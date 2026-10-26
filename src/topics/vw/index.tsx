@@ -10,6 +10,7 @@ import { VWSolution } from '../../kit/solutions'
 import { pick, randInt, rng, TopicFrequency, useSeed } from '../../labs/common'
 import type { PYQ } from '../../pyq/types'
 import type { TopicModule } from '../modules'
+import { FullProblems } from './FullProblems'
 
 const E = 29000
 const EIof = (I: number) => (E * I) / 144
@@ -183,6 +184,9 @@ function Approach() {
 function Lab() {
   return (
     <div>
+      <Section title="Full problems" sub="A new exam-style problem each time — check the real and virtual systems on the way, then the answer.">
+        <FullProblems />
+      </Section>
       <Section title="Product-integral drill" sub="The single most repeated calculation in VW questions.">
         <ProductDrill />
       </Section>
