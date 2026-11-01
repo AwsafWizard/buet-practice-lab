@@ -1468,7 +1468,7 @@ export function StirrupSketch({ sd }: { sd: ShearDesign }) {
 }
 
 // ---------------------------------------------------------------- one-way slab with ACI coefficients
-export function OneWaySolution({ p, endNote }: { p: OneWayCoefInput; endNote?: string }) {
+export function OneWaySolution({ p, endNote, noSketch }: { p: OneWayCoefInput; endNote?: string; noSketch?: boolean }) {
   const r = oneWayCoef(p)
   const sec = r.sections.filter((s) => !s.mirror)
   const steps: SolStep[] = [
@@ -1503,7 +1503,7 @@ export function OneWaySolution({ p, endNote }: { p: OneWayCoefInput; endNote?: s
           },
         ]}
       />
-      <SlabStripSketch r={r} />
+      {!noSketch && <SlabStripSketch r={r} />}
       {endNote && <Md>{endNote}</Md>}
       {r.warnings.length > 0 && <Md>{r.warnings.map((w) => `- ${w}`).join('\n')}</Md>}
     </Sol>

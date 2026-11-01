@@ -1109,6 +1109,136 @@ const fig8 = () => (
 const P = '2012-13' as const
 const PG = { s1: [63], s2: [64], s3: [65], f1: [66], f2: [67], tab: [68, 69] }
 
+
+// ================================================================ numerical data (engine calls are lazy)
+const s1c = { b: 12, h: 27, d: 24, As: Asof(3, 10), fc: 4000, n: 8 }
+const u1c = lazy(() => uncracked(s1c))
+const e1c = lazy(() => elasticAt(s1c, 125))
+
+const p2c: DoublyDesignIn = { b: 12, d: 20, dt: 21.5, dp: 2.5, fc: 3, fy: 50, Mu: 375 }
+const d2c = lazy(() => designDoubly(p2c))
+
+const q3b = lazy(() => {
+  const L = beamLoads({ span: 22, support: 'ss', b: 14, h: 26, sdl: 1.5, ll: 2 })
+  const D = designAs(L.Mu, 14, 23.5, 3000, 60000)
+  const bars = pickSingly(D.As, 14)
+  const Lold = beamLoads({ span: 22, support: 'ss', b: 14, h: 26, sdl: 1.5, ll: 2, fD: 1.4, fL: 1.7 })
+  const Dold = designAs(Lold.Mu, 14, 23.5, 3000, 60000)
+  return { L, D, bars, Lold, Dold }
+})
+
+const r3c = lazy(() => review({ b: 12, fc: 4000, fy: 60000, layers: [{ As: Asof(4, 8), d: 25.5 }, { As: Asof(4, 8), d: 28.5 }] }))
+
+const p4a = { Mu: 600, bw: 12, hf: 3, d: 21, dt: 22, fc: 3, fy: 60 }
+const t4a = lazy(() => {
+  const bf = effectiveWidth({ kind: 'interior', L: 25, bw: 12, hf: 3, cc: 48 })
+  const inp: TDesignIn = { ...p4a, beff: bf.b }
+  const r = designT(inp)
+  return { bf, inp, r, bars: pickD(r.As, 12, [8, 9, 10], 2) }
+})
+
+const p4b: DoublyReviewIn = { b: 12, d: 27, dt: 28.5, dp: 2.5, As: Asof(8, 8), Asp: Asof(3, 7), fc: 3.5, fy: 60 }
+const r4b = lazy(() => reviewDoubly(p4b))
+
+const bm5a: ShearBeam = { kind: 'ss', L: 40, wD: 2.5, P: [{ x: 10, P: 30 }, { x: 20, P: 30 }, { x: 30, P: 30 }], factored: true }
+const sec5a: ShearSection = { bw: 15, d: 24, fc: 3000, fy: 60000 }
+
+/** free-section singly design with self-weight iteration: b fixed, ρ = 0.6ρmax, h ≥ l/16 */
+export function freeBeam(span: number, sdl: number, ll: number, fc: number, fy: number, b: number, fD = 1.2, fL = 1.6) {
+  const hmin = Math.ceil((span * 12) / 16)
+  const rho = 0.6 * limits(fc, fy).rhoMax
+  let h = hmin
+  const hist: { h: number; sw: number; Mu: number; dReq: number }[] = []
+  let L = beamLoads({ span, support: 'ss', b, h, sdl, ll, fD, fL })
+  let S = designSection(L.Mu, fc, fy, rho, { b })
+  for (let i = 0; i < 6; i++) {
+    L = beamLoads({ span, support: 'ss', b, h, sdl, ll, fD, fL })
+    S = designSection(L.Mu, fc, fy, rho, { b })
+    hist.push({ h, sw: L.sw, Mu: L.Mu, dReq: S.d })
+    const hNew = Math.max(hmin, Math.ceil(S.d + 2.5))
+    if (hNew === h) break
+    h = hNew
+  }
+  const d = h - 2.5
+  const D = designAs(L.Mu, b, d, fc, fy)
+  let bars = pickSingly(D.As, b)
+  let dUse = d
+  let D2 = D
+  if (bars.layers !== 1) {
+    dUse = h - 3.5
+    D2 = designAs(L.Mu, b, dUse, fc, fy)
+    bars = pickSingly(D2.As, b)
+  }
+  return { hmin, rho, h, b, L, S, hist, d: dUse, D: D2, bars }
+}
+const b5b = lazy(() => freeBeam(36, 1.5, 1.0, 3500, 60000, 14))
+
+const s6a = lazy(() => oneWayCoef({ spans: [16, 16], ends: ['spandrel', 'spandrel'], ll: 120, fc: 3000, fy: 60000 }))
+
+/** simplified tension ld of bars, as top bars and as other bars (favourable case, uncoated, normal weight) */
+export function ldPair(ids: string[], fc: number, fy: number) {
+  return ids.map((id) => {
+    const b = bar(id)
+    const top = ldSimplified({ db: b.db, small: b.small, fc, fy, met: true, psiT: 1.3 })
+    const oth = ldSimplified({ db: b.db, small: b.small, fc, fy, met: true })
+    return { b, top, oth }
+  })
+}
+export const ldPairChecks = (ids: string[], fc: number, fy: number): Check[] =>
+  ldPair(ids, fc, fy).flatMap((x) => [
+    { key: `t${x.b.mm ?? x.b.no}`, label: `${x.b.label} top bar ld`, value: x.top.final, unit: 'in', tol: 0.02 },
+    { key: `o${x.b.mm ?? x.b.no}`, label: `${x.b.label} other bar ld`, value: x.oth.final, unit: 'in', tol: 0.02 },
+  ])
+export function LdPairSol({ ids, fc, fy }: { ids: string[]; fc: number; fy: number }) {
+  const rows = ldPair(ids, fc, fy)
+  return (
+    <Sol>
+      <Md>{`Simplified ACI equations (clear spacing ≥ db, cover ≥ db, code-minimum stirrups; uncoated; normal weight): $l_d = \\frac{f_y\\psi_t\\psi_e}{25\\lambda\\sqrt{f'_c}}d_b$ for No. 6 and smaller, $\\frac{f_y\\psi_t\\psi_e}{20\\lambda\\sqrt{f'_c}}d_b$ for No. 7 and larger. $\\sqrt{${fc}} = ${f(Math.sqrt(fc), 2)}$ psi; top bars (more than 12 in of concrete below) ψt = 1.3. Metric bars take the column of the nearest US size.`}</Md>
+      <Tbl
+        head={['bar', 'db (in)', 'equation', 'top bars ld (in)', 'other bars ld (in)']}
+        rows={rows.map((x) => [x.b.label, f(x.b.db, 3), x.b.small ? '1/25 (≤ No. 6)' : '1/20 (≥ No. 7)', `${f(x.top.ld, 1)} → ${upIn(x.top.final)}`, `${f(x.oth.ld, 1)} → ${upIn(x.oth.final)}`])}
+      />
+      <Final>{rows.map((x) => `- ${x.b.label}: top bars **${upIn(x.top.final)} in** (${f(x.top.ratio, 1)} db), other bars **${upIn(x.oth.final)} in** (${f(x.oth.ratio, 1)} db).`).join('\n')}</Final>
+    </Sol>
+  )
+}
+
+const w8a = lazy(() => twoWay({ lx: 25, ly: 20, edges: { top: false, left: false, right: true, bottom: true }, ll: 80, ff: 25, pw: 30, fc: 3000, fy: 60000 }))
+
+export function TwoWaySol({ r }: { r: ReturnType<typeof twoWay> }) {
+  const L = r.loads
+  const rows = r.steel.map((x) => [x.label, f(x.Mu, 3), f(x.d, 2), f(x.as.As), f(x.AsD) + (x.usesMin ? ' (min)' : '')])
+  const steps: SolStep[] = [
+    { t: 'Panel case', tex: `l_a = ${f(r.geo.la)},\\ l_b = ${f(r.geo.lb)}\\text{ ft},\\ m = l_a/l_b = ${f(r.m, 3)}\\ (l_b/l_a = ${f(r.geo.ratio, 2)} < 2:\\ \\text{two-way});\\ \\text{Case }${r.case}`, md: `${r.geo.nLong} long and ${r.geo.nShort} short edge(s) continuous.` },
+    { t: 'Thickness', tex: `h = \\frac{l_n(0.8 + f_y/200000)}{36 + 9\\beta} = \\frac{${f(r.geo.lb * 12)}(${f(0.8 + r.input.fy / 200000, 2)})}{36 + 9(${f(r.th.beta, 3)})} = ${f(r.th.raw, 2)}\\text{ in}\\ (\\text{perimeter}/180 = ${f(r.th.perim, 2)})\\Rightarrow h = ${f(r.h)}\\text{ in}` },
+    { t: 'Loads', tex: `D = ${f(L.D, 1)}\\text{ psf (self-wt }${f(L.sw, 1)}),\\ L = ${f(L.L)}\\text{ psf};\\ w_{uD} = ${f(L.wD, 1)},\\ w_{uL} = ${f(L.wL, 1)},\\ w_u = ${f(L.wu, 1)}\\text{ psf}` },
+    {
+      t: 'Coefficients (Tables 12.3–12.5)',
+      tex: `C_{a,neg} = ${r.C.aNeg === null ? '—' : f(r.C.aNeg, 4)},\\ C_{b,neg} = ${r.C.bNeg === null ? '—' : f(r.C.bNeg, 4)};\\ C_{a,DL} = ${f(r.C.aDL, 4)},\\ C_{b,DL} = ${f(r.C.bDL, 4)};\\ C_{a,LL} = ${f(r.C.aLL, 4)},\\ C_{b,LL} = ${f(r.C.bLL, 4)}`,
+    },
+    {
+      t: 'Moments (k-ft/ft)',
+      tex: `M_a^+ = (${f(r.C.aDL, 4)}\\times${f(L.wDk, 4)} + ${f(r.C.aLL, 4)}\\times${f(L.wLk, 4)})(${f(r.geo.la)})^2 = ${f(r.M.aPos, 3)};\\ M_b^+ = ${f(r.M.bPos, 3)};\\ M_a^- = ${r.M.aNeg === null ? '—' : f(r.M.aNeg, 3)};\\ M_b^- = ${r.M.bNeg === null ? '—' : f(r.M.bNeg, 3)}`,
+      md: 'Discontinuous edges: −M = ⅓ of the positive moment.',
+    },
+    { t: 'Depth check', tex: `d_{req} = ${f(r.depth.dreq, 2)}\\text{ in} \\le d = ${f(r.d.short)}\\text{ in}\\ \\checkmark` },
+    { t: 'Minimum steel', tex: `A_{s,min} = 0.0018(12)(${f(r.h)}) = ${f(r.AsMin)}\\text{ in}^2/\\text{ft},\\ s_{max} = 2h = ${f(r.smax)}\\text{ in}` },
+  ]
+  return (
+    <Sol>
+      <StepList steps={steps} />
+      <SH>Steel (middle strips, d short = {f(r.d.short)} in, long = {f(r.d.long)} in)</SH>
+      <Tbl head={['section', 'Mu', 'd', 'As req', 'As design']} rows={rows} />
+      <Final>{`- Short direction (middle strip ${f(r.strips.aMid)} ft): bottom No. ${r.bar} @ **${f(r.midA.s)} in**, alternate bars cranked; ${r.extra.aNeg ? `continuous edge extra top ${r.extra.aNeg.n} No. ${r.bar} between cranked bars` : ''}${r.extra.aDisc ? `; discontinuous edge ${r.extra.aDisc.n > 0 ? `${r.extra.aDisc.n} extra` : 'cranked bars suffice'}` : ''}.
+- Long direction (middle strip ${f(r.strips.bMid)} ft): bottom No. ${r.bar} @ **${f(r.midB.s)} in**; ${r.extra.bNeg ? `continuous edge extra top ${r.extra.bNeg.n} No. ${r.bar}` : ''}${r.extra.bDisc ? `; discontinuous edge ${r.extra.bDisc.n > 0 ? `${r.extra.bDisc.n} extra` : 'cranked bars suffice'}` : ''}.
+- Column strips: No. ${r.bar} @ ${f(r.col.a.s)} in (short) and @ ${f(r.col.b.s)} in (long) — 1.5 × middle-strip spacing, ≤ As,min spacing.
+- Corner steel at the exterior corner: ${f(r.corner.As)} in²/ft (No. ${r.bar} @ ${f(r.corner.sp.s)} in) top and bottom, both ways, over ${f(r.corner.zone)} ft.
+- Bend points: ${f(r.cutoffs.a.bendCont, 2)} ft (l/4) from continuous and ${f(r.cutoffs.a.bendDisc, 2)} ft (l/7) from discontinuous edges in the short span; top bars extend ${f(r.cutoffs.a.topExt, 2)} ft (l/3) past the support.`}</Final>
+    </Sol>
+  )
+}
+
+
 export const R2012: RcQ[] = [
   {
     id: 'rc-2012-13-1a',
@@ -1138,7 +1268,6 @@ export const R2012: RcQ[] = [
     given: [],
     solution: ans(A_STAGES, StagesSketch),
   },
-  // needs: elastic engine — Mcr from Ig (and I_ut with n = 8)
   {
     id: 'rc-2012-13-1c-i',
     paper: P,
@@ -1156,8 +1285,23 @@ Find: (i) Cracking moment.`,
     given: [],
     figure: fig1,
     notes: ['The paper does not say whether to use the gross section or the uncracked transformed section for Mcr; work both (gross is the usual exam answer).'],
+    checks: () => [
+      { key: 'mcrg', label: 'Mcr from the gross section', value: u1c().McrG, unit: 'k-ft' },
+      { key: 'mcr', label: 'Mcr from the uncracked transformed section', value: u1c().Mcr, unit: 'k-ft' },
+    ],
+    solution: () => {
+      const u = u1c()
+      return (
+        <Sol>
+          <SH>Gross section (steel ignored)</SH>
+          <StepList steps={[{ t: 'Gross section', tex: `I_g = \\frac{12(27)^3}{12} = ${f(u.Ig, 0)}\\text{ in}^4,\\ y_t = 13.5\\text{ in},\\ M_{cr} = \\frac{f_rI_g}{y_t} = \\frac{${f(u.fr, 0)}\\times${f(u.Ig, 0)}}{13.5} = ${f(u.McrG * 12000, 0)}\\text{ in-lb} = ${f(u.McrG, 1)}\\text{ k-ft}` }]} />
+          <SH>Uncracked transformed section</SH>
+          <StepList steps={u.steps} start={2} />
+          <Final>{`**Mcr ≈ ${f(u.McrG, 1)} k-ft** (gross) or **${f(u.Mcr, 1)} k-ft** (transformed, ${f((u.Mcr / u.McrG - 1) * 100, 0)} % higher because the steel adds stiffness and lowers the neutral axis).`}</Final>
+        </Sol>
+      )
+    },
   },
-  // needs: elastic engine — cracked transformed section (kd, Icr), fc and fs at M = 125 k-ft
   {
     id: 'rc-2012-13-1c-ii',
     paper: P,
@@ -1173,6 +1317,20 @@ Find: (ii) Stresses in concrete and steel caused by a bending moment $M = 125$ k
     given: [],
     figure: fig1,
     notes: ['M = 125 k-ft is well above Mcr from (i), so the section is cracked; fs = 24 ksi is the allowable to compare the steel stress with.'],
+    checks: () => [
+      { key: 'kd', label: 'Neutral-axis depth kd (cracked)', value: e1c().na, unit: 'in' },
+      { key: 'fc', label: 'Concrete stress fc', value: e1c().fc, unit: 'ksi' },
+      { key: 'fs', label: 'Steel stress fs', value: e1c().fs, unit: 'ksi' },
+    ],
+    solution: () => {
+      const e = e1c()
+      return (
+        <Sol>
+          <StepList steps={e.steps} />
+          <Final>{`**fc = ${f(e.fc, 3)} ksi** ${e.fc <= 1.8 ? '≤' : '>'} 0.45f′c = 1.8 ksi; **fs = ${f(e.fs, 2)} ksi** ${e.fs <= 24 ? '≤' : '>'} fs = 24 ksi (allowable). ${e.fc <= 1.8 && e.fs <= 24 ? 'Both stresses are within the allowables.' : 'An allowable is exceeded.'}`}</Final>
+        </Sol>
+      )
+    },
   },
   {
     id: 'rc-2012-13-2a',
@@ -1202,7 +1360,6 @@ Find: (ii) Stresses in concrete and steel caused by a bending moment $M = 125$ k
     given: [],
     solution: ans(A_PHI_ET + '\n\n' + A_ET_RHOMAX, PhiChart),
   },
-  // needs: doubly design engine — b = 12, h = 24, d = 20, dt = 21.5, d' = 2.5, Mu = 375, f'c 3, fy 50
   {
     id: 'rc-2012-13-2c',
     paper: P,
@@ -1217,6 +1374,22 @@ Find: (ii) Stresses in concrete and steel caused by a bending moment $M = 125$ k
 Given: $f'_c = 3$ ksi and $f_y = 50$ ksi.`,
     given: [],
     notes: ['Check the singly reinforced capacity at εt = 0.005 first; it falls well short of 375 k-ft, so compression steel is needed. fy = 50 ksi (εy = 0.00172).'],
+    checks: () => [
+      { key: 'pm1', label: 'φMn of the largest singly reinforced section (εt = 0.005)', value: d2c().sm.phiMn1, unit: 'k-ft' },
+      { key: 'asp', label: "Required compression steel A′s", value: d2c().Asp, unit: 'in²' },
+      { key: 'as', label: 'Required tension steel As', value: d2c().As, unit: 'in²' },
+    ],
+    solution: () => {
+      const dd = d2c()
+      return (
+        <Sol>
+          <StepList steps={doublyDesignSteps(p2c, dd)} />
+          <SH>Review of the bars chosen</SH>
+          <StepList steps={doublyReviewSteps({ ...p2c, As: dd.tension.A, Asp: dd.comp!.A }, dd.review)} />
+          <Final>{`Use **${dd.tension.n} No. ${dd.tension.no}** tension bars (two layers) and **${dd.comp!.n} No. ${dd.comp!.no}** compression bars at d′ = 2.5 in: φMn = ${f(dd.review.phiMn, 1)} k-ft ≥ Mu = 375 k-ft ${dd.ok ? '✓' : '✗'}.`}</Final>
+        </Sol>
+      )
+    },
   },
   {
     id: 'rc-2012-13-3a',
@@ -1232,7 +1405,6 @@ Given: $f'_c = 3$ ksi and $f_y = 50$ ksi.`,
     given: [],
     solution: ans(A_COVER),
   },
-  // needs: load combo + singly design engine — 22 ft SS, 14 × 26, self-weight added, f'c 3, fy 60
   {
     id: 'rc-2012-13-3b',
     paper: P,
@@ -1249,8 +1421,24 @@ Given: $f'_c = 3$ ksi and $f_y = 60$ ksi. Design the beam for flexure.`,
     figure: fig2,
     flag: 'Load factors not printed: solve with 1.2D + 1.6L (paper era: 1.4D + 1.7L)',
     notes: ['d is not given: take d = h − 2.5 in = 23.5 in (one layer).', 'Self-weight = (14 × 26/144) × 0.150 = 0.379 k/ft, added to the 1.5 k/ft superimposed dead load.'],
+    checks: () => [
+      { key: 'wu', label: 'Factored load wu (1.2D + 1.6L, with self-weight)', value: q3b().L.wu, unit: 'k/ft' },
+      { key: 'mu', label: 'Mu at midspan', value: q3b().L.Mu, unit: 'k-ft' },
+      { key: 'as', label: 'Required As (d = 23.5 in)', value: q3b().D.As, unit: 'in²' },
+    ],
+    solution: () => {
+      const { L, D, bars, Lold, Dold } = q3b()
+      return (
+        <Sol>
+          <StepList steps={L.steps} />
+          <SH>Steel for b = 14 in, d = 26 − 2.5 = 23.5 in</SH>
+          <StepList steps={D.steps} start={L.steps.length + 1} />
+          <Final>{`As = ${f(D.As)} in² → **${bars.n} No. ${bars.bar}** (${f(bars.As, 2)} in², ${bars.fits ? 'one layer fits' : 'two layers'}). εt = ${f(D.epsT, 4)}: tension-controlled ✓; As ≥ As,min = ${f(D.AsMin)} in² ✓.`}</Final>
+          <Md className="text-xs text-mute">{`With the paper-era factors 1.4D + 1.7L: wu = ${f(Lold.wu)} k/ft, Mu = ${f(Lold.Mu, 1)} k-ft, As = ${f(Dold.As)} in².`}</Md>
+        </Sol>
+      )
+    },
   },
-  // needs: singly review engine (two layers, φ from εt) — b 12, d 27, dt 28.5, 8 #8, f'c 4, fy 60
   {
     id: 'rc-2012-13-3c',
     paper: P,
@@ -1264,8 +1452,22 @@ Given: $f'_c = 3$ ksi and $f_y = 60$ ksi. Design the beam for flexure.`,
     given: [],
     figure: fig3(false, 'Fig. 3 (h not shown)', ["f′c = 4 ksi", 'fy = 60 ksi']),
     notes: ['εt lands in the transition zone (just under 0.005), so φ is a little below 0.90 — that is the point of the question.'],
+    checks: () => [
+      { key: 'a', label: 'Depth of stress block a', value: r3c().a, unit: 'in' },
+      { key: 'et', label: 'Net tensile strain εt', value: r3c().epsT, tol: 0.02 },
+      { key: 'mn', label: 'Mn', value: r3c().Mn, unit: 'k-ft' },
+      { key: 'pmn', label: 'φMn', value: r3c().phiMn, unit: 'k-ft' },
+    ],
+    solution: () => {
+      const r = r3c()
+      return (
+        <Sol>
+          <StepList steps={r.steps} />
+          <Final>{`**Mn = ${f(r.Mn, 1)} k-ft**; εt = ${f(r.epsT, 5)} is in the ${r.zone === 'tension' ? 'tension-controlled zone' : 'transition zone'}, so φ = ${f(r.phi)} and **φMn = ${f(r.phiMn, 1)} k-ft**.`}</Final>
+        </Sol>
+      )
+    },
   },
-  // needs: T-beam design engine — beff rules, true-T split, As,min and εt checks
   {
     id: 'rc-2012-13-4a',
     paper: P,
@@ -1278,9 +1480,22 @@ Given: $f'_c = 3$ ksi and $f_y = 60$ ksi. Design the beam for flexure.`,
     text: `A floor system consists of a 3 in. slab supported by continuous T-beams with 25 ft span, 48 in. on centres as shown in Fig. 4. Web dimensions as determined by negative moment requirement at support are $b_w = 12$ in. and $d = 21$ in. What tensile reinforcement is required at midspan to resist a factored moment $M_u = 600$ kip-ft, if $f_y = 60$ ksi and $f'_c = 3$ ksi? Also, check minimum reinforcement and $\\varepsilon_t$.`,
     given: [],
     figure: fig4,
-    notes: ['beff = min(L/4 = 75 in, bw + 16hf = 60 in, c/c spacing = 48 in) = 48 in.', 'A rectangular trial gives a greater than hf = 3 in, so the section acts as a true T.'],
+    notes: ['beff = min(L/4 = 75 in, bw + 16hf = 60 in, c/c spacing = 48 in) = 48 in.', 'A rectangular trial gives a greater than hf = 3 in, so the section acts as a true T.', 'Six bars in two rows: dt taken as d + 1 = 22 in.'],
+    checks: () => [
+      { key: 'beff', label: 'Effective flange width', value: t4a().bf.b, unit: 'in' },
+      { key: 'as', label: 'Required As at midspan', value: t4a().r.As, unit: 'in²' },
+      { key: 'et', label: 'εt', value: t4a().r.epsT, tol: 0.03 },
+    ],
+    solution: () => {
+      const { bf, inp, r, bars } = t4a()
+      return (
+        <Sol>
+          <StepList steps={tDesignSteps(inp, r, bf)} />
+          <Final>{`As = ${f(r.As)} in² → **${bars.n} No. ${bars.no}** (${f(bars.A, 2)} in², ${bars.layers} layers, as drawn). As,min = ${f(r.AsMin)} in² ✓; εt = ${f(r.epsT, 4)} ${r.epsT >= 0.005 ? '≥ 0.005, φ = 0.9' : `→ φ = ${f(r.phi)}`}.`}</Final>
+        </Sol>
+      )
+    },
   },
-  // needs: doubly review engine (strain compatibility, f's check) — b 12, d 27, dt 28.5, 8 #8, 3 #7 @ 2.5, f'c 3.5, fy 60
   {
     id: 'rc-2012-13-4b',
     paper: P,
@@ -1293,8 +1508,21 @@ Given: $f'_c = 3$ ksi and $f_y = 60$ ksi. Design the beam for flexure.`,
     text: `A rectangular RC beam as shown in Fig. 5 measures 12 in. wide and has an effective depth of 27 in. Tension steel consists of eight No. 8 bars in two layers ($d = 27$ in., $d_t = 28.5$ in.) and compression steel consisting of three No. 7 bars is located 2.5 in. from the compression face. If $f'_c = 3.5$ ksi and $f_y = 60$ ksi, what is the design moment capacity of the beam according to ACI code. Check for yielding of compression steel.`,
     given: [],
     figure: fig3(true, 'Fig. 5', ["f′c = 3.5 ksi", 'fy = 60 ksi']),
+    checks: () => [
+      { key: 'c', label: 'Neutral-axis depth c', value: r4b().c, unit: 'in' },
+      { key: 'fsp', label: "Stress in the compression steel f′s", value: r4b().fsp, unit: 'ksi' },
+      { key: 'pmn', label: 'Design moment capacity φMn', value: r4b().phiMn, unit: 'k-ft' },
+    ],
+    solution: () => {
+      const r = r4b()
+      return (
+        <Sol>
+          <StepList steps={doublyReviewSteps(p4b, r)} />
+          <Final>{`Compression steel ${r.compYields ? 'yields' : `does **not** yield (f′s = ${f(r.fsp, 1)} ksi)`}; **φMn = ${f(r.phiMn, 1)} k-ft** (Mn = ${f(r.MnFt, 1)} k-ft, φ = ${f(r.phi)}).`}</Final>
+        </Sol>
+      )
+    },
   },
-  // needs: shear engine (Case A–D, zones) — SS 40 ft, 3 × 30 k @ 10/20/30 + 2.5 k/ft factored, bw 15, d 24, f'c 3
   {
     id: 'rc-2012-13-5a',
     paper: P,
@@ -1313,8 +1541,9 @@ Fig. 6: span 40 ft (4 × 10 ft); 30 k at 10, 20 and 30 ft plus 2.5 kip/ft over t
       'Support width is not shown: the critical section is taken d = 2 ft from the support (treat the support as a point/face).',
       'Self-weight is not mentioned; the loads are used as given (factored). The flange size does not matter for shear (bw = 15 in).',
     ],
+    checks: () => shearChecks(bm5a, sec5a),
+    solution: () => <ShearSol bm={bm5a} sec={sec5a} note="All loads are factored; the support is treated as a point, so the critical section is d = 24 in from the support line." />,
   },
-  // needs: singly design engine with self-weight iteration — SS 36 ft, DL 1.5 (excl. sw), LL 1.0, f'c 3.5, fy 60
   {
     id: 'rc-2012-13-5b',
     paper: P,
@@ -1330,9 +1559,27 @@ Fig. 7: simple span 36′-0″; LL = 1.0 kip/ft, DL = 1.5 kip/ft (excluding self
     given: [],
     figure: fig7,
     flag: 'Load factors not printed: solve with 1.2D + 1.6L (paper era: 1.4D + 1.7L)',
-    notes: ['Section size is free: assume self-weight, pick ρ (e.g. ρ0.005 or about 0.5ρmax) and b/d ≈ 0.5, then recheck the self-weight.'],
+    notes: ['Section size is free: b = 14 in and ρ = 0.6ρmax chosen; h ≥ l/16 = 27 in; self-weight iterated.'],
+    checks: () => [
+      { key: 'h', label: 'Overall depth h chosen (b = 14 in)', value: b5b().h, unit: 'in', tol: 0.08 },
+      { key: 'mu', label: 'Mu with the final self-weight', value: b5b().L.Mu, unit: 'k-ft', tol: 0.05 },
+      { key: 'as', label: 'Required As', value: b5b().D.As, unit: 'in²', tol: 0.08 },
+    ],
+    solution: () => {
+      const B = b5b()
+      return (
+        <Sol>
+          <Md>{`**Choices:** b = ${B.b} in, ρ = 0.6ρmax = ${f(B.rho, 5)} (economical, keeps εt well above 0.005), h at least l/16 = ${B.hmin} in for deflection. Self-weight is assumed from the trial h and re-checked.`}</Md>
+          <Tbl head={['trial h (in)', 'self-wt (k/ft)', 'Mu (k-ft)', 'd req (in)']} rows={B.hist.map((x) => [f(x.h), f(x.sw), f(x.Mu, 1), f(x.dReq, 2)])} />
+          <StepList steps={B.L.steps} />
+          <StepList steps={B.S.steps} start={B.L.steps.length + 1} />
+          <SH>Steel for the final section {B.b} × {B.h} in (d = {f(B.d)} in)</SH>
+          <StepList steps={B.D.steps} start={B.L.steps.length + B.S.steps.length + 1} />
+          <Final>{`Section **${B.b} in × ${B.h} in**, As = ${f(B.D.As)} in² → **${B.bars.n} No. ${B.bars.bar}** (${f(B.bars.As, 2)} in²${B.bars.fits ? '' : ', two layers'}).`}</Final>
+        </Sol>
+      )
+    },
   },
-  // needs: one-way slab engine (h_min, ACI coefficients, As per ft, T&S) — 2 spans × 16 ft clear, LL 120 psf, f'c 3, fy 60
   {
     id: 'rc-2012-13-6a',
     paper: P,
@@ -1346,6 +1593,12 @@ Fig. 7: simple span 36′-0″; LL = 1.0 kip/ft, DL = 1.5 kip/ft (excluding self
     given: [],
     flag: 'Load factors not printed: solve with 1.2D + 1.6L (paper era: 1.4D + 1.7L)',
     notes: ['No floor finish or partitions are given: DL = self-weight only.', 'h from the one-end-continuous rule l/24; supports are integral (spandrel beams) for the exterior negative coefficient.'],
+    checks: () => [
+      { key: 'h', label: 'Slab thickness h', value: s6a().h, unit: 'in' },
+      { key: 'wu', label: 'Factored load wu', value: s6a().loads.wu, unit: 'psf' },
+      { key: 'mneg', label: 'Mu at the interior support (−1/9)', value: s6a().sections.find((s) => s.id === 's1')!.Mu, unit: 'k-ft/ft' },
+    ],
+    solution: () => <OneWaySol r={s6a()} endNote="Exterior supports taken as integral spandrel beams (−1/24); with columns use −1/16. Two spans → −1/9 at the interior support, +1/14 in the spans." />,
   },
   {
     id: 'rc-2012-13-6b',
@@ -1418,7 +1671,6 @@ Fig. 7: simple span 36′-0″; LL = 1.0 kip/ft, DL = 1.5 kip/ft (excluding self
     flag: 'General question, not on the current slides',
     solution: ans(A_FAILURE),
   },
-  // needs: bond engine (simplified ld, ψt, mm bars) — 16 mm and 25 mm, f'c 3500, fy 60000
   {
     id: 'rc-2012-13-7d',
     paper: P,
@@ -1431,8 +1683,9 @@ Fig. 7: simple span 36′-0″; LL = 1.0 kip/ft, DL = 1.5 kip/ft (excluding self
     text: `Calculate the development length by USD method for 16 mm and 25 mm bars when used as (i) top bars, (ii) for other bars. Given: $f'_c = 3500$ psi and $f_y = 60{,}000$ psi.`,
     given: [],
     notes: ['Cover, spacing and stirrups are not given: assume the favourable case (clear spacing ≥ db, cover ≥ db, minimum stirrups), uncoated bars, normal-weight concrete.', '16 mm (≈ No. 5) uses the No. 6-and-smaller equation; 25 mm (≈ No. 8) the No. 7-and-larger one. Top bars: ψt = 1.3.'],
+    checks: () => ldPairChecks(['16mm', '25mm'], 3500, 60000),
+    solution: () => <LdPairSol ids={['16mm', '25mm']} fc={3500} fy={60000} />,
   },
-  // needs: two-way slab engine (case 4, m = 0.8, Tables 12.3–12.5) — 25 × 20 ft panels, LL 80, FF 25, PW 30, f'c 3, fy 60
   {
     id: 'rc-2012-13-8a',
     paper: P,
@@ -1454,9 +1707,15 @@ Fig. 8: 2 × 2 panels, each 25′ × 20′ (50′ × 40′ overall); every panel
     flag: 'Load factors not printed: solve with 1.2D + 1.6L (paper era: 1.4D + 1.7L)',
     notes: [
       'Every panel is a corner panel: Case 4 (two adjacent edges continuous), m = la/lb = 20/25 = 0.80.',
-      '25′ and 20′ are taken as clear spans (as in the slab solutions PDF). Slab thickness is not given: h from perimeter/180 = 2(25 + 20)(12)/180 = 6 in.',
+      '25′ and 20′ are taken as clear spans (as in the slab solutions PDF). Slab thickness is not given: h from the class formula ln(0.8 + fy/200,000)/(36 + 9β) = 6.98 → 7 in (perimeter/180 would give 6 in).',
       'No load-distribution (wa/wb) table was attached, so loads on the walls are not asked.',
     ],
+    checks: () => [
+      { key: 'h', label: 'Slab thickness h', value: w8a().h, unit: 'in' },
+      { key: 'man', label: 'Short-direction negative moment Ma,neg (continuous edge)', value: w8a().M.aNeg ?? 0, unit: 'k-ft/ft' },
+      { key: 'map', label: 'Short-direction positive moment Ma,pos', value: w8a().M.aPos, unit: 'k-ft/ft' },
+    ],
+    solution: () => <TwoWaySol r={w8a()} />,
   },
   {
     id: 'rc-2012-13-8b',

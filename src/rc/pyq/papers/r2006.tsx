@@ -6,8 +6,15 @@
 // This file also exports the small SVG kit and the model answers that the other old papers
 // (r2005, r2004, r2002) reuse.
 import type { ReactNode } from 'react'
-import { Md } from '../../../components/ui'
-import type { RcGiven, RcQ } from '../../types'
+import { Md, Step, Steps, Tex } from '../../../components/ui'
+import type { Check, RcGiven, RcQ } from '../../types'
+import { allowableMoment, f, uncracked, wsdDoublyDesign } from '../../engine/elastic'
+import { pickBars as pickDoubly, reviewDoubly, singlyMax, type DoublyReview, type DoublyReviewIn } from '../../engine/doubly'
+import { designT, effectiveWidth, floorLoads, reviewT, wsdTDesign, wsdTj, type TDesign, type TDesignIn, type WsdTDesign } from '../../engine/tbeam'
+import { designShear, selfWeight, shearAt, type ShearDesign, type ShearSection } from '../../engine/shear'
+import { cantSlab, type CantSlabResult } from '../../engine/oneway'
+import { beamLoads, designAs, limits, pickBars as pickSingly, review } from '../../engine/singly'
+import { bar, beamBarGeometry, columnAnchorage, cutoff, hookGeometry, ldhCalc, ldSimplified, simplifiedCase } from '../../engine/bond'
 
 // ================================================================ SVG kit (shared by r2005 / r2004 / r2002)
 export const INK = 'var(--c-ink)'
@@ -506,6 +513,270 @@ export const A_OVER_UNDER = String.raw`Compare the steel ratio $\rho = A_s/bd$ w
 - **Over-reinforced section ($\rho > \rho_b$):** the concrete crushes before the steel yields ($f_s < f_y$). Failure is **sudden and brittle, with no warning**, and the expensive steel is not fully used. Not permitted.
 - **Balanced section ($\rho = \rho_b$):** both happen together — the dividing line.`
 
+// ================================================================ solution kit (engine output → steps)
+export type St = { t: string; tex?: string; md?: string }
+
+/** numbered steps (title, block TeX, markdown note) + an answer box */
+export function Sol({ steps, end, children }: { steps: St[]; end?: string; children?: ReactNode }) {
+  return (
+    <div className="space-y-3 text-sm">
+      <Steps>
+        {steps.map((s, i) => (
+          <Step key={i} n={i + 1} title={s.t}>
+            {s.tex && <Tex block>{s.tex}</Tex>}
+            {s.md && <Md>{s.md}</Md>}
+          </Step>
+        ))}
+      </Steps>
+      {children}
+      {end && (
+        <div className="rounded-lg border border-good/40 bg-good/5 p-2">
+          <Md>{end}</Md>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export const ck = (key: string, label: string, value: number, unit?: string, tol?: number): Check => ({ key, label, value, unit, tol })
+
+export function doublySteps(p: DoublyReviewIn, r: DoublyReview): St[] {
+  const dt = p.dt ?? p.d
+  const out: St[] = [
+    { t: 'Steel ratios', tex: `\\rho = \\frac{A_s}{bd} = \\frac{${f(p.As)}}{${f(p.b)}\\times${f(p.d)}} = ${f(r.rho, 4)},\\quad \\rho' = \\frac{${f(p.Asp)}}{${f(p.b * p.d)}} = ${f(r.rhoP, 4)},\\quad \\beta_1 = ${f(r.b1)}` },
+    {
+      t: 'Trial: assume both steels yield',
+      tex: `a = \\frac{(A_s - A'_s)f_y}{0.85f'_cb} = \\frac{(${f(p.As)} - ${f(p.Asp)})(${f(p.fy)})}{0.85(${f(p.fc)})(${f(p.b)})} = ${f(r.trial.a)}\\text{ in},\\quad c = \\frac{a}{\\beta_1} = ${f(r.trial.c)}\\text{ in}`,
+    },
+    {
+      t: 'Does the compression steel yield?',
+      tex: `\\varepsilon'_s = 0.003\\frac{c - d'}{c} = 0.003\\frac{${f(r.trial.c)} - ${f(p.dp)}}{${f(r.trial.c)}} = ${f(r.trial.epsSp, 5)}\\ ${r.trial.epsSp >= r.ey ? '\\ge' : '<'}\\ \\varepsilon_y = ${f(r.ey, 5)}`,
+      md: r.trial.epsSp >= r.ey ? "Yes: $f'_s = f_y$ and the trial values stand." : "No: $f'_s = E_s\\varepsilon'_s = 87(c - d')/c$ ksi; find c from $C_c + C_s = T$.",
+    },
+  ]
+  if (r.method === 'quadratic' && r.quad)
+    out.push({
+      t: 'Solve for c',
+      tex: `0.85f'_c\\beta_1 b\\,c^2 + \\left(87A'_s${r.dispUsed ? " - 0.85f'_cA'_s" : ''} - A_sf_y\\right)c - 87A'_sd' = 0 \\;\\Rightarrow\\; ${f(r.quad.A, 3)}c^2 ${r.quad.B >= 0 ? '+' : '-'} ${f(Math.abs(r.quad.B), 3)}c - ${f(-r.quad.C, 3)} = 0`,
+      md: r.dispUsed ? "The displaced concrete $0.85f'_cA'_s$ is subtracted (class handnote, non-yielding branch)." : undefined,
+    })
+  if (r.method === 'general') out.push({ t: 'Tension steel does not yield', md: 'Solved by strain compatibility for both steels (over-reinforced).' })
+  out.push(
+    { t: 'Neutral axis and steel stresses', tex: `c = ${f(r.c)}\\text{ in},\\ a = \\beta_1 c = ${f(r.a)}\\text{ in},\\ f'_s = ${f(r.fsp, 2)}\\text{ ksi},\\ f_s = ${f(r.fs, 2)}\\text{ ksi}` },
+    {
+      t: 'Forces',
+      tex: `C_c = 0.85f'_cab = ${f(r.Cc, 1)}\\text{ k},\\quad C_s = A'_s(f'_s${r.dispUsed ? " - 0.85f'_c" : ''}) = ${f(r.Cs, 1)}\\text{ k},\\quad T = A_sf_s = ${f(r.T, 1)}\\text{ k}`,
+    },
+    {
+      t: 'Nominal moment',
+      tex: `M_n = C_c\\left(d - \\frac a2\\right) + C_s(d - d') = ${f(r.Cc, 1)}(${f(p.d - r.a / 2)}) + ${f(r.Cs, 1)}(${f(p.d - p.dp)}) = ${f(r.Mn, 0)}\\text{ in-k} = ${f(r.MnFt, 1)}\\text{ k-ft}`,
+    },
+    {
+      t: 'Net tensile strain and φ',
+      tex: `\\varepsilon_t = 0.003\\frac{d_t - c}{c} = 0.003\\frac{${f(dt)} - ${f(r.c)}}{${f(r.c)}} = ${f(r.epsT, 5)} \\Rightarrow \\phi = ${f(r.phi)}\\ \\ (\\text{${r.zone}})`,
+      md: r.ductileOk ? undefined : '**εt < 0.004: not permitted for a beam.**',
+    },
+    { t: 'Design strength', tex: `\\phi M_n = ${f(r.phi)}\\times${f(r.MnFt, 1)} = ${f(r.phiMn, 1)}\\text{ k-ft}` },
+  )
+  return out
+}
+
+export function tDesignSteps(p: TDesignIn, r: TDesign): St[] {
+  const fd = `${f(p.d)} - ${f(p.hf / 2)}`
+  const out: St[] = [
+    {
+      t: 'Does the flange alone carry Mu?',
+      tex: `\\phi M_{n,flange} = 0.9(0.85f'_c)b_{eff}h_f\\left(d - \\frac{h_f}{2}\\right) = 0.9(0.85)(${f(p.fc)})(${f(p.beff)})(${f(p.hf)})(${fd}) = ${f(r.phiMnFlange, 1)}\\text{ k-ft}\\ ${r.rect ? '\\ge' : '<'}\\ M_u = ${f(p.Mu, 1)}`,
+      md: r.rect ? '$a \\le h_f$: design as a **rectangular beam with $b = b_{eff}$**.' : '$a > h_f$: **true T-beam** — split into flange overhangs + web.',
+    },
+    { t: 'Class trial (a = hf)', tex: `A_s = \\frac{M_u}{0.9f_y(d - h_f/2)} = \\frac{${f(p.Mu * 12, 0)}}{0.9(${f(p.fy)})(${fd})} = ${f(r.trial.As)}\\text{ in}^2,\\quad a = \\frac{A_sf_y}{0.85f'_cb_{eff}} = ${f(r.trial.a)}\\text{ in}` },
+  ]
+  if (r.rect)
+    out.push({
+      t: 'Steel (rectangle beff × d)',
+      tex: `A_s = ${f(r.As)}\\text{ in}^2,\\quad a = ${f(r.a)}\\text{ in} \\le h_f,\\quad c = ${f(r.c)}\\text{ in},\\quad \\varepsilon_t = ${f(r.epsT, 5)} \\Rightarrow \\phi = ${f(r.phi)}`,
+      md: 'From $M_u = \\phi A_sf_y(d - a/2)$ solved exactly (same as iterating on a).',
+    })
+  else
+    out.push(
+      { t: 'Flange overhangs', tex: `A_{sf} = \\frac{0.85f'_c(b_{eff} - b_w)h_f}{f_y} = \\frac{0.85(${f(p.fc)})(${f(p.beff - p.bw)})(${f(p.hf)})}{${f(p.fy)}} = ${f(r.Asf)}\\text{ in}^2,\\quad \\phi M_{n1} = ${f(r.phiMn1, 1)}\\text{ k-ft}` },
+      { t: 'Web', tex: `\\phi M_{n2} = M_u - \\phi M_{n1} = ${f(r.phiMn2, 1)}\\text{ k-ft} \\Rightarrow A_{sw} = ${f(r.Asw)}\\text{ in}^2,\\ a = ${f(r.a)}\\text{ in}` },
+      { t: 'Total steel and strain', tex: `A_s = A_{sf} + A_{sw} = ${f(r.As)}\\text{ in}^2,\\quad c = ${f(r.c)}\\text{ in},\\ \\varepsilon_t = ${f(r.epsT, 5)} \\Rightarrow \\phi = ${f(r.phi)}` },
+    )
+  out.push({ t: 'Minimum steel', tex: `A_{s,min} = \\frac{\\max(3\\sqrt{f'_c},200)}{f_y}b_wd = ${f(r.AsMin)}\\text{ in}^2\\ ${r.As >= r.AsMin ? '\\le A_s\\ \\checkmark' : '> A_s \\Rightarrow \\text{use } A_{s,min}'}` })
+  return out
+}
+
+export function wsdTSteps(p: { M: number; beff: number; hf: number; d: number; n: number; fcAllow: number; fsAllow: number }, r: WsdTDesign): St[] {
+  const s = r.sec
+  const jPrinted = wsdTj(s.rho, p.n, p.hf, p.d)
+  return [
+    { t: 'First trial', tex: `jd \\approx d - \\frac t2 = ${f(p.d - p.hf / 2)}\\text{ in},\\quad A_s = \\frac{M}{f_s\\,jd} = \\frac{${f(p.M * 12, 0)}}{${f(p.fsAllow)}\\times${f(p.d - p.hf / 2)}} = ${f(r.iters[0].As)}\\text{ in}^2` },
+    {
+      t: 'Neutral axis (T formula)',
+      tex: s.rect
+        ? `\\rho = \\frac{A_s}{bd} = ${f(s.rho, 5)},\\ k = \\sqrt{(\\rho n)^2 + 2\\rho n} - \\rho n = ${f(s.k)},\\ kd = ${f(s.kd)}\\text{ in} \\le t = ${f(p.hf)}`
+        : `\\rho = \\frac{A_s}{b_{eff}d} = ${f(s.rho, 5)},\\quad k = \\frac{n\\rho + \\tfrac12(t/d)^2}{n\\rho + t/d} = ${f(s.k)},\\quad kd = ${f(s.kd)}\\text{ in} > t = ${f(p.hf)}`,
+      md: s.rect ? 'Neutral axis inside the flange: rectangular formulas with b = beff.' : undefined,
+    },
+    {
+      t: 'Lever arm',
+      tex: s.rect
+        ? `jd = d - \\frac{kd}{3} = ${f(s.jd)}\\text{ in}`
+        : `z = \\frac{3kd - 2t}{2kd - t}\\cdot\\frac t3 = ${f(s.z)}\\text{ in},\\quad jd = d - z = ${f(s.jd)}\\text{ in}\\ \\ (j = ${f(s.j, 4)};\\ \\text{printed formula } j = ${f(jPrinted, 4)})`,
+    },
+    { t: 'Steel (iterated until As settles)', tex: `A_s = \\frac{M}{f_s\\,jd} = \\frac{${f(p.M * 12, 0)}}{${f(p.fsAllow)}\\times${f(s.jd)}} = ${f(r.As)}\\text{ in}^2`, md: `Iterations: ${r.iters.slice(0, 4).map((i) => `$${f(i.As)}$`).join(' → ')} in².` },
+    {
+      t: 'Concrete stress check',
+      tex: `f_c = \\frac{f_s}{n}\\cdot\\frac{k}{1-k} = \\frac{${f(p.fsAllow)}}{${p.n}}\\cdot\\frac{${f(s.k)}}{${f(1 - s.k)}} = ${f(r.fcAct)}\\text{ ksi}\\ ${r.concreteOk ? '\\le' : '>'}\\ ${f(p.fcAllow)}\\ ${r.concreteOk ? '\\checkmark' : '\\times'}`,
+    },
+  ]
+}
+
+/** shear design summary from designShear */
+export function ShearSol({ D, sec, pre = [], end }: { D: ShearDesign; sec: ShearSection; pre?: St[]; end?: string }) {
+  const k = D.lim
+  const steps: St[] = [
+    ...pre,
+    {
+      t: 'Concrete capacity',
+      tex: `\\phi V_c = ${f(k.phi)}(2)\\sqrt{${sec.fc}}(${f(sec.bw)})(${f(sec.d)}) = ${f(k.phiVc, 2)}\\text{ k},\\quad \\tfrac12\\phi V_c = ${f(k.halfPhiVc, 2)}\\text{ k}`,
+      md: `Case limits on $\\phi V_s$: $\\phi 4\\sqrt{f'_c}b_wd = ${f(k.phiVs4, 1)}$ k, $\\phi 8\\sqrt{f'_c}b_wd = ${f(k.phiVs8, 1)}$ k; $V_{u,max} = ${f(k.VuMax, 1)}$ k. Minimum $A_v/s = \\max(0.75\\sqrt{f'_c}b_w/f_y,\\ 50b_w/f_y) = ${f(k.avsMin, 4)}$ in²/in → $s = ${f(k.sMinSteel, 1)}$ in for $A_v = ${f(k.Av, 2)}$ in².`,
+    },
+  ]
+  for (const r of D.runs) {
+    const a = shearAt(r.Vd, sec)
+    const lay = D.layouts[r.id]
+    steps.push({
+      t: r.label,
+      tex: `V_{u,face} = ${f(r.Vface, 2)}\\text{ k},\\ V_u${r.critAtFace ? '' : '(d)'} = ${f(r.Vd, 2)}\\text{ k} \\Rightarrow \\text{Case ${a.case}}${a.case === 'A' ? '' : `,\\ \\phi V_s = ${f(a.phiVs, 2)}\\text{ k},\\ A_v/s = ${f(a.avs, 4)},\\ s = \\min(${f(a.sCalc, 2)},\\ ${f(a.sMax, 2)}) = ${f(a.s, 2)}\\text{ in}`}`,
+      md:
+        [
+          r.uPhiVc !== null ? `$V_u = \\phi V_c$ at ${f(r.uPhiVc / 12, 2)} ft from the face` : '',
+          r.uReqEnd > 0 ? `stirrups required to ${f(r.uReqEnd / 12, 2)} ft from the face${r.uReqEnd >= r.len - 0.1 ? ' (the whole run)' : ' (where $V_u = \\tfrac12\\phi V_c$)'}` : 'no stirrups required',
+          lay.count ? `layout: **1 @ ${f(lay.first)} in + ${lay.zones.map((z) => `${z.n} @ ${f(z.s)} in`).join(' + ')}** (${lay.count} stirrups, last at ${f(lay.last)} in)` : '',
+        ]
+          .filter(Boolean)
+          .join('; ') + '.',
+    })
+  }
+  return (
+    <Sol steps={steps} end={end}>
+      {D.flags.length > 0 && (
+        <ul className="text-xs text-mute list-disc pl-5">
+          {D.flags.map((x, i) => (
+            <li key={i}>{x}</li>
+          ))}
+        </ul>
+      )}
+    </Sol>
+  )
+}
+
+/** one-way slab strip with cantilever(s): steps from cantSlab */
+export function cantSlabSteps(r: CantSlabResult, factorNote?: string): St[] {
+  const L = r.loads
+  return [
+    {
+      t: 'Thickness',
+      tex: `h = ${f(r.h)}\\text{ in}${r.hGiven ? '\\ (\\text{given})' : ''},\\quad d = h - 1 = ${f(r.d)}\\text{ in}`,
+      md: `ACI minimum: span ${r.spanRule === 'both' ? 'l/28' : r.spanRule === 'one' ? 'l/24' : 'l/20'} = ${f(r.hSpan, 2)} in${r.nC ? `, cantilever l/10 = ${f(r.hCant, 2)} in` : ''}${r.fyF !== 1 ? ` (× ${f(r.fyF, 2)} for fy)` : ''}.`,
+    },
+    {
+      t: 'Loads (1 ft strip)',
+      tex: `w_D = ${f(L.fD)}(${f(L.D, 1)}) = ${f(L.wD, 1)}\\text{ psf},\\quad w_L = ${f(L.fL)}(${f(L.L, 1)}) = ${f(L.wL, 1)}\\text{ psf},\\quad w_u = ${f(L.wu, 1)}\\text{ psf}`,
+      md: (L.given ? 'Dead load as given (includes self-weight).' : `Dead load = self-weight ${f(L.sw, 1)} psf + superimposed.`) + (factorNote ? ' ' + factorNote : ''),
+    },
+    { t: 'Geometry', tex: `L_{c/c} = ${f(r.geo.L, 3)}\\text{ ft}${r.geo.acL ? `,\\ a_{left} = ${f(r.geo.acL, 3)}\\text{ ft}` : ''}${r.geo.acR ? `,\\ a_{right} = ${f(r.geo.acR, 3)}\\text{ ft}` : ''}`, md: 'Cantilever lengths here are measured to the support centre (used for the span statics).' },
+    {
+      t: 'Max negative moment (LL on the cantilever; at the support face)',
+      tex: `M_u^- = \\frac{w_u a^2}{2} = \\frac{${f(L.wuk, 4)}\\times${f(Math.max(r.input.cantL, r.input.cantR))}^2}{2} = ${f(r.Mneg, 2)}\\text{ k-ft/ft}`,
+    },
+    {
+      t: 'Max positive moment (LL on the span only, cantilevers DL only)',
+      tex: `M_u^+ = ${f(r.Mpos, 2)}\\text{ k-ft/ft at } x = ${f(r.patterns.span.xm, 2)}\\text{ ft}`,
+      md: `Simple-span value $w_uL^2/8 = ${f(r.simple, 2)}$ k-ft/ft less the relief from the dead-loaded cantilever(s).`,
+    },
+    {
+      t: 'Pattern with LL on the cantilever(s) only',
+      md: r.uplift.negThrough
+        ? `Moment stays negative through the span (max ${f(r.uplift.Mmax, 2)} k-ft/ft): top bars must run through.`
+        : `Span moment still positive (max ${f(r.uplift.Mmax, 2)} k-ft/ft). Reactions ${f(r.uplift.RA, 2)} / ${f(r.uplift.RB, 2)} k/ft${r.uplift.RB < 0 || r.uplift.RA < 0 ? ' — **uplift at a support: anchor the slab**' : ' (no uplift)'}.`,
+    },
+    { t: 'Depth check', tex: `d_{req} = ${f(r.depth.dreq, 2)}\\text{ in} ${r.depth.dreq <= r.d ? '\\le' : '>'} d = ${f(r.d)}\\text{ in}\\ ${r.depth.dreq <= r.d ? '\\checkmark' : '\\times'}`, md: 'Effective depth needed at $\\rho_{0.005}$ (tension-controlled).' },
+    {
+      t: 'Steel',
+      tex: `A_s^+ = ${f(r.asPos.As)},\\quad A_s^- = ${f(r.asNeg.As)},\\quad A_{s,min} = ${f(r.AsMin)}\\text{ in}^2/\\text{ft}`,
+      md: "Iterating $A_s = M_u/[0.9f_y(d - a/2)]$ with $a = A_sf_y/(0.85f'_c\\cdot 12)$; $A_{s,min}$ = T&S ratio × 12h.",
+    },
+    {
+      t: 'Bars',
+      md: `Bottom: **#${r.bar} @ ${f(r.pos.s)} in c/c** ($\\le 3h$, 18 in). Top over the cantilever support: alternate bottom bars cranked up (one per ${f(r.extra.width)} in) + ${r.extra.sExtra ? `**extra #${r.bar} @ ${f(r.extra.sExtra)} in c/c**` : 'no extra bars needed'} (or straight top bars #${r.bar} @ ${f(r.straight.s)} in). Top bars run ${f(r.topExt, 2)} ft into the span. T&S: **#3 @ ${f(r.ts.s)} in c/c** perpendicular.`,
+    },
+    {
+      t: 'Shear',
+      tex: `V_u = ${f(Math.max(r.shear.Vcant, r.shear.Vspan), 2)}\\text{ k/ft}\\ ${r.shear.ok ? '\\le' : '>'}\\ \\phi V_c = ${f(r.shear.phiVc, 2)}\\text{ k/ft}\\ ${r.shear.ok ? '\\checkmark' : '\\times'}`,
+    },
+  ]
+}
+
+/** reinforcement sketch of a slab strip: supports, bottom bars, cranked bars, extra top bars */
+export function SlabSketch({ r, beams = false }: { r: CantSlabResult; beams?: boolean }) {
+  const cl = r.input.cantL
+  const cr = r.input.cantR
+  const bw = r.input.support / 12
+  const sp = r.input.span
+  const tot = cl + bw + sp + bw + cr
+  const s = 520 / tot
+  const X = (ft: number) => 40 + ft * s
+  const xs1 = X(cl)
+  const xs2 = X(cl + bw + sp)
+  const yT = 60
+  const t = 26
+  const top = yT + 5
+  const bot = yT + t - 5
+  const ext = r.topExt
+  const kL = cl ? xs1 + bw * s + 0.25 * sp * s : xs1 + 0.15 * sp * s
+  const kR = cr ? xs2 - 0.25 * sp * s : xs2 - 0.15 * sp * s
+  return (
+    <Fig w={600} h={210}>
+      <rect x={X(0)} y={yT} width={tot * s} height={t} fill={CONC} stroke={INK} />
+      {beams ? (
+        <>
+          <rect x={xs1} y={yT + t} width={bw * s} height={40} fill={CONC} stroke={INK} />
+          <rect x={xs2} y={yT + t} width={bw * s} height={40} fill={CONC} stroke={INK} />
+        </>
+      ) : (
+        <>
+          <Hatch x={xs1} y={yT + t} w={bw * s} h={40} />
+          <Hatch x={xs2} y={yT + t} w={bw * s} h={40} />
+        </>
+      )}
+      <Ln x1={xs1 - 3} y1={bot} x2={xs2 + bw * s + 3} y2={bot} c={STEEL} w={2} />
+      <polyline
+        points={`${cl ? X(0) + 4 : xs1 + 3},${cl ? top : bot} ${kL},${cl ? top : bot} ${kL + 12},${bot} ${kR - 12},${bot} ${kR},${cr ? top : bot} ${cr ? X(tot) - 4 : xs2 + bw * s - 3},${cr ? top : bot}`}
+        fill="none"
+        stroke={LOAD}
+        strokeWidth={1.8}
+      />
+      {cl > 0 && <Ln x1={X(0) + 4} y1={top + 3} x2={xs1 + bw * s + ext * s} y2={top + 3} c={STEEL} w={2} dash="6 3" />}
+      {cr > 0 && <Ln x1={xs2 - ext * s} y1={top + 3} x2={X(tot) - 4} y2={top + 3} c={STEEL} w={2} dash="6 3" />}
+      <T x={300} y={28} s={11}>
+        {`bottom #${r.bar} @ ${f(r.pos.s)}″ c/c, alternate bars cranked (orange)`}
+      </T>
+      <T x={300} y={44} s={11}>
+        {r.extra.sExtra ? `extra top #${r.bar} @ ${f(r.extra.sExtra)}″ c/c (dashed), ${f(ext, 2)}′ past the support face` : `top: cranked bars suffice, ${f(ext, 2)}′ past the support face`}
+      </T>
+      {cl > 0 && <DimH x1={X(0)} x2={xs1} y={yT + t + 20} label={`${f(cl)}′`} below />}
+      <DimH x1={xs1 + bw * s} x2={xs2} y={yT + t + 20} label={`${f(sp)}′ clear`} below />
+      {cr > 0 && <DimH x1={xs2 + bw * s} x2={X(tot)} y={yT + t + 20} label={`${f(cr)}′`} below />}
+      <T x={300} y={yT + t + 70} s={11}>
+        {`T&S: #3 @ ${f(r.ts.s)}″ c/c perpendicular · h = ${f(r.h)}″, d = ${f(r.d)}″`}
+      </T>
+    </Fig>
+  )
+}
+
 // ================================================================ figures (2006-07)
 const G = (label: string, ref: string, what?: string, formula?: boolean): RcGiven => ({ label, ref, what, formula })
 const graphA1 = G('Graph A.1a / A.1b', 'f-graphA1', 'R = Mn/bd² vs ρ, pp. 99–100')
@@ -741,7 +1012,7 @@ const T_FIG3 = String.raw`A floor slab 4″ thick is supported by reinforced con
 
 const LF02 = 'Load factors are not printed. The paper cites ACI 318-02, so use 1.2D + 1.6L (an examiner of that era may also accept 1.4D + 1.7L); say which you use.'
 
-export const R2006: RcQ[] = [
+const BASE: RcQ[] = [
   // ---------------------------------------------------------------- Section A
   {
     id: 'rc-2006-07-1a',
@@ -785,7 +1056,6 @@ and the compression steel is transformed with area $(2n - 1)A'_s$ (the $-1$ remo
     ),
   },
   {
-    // needs: WSD design of a fixed 12x30 section; M from wD (0.8 + self-wt) + wL; check singly vs doubly (A's by 2n rule) — phase 2
     id: 'rc-2006-07-1c-i',
     paper: '2006-07',
     sec: 'A',
@@ -805,7 +1075,6 @@ and the compression steel is transformed with area $(2n - 1)A'_s$ (the $-1$ remo
     ],
   },
   {
-    // needs: USD design of As for the fixed 12x30 section (Mu from 1.2D + 1.6L), bar selection — phase 2
     id: 'rc-2006-07-1c-ii',
     paper: '2006-07',
     sec: 'A',
@@ -878,7 +1147,6 @@ $$\phi = 0.48 + 83\,\varepsilon_t \;\;(\text{tied}),\qquad \phi = 0.57 + 67\,\va
     ),
   },
   {
-    // needs: doubly-reinforced review engine (A's yield check, c, εt at dt, φ) — phase 2
     id: 'rc-2006-07-2c-i',
     paper: '2006-07',
     sec: 'A',
@@ -892,7 +1160,6 @@ $$\phi = 0.48 + 83\,\varepsilon_t \;\;(\text{tied}),\qquad \phi = 0.57 + 67\,\va
     figure: () => <Fig2 />,
   },
   {
-    // needs: doubly-reinforced review engine with dt ≠ d (two layers, transition-zone φ) — phase 2
     id: 'rc-2006-07-2c-ii',
     paper: '2006-07',
     sec: 'A',
@@ -907,7 +1174,6 @@ $$\phi = 0.48 + 83\,\varepsilon_t \;\;(\text{tied}),\qquad \phi = 0.57 + 67\,\va
     notes: ['Two layers of 3 #9 presumably at 26.5 in and 23.5 in (centroid 25 in).'],
   },
   {
-    // needs: effective flange width (interior T-beam: L/4, 16hf + bw, c/c) — phase 2
     id: 'rc-2006-07-3a-i',
     paper: '2006-07',
     sec: 'A',
@@ -921,7 +1187,6 @@ $$\phi = 0.48 + 83\,\varepsilon_t \;\;(\text{tied}),\qquad \phi = 0.57 + 67\,\va
     figure: () => <Fig3 />,
   },
   {
-    // needs: T-beam design engine (loads per beam incl. slab + web self-weight, Mu, a ≤ hf check, As, bars) — phase 2
     id: 'rc-2006-07-3a-ii',
     paper: '2006-07',
     sec: 'A',
@@ -936,7 +1201,6 @@ $$\phi = 0.48 + 83\,\varepsilon_t \;\;(\text{tied}),\qquad \phi = 0.57 + 67\,\va
     notes: [LF02, 'h = 4 + 20 = 24 in, d = 24 − 4 = 20 in. Self-weight = slab (10 ft strip) + web below the slab.'],
   },
   {
-    // needs: WSD T-beam design with the printed k, j, z formulas — phase 2
     id: 'rc-2006-07-3a-iii',
     paper: '2006-07',
     sec: 'A',
@@ -1004,7 +1268,6 @@ ACI therefore gives minimum thicknesses. If $h$ is at least the tabulated value,
     ),
   },
   {
-    // needs: one-way slab strip with one cantilever, pattern LL (max +M span, −M at wall, cantilever), As + sketch — phase 2
     id: 'rc-2006-07-4c',
     paper: '2006-07',
     sec: 'A',
@@ -1023,7 +1286,6 @@ ACI therefore gives minimum thicknesses. If $h$ is at least the tabulated value,
   },
   // ---------------------------------------------------------------- Section B (Fig. 5 cantilever)
   {
-    // needs: Mcr (fr·I/yt, gross or uncracked transformed) at the column face, w = 2Mcr/L² − self-wt — phase 2
     id: 'rc-2006-07-5',
     paper: '2006-07',
     sec: 'B',
@@ -1105,7 +1367,6 @@ ACI therefore gives minimum thicknesses. If $h$ is at least the tabulated value,
     solution: () => <Md>{A_COVER}</Md>,
   },
   {
-    // needs: cracked transformed section (kd, Icr), allowable M = min(fc, fs governed), w = 2M/L² − self-wt — phase 2
     id: 'rc-2006-07-7b',
     paper: '2006-07',
     sec: 'B',
@@ -1148,7 +1409,6 @@ Compute the value of live load that can be applied on the beam of Fig. 5 without
     ),
   },
   {
-    // needs: singly review φMn (εt, φ) of 10x17.5 with 3 #8, then LL from wu L²/2 = φMn (and the Mn alternative) — phase 2
     id: 'rc-2006-07-8b',
     paper: '2006-07',
     sec: 'B',
@@ -1163,7 +1423,6 @@ Compute the value of live load that can be applied on the beam of Fig. 5 without
     notes: [LF02, 'Ambiguous whether the live load is back-figured with load factors (wu L²/2 = φMn) or as the actual load at which the section reaches Mn. Show the factored reading; mention the other.'],
   },
   {
-    // needs: shear engine for a cantilever (Vu at d from the column face, φVc, φVc/2 zones, Case A–D, #3 stirrups) — phase 2
     id: 'rc-2006-07-9a',
     paper: '2006-07',
     sec: 'B',
@@ -1206,7 +1465,6 @@ If the beam of Fig. 5 carries a live load of 2 k/ft (unfactored) for what part o
     ),
   },
   {
-    // needs: bond engine — simplified ld (#8 top bar, f′c 5 ksi) vs available embedment in the 20″ column; ldh, bend dia, 12db tail — phase 2
     id: 'rc-2006-07-10b',
     paper: '2006-07',
     sec: 'B',
@@ -1237,7 +1495,6 @@ If the column material strengths are $f_y = 60$ ksi and $f'_c = 5.0$ ksi, check 
     solution: () => <Md>{A_PHI_WHY}</Md>,
   },
   {
-    // needs: cut-off engine — M(x) of the cantilever (1.2D+1.6L), point where 2 #8 suffice, extend d/12db, ld checks for both bar groups — phase 2
     id: 'rc-2006-07-11b',
     paper: '2006-07',
     sec: 'B',
@@ -1252,7 +1509,6 @@ If the column material strengths are $f_y = 60$ ksi and $f'_c = 5.0$ ksi, check 
     notes: [LF02],
   },
   {
-    // needs: ρ vs ρb for 10x17.5 with 3 #8; As for balance (ρb bd) — phase 2
     id: 'rc-2006-07-12a',
     paper: '2006-07',
     sec: 'B',
@@ -1267,7 +1523,6 @@ If the column material strengths are $f_y = 60$ ksi and $f'_c = 5.0$ ksi, check 
     notes: ['The printed word "such" is struck out and replaced in pencil by a student; read as "balanced section".'],
   },
   {
-    // needs: doubly design with A's = 2 #6 given (USD: As = ρmax part + A's part, check f's; or WSD), then allowable LL — phase 2
     id: 'rc-2006-07-12b',
     paper: '2006-07',
     sec: 'B',
@@ -1286,3 +1541,317 @@ If the column material strengths are $f_y = 60$ ksi and $f'_c = 5.0$ ksi, check 
     ],
   },
 ]
+
+// ================================================================ numerical solutions (engines)
+type SolPart = Pick<RcQ, 'checks' | 'solution'>
+const FT = (v: number, d = 2) => f(v, d)
+
+// ---- Q1(c) fixed 12 x 30 beam, 28 ft
+const q1 = (() => {
+  const sw = selfWeight(12, 30)
+  const wD = 0.8 + sw
+  const w = wD + 1.0
+  const M = (w * 28 * 28) / 8
+  const dW = 26.5
+  const W = wsdDoublyDesign(M, 12, dW, 2.5, 9, 1.35, 20)
+  const tW = pickDoubly(W.As, 12)
+  const cW = pickDoubly(W.Asp, 12, [5, 6, 7, 8, 9], 1)
+  const L = beamLoads({ span: 28, support: 'ss', b: 12, h: 30, sdl: 0.8, ll: 1.0 })
+  const D = designAs(L.Mu, 12, 27.5, 3000, 40000)
+  const bU = pickSingly(D.As, 12)
+  const dU = bU.layers === 2 ? 26.5 : 27.5
+  const R = review({ b: 12, fc: 3000, fy: 40000, layers: [{ As: bU.As, d: dU }] })
+  return { sw, wD, w, M, dW, W, tW, cW, L, D, bU, dU, R }
+})()
+
+// ---- Q2(c)
+const q2in = (As: number, dt: number): DoublyReviewIn => ({ b: 12, d: 25, dt, dp: 2.5, As, Asp: 2 * 0.79, fc: 3, fy: 60 })
+const q2 = [q2in(3 * 1.0, 25), q2in(6 * 1.0, 26.5)].map((p) => ({ p, r: reviewDoubly(p) }))
+
+// ---- Q3 T-beam floor
+const q3 = (() => {
+  const B = effectiveWidth({ kind: 'interior', L: 25, bw: 12, hf: 4, cc: 120, rule: 'aci08' })
+  const B14 = effectiveWidth({ kind: 'interior', L: 25, bw: 12, hf: 4, cc: 120, rule: 'aci14' })
+  const FL = floorLoads({ hf: 4, spacing: 10, bw: 12, h: 24, sdl: 75, ll: 100 })
+  const Mu = (FL.wu * 25 * 25) / 8
+  const tin: TDesignIn = { Mu, beff: B.b, bw: 12, hf: 4, d: 20, fc: 3, fy: 60 }
+  const TD = designT(tin)
+  const bars = pickDoubly(TD.As, 12)
+  const RT = reviewT({ beff: B.b, bw: 12, hf: 4, d: 20, As: bars.A, fc: 3, fy: 60 })
+  const M = ((FL.wD + FL.wL) * 25 * 25) / 8
+  const win = { M, beff: B.b, hf: 4, d: 20, n: 9, fcAllow: 1.35, fsAllow: 24 }
+  const WT = wsdTDesign(win)
+  const wbars = pickDoubly(WT.As, 12)
+  return { B, B14, FL, Mu, tin, TD, bars, RT, M, win, WT, wbars }
+})()
+
+// ---- Q4(c) slab
+const q4 = cantSlab({ span: 12, support: 10, cantL: 5, cantR: 0, ll: 80, dlTotal: 140, fc: 3000, fy: 60000, h: 6.5 })
+
+// ---- Section B cantilever
+const SW5 = selfWeight(10, 20)
+const SEC5 = { b: 10, h: 20, d: 17.5, As: 3 * 0.79, fc: 4000 }
+const q5 = (() => {
+  const U = uncracked({ ...SEC5, n: 8, frPsi: 350 })
+  const w = (2 * U.Mcr) / 100
+  const wg = (2 * U.McrG) / 100
+  return { U, w, LL: w - SW5, LLg: wg - SW5 }
+})()
+const q7 = (() => {
+  const A = allowableMoment({ ...SEC5, n: 8 }, 1.8, 24)
+  const w = (2 * A.M) / 100
+  return { A, w, LL: w - SW5 }
+})()
+const q8 = (() => {
+  const R = review({ b: 10, fc: 4000, fy: 60000, layers: [{ As: SEC5.As, d: 17.5 }] })
+  const wu = (2 * R.phiMn) / 100
+  const LL = (wu - 1.2 * SW5) / 1.6
+  const LLn = (2 * R.Mn) / 100 - SW5
+  return { R, wu, LL, LLn }
+})()
+const SEC9: ShearSection = { bw: 10, d: 17.5, fc: 4000, fy: 60000 }
+const q9 = designShear({ kind: 'cant', L: 10, wL: 2, selfWeight: { b: 10, h: 20 } }, SEC9)
+const b8 = bar('#8')
+const geo5 = beamBarGeometry({ b: 10, cover: 1.5, ds: 0.375, db: b8.db, n: 3 })
+const case5 = simplifiedCase({ db: b8.db, clearSpacing: geo5.clearSpacing, clearCover: geo5.clearCover, stirrupsMin: true })
+const q10 = (() => {
+  const ld = ldSimplified({ db: b8.db, small: false, fc: 5000, fy: 60000, met: case5.met, psiT: 1.3 })
+  const lh = ldhCalc({ db: b8.db, fc: 5000, fy: 60000 })
+  const lh7 = ldhCalc({ db: b8.db, fc: 5000, fy: 60000, psiC: 0.7 })
+  const hg = hookGeometry(8, b8.db)
+  const ca = columnAnchorage({ colDepth: 20, backCover: 2, ldStraight: ld.final, ldh: lh.final })
+  return { ld, lh, lh7, hg, ca }
+})()
+const q11 = (() => {
+  const wu = 1.2 * SW5 + 1.6 * 2
+  const ld = ldSimplified({ db: b8.db, small: false, fc: 4000, fy: 60000, met: case5.met, psiT: 1.3 })
+  const C = cutoff({ dg: { kind: 'cant', L: 10, wu, P: 0 }, b: 10, d: 17.5, fc: 4000, fy: 60000, bar: b8, nTotal: 3, nCut: 1, ld: ld.final, endEmbed: 2 })
+  return { wu, ld, C }
+})()
+const q12a = (() => {
+  const Lm = limits(4000, 60000)
+  const rho = SEC5.As / (10 * 17.5)
+  return { Lm, rho, AsBal: Lm.rhoB * 10 * 17.5, AsMax: Lm.rhoMax * 10 * 17.5 }
+})()
+const q12b = (() => {
+  const Asp = 2 * 0.44
+  const sm = singlyMax(10, 17.5, 17.5, 4, 60)
+  const epsSp = (0.003 * (sm.c - 2.5)) / sm.c
+  const fsp = Math.min(60, 29000 * epsSp)
+  const As2 = (Asp * fsp) / 60
+  const AsReq = sm.As1 + As2
+  const n = Math.ceil(AsReq / 0.79 - 1e-9)
+  const n2 = Math.max(0, n - 3)
+  const dTop = (3 * 2.5 + n2 * 4.5) / n // centroid from the tension (top) face
+  const p: DoublyReviewIn = { b: 10, d: 20 - dTop, dt: 17.5, dp: 2.5, As: n * 0.79, Asp, fc: 4, fy: 60 }
+  const r = reviewDoubly(p)
+  const LL = ((2 * r.phiMn) / 100 - 1.2 * SW5) / 1.6
+  return { Asp, sm, epsSp, fsp, As2, AsReq, n, n2, p, r, LL, single: q8.LL }
+})()
+
+const SOL: Record<string, SolPart> = {
+  'rc-2006-07-1c-i': {
+    checks: () => [ck('M', 'Service moment M (incl. self-weight)', q1.M, 'k-ft'), ck('M1', 'Moment the 12×30 can take without compression steel', q1.W.M1, 'k-ft'), ck('Asp', "Compression steel A′s", q1.W.Asp, 'in²', 0.04), ck('As', 'Tension steel As', q1.W.As, 'in²', 0.03)],
+    solution: () => (
+      <Sol
+        steps={[
+          { t: 'Service load', tex: `w_{sw} = \\frac{12\\times30}{144}(0.150) = ${FT(q1.sw, 3)}\\text{ k/ft},\\quad w = 0.8 + ${FT(q1.sw, 3)} + 1.0 = ${FT(q1.w, 3)}\\text{ k/ft}` },
+          { t: 'Service moment', tex: `M = \\frac{wL^2}{8} = \\frac{${FT(q1.w, 3)}\\times28^2}{8} = ${FT(q1.M, 1)}\\text{ k-ft}` },
+          { t: 'Effective depth', md: `Two layers of tension bars will be needed in a 12 in width, so $d = 30 - 3.5 = ${q1.dW}$ in; $d' = 2.5$ in. Allowables $f_c = 0.45(3) = 1.35$ ksi, $f_s = 20$ ksi, $n = 9$.` },
+          ...q1.W.steps,
+        ]}
+        end={`$M = ${FT(q1.M, 1)}$ k-ft $>$ $M_1 = ${FT(q1.W.M1, 1)}$ k-ft, so the fixed 12″×30″ section **needs compression steel** (this is why Q1(b) asks about 2n). Provide **tension ${q1.tW.n} #${q1.tW.no}** (${FT(q1.tW.A)} in², ${q1.tW.layers} layer${q1.tW.layers > 1 ? 's' : ''}) and **compression ${q1.cW.n} #${q1.cW.no}** (${FT(q1.cW.A)} in²).`}
+      />
+    ),
+  },
+  'rc-2006-07-1c-ii': {
+    checks: () => [ck('Mu', 'Factored moment Mu', q1.L.Mu, 'k-ft'), ck('As', 'Required As', q1.D.As, 'in²', 0.03), ck('phiMn', 'φMn of the bars provided', q1.R.phiMn, 'k-ft')],
+    solution: () => (
+      <Sol
+        steps={[
+          ...q1.L.steps,
+          { t: 'Effective depth', md: 'One layer assumed: $d = 30 - 2.5 = 27.5$ in. $f\'_c = 3000$ psi, $f_y = 40{,}000$ psi.' },
+          ...q1.D.steps,
+          { t: 'Bars', md: `${q1.bU.n} #${q1.bU.bar} = ${FT(q1.bU.As)} in² (${q1.bU.layers === 1 ? `one layer, needs $b \\ge ${FT(q1.bU.bmin)}$ in` : 'two layers, d = 26.5 in'}).` },
+          ...q1.R.steps,
+        ]}
+        end={`USD: singly reinforced is enough — **${q1.bU.n} #${q1.bU.bar}**, $\\phi M_n = ${FT(q1.R.phiMn, 1)}$ k-ft $\\ge M_u = ${FT(q1.L.Mu, 1)}$ k-ft. Compare WSD, which needed compression steel for the same beam: USD uses the real (plastic) capacity of the concrete.`}
+      />
+    ),
+  },
+  ...Object.fromEntries(
+    q2.map(({ p, r }, i) => [
+      i === 0 ? 'rc-2006-07-2c-i' : 'rc-2006-07-2c-ii',
+      {
+        checks: () => [ck('c', 'Neutral axis depth c', r.c, 'in'), ck('fsp', "Stress in compression steel f′s", r.fsp, 'ksi'), ck('phi', 'φ', r.phi, '', 0.01), ck('phiMn', 'Design moment φMn', r.phiMn, 'k-ft')],
+        solution: () => (
+          <Sol
+            steps={doublySteps(p, r)}
+            end={`Compression steel **${r.compYields ? 'yields' : `does not yield ($f'_s = ${FT(r.fsp, 1)}$ ksi)`}**; $\\varepsilon_t = ${FT(r.epsT, 5)}$ → ${r.zone}, $\\phi = ${FT(r.phi, 3)}$. **$\\phi M_n = ${FT(r.phiMn, 1)}$ k-ft.**`}
+          />
+        ),
+      } as SolPart,
+    ]),
+  ),
+  'rc-2006-07-3a-i': {
+    checks: () => [ck('beff', 'Effective flange width', q3.B.b, 'in')],
+    solution: () => (
+      <Sol
+        steps={[
+          { t: 'Interior T-beam (ACI 318-02)', tex: q3.B.cands.map((c) => `${c.label} = ${FT(c.value, 1)}`).join(',\\quad ') + `\\ \\text{in}`, md: 'Span/4 = 25 × 12/4 = 75 in; 16hf + bw = 16(4) + 12 = 76 in; c/c spacing = 120 in.' },
+          { t: 'Current slides (ACI 318-14)', md: `Overhang ≤ L/8 each side: ${q3.B14.cands.map((c) => `$${c.label} = ${FT(c.value, 1)}$`).join(', ')} → ${FT(q3.B14.b, 1)} in.` },
+        ]}
+        end={`$b_{eff} = ${FT(q3.B.b, 1)}$ in (ACI 2002, the code of this paper; ${FT(q3.B14.b, 1)} in by the newer rule).`}
+      />
+    ),
+  },
+  'rc-2006-07-3a-ii': {
+    checks: () => [ck('wu', 'Factored load per beam wu', q3.FL.wu, 'k/ft'), ck('Mu', 'Mu', q3.Mu, 'k-ft'), ck('As', 'Required As', q3.TD.As, 'in²', 0.03)],
+    solution: () => (
+      <Sol
+        steps={[
+          {
+            t: 'Loads on one interior beam (10 ft strip)',
+            tex: `w_D = \\underbrace{${FT(q3.FL.slab, 3)}}_{\\text{slab}} + \\underbrace{${FT(q3.FL.web, 3)}}_{\\text{web } 12\\times20} + \\underbrace{${FT(q3.FL.sdl, 3)}}_{75\\text{ psf}} = ${FT(q3.FL.wD, 3)}\\text{ k/ft},\\quad w_L = ${FT(q3.FL.wL, 3)}\\text{ k/ft}`,
+          },
+          { t: 'Factored moment', tex: `w_u = 1.2(${FT(q3.FL.wD, 3)}) + 1.6(${FT(q3.FL.wL, 3)}) = ${FT(q3.FL.wu, 3)}\\text{ k/ft},\\quad M_u = \\frac{w_uL^2}{8} = \\frac{${FT(q3.FL.wu, 3)}(25)^2}{8} = ${FT(q3.Mu, 1)}\\text{ k-ft}` },
+          { t: 'Section', md: `$b_{eff} = ${FT(q3.B.b)}$ in (part i), $b_w = 12$ in, $h_f = 4$ in, $d = 24 - 4 = 20$ in.` },
+          ...tDesignSteps(q3.tin, q3.TD),
+          { t: 'Bars and check', md: `${q3.bars.n} #${q3.bars.no} = ${FT(q3.bars.A)} in² (${q3.bars.layers} layer${q3.bars.layers > 1 ? 's' : ''}); review: $\\phi M_n = ${FT(q3.RT.phiMn, 1)}$ k-ft ≥ $M_u$ ✓.` },
+        ]}
+        end={`$A_s = ${FT(q3.TD.As)}$ in² → **${q3.bars.n} #${q3.bars.no}**. ${q3.TD.rect ? 'The stress block stays in the flange (rectangular behaviour).' : 'True T-beam action.'}`}
+      />
+    ),
+  },
+  'rc-2006-07-3a-iii': {
+    checks: () => [ck('M', 'Service moment M', q3.M, 'k-ft'), ck('kd', 'Neutral axis kd', q3.WT.sec.kd, 'in'), ck('As', 'Required As (WSD)', q3.WT.As, 'in²', 0.03)],
+    solution: () => (
+      <Sol
+        steps={[
+          { t: 'Service moment', tex: `w = w_D + w_L = ${FT(q3.FL.wD, 3)} + ${FT(q3.FL.wL, 3)} = ${FT(q3.FL.wD + q3.FL.wL, 3)}\\text{ k/ft},\\quad M = \\frac{wL^2}{8} = ${FT(q3.M, 1)}\\text{ k-ft}` },
+          ...wsdTSteps(q3.win, q3.WT),
+          { t: 'Bars', md: `${q3.wbars.n} #${q3.wbars.no} = ${FT(q3.wbars.A)} in².` },
+        ]}
+        end={`WSD: $A_s = ${FT(q3.WT.As)}$ in² → **${q3.wbars.n} #${q3.wbars.no}** (USD needed ${FT(q3.TD.As)} in²). Concrete stress ${FT(q3.WT.fcAct, 3)} ksi ≤ 1.35 ksi.`}
+      />
+    ),
+  },
+  'rc-2006-07-4c': {
+    checks: () => [ck('wu', 'Factored load wu', q4.loads.wu, 'psf'), ck('Mneg', 'Max −Mu at the left wall', q4.Mneg, 'k-ft/ft'), ck('Mpos', 'Max +Mu in the span', q4.Mpos, 'k-ft/ft'), ck('s', 'Bottom bar spacing', q4.pos.s, 'in', 0.05)],
+    solution: () => (
+      <Sol steps={cantSlabSteps(q4, 'Load factors 1.2D + 1.6L (ACI 318-02).')} end={`Critical moments: $M_u^- = ${FT(q4.Mneg)}$ k-ft/ft over the left wall, $M_u^+ = ${FT(q4.Mpos)}$ k-ft/ft in the span. Right end on the brick wall: simply supported (provide nominal top bars ≈ 0.15L to control cracking).`}>
+        <SlabSketch r={q4} />
+      </Sol>
+    ),
+  },
+  'rc-2006-07-5': {
+    checks: () => [ck('Mcr', 'Cracking moment (uncracked transformed section)', q5.U.Mcr, 'k-ft'), ck('LL', 'Live load at first cracking', q5.LL, 'k/ft')],
+    solution: () => (
+      <Sol
+        steps={[
+          { t: 'Section', md: 'Cantilever: tension at the top. Distances below are measured from the compression (bottom) face, so the 3 #8 sit at $d = 17.5$ in. $f_r = 350$ psi and $n = 8$ as given.' },
+          ...q5.U.steps,
+          { t: 'Load at cracking', tex: `M_{cr} = \\frac{wL^2}{2} \\Rightarrow w = \\frac{2M_{cr}}{L^2} = \\frac{2(${FT(q5.U.Mcr)})}{10^2} = ${FT(q5.w, 3)}\\text{ k/ft}` },
+          { t: 'Subtract self-weight', tex: `w_{sw} = \\frac{10\\times20}{144}(0.15) = ${FT(SW5, 3)}\\text{ k/ft},\\quad LL = ${FT(q5.w, 3)} - ${FT(SW5, 3)} = ${FT(q5.LL, 3)}\\text{ k/ft}` },
+        ]}
+        end={`First cracking at the column face under **LL ≈ ${FT(q5.LL, 3)} k/ft** (gross section, steel ignored: ${FT(q5.LLg, 3)} k/ft).`}
+      />
+    ),
+  },
+  'rc-2006-07-7b': {
+    checks: () => [ck('kd', 'Cracked neutral axis kd', q7.A.kd, 'in'), ck('M', 'Allowable moment', q7.A.M, 'k-ft'), ck('LL', 'Allowable live load', q7.LL, 'k/ft')],
+    solution: () => (
+      <Sol
+        steps={[
+          { t: 'Allowables', md: "$f_c = 0.45(4000) = 1800$ psi, $f_s = 0.4(60{,}000) = 24{,}000$ psi, $n = 8$; cracked transformed section (d measured from the bottom = compression face)." },
+          ...q7.A.steps,
+          { t: 'Load', tex: `w = \\frac{2M}{L^2} = \\frac{2(${FT(q7.A.M, 1)})}{100} = ${FT(q7.w, 3)}\\text{ k/ft},\\quad LL = ${FT(q7.w, 3)} - ${FT(SW5, 3)} = ${FT(q7.LL, 3)}\\text{ k/ft}` },
+        ]}
+        end={`Allowable **LL = ${FT(q7.LL, 3)} k/ft** (${q7.A.governs} governs).`}
+      />
+    ),
+  },
+  'rc-2006-07-8b': {
+    checks: () => [ck('phiMn', 'Design strength φMn', q8.R.phiMn, 'k-ft'), ck('LL', 'Live load (wu L²/2 = φMn, 1.2D + 1.6L)', q8.LL, 'k/ft')],
+    solution: () => (
+      <Sol
+        steps={[
+          ...q8.R.steps,
+          { t: 'Live load that uses the full design strength', tex: `\\frac{w_uL^2}{2} = \\phi M_n \\Rightarrow w_u = \\frac{2(${FT(q8.R.phiMn, 1)})}{100} = ${FT(q8.wu, 3)}\\text{ k/ft} = 1.2(${FT(SW5, 3)}) + 1.6\\,LL \\Rightarrow LL = ${FT(q8.LL, 3)}\\text{ k/ft}` },
+          { t: 'Other reading', md: `Actual (unfactored) load at which the section reaches $M_n$: $w = 2M_n/L^2 = ${FT((2 * q8.R.Mn) / 100, 3)}$ k/ft → LL = ${FT(q8.LLn, 3)} k/ft.` },
+        ]}
+        end={`$\\phi M_n = ${FT(q8.R.phiMn, 1)}$ k-ft; safe service **LL = ${FT(q8.LL, 3)} k/ft** (the beam actually fails at about ${FT(q8.LLn, 2)} k/ft).`}
+      />
+    ),
+  },
+  'rc-2006-07-9a': {
+    checks: () => [ck('Vf', 'Vu at the column face', q9.runs[0].Vface, 'k'), ck('Vd', 'Vu at d', q9.runs[0].Vd, 'k'), ck('phiVc', 'φVc', q9.lim.phiVc, 'k'), ck('x', 'Stirrups needed up to (ft from the face)', q9.runs[0].uReqEnd / 12, 'ft', 0.03)],
+    solution: () => (
+      <ShearSol
+        D={q9}
+        sec={SEC9}
+        pre={[{ t: 'Factored load', tex: `w_u = 1.2(${FT(SW5, 3)}) + 1.6(2.0) = ${FT(q9.dg.wu, 3)}\\text{ k/ft},\\quad V_u(x) = w_u(10 - x)`, md: 'Critical section at d = 17.5 in from the column face (column support, load on top).' }]}
+        end={`Web reinforcement is required from the column face to **${FT(q9.runs[0].uReqEnd / 12, 2)} ft** (beyond that $V_u \\le \\tfrac12\\phi V_c$). #3 two-legged stirrups: **1 @ ${FT(q9.layouts.c.first)} in, ${q9.layouts.c.zones.map((z) => `${z.n} @ ${FT(z.s)} in`).join(', ')}** (s = d/2 governs).`}
+      />
+    ),
+  },
+  'rc-2006-07-10b': {
+    checks: () => [ck('ld', 'Straight development length ld (top bar)', q10.ld.final, 'in', 0.03), ck('ldh', 'Hook development length ldh', q10.lh.final, 'in', 0.03)],
+    solution: () => (
+      <Sol
+        steps={[
+          { t: 'Bar spacing and cover (beam 10 in, 3 #8, #3 stirrups)', md: `Clear spacing ${FT(geo5.clearSpacing)} in, clear cover ${FT(geo5.clearCover)} in → ${case5.why}.` },
+          { t: 'Straight bar (simplified, #7 and larger)', tex: `\\ell_d = \\frac{f_y\\psi_t\\psi_e}{20\\lambda\\sqrt{f'_c}}d_b = \\frac{60{,}000(1.3)(1.0)}{20\\sqrt{5000}}(1.0) = ${FT(q10.ld.final, 1)}\\text{ in}`, md: 'ψt = 1.3: top bars with more than 12 in of concrete below.' },
+          { t: 'Available in the column', tex: `20 - 2\\ (\\text{cover}) = ${FT(q10.ca.available)}\\text{ in}\\ ${q10.ca.straightOK ? '\\ge' : '<'}\\ ${FT(q10.ld.final, 1)}`, md: q10.ca.straightOK ? 'Straight embedment is enough.' : '**Not enough — hooks are required.**' },
+          { t: 'Standard 90° hook', tex: `\\ell_{dh} = \\frac{f_y\\psi_e\\psi_c\\psi_r}{50\\lambda\\sqrt{f'_c}}d_b = \\frac{60{,}000}{50\\sqrt{5000}}(1.0) = ${FT(q10.lh.final, 1)}\\text{ in} \\ge 8d_b, 6\\text{ in}`, md: `With side cover ≥ 2.5 in and tail cover ≥ 2 in, ψc = 0.7 → ${FT(q10.lh7.final, 1)} in. Available ${FT(q10.ca.available)} in ${q10.ca.hookOK ? '≥' : '<'} ${FT(q10.lh.final, 1)} in ${q10.ca.hookOK ? '✓' : '✗'}.` },
+          { t: 'Hook geometry', md: `Inside bend diameter $${q10.hg.Dk}d_b = ${FT(q10.hg.D)}$ in; straight tail $12d_b = ${FT(q10.hg.tail)}$ in turned down into the column; the hook sits against the far face, inside the column ties.` },
+        ]}
+        end={`Straight bars need ${FT(q10.ld.final, 1)} in > ${FT(q10.ca.available)} in available → **use standard 90° hooks**: $\\ell_{dh} = ${FT(q10.lh.final, 1)}$ in (≤ ${FT(q10.ca.available)} in ✓), bend diameter ${FT(q10.hg.D)} in, tail ${FT(q10.hg.tail)} in.`}
+      />
+    ),
+  },
+  'rc-2006-07-11b': {
+    checks: () => [ck('xTheo', 'Theoretical cut-off of the centre bar (ft from the face)', q11.C.xTheo, 'ft', 0.03), ck('xCut', 'Actual cut-off point (ft from the face)', q11.C.xCut, 'ft', 0.03)],
+    solution: () => (
+      <Sol
+        steps={[
+          { t: 'Factored load and moment', tex: `w_u = 1.2(${FT(SW5, 3)}) + 1.6(2) = ${FT(q11.wu, 3)}\\text{ k/ft},\\quad M_u(\\text{face}) = \\frac{w_uL^2}{2} = ${FT(q11.C.Mmax, 1)}\\text{ k-ft}` },
+          { t: 'Capacities', tex: `\\phi M_n(3\\#8) = ${FT(q11.C.all.phiMn, 1)}\\text{ k-ft},\\quad \\phi M_n(2\\#8) = ${FT(q11.C.remain.phiMn, 1)}\\text{ k-ft}`, md: q11.C.adequate ? undefined : `Note: with 1.2D + 1.6L the 3 #8 give ${FT(q11.C.all.phiMn, 1)} < ${FT(q11.C.Mmax, 1)} k-ft (about ${FT((q11.C.Mmax / q11.C.all.phiMn - 1) * 100, 0)}% short — see Q8(b)); the cut-off is located the same way.` },
+          { t: 'Theoretical cut-off', tex: `\\frac{w_u a^2}{2} = ${FT(q11.C.remain.phiMn, 1)} \\Rightarrow a = ${FT(10 - q11.C.xTheo)}\\text{ ft from the tip} \\Rightarrow x = ${FT(q11.C.xTheo)}\\text{ ft from the face}` },
+          { t: 'Extend past it', tex: `\\max(d, 12d_b) = \\max(17.5, 12) = ${FT(q11.C.ext)}\\text{ in} \\Rightarrow x = ${FT(q11.C.xExt)}\\text{ ft}` },
+          { t: 'Development of the cut bar', tex: `\\ell_d = \\frac{60{,}000(1.3)}{20\\sqrt{4000}}(1.0) = ${FT(q11.ld.final, 1)}\\text{ in} = ${FT(q11.ld.final / 12)}\\text{ ft from the face (point of max stress)}`, md: q11.C.ldGoverns ? 'ld governs over the extension rule.' : 'The extension rule governs.' },
+          { t: 'Continuing 2 #8', md: `Length available beyond the theoretical cut-off to the tip (less 2 in cover) = ${FT(q11.C.availCont, 1)} in ${q11.C.contOK ? '≥' : '<'} ld = ${FT(q11.ld.final, 1)} in ${q11.C.contOK ? '✓' : '✗ — hook or bend the bars down at the free end'}. At the column all three bars are anchored by the standard hooks of Q10(b).` },
+        ]}
+        end={`Stop the centre #8 at **${FT(q11.C.xCut, 2)} ft** from the column face (say ${Math.ceil(q11.C.xCut * 2) / 2} ft).`}
+      />
+    ),
+  },
+  'rc-2006-07-12a': {
+    checks: () => [ck('rho', 'ρ provided', q12a.rho, '', 0.01), ck('rhob', 'ρb', q12a.Lm.rhoB, '', 0.01)],
+    solution: () => (
+      <Sol
+        steps={[{ t: 'Steel ratio', tex: `\\rho = \\frac{2.37}{10\\times17.5} = ${FT(q12a.rho, 5)}` }, ...q12a.Lm.steps.slice(0, 3)]}
+        end={`$\\rho = ${FT(q12a.rho, 4)} < \\rho_b = ${FT(q12a.Lm.rhoB, 4)}$: **not balanced — under-reinforced**. It would become balanced with $A_s = \\rho_b bd = ${FT(q12a.AsBal)}$ in² (or by reducing d until $\\rho = \\rho_b$). The code does not allow that: a beam must keep $\\varepsilon_t \\ge 0.004$, i.e. $A_s \\le \\rho_{max}bd = ${FT(q12a.AsMax)}$ in²; to carry more, add compression steel (Q12(b)).`}
+      />
+    ),
+  },
+  'rc-2006-07-12b': {
+    checks: () => [ck('As', 'Tension steel required', q12b.AsReq, 'in²', 0.03), ck('phiMn', 'φMn of the doubly reinforced section', q12b.r.phiMn, 'k-ft'), ck('LL', 'Live load', q12b.LL, 'k/ft')],
+    solution: () => (
+      <Sol
+        steps={[
+          { t: 'Method', md: "USD. Take the singly part at the tension-controlled limit $\\rho_{0.005}$, then the 2 #6 ($A'_s = 0.88$ in², $d' = 2.5$ in at the bottom) with an equal extra tension area." },
+          { t: 'Singly part', tex: `A_{s1} = \\rho_{0.005}bd = ${FT(q12b.sm.rho005, 5)}(10)(17.5) = ${FT(q12b.sm.As1)}\\text{ in}^2,\\ a = ${FT(q12b.sm.a)}\\text{ in},\\ c = ${FT(q12b.sm.c)}\\text{ in}` },
+          { t: 'Compression steel stress', tex: `\\varepsilon'_s = 0.003\\frac{${FT(q12b.sm.c)} - 2.5}{${FT(q12b.sm.c)}} = ${FT(q12b.epsSp, 5)} \\Rightarrow f'_s = ${FT(q12b.fsp, 2)}\\text{ ksi}` },
+          { t: 'Tension steel', tex: `A_{s2} = \\frac{A'_sf'_s}{f_y} = \\frac{0.88(${FT(q12b.fsp, 2)})}{60} = ${FT(q12b.As2)},\\quad A_s = ${FT(q12b.sm.As1)} + ${FT(q12b.As2)} = ${FT(q12b.AsReq)}\\text{ in}^2` },
+          { t: 'Bars', md: `${q12b.n} #8 = ${FT(q12b.n * 0.79)} in²: 3 in the top layer + ${q12b.n2} in a second layer (1 in clear) → centroid $d = ${FT(q12b.p.d)}$ in, $d_t = 17.5$ in.` },
+          ...doublySteps(q12b.p, q12b.r),
+          { t: 'Live load', tex: `w_u = \\frac{2\\phi M_n}{L^2} = ${FT((2 * q12b.r.phiMn) / 100, 3)} = 1.2(${FT(SW5, 3)}) + 1.6\\,LL \\Rightarrow LL = ${FT(q12b.LL, 3)}\\text{ k/ft}` },
+        ]}
+        end={`Tension steel **${q12b.n} #8** (${FT(q12b.AsReq)} in² required) with 2 #6 in compression: $\\phi M_n = ${FT(q12b.r.phiMn, 1)}$ k-ft → **LL = ${FT(q12b.LL, 2)} k/ft** (vs ${FT(q12b.single, 2)} k/ft singly reinforced).`}
+      />
+    ),
+  },
+}
+
+export const R2006: RcQ[] = BASE.map((q) => (SOL[q.id] ? { ...q, ...SOL[q.id] } : q))
