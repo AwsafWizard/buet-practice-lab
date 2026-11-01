@@ -9,6 +9,8 @@ import { markUsed } from '../../reference/pane'
 import type { RcQ, RcTheoryItem, RcTopicModule } from '../../types'
 import { BarsSel, Badge, f, FC_OPTS, Flow, FY_OPTS, newSeed, Num, ProblemBox, Sel, zoneLabel } from './kit'
 import { DesignSolution, DoublySketch, ReviewSolution } from './solve'
+import { DesignProblems } from '../singly/DesignProblems'
+import { D_FAMILIES, makeDoublyDesign } from './design'
 
 const TOPIC = 'rc-doubly'
 
@@ -327,6 +329,9 @@ function Lab() {
   const [mode, setMode] = useState<'review' | 'design'>('review')
   return (
     <div>
+      <Section title="Design problems" sub="b × h fixed by architecture, M_u above the singly limit → compression steel, f′s from the strain, bars and review. 🎲 for a new one.">
+        <DesignProblems topic={TOPIC} families={D_FAMILIES} make={makeDoublyDesign} />
+      </Section>
       <Section title="Doubly reinforced lab" sub="Every input is editable; 🎲 makes a paper-style problem. Code pane: 'Does A′s yield?' and Graph A.1 highlight what you used." right={<Seg value={mode} onChange={setMode} items={[{ v: 'review', label: 'Review' }, { v: 'design', label: 'Design' }]} />}>
         {mode === 'review' ? <ReviewLab /> : <DesignLab />}
       </Section>

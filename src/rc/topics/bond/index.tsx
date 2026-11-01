@@ -12,6 +12,7 @@ import {
 import { wu as wuOf } from '../../engine/materials'
 import type { RcQ, RcTopicModule } from '../../types'
 import { CutoffSketch, StdCutoffFig } from './figs'
+import { BondDesignProblems } from './DesignProblems'
 import { BondLab } from './lab'
 import { BOND_THEORY } from './theory'
 
@@ -168,7 +169,12 @@ function Approach() {
 }
 
 function Lab() {
-  return <BondLab />
+  return (
+    <div className="space-y-6">
+      <BondDesignProblems />
+      <BondLab />
+    </div>
+  )
 }
 
 // ---------------------------------------------------------------- practice problems

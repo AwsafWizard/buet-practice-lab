@@ -4,6 +4,7 @@ import { RcFrequency } from '../../components/Frequency'
 import { bwdRequired, designShear, layoutRun, shearAt, shearLimits, type ShearBeam, type ShearSection } from '../../engine/shear'
 import type { Check, RcQ, RcTopicModule } from '../../types'
 import { CaseChart } from './figs'
+import { ShearDesignProblems } from './DesignProblems'
 import { ShearLab } from './Lab'
 import { layoutText, ShearSolution } from './Solution'
 import { SHEAR_THEORY } from './theory'
@@ -210,8 +211,11 @@ export default mod
 
 function ShearLabPage() {
   return (
+    <div className="space-y-6">
+      <ShearDesignProblems />
     <Section title="Stirrup design lab" sub="Build the beam (or 🎲), fill the checkpoints, then make the layout pass and open the full solution. The code pane highlights the case you are in.">
       <ShearLab />
     </Section>
+    </div>
   )
 }

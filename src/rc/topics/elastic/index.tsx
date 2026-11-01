@@ -13,6 +13,8 @@ import { stageAt, stagesData, STAGE_LABEL, type StageInput } from '../../engine/
 import type { RcQ, RcTheoryItem, RcTopicModule } from '../../types'
 import { BAR_OPTS, Checks, COUNT_OPTS, FC_OPTS, Num, Prompt, Sel, useMark } from './inputs'
 import { SectionSketch, SolSteps, StageDiagram } from './ui'
+import { DesignProblems } from '../singly/DesignProblems'
+import { E_FAMILIES, makeElasticDesign } from './design'
 
 const T = 'rc-elastic'
 
@@ -385,6 +387,9 @@ function Lab() {
   const [random, setRandom] = useState(false)
   return (
     <div>
+      <Section title="Design problems" sub="WSD design from the loads (k, j, R, d, A_s), WSD with the section fixed (compression steel?), and the service-load check of a USD beam. 🎲 for a new one.">
+        <DesignProblems topic={T} families={E_FAMILIES} make={makeElasticDesign} note="Service loads (no load factors) in WSD; ft, kip, in, ksi; moments in k-ft. Answers within 2 % are accepted." />
+      </Section>
       <Section title="Elastic section calculator" sub="The four-part paper template: M_cr, f_s before cracking, allowable moment, stresses at a service M.">
         <Calculator p={p} setP={setP} random={random} setRandom={setRandom} />
       </Section>

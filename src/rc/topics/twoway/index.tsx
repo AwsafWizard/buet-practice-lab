@@ -10,6 +10,7 @@ import { Box, f, FC_OPTS, Flow, FY_OPTS, Num, Pick, useMark } from '../oneway/ki
 import { PanelPlan } from './plan'
 import { TwoWaySolution } from './solution'
 import { TWOWAY_THEORY } from './theory'
+import { TwoWayDesign } from './DesignProblems'
 
 const TID = 'rc-twoway'
 const E = (s: string): Edges => ({ top: s.includes('t'), right: s.includes('r'), bottom: s.includes('b'), left: s.includes('l') })
@@ -170,11 +171,11 @@ function TwLab() {
       <div className="grid cq-lg:grid-cols-[auto_1fr] gap-4">
         <div>
           <div className="text-xs font-bold uppercase tracking-wider text-faint mb-1">Coefficients (interpolate)</div>
-          <CheckTable key={key} rows={coefRows} rowKey={(x) => x.k} given={[{ label: 'Coefficient', get: (x) => x.name }]} cols={COEF_COLS} idp={id('coef')} />
+          <CheckTable key={key + ":coef"} rows={coefRows} rowKey={(x) => x.k} given={[{ label: 'Coefficient', get: (x) => x.name }]} cols={COEF_COLS} idp={id('coef')} />
         </div>
         <div>
           <div className="text-xs font-bold uppercase tracking-wider text-faint mb-1">Moments and steel</div>
-          <CheckTable key={key} rows={r.steel} rowKey={(x) => x.key} given={[{ label: 'Section', get: (x) => x.label }, { label: 'd (in)', get: (x) => f(x.d, 2) }]} cols={ST_COLS} idp={id('st')} />
+          <CheckTable key={key + ":st"} rows={r.steel} rowKey={(x) => x.key} given={[{ label: 'Section', get: (x) => x.label }, { label: 'd (in)', get: (x) => f(x.d, 2) }]} cols={ST_COLS} idp={id('st')} />
         </div>
       </div>
       <Reveal id={id('sol')} title="Full solution (handnote style)">
@@ -270,6 +271,9 @@ function Approach() {
 function Lab() {
   return (
     <div>
+      <Section title="Design problems" sub="A floor plan with several panels: identify panel S1's case from its neighbours, then design it in the class order and check each step.">
+        <TwoWayDesign />
+      </Section>
       <Section title="Two-way panel designer with checkpoints" sub="Set the spans, click the edges, roll a random panel; the code-pane tables highlight the case and m you used.">
         <TwLab />
       </Section>

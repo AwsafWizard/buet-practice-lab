@@ -10,6 +10,7 @@ import { markUsed } from '../../reference/pane'
 import type { RcQ, RcTheoryItem, RcTopicModule } from '../../types'
 import { Badge, BarsSel, f, FC_OPTS, Flow, FY_OPTS, newSeed, Num, ProblemBox, Sel, zoneLabel } from '../doubly/kit'
 import { ReviewSolution } from '../doubly/solve'
+import { TBeamDesign } from './DesignProblems'
 import { BeffSolution, FloorSolution, RectDesignSolution, RectReviewSolution, TDesignSolution, TReviewSolution, TSketch, WsdSolution } from './solve'
 
 const TOPIC = 'rc-tbeam'
@@ -607,5 +608,14 @@ const problems: RcQ[] = [
   },
 ]
 
-const mod: RcTopicModule = { Overview, Approach, Lab, problems, theory }
+function LabTab() {
+  return (
+    <div className="space-y-6">
+      <TBeamDesign />
+      <Lab />
+    </div>
+  )
+}
+
+const mod: RcTopicModule = { Overview, Approach, Lab: LabTab, problems, theory }
 export default mod

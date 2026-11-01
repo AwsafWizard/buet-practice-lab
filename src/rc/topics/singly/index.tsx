@@ -12,6 +12,8 @@ import type { RcQ, RcTheoryItem, RcTopicModule } from '../../types'
 import { BAR_OPTS, Checks, COUNT_OPTS, FC_OPTS, FY_OPTS, Num, Prompt, Sel, useMark } from '../elastic/inputs'
 import { SectionSketch, SolSteps } from '../elastic/ui'
 import { PhiChart, StrainLimits } from './charts'
+import { makeSinglyDesign, S_FAMILIES } from './design'
+import { DesignProblems } from './DesignProblems'
 
 const T = 'rc-singly'
 
@@ -480,6 +482,9 @@ function Lab() {
   const [mode, setMode] = useState<'review' | 'design' | 'limits'>('review')
   return (
     <div>
+      <Section title="Design problems" sub="Paper-style design from the beam and its loads: self-weight, w_u, M_u, d, A_s, bars, ε_t check. 🎲 for a new one; full solution at the bottom.">
+        <DesignProblems topic={T} families={S_FAMILIES} make={makeSinglyDesign} />
+      </Section>
       <Section title="Singly reinforced beam lab" sub="Review a section, design for M_u, or drill the ρ limits. φ–ε_t chart shows where your beam sits.">
         <div className="mb-3">
           <Seg value={mode} onChange={setMode} items={[{ v: 'review', label: 'Review φM_n' }, { v: 'design', label: 'Design' }, { v: 'limits', label: 'ρ limits & φ' }]} />

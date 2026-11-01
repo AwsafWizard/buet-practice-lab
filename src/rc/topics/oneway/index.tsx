@@ -9,6 +9,7 @@ import { Box, f, FC_OPTS, Flow, FY_OPTS, Num, Pick, useMark } from './kit'
 import { CantSketch, ContSketch } from './sketch'
 import { CantSolution, CoefSolution } from './solution'
 import { ONEWAY_THEORY } from './theory'
+import { OneWayDesign } from './DesignProblems'
 
 const TID = 'rc-oneway'
 const END_OPTS: { v: EndSupport; label: string }[] = (['spandrel', 'column', 'unrestrained'] as EndSupport[]).map((v) => ({ v, label: END_LABEL[v] }))
@@ -433,6 +434,9 @@ function Lab() {
   const [tab, setTab] = useState<'cont' | 'cant'>('cont')
   return (
     <div>
+      <Section title="Design problems" sub="A full paper-style question each roll: floor plan or strip, loads, materials. Work it in the class order, check each step, then open the full solution.">
+        <OneWayDesign />
+      </Section>
       <Section title="One-way slab designer with checkpoints" sub="Change anything or roll a random exam problem; fill the checkpoints, then open the full solution.">
         <div className="mb-3">
           <Tabs
