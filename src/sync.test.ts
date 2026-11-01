@@ -8,6 +8,7 @@ const base = (over: Partial<Progress> = {}): Progress => ({
   streak: { last: '', count: 0 },
   activity: {},
   planner: null,
+  planner315: null,
   qStatus: {},
   mockScores: {},
   timeLog: {},

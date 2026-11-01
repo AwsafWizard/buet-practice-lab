@@ -19,6 +19,19 @@ export type TopicId =
   | 'vw'
   | 'cable'
 
+/** CE 315 (RCC) topics; the rc- prefix keeps their check ids apart from CE 311's */
+export type RcTopicId =
+  | 'rc-basics'
+  | 'rc-elastic'
+  | 'rc-singly'
+  | 'rc-doubly'
+  | 'rc-tbeam'
+  | 'rc-shear'
+  | 'rc-torsion'
+  | 'rc-bond'
+  | 'rc-oneway'
+  | 'rc-twoway'
+
 export interface Attempt {
   tries: number
   correct: boolean
@@ -28,7 +41,7 @@ export interface Attempt {
 
 export interface PlanBlock {
   id: string
-  topic: TopicId | 'mixed' | 'mock' | 'setup'
+  topic: TopicId | RcTopicId | 'mixed' | 'mock' | 'setup'
   title: string
   hours: number
   kind: 'learn' | 'practice' | 'revise' | 'mock'
@@ -63,12 +76,14 @@ interface State {
   streak: { last: string; count: number }
   activity: Record<string, number> // yyyy-mm-dd -> checks done
   planner: PlannerState | null
+  /** CE 315's own study plan */
+  planner315: PlannerState | null
   qStatus: Record<string, 'todo' | 'tried' | 'solved' | 'review'>
   mockScores: Record<string, { at: number; secA: number; secB: number; note?: string }>
   timeLog: TimeLog
   timeAdjust: TimeAdjust
   timeGoal: number // hours per day
-  /** when each setting / question status last changed (keys: planner, timeGoal, bmdSide, rotSign, q:<id>), so syncing keeps the later one */
+  /** when each setting / question status last changed (keys: planner, planner315, timeGoal, bmdSide, rotSign, q:<id>), so syncing keeps the later one */
   stamps: Record<string, number>
   setTheme(t: 'dark' | 'light'): void
   setBmdSide(s: 'compression' | 'tension'): void
@@ -76,6 +91,7 @@ interface State {
   record(id: string, correct: boolean, topic?: string): Attempt
   reveal(id: string): void
   setPlanner(p: PlannerState): void
+  setPlanner315(p: PlannerState): void
   setQStatus(id: string, s: 'todo' | 'tried' | 'solved' | 'review'): void
   saveMock(id: string, secA: number, secB: number, note?: string): void
   addTime(device: string, day: string, seconds: number): void
@@ -103,6 +119,7 @@ const initial = {
   streak: { last: '', count: 0 },
   activity: {},
   planner: null,
+  planner315: null as PlannerState | null,
   qStatus: {},
   mockScores: {},
   timeLog: {} as TimeLog,
@@ -144,6 +161,7 @@ export const useStore = create<State>()(
       },
       reveal: (id) => set({ revealed: { ...get().revealed, [id]: true } }),
       setPlanner: (planner) => set({ planner, stamps: stamp(get().stamps, 'planner') }),
+      setPlanner315: (planner315) => set({ planner315, stamps: stamp(get().stamps, 'planner315') }),
       setQStatus: (id, s) => set({ qStatus: { ...get().qStatus, [id]: s }, stamps: stamp(get().stamps, 'q:' + id) }),
       saveMock: (id, secA, secB, note) => set({ mockScores: { ...get().mockScores, [id]: { at: Date.now(), secA, secB, note } } }),
       addTime(device, day, seconds) {
@@ -169,8 +187,8 @@ useStore.subscribe((s) => setClockwise(s.rotSign !== 'ccw'))
 
 export function exportState(): string {
   const s = useStore.getState()
-  const { attempts, revealed, xp, streak, activity, planner, qStatus, mockScores, timeLog, timeAdjust, timeGoal, stamps, theme, bmdSide, rotSign } = s
-  return JSON.stringify({ attempts, revealed, xp, streak, activity, planner, qStatus, mockScores, timeLog, timeAdjust, timeGoal, stamps, theme, bmdSide, rotSign }, null, 1)
+  const { attempts, revealed, xp, streak, activity, planner, planner315, qStatus, mockScores, timeLog, timeAdjust, timeGoal, stamps, theme, bmdSide, rotSign } = s
+  return JSON.stringify({ attempts, revealed, xp, streak, activity, planner, planner315, qStatus, mockScores, timeLog, timeAdjust, timeGoal, stamps, theme, bmdSide, rotSign }, null, 1)
 }
 
 /** mastery of a topic: correct checks / total checks seen with that topic prefix */

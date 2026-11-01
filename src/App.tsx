@@ -1,6 +1,8 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { NavLink, Route, Routes, useLocation } from 'react-router-dom'
+import { Route, Routes, useLocation } from 'react-router-dom'
 import { CodeDrawer, usePageGroup } from './components/CodeDrawer'
+import { CoursePicker, rememberCourseRoute } from './components/CoursePicker'
+import { RailSidebar } from './components/RailSidebar'
 import { TimeCounter } from './components/TimeCounter'
 import { Ring } from './components/ui'
 import { ALL_PYQ } from './pyq'
@@ -18,8 +20,33 @@ const Formulas = lazy(() => import('./pages/Formulas'))
 const QuestionPage = lazy(() => import('./pages/QuestionPage'))
 const ScreenTime = lazy(() => import('./pages/ScreenTime'))
 
+const RcApp = lazy(() => import('./rc/RcApp'))
+
+export type CourseKey = 'home' | 'ce311' | 'ce315'
+export const courseOf = (pathname: string): CourseKey => (pathname === '/' ? 'home' : pathname.startsWith('/ce315') ? 'ce315' : 'ce311')
+
 export default function App() {
   const theme = useStore((s) => s.theme)
+  const loc = useLocation()
+  const course = courseOf(loc.pathname)
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+  }, [theme])
+  useEffect(() => {
+    document.documentElement.dataset.course = course
+  }, [course])
+  useEffect(() => {
+    window.scrollTo({ top: 0 })
+    if (course !== 'home') rememberCourseRoute(course, loc.pathname)
+  }, [loc.pathname, course])
+  return (
+    <Suspense fallback={<div className="text-mute p-10">Loading…</div>}>
+      {course === 'home' ? <CoursePicker /> : course === 'ce315' ? <RcApp /> : <Ce311App />}
+    </Suspense>
+  )
+}
+
+function Ce311App() {
   const rotSign = useStore((s) => s.rotSign)
   const [open, setOpen] = useState(false)
   const loc = useLocation()
@@ -27,11 +54,7 @@ export default function App() {
   const drawer = useDrawer()
   const drawerOpen = drawer.open && pageGroup !== null
   useEffect(() => {
-    document.documentElement.dataset.theme = theme
-  }, [theme])
-  useEffect(() => {
     setOpen(false)
-    window.scrollTo({ top: 0 })
   }, [loc.pathname])
   return (
     <div className="min-h-full flex">
@@ -43,7 +66,7 @@ export default function App() {
           <Suspense fallback={<div className="text-mute p-10">Loading…</div>}>
             {/* re-mount the page when the rotation sign convention flips so every value and label follows */}
             <Routes key={rotSign}>
-              <Route path="/" element={<Overview />} />
+              <Route path="/ce311" element={<Overview />} />
               <Route path="/topic/:id" element={<TopicPage />} />
               <Route path="/topic/:id/:tab" element={<TopicPage />} />
               <Route path="/papers" element={<Papers />} />
@@ -64,6 +87,15 @@ export default function App() {
   )
 }
 
+export function Ce311Logo({ size = 30 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32">
+      <rect width="32" height="32" rx="8" fill="var(--c-accent)" opacity="0.15" />
+      <path d="M5 24 L16 8 L27 24 Z M10.5 24 L16 16 L21.5 24" fill="none" stroke="var(--c-accent)" strokeWidth="2.2" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const qStatus = useStore((s) => s.qStatus)
   const groups: ('B' | 'A' | 'X')[] = ['B', 'A', 'X']
@@ -72,74 +104,41 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
     const qs = ALL_PYQ.filter((q) => q.topics.includes(id as never))
     return { total: qs.length, solved: qs.filter((q) => qStatus[q.id] === 'solved').length }
   }
-  const link = (to: string, label: React.ReactNode, end = false) => (
-    <NavLink
-      to={to}
-      end={end}
-      className={({ isActive }) =>
-        'flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-sm transition-colors ' + (isActive ? 'bg-accent/15 text-ink font-semibold' : 'text-mute hover:text-ink hover:bg-panel2')
-      }
-    >
-      {label}
-    </NavLink>
-  )
+  const glyph = (g: string) => <span className="text-center">{g}</span>
   return (
-    <>
-      <div className={'fixed inset-0 bg-black/40 z-30 lg:hidden ' + (open ? '' : 'hidden')} onClick={onClose} />
-      <aside
-        className={
-          'fixed lg:sticky top-0 z-40 h-screen w-[270px] shrink-0 bg-panel border-r border-line flex flex-col transition-transform ' +
-          (open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0')
-        }
-      >
-        <div className="px-4 py-4 flex items-center gap-2.5 border-b border-line">
-          <svg width="30" height="30" viewBox="0 0 32 32">
-            <rect width="32" height="32" rx="8" fill="var(--c-accent)" opacity="0.15" />
-            <path d="M5 24 L16 8 L27 24 Z M10.5 24 L16 16 L21.5 24" fill="none" stroke="var(--c-accent)" strokeWidth="2.2" strokeLinejoin="round" />
-          </svg>
-          <div>
-            <div className="font-extrabold leading-tight">CE 311 Practice Lab</div>
-            <div className="text-[11px] text-faint">Structural Analysis · term final</div>
-          </div>
-        </div>
-        <nav className="flex-1 overflow-y-auto scroll-thin px-2 py-3 space-y-4">
-          <div className="space-y-0.5">
-            {link('/', <><span className="w-6 text-center">◎</span> Overview & plan</>, true)}
-            {link('/papers', <><span className="w-6 text-center">▤</span> Past papers & mocks</>)}
-            {link('/formulas', <><span className="w-6 text-center">∑</span> Formulas & tables</>)}
-            {link('/time', <><span className="w-6 text-center">⏱</span> Screen time</>)}
-          </div>
-          {groups.map((g) => (
-            <div key={g}>
-              <div className="px-3 text-[10.5px] uppercase tracking-wider text-faint font-bold mb-1">{SECTION_LABEL[g]}</div>
-              <div className="space-y-0.5">
-                {TOPICS.filter((t) => t.section === g).map((t) => {
-                  const { total, solved } = pyqStats(t.id)
-                  const pct = total ? Math.round((solved / total) * 100) : 0
-                  return (
-                    <NavLink
-                      key={t.id}
-                      to={`/topic/${t.id}`}
-                      className={({ isActive }) =>
-                        'flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-sm transition-colors ' + (isActive ? 'bg-accent/15 text-ink font-semibold' : 'text-mute hover:text-ink hover:bg-panel2')
-                      }
-                    >
-                      <TopicIcon id={t.id} color={t.color} />
-                      <span className="flex-1 truncate">{t.short}</span>
-                      <span className="text-[10px] text-faint num">{total}Q</span>
-                      <span title={`${solved}/${total} TF questions solved (${pct}%)`}>
-                        <Ring value={total ? solved / total : 0} size={18} stroke={2.6} color={t.color} />
-                      </span>
-                    </NavLink>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
-        </nav>
-        <SidebarFooter />
-      </aside>
-    </>
+    <RailSidebar
+      open={open}
+      onClose={onClose}
+      brand={{ logo: <Ce311Logo />, title: 'CE 311 Practice Lab', sub: 'Structural Analysis · term final' }}
+      main={[
+        { to: '/ce311', icon: glyph('◎'), label: 'Overview & plan', title: 'Overview & plan', end: true },
+        { to: '/papers', icon: glyph('▤'), label: 'Past papers & mocks', title: 'Past papers & mocks' },
+        { to: '/formulas', icon: glyph('∑'), label: 'Formulas & tables', title: 'Formulas & tables' },
+        { to: '/time', icon: glyph('⏱'), label: 'Screen time', title: 'Screen time' },
+      ]}
+      groups={groups.map((g) => ({
+        label: SECTION_LABEL[g],
+        items: TOPICS.filter((t) => t.section === g).map((t) => {
+          const { total, solved } = pyqStats(t.id)
+          const pct = total ? Math.round((solved / total) * 100) : 0
+          return {
+            to: `/topic/${t.id}`,
+            icon: <TopicIcon id={t.id} color={t.color} />,
+            label: t.short,
+            title: `${t.title} · ${solved}/${total} solved`,
+            right: (
+              <>
+                <span className="text-[10px] text-faint num">{total}Q</span>
+                <span title={`${solved}/${total} TF questions solved (${pct}%)`}>
+                  <Ring value={total ? solved / total : 0} size={18} stroke={2.6} color={t.color} />
+                </span>
+              </>
+            ),
+          }
+        }),
+      }))}
+      footer={<SidebarFooter course="ce311" />}
+    />
   )
 }
 
@@ -147,7 +146,7 @@ type ArtifactWindow = {
   claude?: { use(name: 'downloads'): Promise<{ save(r: { filename: string; data: string }): Promise<unknown> } | null> }
 }
 
-function SidebarFooter() {
+export function SidebarFooter({ course }: { course: 'ce311' | 'ce315' }) {
   const theme = useStore((s) => s.theme)
   const setTheme = useStore((s) => s.setTheme)
   const side = useStore((s) => s.bmdSide)
@@ -156,7 +155,7 @@ function SidebarFooter() {
   const setRotSign = useStore((s) => s.setRotSign)
   const importState = useStore((s) => s.importState)
   const download = async () => {
-    const filename = `ce311-progress-${new Date().toISOString().slice(0, 10)}.json`
+    const filename = `${course}-progress-${new Date().toISOString().slice(0, 10)}.json`
     if (ARTIFACT) {
       // the Artifact viewer blocks plain downloads; its save prompt asks the viewer first
       const downloads = await (window as unknown as ArtifactWindow).claude?.use('downloads')
@@ -187,6 +186,8 @@ function SidebarFooter() {
           {theme === 'dark' ? '☾ Dark' : '☀ Light'}
         </button>
       </div>
+      {course === 'ce311' && (
+      <>
       <div className="flex items-center justify-between">
         <span className="text-mute" title="Where positive (sagging) moment is drawn">BMD drawn on</span>
         <button className="btn !py-0.5 !px-2 !text-xs" onClick={() => setSide(side === 'compression' ? 'tension' : 'compression')}>
@@ -199,6 +200,8 @@ function SidebarFooter() {
           {rotSign === 'cw' ? '↻ clockwise' : '↺ counter-clockwise'}
         </button>
       </div>
+      </>
+      )}
       {ARTIFACT && <SyncLine />}
       <div className="flex gap-2">
         <button className="btn !py-0.5 !px-2 !text-xs flex-1 justify-center" onClick={download}>
@@ -231,10 +234,10 @@ function SyncLine() {
   )
 }
 
-function Header({ onMenu }: { onMenu: () => void }) {
+export function Header({ onMenu, examDate = EXAM_DATE, examLabel = '31 Oct' }: { onMenu: () => void; examDate?: string; examLabel?: string }) {
   const xp = useStore((s) => s.xp)
   const streak = useStore((s) => s.streak)
-  const exam = new Date(EXAM_DATE + 'T09:00:00')
+  const exam = new Date(examDate + 'T09:00:00')
   const days = Math.max(0, Math.ceil((exam.getTime() - Date.now()) / 86400000))
   const level = Math.floor(xp / 200) + 1
   return (
@@ -244,7 +247,7 @@ function Header({ onMenu }: { onMenu: () => void }) {
           ☰
         </button>
         <div className="text-sm">
-          <span className="font-bold num text-accent">{days}</span> <span className="text-mute">days to go<span className="hidden sm:inline"> · exam 31 Oct</span></span>
+          <span className="font-bold num text-accent">{days}</span> <span className="text-mute">days to go<span className="hidden sm:inline"> · exam {examLabel}</span></span>
         </div>
         <div className="ml-auto flex items-center gap-3 sm:gap-4 text-sm">
           <TimeCounter />

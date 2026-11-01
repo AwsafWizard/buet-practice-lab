@@ -4,6 +4,10 @@ import { TopicIcon } from '../../topics/icons'
 import { topicById } from '../../topics/registry'
 import { today, useStore, type PlanBlock, type PlannerState, type TopicId } from '../../store'
 import { daysBetween, defaultPlanner, pack } from './template'
+import { rcDefaultPlanner } from '../../rc/plan'
+import { rcTopicById } from '../../rc/registry'
+
+export type Course = 'ce311' | 'ce315'
 
 const KIND_COLOR: Record<PlanBlock['kind'], string> = {
   learn: 'var(--c-accent)',
@@ -12,26 +16,29 @@ const KIND_COLOR: Record<PlanBlock['kind'], string> = {
   mock: 'var(--c-bad)',
 }
 
-export function usePlanner(): [PlannerState, (p: PlannerState) => void] {
-  const planner = useStore((s) => s.planner)
-  const setPlanner = useStore((s) => s.setPlanner)
-  const p = useMemo(() => planner ?? defaultPlanner(), [planner])
+const fresh = (course: Course) => (course === 'ce315' ? rcDefaultPlanner() : defaultPlanner())
+
+export function usePlanner(course: Course = 'ce311'): [PlannerState, (p: PlannerState) => void] {
+  const planner = useStore((s) => (course === 'ce315' ? s.planner315 : s.planner))
+  const setPlanner = useStore((s) => (course === 'ce315' ? s.setPlanner315 : s.setPlanner))
+  const p = useMemo(() => planner ?? fresh(course), [planner, course])
   return [p, setPlanner]
 }
 
-export function blockLink(b: PlanBlock) {
-  if (b.topic === 'mock') return '/papers'
-  if (b.topic === 'mixed' || b.topic === 'setup') return '/'
-  return `/topic/${b.topic}`
+export function blockLink(b: PlanBlock, course: Course = 'ce311') {
+  const base = course === 'ce315' ? '/ce315' : ''
+  if (b.topic === 'mock') return base + '/papers'
+  if (b.topic === 'mixed' || b.topic === 'setup') return course === 'ce315' ? '/ce315' : '/ce311'
+  return `${base}/topic/${b.topic}`
 }
 
-export function BlockChip({ b, onToggle, compact }: { b: PlanBlock; onToggle?: () => void; compact?: boolean }) {
-  const t = topicById(b.topic)
+export function BlockChip({ b, onToggle, compact, course = 'ce311' }: { b: PlanBlock; onToggle?: () => void; compact?: boolean; course?: Course }) {
+  const t = course === 'ce315' ? rcTopicById(b.topic) : topicById(b.topic)
   return (
     <div className={'flex items-start gap-2 rounded-lg border border-line bg-panel2/60 px-2.5 py-2 ' + (b.done ? 'opacity-55' : '')} style={{ borderLeft: `3px solid ${KIND_COLOR[b.kind]}` }}>
       {onToggle && <input type="checkbox" checked={!!b.done} onChange={onToggle} className="mt-1 accent-[var(--c-accent)]" />}
       <div className="min-w-0 flex-1">
-        <Link to={blockLink(b)} className={'text-sm font-semibold leading-snug hover:text-accent ' + (b.done ? 'line-through' : '')}>
+        <Link to={blockLink(b, course)} className={'text-sm font-semibold leading-snug hover:text-accent ' + (b.done ? 'line-through' : '')}>
           {t && <TopicIcon id={t.id as TopicId} color={t.color} size={14} />} {b.title}
         </Link>
         {!compact && <div className="text-[11px] text-faint mt-0.5">{b.how}</div>}
@@ -41,8 +48,8 @@ export function BlockChip({ b, onToggle, compact }: { b: PlanBlock; onToggle?: (
   )
 }
 
-export function Planner() {
-  const [p, setP] = usePlanner()
+export function Planner({ course = 'ce311' }: { course?: Course }) {
+  const [p, setP] = usePlanner(course)
   const [drag, setDrag] = useState<string | null>(null)
   const [edit, setEdit] = useState<string | null>(null)
   const map = useMemo(() => pack(p), [p])
@@ -75,7 +82,7 @@ export function Planner() {
         </label>
         <label className="flex flex-col gap-1">
           <span className="text-xs text-mute">Hours / day</span>
-          <input type="number" min={1} max={14} step={0.5} className="field w-20" value={p.defaultHours} onChange={(e) => update((q) => ({ ...q, defaultHours: +e.target.value || 7 }))} />
+          <input type="number" min={1} max={14} step={0.5} className="field w-20" value={p.defaultHours} onChange={(e) => update((q) => ({ ...q, defaultHours: +e.target.value || 8 }))} />
         </label>
         <label className="flex flex-col gap-1">
           <span className="text-xs text-mute">Protected revision days</span>
@@ -87,7 +94,7 @@ export function Planner() {
         <button
           className="btn"
           onClick={() => {
-            if (confirm('Reset the plan to the default template? Your checked-off blocks will be cleared.')) setP(defaultPlanner())
+            if (confirm('Reset the plan to the default template? Your checked-off blocks will be cleared.')) setP(fresh(course))
           }}
         >
           Reset to default
@@ -173,6 +180,7 @@ export function Planner() {
                       <div className="group relative">
                         <BlockChip
                           b={blk}
+                          course={course}
                           compact
                           onToggle={() =>
                             update((q) => {
