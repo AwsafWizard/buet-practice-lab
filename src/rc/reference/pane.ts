@@ -23,6 +23,8 @@ interface PaneState {
   group: RcRefGroup | null
   expanded: string[]
   wide: boolean
+  /** pane width in px on screens ≥ 640 px (drag the left edge; the page shrinks beside it) */
+  width: number
   /** past question whose attached tables lead the pane */
   focus: string | null
   focusGiven: RcGiven[]
@@ -37,10 +39,10 @@ let state: PaneState = load()
 const subs = new Set<() => void>()
 
 function load(): PaneState {
-  const base: PaneState = { open: false, group: null, expanded: [], wide: false, focus: null, focusGiven: [], focusOpen: [], jump: null, hl: {} }
+  const base: PaneState = { open: false, group: null, expanded: [], wide: false, width: 440, focus: null, focusGiven: [], focusOpen: [], jump: null, hl: {} }
   try {
     const s = JSON.parse(localStorage.getItem(KEY) ?? '{}')
-    return { ...base, open: !!s.open, group: s.group ?? null, expanded: Array.isArray(s.expanded) ? s.expanded : [], wide: !!s.wide }
+    return { ...base, open: !!s.open, group: s.group ?? null, expanded: Array.isArray(s.expanded) ? s.expanded : [], wide: !!s.wide, width: typeof s.width === 'number' ? s.width : s.wide ? 760 : 440 }
   } catch {
     return base
   }
@@ -49,8 +51,8 @@ function load(): PaneState {
 export function setPane(p: Partial<PaneState>) {
   state = { ...state, ...p }
   try {
-    const { open, group, expanded, wide } = state
-    localStorage.setItem(KEY, JSON.stringify({ open, group, expanded, wide }))
+    const { open, group, expanded, wide, width } = state
+    localStorage.setItem(KEY, JSON.stringify({ open, group, expanded, wide, width }))
   } catch {
     /* storage blocked */
   }
@@ -97,3 +99,9 @@ export function groupOfRcRef(id: string | undefined): RcRefGroup | null {
 
 export const RC_GROUP_LABEL: Record<RcRefGroup, string> = { mat: 'Materials & bars', flex: 'Flexure', shear: 'Shear & torsion', bond: 'Bond', slab: 'Slabs', steps: 'Steps' }
 export const RC_GROUP_ORDER: RcRefGroup[] = ['mat', 'flex', 'shear', 'bond', 'slab', 'steps']
+
+/** the width actually used: never more than leaves ~420 px of page beside it */
+export function paneWidth(w: number) {
+  const vw = typeof window === 'undefined' ? 1600 : window.innerWidth
+  return Math.round(Math.max(320, Math.min(w, vw - 420, 1100)))
+}

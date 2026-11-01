@@ -10,7 +10,7 @@ import { TopicIcon } from '../topics/icons'
 import { CodePane, useRcPageGroup } from './components/CodePane'
 import { RC_EXAM_DATE } from './plan'
 import { RC_ALL } from './pyq'
-import { usePane } from './reference/pane'
+import { paneWidth, usePane } from './reference/pane'
 import { RC_SECTION_LABEL, RC_TOPICS } from './registry'
 
 const RcOverview = lazy(() => import('./pages/RcOverview'))
@@ -44,7 +44,11 @@ export default function RcApp() {
   return (
     <div className="min-h-full flex">
       <RcSidebar open={open} onClose={() => setOpen(false)} />
-      <div className={'flex-1 min-w-0 flex flex-col transition-[padding] duration-200 ' + (pane.open ? (pane.wide ? 'min-[1800px]:pr-[760px]' : 'xl:pr-[440px]') : '')}>
+      {/* from lg up the open code pane sits beside the page (side by side), never on top of it */}
+      <div
+        className={'flex-1 min-w-0 flex flex-col transition-[padding] duration-200 ' + (pane.open ? 'lg:pr-[var(--pw)]' : '')}
+        style={{ '--pw': `${paneWidth(pane.width)}px` } as React.CSSProperties}
+      >
         <Header onMenu={() => setOpen(true)} examDate={RC_EXAM_DATE} examLabel="5 Nov" />
         <main className="@container/page flex-1 px-4 md:px-8 py-6 max-w-[1180px] w-full mx-auto">
           <Suspense fallback={<div className="text-mute p-10">Loading…</div>}>

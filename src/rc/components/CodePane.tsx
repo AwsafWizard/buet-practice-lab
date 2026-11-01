@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { rcQById } from '../pyq'
 import { rcTopicById, type RcRefGroup } from '../registry'
-import { groupOfRcRef, givenRefIds, RC_GROUP_LABEL, RC_GROUP_ORDER, focusRcQuestion, setPane, usePane } from '../reference/pane'
+import { groupOfRcRef, givenRefIds, paneWidth, RC_GROUP_LABEL, RC_GROUP_ORDER, focusRcQuestion, setPane, usePane } from '../reference/pane'
 
 const Panel = lazy(() => import('./Panel'))
 
@@ -22,7 +22,9 @@ const editable = (el: EventTarget | null) => el instanceof HTMLElement && (el.is
 
 /** right-hand slide-out with the ACI / BNBC tables and step checklists; non-modal */
 export function CodePane({ pageGroup }: { pageGroup: RcRefGroup }) {
-  const { open, group, expanded, wide, focus, focusGiven, focusOpen, jump } = usePane()
+  const { open, group, expanded, width, focus, focusGiven, focusOpen, jump } = usePane()
+  const w = paneWidth(width)
+  const wide = w >= 700
   const [query, setQuery] = useState('')
   const { pathname } = useLocation()
   const focusGroup = focus ? groupOfRcRef(givenRefIds(focusGiven)[0]) : null
@@ -72,20 +74,20 @@ export function CodePane({ pageGroup }: { pageGroup: RcRefGroup }) {
       </button>
       <aside
         className={
-          'no-print fixed top-0 right-0 z-50 h-screen w-full bg-bg ' +
-          (wide ? 'md:w-[min(760px,92vw)]' : 'sm:w-[440px]') +
-          ' border-l border-line shadow-2xl flex flex-col transition-transform duration-200 ' +
+          'no-print fixed top-0 right-0 z-50 h-screen w-full sm:w-[var(--pw)] bg-bg border-l border-line shadow-2xl lg:shadow-none flex flex-col transition-transform duration-200 ' +
           (open ? 'translate-x-0' : 'translate-x-full')
         }
+        style={{ '--pw': `${w}px` } as React.CSSProperties}
         aria-hidden={!open}
         inert={!open}
       >
+        <DragEdge />
         <div className="px-3 pt-3 pb-2 border-b border-line space-y-2">
           <div className="flex items-center gap-2">
             <div className="font-extrabold">Code & steps</div>
             <span className="hidden sm:inline text-[11px] text-faint">ACI 318 / BNBC 2020 · as taught in CE 315</span>
             <span className="ml-auto hidden md:block">
-              <button className="btn btn-ghost !px-2 !py-0.5 !text-xs" onClick={() => setPane({ wide: !wide })} title={wide ? 'Narrow pane' : 'Wide pane (for the big tables)'}>
+              <button className="btn btn-ghost !px-2 !py-0.5 !text-xs" onClick={() => setPane({ width: wide ? 440 : 760 })} title={wide ? 'Narrow pane' : 'Wide pane (for the big tables) — or drag the left edge'}>
                 {wide ? '⇥ narrow' : '⇤ wide'}
               </button>
             </span>
@@ -121,9 +123,39 @@ export function CodePane({ pageGroup }: { pageGroup: RcRefGroup }) {
           )}
         </div>
         <div className="hidden sm:block px-3 py-1.5 border-t border-line text-[11px] text-faint">
-          <kbd className="chip !py-0">T</kbd> open / close · <kbd className="chip !py-0">Esc</kbd> close · rows a lab used are highlighted
+          <kbd className="chip !py-0">T</kbd> open / close · <kbd className="chip !py-0">Esc</kbd> close · drag the left edge to resize · rows a lab used are highlighted
         </div>
       </aside>
     </>
+  )
+}
+
+/** grab strip on the pane's left edge: drag to resize, the page reflows beside it */
+function DragEdge() {
+  const onDown = (e: React.PointerEvent) => {
+    e.preventDefault()
+    const move = (ev: PointerEvent) => setPane({ width: paneWidth(window.innerWidth - ev.clientX) })
+    const up = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+      document.body.style.userSelect = ''
+      document.body.style.cursor = ''
+    }
+    document.body.style.userSelect = 'none'
+    document.body.style.cursor = 'col-resize'
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+  }
+  return (
+    <div
+      className="hidden sm:block absolute left-0 top-0 h-full w-2 -translate-x-1 cursor-col-resize z-10 group"
+      onPointerDown={onDown}
+      onDoubleClick={() => setPane({ width: 440 })}
+      title="Drag to resize · double-click to reset"
+      role="separator"
+      aria-orientation="vertical"
+    >
+      <span className="block mx-auto h-full w-0.5 bg-transparent group-hover:bg-accent/60 transition-colors" />
+    </div>
   )
 }
