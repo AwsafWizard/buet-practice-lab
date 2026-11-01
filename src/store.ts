@@ -81,6 +81,8 @@ interface State {
   qStatus: Record<string, 'todo' | 'tried' | 'solved' | 'review'>
   mockScores: Record<string, { at: number; secA: number; secB: number; note?: string }>
   timeLog: TimeLog
+  /** the same seconds split by course: key `<device>|<course>` → day → seconds (merge = max, like timeLog) */
+  courseLog: TimeLog
   timeAdjust: TimeAdjust
   timeGoal: number // hours per day
   /** when each setting / question status last changed (keys: planner, planner315, timeGoal, bmdSide, rotSign, q:<id>), so syncing keeps the later one */
@@ -94,7 +96,7 @@ interface State {
   setPlanner315(p: PlannerState): void
   setQStatus(id: string, s: 'todo' | 'tried' | 'solved' | 'review'): void
   saveMock(id: string, secA: number, secB: number, note?: string): void
-  addTime(device: string, day: string, seconds: number): void
+  addTime(device: string, day: string, seconds: number, course?: string): void
   setTimeAdjust(day: string, seconds: number, at?: number): void
   setTimeGoal(hours: number): void
   importState(json: string): void
@@ -123,6 +125,7 @@ const initial = {
   qStatus: {},
   mockScores: {},
   timeLog: {} as TimeLog,
+  courseLog: {} as TimeLog,
   timeAdjust: {} as TimeAdjust,
   timeGoal: 8,
   stamps: {} as Record<string, number>,
@@ -164,10 +167,17 @@ export const useStore = create<State>()(
       setPlanner315: (planner315) => set({ planner315, stamps: stamp(get().stamps, 'planner315') }),
       setQStatus: (id, s) => set({ qStatus: { ...get().qStatus, [id]: s }, stamps: stamp(get().stamps, 'q:' + id) }),
       saveMock: (id, secA, secB, note) => set({ mockScores: { ...get().mockScores, [id]: { at: Date.now(), secA, secB, note } } }),
-      addTime(device, day, seconds) {
+      addTime(device, day, seconds, course) {
         const log = get().timeLog
         const mine = log[device] ?? {}
-        set({ timeLog: { ...log, [device]: { ...mine, [day]: (mine[day] ?? 0) + seconds } } })
+        const patch: Partial<State> = { timeLog: { ...log, [device]: { ...mine, [day]: (mine[day] ?? 0) + seconds } } }
+        if (course) {
+          const cl = get().courseLog ?? {}
+          const k = `${device}|${course}`
+          const c = cl[k] ?? {}
+          patch.courseLog = { ...cl, [k]: { ...c, [day]: (c[day] ?? 0) + seconds } }
+        }
+        set(patch)
       },
       setTimeAdjust: (day, seconds, at = Date.now()) => set({ timeAdjust: { ...get().timeAdjust, [day]: { s: seconds, at } } }),
       setTimeGoal: (timeGoal) => set({ timeGoal, stamps: stamp(get().stamps, 'timeGoal') }),
@@ -187,8 +197,8 @@ useStore.subscribe((s) => setClockwise(s.rotSign !== 'ccw'))
 
 export function exportState(): string {
   const s = useStore.getState()
-  const { attempts, revealed, xp, streak, activity, planner, planner315, qStatus, mockScores, timeLog, timeAdjust, timeGoal, stamps, theme, bmdSide, rotSign } = s
-  return JSON.stringify({ attempts, revealed, xp, streak, activity, planner, planner315, qStatus, mockScores, timeLog, timeAdjust, timeGoal, stamps, theme, bmdSide, rotSign }, null, 1)
+  const { attempts, revealed, xp, streak, activity, planner, planner315, qStatus, mockScores, timeLog, courseLog, timeAdjust, timeGoal, stamps, theme, bmdSide, rotSign } = s
+  return JSON.stringify({ attempts, revealed, xp, streak, activity, planner, planner315, qStatus, mockScores, timeLog, courseLog, timeAdjust, timeGoal, stamps, theme, bmdSide, rotSign }, null, 1)
 }
 
 /** mastery of a topic: correct checks / total checks seen with that topic prefix */

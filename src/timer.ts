@@ -28,6 +28,7 @@ function deviceId() {
 export const device = deviceId()
 let pending = 0 // seconds counted but not yet in the store
 let pendingDay = studyDay()
+let pendingCourse: string | undefined = undefined
 let session = 0
 let lastInput = Date.now()
 let lastTick = Date.now()
@@ -50,8 +51,14 @@ const emit = () => {
   listeners.forEach((l) => l())
 }
 
+/** which course the open page belongs to (App sets html[data-course]) */
+const courseNow = () => {
+  const c = typeof document !== 'undefined' ? document.documentElement.dataset.course : undefined
+  return c === 'ce311' || c === 'ce315' ? c : undefined
+}
+
 function flush() {
-  if (pending > 0) useStore.getState().addTime(device, pendingDay, pending)
+  if (pending > 0) useStore.getState().addTime(device, pendingDay, pending, pendingCourse)
   pending = 0
 }
 
@@ -63,9 +70,11 @@ function tick() {
   const nowActive = !paused && document.visibilityState === 'visible' && now - lastInput < IDLE_MS
   if (nowActive) {
     const d = studyDay()
-    if (d !== pendingDay) {
+    const c = courseNow()
+    if (d !== pendingDay || c !== pendingCourse) {
       flush()
       pendingDay = d
+      pendingCourse = c
     }
     pending += step
     session += step

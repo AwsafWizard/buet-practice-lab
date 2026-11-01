@@ -12,6 +12,7 @@ const base = (over: Partial<Progress> = {}): Progress => ({
   qStatus: {},
   mockScores: {},
   timeLog: {},
+  courseLog: {},
   timeAdjust: {},
   timeGoal: 8,
   stamps: {},

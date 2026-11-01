@@ -34,6 +34,7 @@ export default function App() {
   }, [theme])
   useEffect(() => {
     document.documentElement.dataset.course = course
+    document.title = course === 'ce315' ? 'CE 315 Practice Lab' : course === 'ce311' ? 'CE 311 Practice Lab' : 'Practice Lab'
   }, [course])
   useEffect(() => {
     window.scrollTo({ top: 0 })

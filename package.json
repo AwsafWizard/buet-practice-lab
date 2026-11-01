@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "build:single": "tsc --noEmit && vite build --mode single && node -e \"require('fs').rmSync('dist-single/scans',{recursive:true,force:true})\"",
-    "build:public": "tsc --noEmit && vite build --mode public && node -e \"require('fs').rmSync('dist/scans',{recursive:true,force:true})\"",
+    "build:single": "tsc --noEmit && vite build --mode single && node -e \"for(const d of ['scans','scans315'])require('fs').rmSync('dist-single/'+d,{recursive:true,force:true})\"",
+    "build:public": "tsc --noEmit && vite build --mode public && node -e \"for(const d of ['scans','scans315'])require('fs').rmSync('dist/'+d,{recursive:true,force:true})\"",
     "build:artifact": "tsc --noEmit && vite build --mode artifact && node scripts/artifact-html.mjs",
     "preview": "vite preview",
     "test": "vitest run",

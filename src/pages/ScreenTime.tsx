@@ -61,6 +61,8 @@ export default function ScreenTime() {
         <Tile label="All time" value={fmtShort(total)} sub={`${studied} day${studied === 1 ? '' : 's'} studied · ${streak}-day run`} />
       </div>
 
+      <CourseSplit day={t.day} />
+
       <Section title="Daily screen time" sub={`Dashed lines: your ${goalH}h goal and the daily average.`}>
         <div className="flex items-center justify-between gap-3 flex-wrap mb-2">
           <GoalSetter />
@@ -317,5 +319,39 @@ function AddDay({ onAdd, onCancel, today }: { onAdd: (d: string, s: number) => v
       <input className="field" type="date" max={today} value={d} onChange={(e) => setD(e.target.value)} aria-label="day" />
       {d && d <= today && <TimeInput initial={0} onSave={(s) => onAdd(d, s)} onCancel={onCancel} />}
     </div>
+  )
+}
+
+/** time per course (tracked since the course picker was added; manual day edits are not split) */
+function CourseSplit({ day }: { day: string }) {
+  const log = useStore((s) => s.courseLog) ?? {}
+  const sum = (course: string, d?: string) =>
+    Object.entries(log)
+      .filter(([k]) => k.endsWith('|' + course))
+      .reduce((a, [, days]) => a + (d ? (days[d] ?? 0) : Object.values(days).reduce((x, y) => x + y, 0)), 0)
+  const rows = [
+    { c: 'ce315', label: 'CE 315', color: '#d97706' },
+    { c: 'ce311', label: 'CE 311', color: '#0891b2' },
+  ].map((r) => ({ ...r, today: sum(r.c, day), all: sum(r.c) }))
+  const max = Math.max(1, ...rows.map((r) => r.all))
+  if (!rows.some((r) => r.all > 0)) return null
+  return (
+    <Section title="By course" sub="Counted since the course picker was added. Manual day edits stay in the overall total only.">
+      <div className="space-y-2">
+        {rows.map((r) => (
+          <div key={r.c} className="grid grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-3 text-sm">
+            <span className="font-bold" style={{ color: r.color }}>
+              {r.label}
+            </span>
+            <span className="h-2 rounded-full bg-line overflow-hidden">
+              <span className="block h-full rounded-full" style={{ width: `${(r.all / max) * 100}%`, background: r.color }} />
+            </span>
+            <span className="num text-xs text-mute whitespace-nowrap">
+              today <b className="text-ink">{fmtShort(r.today)}</b> · all <b className="text-ink">{fmtShort(r.all)}</b>
+            </span>
+          </div>
+        ))}
+      </div>
+    </Section>
   )
 }
