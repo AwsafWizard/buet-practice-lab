@@ -2,6 +2,7 @@
 
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { setClockwise } from './engine/sign'
 
 export type TopicId =
   | 'frames'
@@ -46,9 +47,16 @@ export interface PlannerState {
   revisionDays: number
 }
 
+/** seconds on the site, per device per day (each device only writes its own entry, so syncing never double-counts) */
+export type TimeLog = Record<string, Record<string, number>>
+/** manual correction per day in seconds (added to what was tracked); the later edit wins when syncing */
+export type TimeAdjust = Record<string, { s: number; at: number }>
+
 interface State {
   theme: 'dark' | 'light'
   bmdSide: 'compression' | 'tension'
+  /** which sense of rotation is positive (moment reactions, rotations, couples) */
+  rotSign: 'cw' | 'ccw'
   attempts: Record<string, Attempt> // key: check id
   revealed: Record<string, boolean> // solutions opened
   xp: number
@@ -57,13 +65,22 @@ interface State {
   planner: PlannerState | null
   qStatus: Record<string, 'todo' | 'tried' | 'solved' | 'review'>
   mockScores: Record<string, { at: number; secA: number; secB: number; note?: string }>
+  timeLog: TimeLog
+  timeAdjust: TimeAdjust
+  timeGoal: number // hours per day
+  /** when each setting / question status last changed (keys: planner, timeGoal, bmdSide, rotSign, q:<id>), so syncing keeps the later one */
+  stamps: Record<string, number>
   setTheme(t: 'dark' | 'light'): void
   setBmdSide(s: 'compression' | 'tension'): void
+  setRotSign(s: 'cw' | 'ccw'): void
   record(id: string, correct: boolean, topic?: string): Attempt
   reveal(id: string): void
   setPlanner(p: PlannerState): void
   setQStatus(id: string, s: 'todo' | 'tried' | 'solved' | 'review'): void
   saveMock(id: string, secA: number, secB: number, note?: string): void
+  addTime(device: string, day: string, seconds: number): void
+  setTimeAdjust(day: string, seconds: number, at?: number): void
+  setTimeGoal(hours: number): void
   importState(json: string): void
   reset(): void
 }
@@ -79,6 +96,7 @@ export function isoDate(d: Date) {
 const initial = {
   theme: 'dark' as const,
   bmdSide: 'compression' as const,
+  rotSign: 'cw' as 'cw' | 'ccw',
   attempts: {},
   revealed: {},
   xp: 0,
@@ -87,14 +105,21 @@ const initial = {
   planner: null,
   qStatus: {},
   mockScores: {},
+  timeLog: {} as TimeLog,
+  timeAdjust: {} as TimeAdjust,
+  timeGoal: 8,
+  stamps: {} as Record<string, number>,
 }
+
+const stamp = (stamps: Record<string, number> = {}, key: string) => ({ ...stamps, [key]: Date.now() })
 
 export const useStore = create<State>()(
   persist(
     (set, get) => ({
       ...initial,
       setTheme: (theme) => set({ theme }),
-      setBmdSide: (bmdSide) => set({ bmdSide }),
+      setBmdSide: (bmdSide) => set({ bmdSide, stamps: stamp(get().stamps, 'bmdSide') }),
+      setRotSign: (rotSign) => set({ rotSign, stamps: stamp(get().stamps, 'rotSign') }),
       record(id, correct) {
         const prev = get().attempts[id]
         const a: Attempt = prev
@@ -118,9 +143,16 @@ export const useStore = create<State>()(
         return a
       },
       reveal: (id) => set({ revealed: { ...get().revealed, [id]: true } }),
-      setPlanner: (planner) => set({ planner }),
-      setQStatus: (id, s) => set({ qStatus: { ...get().qStatus, [id]: s } }),
+      setPlanner: (planner) => set({ planner, stamps: stamp(get().stamps, 'planner') }),
+      setQStatus: (id, s) => set({ qStatus: { ...get().qStatus, [id]: s }, stamps: stamp(get().stamps, 'q:' + id) }),
       saveMock: (id, secA, secB, note) => set({ mockScores: { ...get().mockScores, [id]: { at: Date.now(), secA, secB, note } } }),
+      addTime(device, day, seconds) {
+        const log = get().timeLog
+        const mine = log[device] ?? {}
+        set({ timeLog: { ...log, [device]: { ...mine, [day]: (mine[day] ?? 0) + seconds } } })
+      },
+      setTimeAdjust: (day, seconds, at = Date.now()) => set({ timeAdjust: { ...get().timeAdjust, [day]: { s: seconds, at } } }),
+      setTimeGoal: (timeGoal) => set({ timeGoal, stamps: stamp(get().stamps, 'timeGoal') }),
       importState(json) {
         const data = JSON.parse(json)
         set({ ...data })
@@ -131,10 +163,14 @@ export const useStore = create<State>()(
   ),
 )
 
+// the engine's display helpers follow the stored convention (set before any page renders)
+setClockwise(useStore.getState().rotSign !== 'ccw')
+useStore.subscribe((s) => setClockwise(s.rotSign !== 'ccw'))
+
 export function exportState(): string {
   const s = useStore.getState()
-  const { attempts, revealed, xp, streak, activity, planner, qStatus, mockScores, theme, bmdSide } = s
-  return JSON.stringify({ attempts, revealed, xp, streak, activity, planner, qStatus, mockScores, theme, bmdSide }, null, 1)
+  const { attempts, revealed, xp, streak, activity, planner, qStatus, mockScores, timeLog, timeAdjust, timeGoal, stamps, theme, bmdSide, rotSign } = s
+  return JSON.stringify({ attempts, revealed, xp, streak, activity, planner, qStatus, mockScores, timeLog, timeAdjust, timeGoal, stamps, theme, bmdSide, rotSign }, null, 1)
 }
 
 /** mastery of a topic: correct checks / total checks seen with that topic prefix */

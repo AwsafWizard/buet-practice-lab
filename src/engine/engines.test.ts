@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { cantileverMethod, portalMethod, xBraced } from './approx'
-import { stiffenedSuspension, parabolicCable, threeHingedArch } from './cable'
+import { hangerGirder, stiffenedSuspension, parabolicCable, threeHingedArch } from './cable'
 import { determinacy } from './determinacy'
 import { baseShear, period } from './eq'
 import { influenceLine, ildAt, type ILD } from './ild'
 import { reducedLL } from './llr'
 import { beam, type Model } from './model'
-import { absoluteMaxMoment, ssMomentILD, ssShearILD, trainExtremes, uniformPlusConcentrated } from './moving'
+import { absoluteMaxMoment, place, ssMomentILD, ssShearILD, trainExtremes, TRAVEL, uniformPlusConcentrated } from './moving'
 import { virtualWork } from './vw'
 import { Kz, kzt, qz } from './wind'
 
@@ -111,7 +111,7 @@ describe('moving loads', () => {
     // compare with direct brute force sampling
     let best = 0
     for (let s = -40; s <= 120; s += 0.01) {
-      for (const o of [1, -1]) {
+      for (const o of [-1]) {
         let v = 0
         let x = s
         t.P.forEach((P, k) => {
@@ -122,6 +122,17 @@ describe('moving loads', () => {
       }
     }
     near(e.max.value, best, 1e-3)
+  })
+  it('train travels right to left: wheel 1 leads, the rest trails to its right', () => {
+    const t = { P: [10, 20], gaps: [5] }
+    const p = place(ssShearILD(40, 10), t, 10, TRAVEL)
+    near(p.wheels[1].x, 15)
+  })
+  it('an unending uniform tail never has its far end on the span', () => {
+    // shear at the quarter point: the tail alone on the negative part (−15) would need a finite tail;
+    // with the tail behind, every real position gives V ≥ 0
+    const e = trainExtremes(ssShearILD(80, 20), { P: [20], gaps: [], udl: { w: 6, gap: 4 } })
+    near(e.min.value, 0, 1e-6)
   })
   it('shear ILD extremes with uniform + roving', () => {
     const ild: ILD = ssShearILD(60, 20)
@@ -221,6 +232,17 @@ describe('virtual work, cables, arch', () => {
   it('suspension bridge: hinge condition gives zero moment at the hinge', () => {
     const s = stiffenedSuspension({ L: 1000, h: 100, xh: 500, loads: [{ x: 300, P: 20 }, { x: 500, P: 20 }] })
     near(s.M(500), 0, 1e-6)
+  })
+  it('suspension bridge: discrete hangers match the uniform q at panel points', () => {
+    const loads = [{ x: 36, P: 12 }, { x: 72, P: 10 }]
+    const s = stiffenedSuspension({ L: 120, h: 100, xh: 60, loads })
+    const g = hangerGirder({ L: 120, panel: 12, q: s.q, loads })
+    for (let x = 0; x <= 120; x += 12) near(g.M(x), s.M(x), 1e-6)
+    near(g.M(60), 0, 1e-6)
+    // end half-panels go straight to the towers
+    near(g.RA, s.V(0) + (s.q * 12) / 2, 1e-6)
+    near(g.RA + g.RB + 9 * g.F, 22, 1e-6)
+    near(g.V(36, 1) - g.V(36), g.F - 12, 1e-6)
   })
   it('parabolic cable H = wL²/8h', () => {
     const c = parabolicCable({ L: 1000, w: 1, h: 1000 / 30 })

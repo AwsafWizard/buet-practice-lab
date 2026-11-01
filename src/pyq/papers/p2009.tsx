@@ -1,9 +1,10 @@
 // 2009-10 term final (held 13 Dec 2010) — 14 questions, all of equal value (210 / 10 answered = 21 marks each).
 import type { PYQ } from '../types'
 import { solve } from '../../engine/frame2d'
+import { rot, rotTag } from '../../engine/sign'
 import { influenceLine, ildAt, ildExtremes, type ILD } from '../../engine/ild'
 import { trainExtremes, ssShearILD, uniformPlusConcentrated, offsets, place, type Train } from '../../engine/moving'
-import { cablePointLoads, parabolicCable, stiffenedSuspension, simpleBeamM, type PointLoad } from '../../engine/cable'
+import { cablePointLoads, hangerGirder, parabolicCable, stiffenedSuspension, simpleBeamM, type PointLoad } from '../../engine/cable'
 import type { Model } from '../../engine/model'
 import { beamOf, F, floorSystem, Mo, P, truss, Wv, model } from '../../kit/builders'
 import { Figure, FrameSolution, ILDStack, MaxEffect, TrainOnILD, TrainTable, TrussSolution } from '../../kit/solutions'
@@ -134,17 +135,7 @@ const stretch12 = c12.segs.reduce((s, q) => s + (q.T * q.len) / EA12, 0)
 // ---------------------------------------------------------------- Q13 suspension bridge (Fig. 11)
 const s13in = { L: 800, h: 60, xh: 400, loads: [{ x: 200, P: 20 }, { x: 300, P: 20 }, { x: 600, P: 40 }] }
 const s13 = stiffenedSuspension(s13in)
-const s13ext = (() => {
-  let max = { x: 0, M: 0 }
-  let min = { x: 0, M: 0 }
-  for (let i = 0; i <= 8000; i++) {
-    const x = (800 * i) / 8000
-    const M = s13.M(x)
-    if (M > max.M) max = { x, M }
-    if (M < min.M) min = { x, M }
-  }
-  return { max, min }
-})()
+const s13ext = hangerGirder({ L: 800, panel: 100, q: s13.q, loads: s13in.loads })
 
 // ---------------------------------------------------------------- Q14 suspension cable
 const c14 = parabolicCable({ L: 1000, w: 1, h: 1000 / 30, E: 29000, A: 30 })
@@ -243,7 +234,7 @@ $$\\Delta V = \\frac{W\\,a}{L} - P_{\\text{crossing}}$$
         <Md>{`**Answer:** $V_{max} = \\mathbf{${fmt(trainExtremes(ild1, T1).max.value)}}$ k (positive). The uniform 5 k/ft trailer is included automatically whenever it reaches the span.`}</Md>
       </div>
     ),
-    notes: ['Read from Fig. 1: wheel spacing 4, 12, 6, 6, 6, 12, 6, 6, 6, 12, 4 ft; an 8 ft gap, then a 24 ft long uniform load of 5 k/ft. The exhaustive search checks both directions of travel.'],
+    notes: ['Read from Fig. 1: wheel spacing 4, 12, 6, 6, 6, 12, 6, 6, 6, 12, 4 ft; an 8 ft gap, then a 24 ft long uniform load of 5 k/ft. Train taken as travelling right to left (wheel 1 leads).'],
   },
   {
     id: '2009-10-A2',
@@ -339,7 +330,7 @@ Beam: free end A (x = 0), roller B (8 ft), C (16 ft), roller D (24 ft), internal
         <Md>{`**Structure.** A–B–C–D–E is a beam on two rollers (B, D) with overhangs A–B and D–E; E–F–G hangs on it at the hinge E and on the pin F. A load on E–G sends $\\tfrac{44-x}{12}$ to E (1 at E, 0 at F, $-0.5$ at G).
 
 **Müller-Breslau sketches.**
-- $R_D$: lift D by 1 → A–E rotates about B: 0 at B, 1 at D, $-1$ at A, $2$ at E; E–F–G follows to 0 at F and $-1$ at G.
+- $R_D$: lift D by 1 → A–E rotates about B: 0 at B, 1 at D, $-\\tfrac{8}{16} = -0.5$ at A, $\\tfrac{24}{16} = 1.5$ at E; E–F–G follows to 0 at F and $-0.75$ at G.
 - $V_C$: cut at C, unit relative slide with parallel segments: $-\\tfrac{x-8}{16}$ left of C, $+\\tfrac{24-x}{16}$ right (jump 1 at C), extended over the overhangs and through the hinge.
 - $V_{D}^{left}$ (section in C–D): load left of the section → $V = R_B - 1 = -\\tfrac{x-8}{16}$ ($+0.5$ at A, $-1$ just left of D); load right of D → $V = R_B = \\tfrac{24-x}{16}$ (0 at D, $-0.5$ at E), then back to 0 at F and $+0.25$ at G through the hinge.
 - $M_C$: unit kink at C → peak $\\tfrac{8\\cdot8}{16} = 4$ ft at C.
@@ -400,7 +391,8 @@ Truss: top chord U₁…U₇, 6 @ 12 ft = 72 ft, 12 ft above L₀ (pin under U�
     ),
     notes: [
       'The third member in the scan is blurred ("U?U₅"); it is read as U₄U₅.',
-      'Loads are assumed to act at the top-chord panel points U₁–U₇ (deck truss: the top chord is the straight, regularly panelled chord, the bottom chord is irregular and sloped). If the floor were on the bottom chord, the ILDs would be straight between the L-points instead.',
+      'Loaded chord: the paper does not say "deck" or "through" and Fig. 5 draws no loads or roadway. Loads are taken at the top-chord panel points U₁–U₇ (deck truss) because the top chord is the only straight, level, regularly panelled chord (6 @ 12 ft, the dimension line is drawn along it), while the bottom chord has irregular panels (6, 12, 12, 6, 12 ft) and slopes down from L₅ to L₇ — it cannot carry a level floor. Supports L₀/L₇ are on the bottom chord, as usual for a deck truss.',
+      'For reference, if the loads were applied at the bottom-chord points L₀…L₇ instead, the ordinates would be U₂U₃ −1.125 (at L₂), L₂L₃ +1.167 (at L₃), U₄U₅ −1.5 (at L₄), U₆L₅ +1.131 (at L₅).',
       'Geometry: L₆ is taken on the straight line L₅–L₇, i.e. 3 ft below L₅.',
     ],
   },
@@ -490,7 +482,11 @@ Dead load 2 k/ft acts over the whole deck (net area), live 5 k/ft over the part 
         <MaxEffect ild={ild5('L3L4')} w={5} P={60} wd={2} label="L₃L₄ (tension +)" />
       </div>
     ),
-    notes: ['Same reading of Fig. 5 as Q5 (loads at the top-chord panel points). Dead load is treated as uniform on the deck and delivered through the same panel points.'],
+    notes: [
+      'Same reading of Fig. 5 as Q5: loads at the top-chord panel points (deck truss) — the top chord is the only level, regularly panelled chord; the bottom chord has irregular panels and slopes from L₅ to L₇. The paper itself does not say deck/through. Dead load is treated as uniform on the deck and delivered through the same panel points.',
+      'The second bar is printed blurred ("L?L₄"); read as L₃L₄ (the bottom-chord bar ending at L₄ that the figure dimensions, 6 ft).',
+      'For reference, with the loads on the bottom chord (L-points) the answers would be U₄L₄ +85.1 / −53.1 k and L₃L₄ +468 k (unchanged).',
+    ],
   },
   // =============================================================== SECTION B
   {
@@ -511,7 +507,7 @@ Horizontal member C–D–E–F–G–H at 20 ft height: C (0), D (10 ft), E (22
       return [
         { key: 'ay', label: 'Vertical reaction at A (↑ +)', value: r.reaction('A').ry, unit: 'k' },
         { key: 'ax', label: 'Horizontal reaction at A (→ +)', value: r.reaction('A').rx, unit: 'k' },
-        { key: 'ma', label: 'Moment reaction at A (ccw +)', value: r.reaction('A').m, unit: 'k-ft' },
+        { key: 'ma', label: `Moment reaction at A (${rotTag()})`, value: rot(r.reaction('A').m), unit: 'k-ft' },
         { key: 'link', label: 'Link force at G (↑ on the beam +)', value: r.reaction('B').ry, unit: 'k' },
       ]
     },
@@ -730,7 +726,7 @@ Span 8 @ 100 ft = 800 ft, cable sag 60 ft, stiffening girder hinged at both towe
         <Md>{`A parabolic cable carries a **uniform** hanger load $q$ (per ft) on the girder: $q = 8Hh/L^2$. The girder moment is the simple-beam moment of the applied loads minus the effect of $q$, i.e. $M(x) = M_0(x) - H\\,y(x)$. The central hinge gives $M(400) = 0$:
 $$R_{left} = \\frac{20(600) + 20(500) + 40(200)}{800} = ${fmt((20 * 600 + 20 * 500 + 40 * 200) / 800)}\\ \\text{k},\\quad M_0(400) = ${fmt(s13.M0h)}\\ \\text{k-ft}$$`}</Md>
         <SuspensionSolution L={800} h={60} xh={400} loads={s13in.loads} panel={100} marks={[0, 100, 200, 300, 400, 500, 600, 700, 800]} />
-        <Md>{`**Answers:** hanger force $= q \\times 100 = \\mathbf{${fmt(s13.q * 100, 3)}}$ k each; girder moments range from ${fmt(s13ext.min.M)} k-ft (at x ≈ ${fmt(s13ext.min.x, 0)} ft) to ${fmt(s13ext.max.M)} k-ft (at x ≈ ${fmt(s13ext.max.x, 0)} ft), with zero at both towers and at the central hinge. Note $q L = ${fmt(s13.q * 800)}$ k exceeds the 80 k applied, so the girder end reactions act downward (anchored ends).`}</Md>
+        <Md>{`**Answers:** hanger force $= q \\times 100 = \\mathbf{${fmt(s13.q * 100, 3)}}$ k each; girder moments range from ${fmt(s13ext.min.M)} k-ft (at x ≈ ${fmt(s13ext.min.x, 0)} ft) to ${fmt(s13ext.max.M)} k-ft (at x ≈ ${fmt(s13ext.max.x, 0)} ft), with zero at both towers and at the central hinge. Girder reactions at the towers (7 hangers; each end half-panel goes straight to its tower): ${fmt(s13ext.RA, 3)} k at the left and ${fmt(s13ext.RB, 3)} k at the right (minus = downward, so that end must be anchored).`}</Md>
       </div>
     ),
     notes: ['Load positions read from Fig. 11: the 20 k loads hang under the 2nd and 3rd hangers (200, 300 ft) and the 40 k under the 6th (600 ft). The girder is hinged at the towers and at mid-span (circles in the figure).'],

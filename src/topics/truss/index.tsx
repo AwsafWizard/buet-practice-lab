@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { fmt } from '../../components/DiagramView'
-import { StructureView } from '../../components/StructureView'
+import { StructureView, type Dim } from '../../components/StructureView'
 import { Callout, isClose, Md, Section, Seg, Step, Steps, Tex } from '../../components/ui'
 import { xBraced } from '../../engine/approx'
 import { solve } from '../../engine/frame2d'
@@ -8,10 +8,11 @@ import type { Model } from '../../engine/model'
 import { P, truss } from '../../kit/builders'
 import { TrussSolution, trussForces } from '../../kit/solutions'
 import { pick, randInt, rng, Slider, TopicFrequency, useSeed } from '../../labs/common'
-import { buildTruss, cutMembers, intersect, TRUSS_NAMES, zeroForceByRules, type TrussType } from '../../labs/trusses'
+import { buildTruss, cutMembers, heightDims, intersect, TRUSS_NAMES, zeroForceByRules, type TrussType } from '../../labs/trusses'
 import type { PYQ } from '../../pyq/types'
 import { useStore } from '../../store'
 import type { TopicModule } from '../modules'
+import { TrussPlayground } from './TrussPlayground'
 
 const TYPES: TrussType[] = ['pratt', 'howe', 'warren', 'parker', 'roof', 'xbraced']
 
@@ -93,12 +94,13 @@ function MemberGame() {
         </button>
       </div>
       {type === 'xbraced' && <div className="text-xs text-mute">Indeterminate: assume the two diagonals of each panel share the panel shear equally (both take T and C).</div>}
-      <div className="grid lg:grid-cols-[1.6fr_1fr] gap-3 items-start">
+      <div className="grid cq-lg:grid-cols-[1.6fr_1fr] gap-3 items-start">
         <div className="rounded-xl bg-bg/60 border border-line p-2">
           <StructureView
             model={t.model}
             autoDimX
-            autoDimY={[0, t.h]}
+            autoDimY={type === 'parker' ? undefined : [0, t.h]}
+            dims={type === 'parker' ? heightDims(t.model) : undefined}
             memberColor={color}
             memberLabels={reveal ? labels : undefined}
             selectedMember={sel}
@@ -179,7 +181,7 @@ function ZeroHunt() {
   }
   const correct = [...picked].filter((x) => zero.has(x)).length
   return (
-    <div className="grid lg:grid-cols-[1.6fr_1fr] gap-3">
+    <div className="grid cq-lg:grid-cols-[1.6fr_1fr] gap-3">
       <div className="rounded-xl bg-bg/60 border border-line p-2">
         <StructureView
           model={t.model}
@@ -249,7 +251,7 @@ function SectionCutter() {
     <div className="space-y-2">
       <Slider label="Cut at x =" value={xc} min={1} max={89} step={0.5} onChange={setXc} unit="′" />
       <div className="rounded-xl bg-bg/60 border border-line p-2">
-        <StructureView model={t.model} memberColor={color} dimMembers={dim} autoDimX maxHeight={260}>
+        <StructureView model={t.model} memberColor={color} dimMembers={dim} autoDimX autoDimY maxHeight={260}>
           {(tr) => (
             <g>
               <line x1={tr.x(xc)} x2={tr.x(xc)} y1={10} y2={tr.H - 10} stroke="var(--c-load)" strokeDasharray="6 4" strokeWidth={2} />
@@ -304,7 +306,7 @@ function XBracedExplorer() {
 function Overview() {
   return (
     <div>
-      <Section title="Truss essentials" right={<div className="w-72 hidden md:block"><TopicFrequency topic="truss" /></div>}>
+      <Section title="Truss essentials" right={<div className="w-72 hidden cq-md:block"><TopicFrequency topic="truss" /></div>}>
         <Md>{`**Assumptions**: members joined by frictionless pins, loads applied at joints → every member is a **two-force member** carrying only axial force (tension +, compression −).
 
 - **Method of joints** — ΣFx = ΣFy = 0 at a joint with ≤ 2 unknowns. Best for finding *all* forces or near supports.
@@ -349,6 +351,9 @@ function Approach() {
 function Lab() {
   return (
     <div>
+      <Section title="Truss playground" sub="Pick a truss and shape it, then drag a load along the deck. Every member force updates live — click a member for its influence line.">
+        <TrussPlayground />
+      </Section>
       <Section title="Solve it member by member" sub="Pick a truss type, click a member, enter its force with T/C. New geometry and loads every time.">
         <MemberGame />
       </Section>
@@ -360,7 +365,7 @@ function Lab() {
 }
 
 // ---------------------------------------------------------------- own problems
-const ownT = (id: string, level: PYQ['level'], title: string, text: string, m: Model, asked: string[], forces?: () => Map<string, number>): PYQ => ({
+const ownT = (id: string, level: PYQ['level'], title: string, text: string, m: Model, asked: string[], forces?: () => Map<string, number>, dims?: Dim[]): PYQ => ({
   id: `own-truss-${id}`,
   paper: 'own',
   level,
@@ -371,7 +376,7 @@ const ownT = (id: string, level: PYQ['level'], title: string, text: string, m: M
   title,
   text,
   pages: [],
-  figure: () => <StructureView model={m} autoDimX maxHeight={260} />,
+  figure: () => <StructureView model={m} autoDimX autoDimY={!dims} dims={dims} maxHeight={260} />,
   checks: () => {
     const f = forces ? forces() : trussForces(m).f
     return asked.map((a) => ({ key: a, label: `Force in ${a} (T +, C −)`, value: f.get(a) ?? 0, unit: 'k' }))
@@ -386,7 +391,7 @@ const ownX = truss('A:0,0 B:0,12 C:0,24 D:10,0 E:10,12 F:10,24', 'A-D B-E C-F A-
 const problems: PYQ[] = [
   ownT('1', 'warm-up', 'Pratt truss — three members by one section', 'Six-panel Pratt truss (panels 20 ft, height 25 ft) with panel loads 30, 30, 40, 30, 30 k at L1…L5. Find the forces in U2U3, U2L3 and L2L3.', ownPratt, ['U2U3', 'U2L3', 'L2L3']),
   ownT('2', 'warm-up', 'Roof truss', 'Fink-type roof truss: 6 panels of 10 ft, rise 15 ft, top-chord joint loads 10, 10, 15, 10, 10 k. Find U2U3, U2L3 and L2L3.', ownRoof, ['U2U3', 'U2L3', 'L2L3']),
-  ownT('3', 'exam', 'Parker truss (curved top chord)', 'Find the forces in U2U3, U2L3 and L2L3 of the curved-chord truss (6 × 18 ft, max height 24 ft, loads 20, 25, 30, 25, 20 k).', ownParker, ['U2U3', 'U2L3', 'L2L3']),
+  ownT('3', 'exam', 'Parker truss (curved top chord)', 'Find the forces in U2U3, U2L3 and L2L3 of the curved-chord truss (6 × 18 ft, vertical heights as shown, loads 20, 25, 30, 25, 20 k at L1…L5).', ownParker, ['U2U3', 'U2L3', 'L2L3'], undefined, heightDims(ownParker)),
   ownT('4', 'exam', 'X-braced tower — approximate', 'A two-panel braced tower (10 ft wide, 2 × 12 ft high) carries 20 k and 10 k horizontally. Diagonals can take tension and compression. Find all diagonal forces approximately.', ownX, ['AE', 'BD', 'BF', 'CE'], () => xBraced(ownX, [['AE', 'BD'], ['BF', 'CE']], 'both').forces),
   ownT('5', 'challenge', 'Same tower, slender diagonals', 'Repeat problem 4 assuming the diagonals cannot take compression.', ownX, ['AE', 'BD', 'BF', 'CE'], () => xBraced(ownX, [['AE', 'BD'], ['BF', 'CE']], 'tension').forces),
 ]

@@ -48,6 +48,8 @@ export interface StructureViewProps {
   under?: (t: Transform) => ReactNode
   className?: string
   wobble?: boolean
+  /** tag unsupported member ends as "free end" (default true) */
+  freeEnds?: boolean
 }
 
 const PX_W = 820
@@ -123,28 +125,56 @@ export function StructureView(p: StructureViewProps) {
   const lu = p.lenUnit ?? '′'
   const showLoads = p.showLoads ?? true
 
-  // auto x-dimension chain
+  // world points where loads act (point loads, partial UDL ends) — added to the auto chains
+  const loadPts = useMemo(() => {
+    const out: { x: number; y: number; horiz: boolean; vert: boolean }[] = []
+    const mm = new Map(p.model.members.map((m) => [m.id, m]))
+    for (const l of showLoads ? loads : []) {
+      if (l.kind === 'node') continue
+      const m = mm.get(l.member)
+      if (!m) continue
+      const ni = nm.get(m.i)!,
+        nj = nm.get(m.j)!
+      const L = Math.hypot(nj.x - ni.x, nj.y - ni.y)
+      const at = (s: number) => {
+        const r = Math.min(Math.max(s / L, 0), 1)
+        out.push({ x: ni.x + r * (nj.x - ni.x), y: ni.y + r * (nj.y - ni.y), horiz: Math.abs(nj.y - ni.y) < 1e-6, vert: Math.abs(nj.x - ni.x) < 1e-6 })
+      }
+      if (l.kind === 'point') at(l.a)
+      else {
+        if (l.a != null) at(l.a)
+        if (l.b != null) at(l.b)
+      }
+    }
+    return out
+  }, [loads, showLoads, p.model, nm])
+
+  const chain = (vals: number[]) => [...new Set(vals.map((v) => +v.toFixed(4)))].sort((a, b) => a - b)
+
+  // auto x-dimension chain (row 1: nodes + load positions; row 2: nodes only, when loads split it)
   const dimsX = useMemo(() => {
     if (!p.autoDimX) return []
-    const xs = Array.isArray(p.autoDimX)
-      ? [...p.autoDimX].sort((a, b) => a - b)
-      : [...new Set(p.model.nodes.map((n) => +n.x.toFixed(4)))].sort((a, b) => a - b)
+    const nodeXs = Array.isArray(p.autoDimX) ? chain(p.autoDimX) : chain(p.model.nodes.map((n) => n.x))
+    const xs = Array.isArray(p.autoDimX) ? nodeXs : chain([...nodeXs, ...loadPts.filter((q) => !q.vert).map((q) => q.x)])
     const out: Dim[] = []
     for (let i = 0; i < xs.length - 1; i++) out.push({ from: [xs[i], t.minY], to: [xs[i + 1], t.minY], text: fmtLen(xs[i + 1] - xs[i], lu) })
+    if (xs.length > nodeXs.length)
+      for (let i = 0; i < nodeXs.length - 1; i++) out.push({ from: [nodeXs[i], t.minY], to: [nodeXs[i + 1], t.minY], text: fmtLen(nodeXs[i + 1] - nodeXs[i], lu), off: 26 })
     return out
-  }, [p.autoDimX, p.model, t, lu])
+  }, [p.autoDimX, p.model, t, lu, loadPts])
   const dimsY = useMemo(() => {
     if (!p.autoDimY) return []
-    const ys = Array.isArray(p.autoDimY)
-      ? [...p.autoDimY].sort((a, b) => a - b)
-      : [...new Set(p.model.nodes.map((n) => +n.y.toFixed(4)))].sort((a, b) => a - b)
+    const nodeYs = Array.isArray(p.autoDimY) ? chain(p.autoDimY) : chain(p.model.nodes.map((n) => n.y))
+    const ys = Array.isArray(p.autoDimY) ? nodeYs : chain([...nodeYs, ...loadPts.filter((q) => !q.horiz).map((q) => q.y)])
     const out: Dim[] = []
     for (let i = 0; i < ys.length - 1; i++) out.push({ from: [t.maxX, ys[i]], to: [t.maxX, ys[i + 1]], text: fmtLen(ys[i + 1] - ys[i], lu) })
+    if (ys.length > nodeYs.length)
+      for (let i = 0; i < nodeYs.length - 1; i++) out.push({ from: [t.maxX, nodeYs[i]], to: [t.maxX, nodeYs[i + 1]], text: fmtLen(nodeYs[i + 1] - nodeYs[i], lu), off: 40 })
     return out
-  }, [p.autoDimY, p.model, t, lu])
+  }, [p.autoDimY, p.model, t, lu, loadPts])
 
-  const Hextra = (dimsX.length ? 34 : 0) + 6
-  const Wextra = dimsY.length ? 44 : 0
+  const Hextra = (dimsX.length ? 34 : 0) + (dimsX.some((d) => d.off) ? 26 : 0) + 6
+  const Wextra = (dimsY.length ? 44 : 0) + (dimsY.some((d) => d.off) ? 40 : 0)
 
   return (
     <svg
@@ -282,6 +312,27 @@ export function StructureView(p: StructureViewProps) {
             </text>
           )
         })}
+      {/* free ends: one framed member, no support, no hinge — tag them so they aren't mistaken for pins */}
+      {p.model.nodes.map((n) => {
+        const ms = connected(p.model, n.id)
+        if (p.freeEnds === false || ms.length !== 1 || ms[0].truss || n.hinge || p.model.supports.some((s) => s.node === n.id)) return null
+        const o = outward(p.model, n)
+        const horiz = Math.abs(o[0]) > 0.7
+        return (
+          <text
+            key={'fe' + n.id}
+            x={t.x(n.x) + (horiz ? o[0] * 16 : 0)}
+            y={t.y(n.y) + (horiz ? 20 : -o[1] * 16 + (o[1] > 0 ? -14 : 18))}
+            fontSize={10.5}
+            fontStyle="italic"
+            textAnchor={horiz ? (o[0] > 0 ? 'start' : 'end') : 'middle'}
+            fill="var(--c-mute)"
+            style={{ pointerEvents: 'none' }}
+          >
+            free end
+          </text>
+        )
+      })}
       {/* loads */}
       {showLoads && loads.map((l, k) => <LoadGlyph key={k} l={l} model={p.model} t={t} fu={fu} />)}
       {/* dims */}
@@ -289,7 +340,7 @@ export function StructureView(p: StructureViewProps) {
         <DimGlyph key={'d' + k} d={d} t={t} />
       ))}
       {dimsY.map((d, k) => (
-        <DimGlyph key={'dy' + k} d={{ ...d, off: 30 }} t={t} />
+        <DimGlyph key={'dy' + k} d={{ ...d, off: 30 + (d.off ?? 0) }} t={t} />
       ))}
       {p.children?.(t)}
     </svg>

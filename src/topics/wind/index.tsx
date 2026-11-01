@@ -1,22 +1,16 @@
 import { useMemo, useState } from 'react'
 import { fmt } from '../../components/DiagramView'
 import { Answer, Callout, Choice, Md, Section, Seg, Step, Steps, Tex } from '../../components/ui'
-import { classifyEnclosure, CP_WINDWARD, cpLeeward, gustFlexible, gustRigid, importanceWind, isLowRise, Kz, kzt, KZT_PARAMS, lambdaFactor, MS_TO_MPH, ps30, PSF_TO_KPA, storeyForces, TERRAIN, ZONES, type Enclosure, type Exposure, type Hill } from '../../engine/wind'
+import { CITY_V, classifyEnclosure, CP_WINDWARD, cpLeeward, GCPI, gustFlexible, gustRigid, importanceWind, isLowRise, Kz, kzt, KZT_PARAMS, lambdaFactor, MS_TO_MPH, ps30, PSF_TO_KPA, storeyForces, TERRAIN, ZONES, type Enclosure, type Exposure, type Hill, type WallOpening } from '../../engine/wind'
 import { GustRigidSolution, KztSolution, WindAnalytical, WindLoadCases } from '../../kit/loads'
+import { CheckTable, hashKey, type CheckCol } from '../../labs/CheckTable'
 import { pick, randInt, rng, Slider, TopicFrequency, useSeed } from '../../labs/common'
 import type { PYQ } from '../../pyq/types'
 import type { TopicModule } from '../modules'
+import { randomSimp, type SimpProblem } from './simplified'
+import { SimplifiedPractice } from './SimplifiedPractice'
 
-export const CITY_V: Record<string, number> = {
-  Dhaka: 65.7,
-  "Cox's Bazar": 80,
-  Chittagong: 80,
-  Comilla: 61.4,
-  Mymensingh: 67.4,
-  Narayanganj: 61.1,
-  Rangamati: 56.7,
-  Tangail: 50.6,
-}
+export { CITY_V }
 
 // ---------------------------------------------------------------- pressure profile
 function Profile({ r, B, h, levels }: { r: ReturnType<typeof storeyForces>; B: number; h: number; levels: number[] }) {
@@ -64,17 +58,89 @@ function Profile({ r, B, h, levels }: { r: ReturnType<typeof storeyForces>; B: n
   )
 }
 
+// ---------------------------------------------------------------- random problem
+interface Prob {
+  city: string
+  exp: Exposure
+  occ: 1 | 2 | 3 | 4
+  n: number
+  hs: number
+  B: number
+  L: number
+  par: number
+  encl: Enclosure
+  // set only for a generated problem
+  use?: string
+  walls?: WallOpening[]
+}
+
+const USES: Record<1 | 2 | 3 | 4, string[]> = {
+  1: ['farm storage building', 'temporary storage facility'],
+  2: ['residential apartment building', 'office building', 'hotel'],
+  3: ['school building (≈ 400 students)', 'community centre for 500 people', 'college building (≈ 600 students)'],
+  4: ['hospital with surgery and emergency units', 'fire station', 'designated cyclone shelter', 'police station'],
+}
+const TERRAIN_TEXT: Record<Exposure, (c: string) => string> = {
+  A: (c) => `in a densely built-up urban area of ${c}, with buildings of similar height all around`,
+  B: (c) => `on open terrain with scattered buildings and trees on the outskirts of ${c}`,
+  C: (c) => `on flat, unobstructed open ground (paddy fields) near ${c}`,
+}
+const OCC = ['', 'I', 'II', 'III', 'IV']
+const WALL_NAME: Record<WallOpening['wall'], string> = { windward: 'Windward', leeward: 'Leeward', side1: 'Side wall 1', side2: 'Side wall 2', roof: 'Roof' }
+
+function randomProb(seed: number): Prob {
+  const r = rng(seed)
+  const occ = pick(r, [1, 2, 2, 2, 3, 3, 4, 4]) as 1
+  const n = occ === 1 ? randInt(r, 1, 3) : randInt(r, 3, 14)
+  const hs = pick(r, [3, 3, 3.2, 3.5])
+  const B = randInt(r, 15, 45, 5),
+    L = randInt(r, 15, 45, 5)
+  const h = n * hs
+  // openings in m²: a big windward opening (shop fronts, a garage) makes it partially enclosed
+  const partial = r() < 0.4
+  const op = (gross: number, lo: number, hi: number) => Math.round(gross * (lo + (hi - lo) * r()))
+  const walls: WallOpening[] = ([
+    { wall: 'windward', gross: Math.round(B * h), open: 0 },
+    { wall: 'leeward', gross: Math.round(B * h), open: 0 },
+    { wall: 'side1', gross: Math.round(L * h), open: 0 },
+    { wall: 'side2', gross: Math.round(L * h), open: 0 },
+  ] satisfies WallOpening[]).map((w) => ({ ...w, open: partial ? (w.wall === 'windward' ? op(w.gross, 0.12, 0.3) : op(w.gross, 0.005, 0.03)) : op(w.gross, 0.03, 0.1) }))
+  return {
+    city: pick(r, Object.keys(CITY_V)),
+    exp: pick(r, ['A', 'B', 'C'] as Exposure[]),
+    occ,
+    n,
+    hs,
+    B,
+    L,
+    par: pick(r, [0, 1, 1, 1.2, 1.5]),
+    encl: classifyEnclosure(walls).cls,
+    use: pick(r, USES[occ]),
+    walls,
+  }
+}
+
+// ---------------------------------------------------------------- storey force table
+type ForceRow = { key: string; name: string; z: number; Kz: number; q: number; net: number; F: number }
+const FORCE_COLS: CheckCol<ForceRow>[] = [
+  { key: 'Kz', label: 'K_z', get: (r) => r.Kz, abs: 0.005, digits: 3 },
+  { key: 'q', label: 'q_z (kN/m²)', get: (r) => r.q, abs: 0.005, digits: 3 },
+  { key: 'p', label: 'net p (kN/m²)', get: (r) => r.net, abs: 0.005, digits: 3 },
+  { key: 'F', label: 'F (kN)', get: (r) => r.F, abs: 0.5, digits: 1 },
+]
+
 // ---------------------------------------------------------------- guided calculator
 function Calculator() {
-  const [city, setCity] = useState('Dhaka')
-  const [exp, setExp] = useState<Exposure>('A')
-  const [occ, setOcc] = useState<1 | 2 | 3 | 4>(2)
-  const [n, setN] = useState(6)
-  const [hs, setHs] = useState(3)
-  const [B, setB] = useState(20)
-  const [L, setL] = useState(30)
-  const [par, setPar] = useState(1)
-  const [encl, setEncl] = useState<Enclosure>('enclosed')
+  const [pr, setPr] = useState<Prob>({ city: 'Dhaka', exp: 'A', occ: 2, n: 6, hs: 3, B: 20, L: 30, par: 1, encl: 'enclosed' })
+  const [random, setRandom] = useState(false)
+  const [plots, setPlots] = useState(false)
+  const set = (o: Partial<Prob>) => setPr({ ...pr, ...o })
+  const generate = () => {
+    setPr(randomProb(Math.floor(Math.random() * 1e9)))
+    setRandom(true)
+    setPlots(false)
+  }
+  const { city, exp, occ, n, hs, B, L, par, encl } = pr
   const V = CITY_V[city]
   const I = importanceWind(occ, V)
   const levels = Array.from({ length: n }, (_, k) => (k + 1) * hs)
@@ -84,73 +150,152 @@ function Calculator() {
   const G = rigid ? 0.85 : gustFlexible({ h, B, L, exp, V, n1: 1 / T, beta: 0.02 }).Gf
   const r = useMemo(() => storeyForces({ V, exp, I, Kzt: 1, G, B, L, levels, parapet: par > 0 ? { height: par } : undefined }), [V, exp, I, G, B, L, n, hs, par])
   const lr = isLowRise(h, Math.min(B, L))
-  const id = (k: string) => `wind:calc:${city}:${exp}:${occ}:${n}:${hs}:${B}:${L}:${par}:${k}`
-  return (
-    <div className="space-y-3">
-      <div className="grid md:grid-cols-4 gap-2 text-sm">
-        <label className="flex flex-col gap-1">
-          <span className="text-xs text-mute">Location (V, m/s)</span>
-          <select className="field" value={city} onChange={(e) => setCity(e.target.value)}>
-            {Object.entries(CITY_V).map(([c, v]) => (
-              <option key={c} value={c}>
-                {c} — {v}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs text-mute">Exposure</span>
-          <select className="field" value={exp} onChange={(e) => setExp(e.target.value as Exposure)}>
-            <option value="A">A (urban, wooded)</option>
-            <option value="B">B (open, scattered)</option>
-            <option value="C">C (flat, unobstructed)</option>
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs text-mute">Occupancy</span>
-          <select className="field" value={occ} onChange={(e) => setOcc(+e.target.value as 1)}>
-            {[1, 2, 3, 4].map((o) => (
-              <option key={o} value={o}>
-                {['', 'I', 'II', 'III', 'IV'][o]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs text-mute">Enclosure</span>
-          <select className="field" value={encl} onChange={(e) => setEncl(e.target.value as Enclosure)}>
-            <option value="enclosed">enclosed</option>
-            <option value="partially">partially enclosed</option>
-            <option value="open">open</option>
-          </select>
-        </label>
-      </div>
-      <div className="grid md:grid-cols-3 gap-x-6">
-        <Slider label="Storeys" value={n} min={1} max={20} onChange={setN} />
-        <Slider label="Storey height" value={hs} min={3} max={4} step={0.5} onChange={setHs} unit=" m" />
-        <Slider label="Parapet" value={par} min={0} max={1.5} step={0.25} onChange={setPar} unit=" m" />
-        <Slider label="B (⊥ wind)" value={B} min={10} max={60} onChange={setB} unit=" m" />
-        <Slider label="L (∥ wind)" value={L} min={10} max={60} onChange={setL} unit=" m" />
-      </div>
-      <div className="grid lg:grid-cols-[1fr_1fr] gap-4">
-        <div className="rounded-xl border border-line p-3 space-y-1 text-sm">
-          <div className="text-xs font-bold uppercase tracking-wider text-faint">Your checkpoints</div>
-          <Choice id={id('lr')} label={`Low-rise? (h = ${h} m)`} options={[{ v: 'y', label: 'Yes' }, { v: 'n', label: 'No' }]} answer={lr.ok ? 'y' : 'n'} />
-          <Choice id={id('rig')} label={`Rigid? (T ≈ ${fmt(T, 3)} s)`} options={[{ v: 'y', label: 'Rigid' }, { v: 'n', label: 'Flexible' }]} answer={rigid ? 'y' : 'n'} />
-          <Answer id={id('I')} label="Importance factor I" value={I} compact />
-          <Answer id={id('kh')} label="K_h at the roof" value={r.Kh} compact />
-          <Answer id={id('qh')} label="q_h (kN/m²)" value={r.qh} compact />
-          <Answer id={id('pl')} label="Leeward p (kN/m²)" value={r.pl} compact />
-          <Answer id={id('f1')} label="Storey force, level 1 (kN)" value={r.rows[0].F} compact />
-          <Answer id={id('V')} label="Base shear (kN)" value={r.base} compact />
-        </div>
+  const encC = random && pr.walls ? classifyEnclosure(pr.walls) : null
+  const key = hashKey(JSON.stringify([pr, random]))
+  const id = (k: string) => `wind:calc:${key}:${k}`
+  const tableRows: ForceRow[] = [
+    ...(r.parapet ? [{ key: 'par', name: 'Parapet', z: r.parapet.zp, Kz: r.parapet.Kz, q: r.parapet.qp, net: r.parapet.net, F: r.parapet.F }] : []),
+    ...[...r.rows].reverse().map((q) => ({ key: `L${q.level}`, name: q.level === n ? `Roof (L${q.level})` : `L${q.level}`, z: q.z, Kz: q.Kz, q: q.qz, net: q.net, F: q.F })),
+  ]
+  const plotsBlock = (
+    <div className="space-y-2">
+      <button className="text-sm text-accent underline" onClick={() => setPlots(!plots)}>
+        {plots ? 'Hide' : 'Show'} pressure profile (gives away q_z and the leeward p)
+      </button>
+      {plots && (
         <div className="rounded-xl bg-bg/60 border border-line p-2">
           <Profile r={r} B={B} h={h} levels={levels} />
         </div>
+      )}
+    </div>
+  )
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <button className="btn" onClick={generate}>
+          🎲 Randomly generate
+        </button>
+        {random && (
+          <button className="text-sm text-accent underline" onClick={() => setRandom(false)}>
+            edit as custom building
+          </button>
+        )}
       </div>
+      {random && pr.walls ? (
+        <div className="rounded-xl border border-line bg-panel2/50 p-3 text-sm leading-relaxed">
+          {[8, 11, 18].includes(n) ? 'An' : 'A'} {n}-storey RC <b>{pr.use}</b> stands {TERRAIN_TEXT[exp](city)}. Every storey is {hs} m high and the roof is flat{par > 0 ? ` with a ${par} m parapet` : ' with no parapet'}. Plan {B} m (normal to the wind) × {L} m (along the wind). The site is level (K_zt = 1). Wall openings are given below. Find the storey wind forces and the base shear for the MWFRS in this direction; estimate T = 0.0466 h^0.9.
+        </div>
+      ) : (
+        <>
+          <div className="grid cq-md:grid-cols-4 gap-2 text-sm">
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-mute">Location</span>
+              <select className="field" value={city} onChange={(e) => set({ city: e.target.value })}>
+                {Object.keys(CITY_V).map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-mute">Exposure</span>
+              <select className="field" value={exp} onChange={(e) => set({ exp: e.target.value as Exposure })}>
+                <option value="A">A (urban, wooded)</option>
+                <option value="B">B (open, scattered)</option>
+                <option value="C">C (flat, unobstructed)</option>
+              </select>
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-mute">Occupancy</span>
+              <select className="field" value={occ} onChange={(e) => set({ occ: +e.target.value as 1 })}>
+                {[1, 2, 3, 4].map((o) => (
+                  <option key={o} value={o}>
+                    {OCC[o]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-mute">Enclosure</span>
+              <select className="field" value={encl} onChange={(e) => set({ encl: e.target.value as Enclosure })}>
+                <option value="enclosed">enclosed</option>
+                <option value="partially">partially enclosed</option>
+                <option value="open">open</option>
+              </select>
+            </label>
+          </div>
+          <div className="grid cq-md:grid-cols-3 gap-x-6">
+            <Slider label="Storeys" value={n} min={1} max={20} onChange={(v) => set({ n: v })} />
+            <Slider label="Storey height" value={hs} min={3} max={4} step={0.5} onChange={(v) => set({ hs: v })} unit=" m" />
+            <Slider label="Parapet" value={par} min={0} max={1.5} step={0.25} onChange={(v) => set({ par: v })} unit=" m" />
+            <Slider label="B (⊥ wind)" value={B} min={10} max={60} onChange={(v) => set({ B: v })} unit=" m" />
+            <Slider label="L (∥ wind)" value={L} min={10} max={60} onChange={(v) => set({ L: v })} unit=" m" />
+          </div>
+        </>
+      )}
+      <div className="grid cq-lg:grid-cols-[1fr_1fr] gap-4">
+        <div key={key} className="rounded-xl border border-line p-3 space-y-1 text-sm">
+          <div className="text-xs font-bold uppercase tracking-wider text-faint">Your checkpoints</div>
+          {random && <Choice id={id('occ')} label="Occupancy" options={[1, 2, 3, 4].map((o) => ({ v: OCC[o], label: OCC[o] }))} answer={OCC[occ]} />}
+          <Answer id={id('Vb')} label="Basic wind speed V (m/s)" value={V} compact />
+          <Answer id={id('I')} label="Importance factor I" value={I} compact />
+          {encC && (
+            <>
+              <Choice id={id('encl')} label="Enclosure" options={[{ v: 'open', label: 'Open' }, { v: 'partially', label: 'Partially' }, { v: 'enclosed', label: 'Enclosed' }]} answer={encC.cls} />
+              <Answer id={id('gcpi')} label="GC_pi (±)" value={GCPI[encC.cls]} compact />
+            </>
+          )}
+          <Choice id={id('lr')} label={`Low-rise? (h = ${fmt(h)} m)`} options={[{ v: 'y', label: 'Yes' }, { v: 'n', label: 'No' }]} answer={lr.ok ? 'y' : 'n'} />
+          <Choice id={id('rig')} label={`Rigid? (T ≈ ${fmt(T, 3)} s)`} options={[{ v: 'y', label: 'Rigid' }, { v: 'n', label: 'Flexible' }]} answer={rigid ? 'y' : 'n'} />
+          <Answer id={id('G')} label="Gust factor G" value={G} compact />
+          <Answer id={id('kh')} label="K_h at the roof" value={r.Kh} compact />
+          <Answer id={id('qh')} label="q_h (kN/m²)" value={r.qh} compact />
+          <Answer id={id('pl')} label="Leeward p (kN/m²)" value={r.pl} compact />
+          <Answer id={id('V')} label="Base shear (kN)" value={r.base} compact />
+        </div>
+        {random && pr.walls ? (
+          <div className="space-y-2">
+            <table className="tbl w-auto text-sm">
+              <thead>
+                <tr>
+                  <th>Wall</th>
+                  <th>Gross area (m²)</th>
+                  <th>Openings (m²)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pr.walls.map((w) => (
+                  <tr key={w.wall}>
+                    <td className="txt">{WALL_NAME[w.wall]}</td>
+                    <td>{w.gross}</td>
+                    <td>{w.open}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="text-xs text-faint">Wind blows onto the windward wall. The roof has no openings.</p>
+          </div>
+        ) : (
+          plotsBlock
+        )}
+      </div>
+      <div>
+        <div className="text-xs font-bold uppercase tracking-wider text-faint mb-1">Storey forces — fill the table (net p = windward − leeward, external only)</div>
+        <CheckTable key={key} rows={tableRows} rowKey={(x) => x.key} given={[{ label: 'Level', get: (x) => x.name }, { label: 'z (m)', get: (x) => fmt(x.z) }]} cols={FORCE_COLS} idp={id('tbl')} />
+      </div>
+      {random && plotsBlock}
       <details>
         <summary className="cursor-pointer text-accent font-semibold text-sm">Full solution table</summary>
-        <div className="mt-2">
+        <div className="mt-2 space-y-2">
+          {random && (
+            <p className="text-sm">
+              {pr.use} → occupancy {OCC[occ]}; {city} → V = {V} m/s; terrain → exposure {exp}.
+            </p>
+          )}
+          {encC && (
+            <Md>{`Enclosure: every wall ≥ 80 % open? ${encC.allOpen ? '**yes → open**' : 'no'}; (i) $A_o = ${encC.Ao} > 1.10A_{oi} = ${fmt(1.1 * encC.Aoi)}$ ${encC.c1 ? '✓' : '✗'}; (ii) $A_o > \\min(0.37, 0.01A_g)$ ${encC.c2 ? '✓' : '✗'}; (iii) $A_{oi}/A_{gi} = ${fmt(encC.ratio, 3)} \\le 0.20$ ${encC.c3 ? '✓' : '✗'} → **${encC.cls}**, $GC_{pi} = \\pm${GCPI[encC.cls]}$.`}</Md>
+          )}
           <WindAnalytical V={V} exp={exp} I={I} G={G} B={B} L={L} levels={levels} enclosure={encl} parapet={par > 0 ? { height: par } : undefined} note={<p className="text-xs text-mute">{rigid ? 'T < 1 s → rigid, G = 0.85.' : `T ≥ 1 s → flexible; G_f computed with n₁ = 1/T and β = 2 %: ${fmt(G, 4)}.`} Period estimated with T = 0.0466 h^0.9 (RC frame); use the value your question gives.</p>} />
         </div>
       </details>
@@ -176,7 +321,7 @@ function EnclosureGame() {
     return { walls, side, hgt, c: classifyEnclosure(walls, 4) }
   }, [seed])
   return (
-    <div className="grid lg:grid-cols-[1fr_1fr] gap-4">
+    <div className="grid cq-lg:grid-cols-[1fr_1fr] gap-4">
       <div>
         <table className="tbl w-auto">
           <thead>
@@ -218,6 +363,33 @@ All of (i)–(iii) → partially enclosed; otherwise enclosed. GC_pi: open 0, pa
 }
 
 // ---------------------------------------------------------------- Kzt explorer
+const KZT_COLS: CheckCol<{ K3: number; Kzt: number }>[] = [
+  { key: 'K3', label: 'K₃', get: (r) => r.K3, abs: 0.003, digits: 3 },
+  { key: 'Kzt', label: 'Kzt', get: (r) => r.Kzt, abs: 0.005, digits: 3 },
+]
+
+type DimName = 'H' | 'Lh' | 'x'
+const DIM_NAMES: DimName[] = ['H', 'Lh', 'x']
+
+/** a tappable blank on a dimension line; green/red once every blank is named */
+function DimTag({ cx, cy, pick, state, onClick }: { cx: number; cy: number; pick?: DimName; state: boolean | null; onClick: () => void }) {
+  const col = state === true ? 'var(--c-good)' : state === false ? 'var(--c-bad)' : 'var(--c-accent)'
+  return (
+    <g onClick={onClick} style={{ cursor: 'pointer' }}>
+      <rect x={cx - 17} y={cy - 10} width={34} height={20} rx={5} fill="var(--c-panel)" stroke={col} />
+      <text x={cx} y={cy + 4.5} textAnchor="middle" fontSize={12} fontWeight={700} fill={col}>
+        {pick === 'Lh' ? (
+          <>
+            L<tspan fontSize={9} dy={3}>h</tspan>
+          </>
+        ) : (
+          (pick ?? '?')
+        )}
+      </text>
+    </g>
+  )
+}
+
 function KztExplorer() {
   const [hill, setHill] = useState<Hill>('escarpment')
   const [H, setH] = useState(30)
@@ -226,75 +398,190 @@ function KztExplorer() {
   const [down, setDown] = useState(true)
   const [exp, setExp] = useState<Exposure>('C')
   const [hb, setHb] = useState(15)
+  const [solve, setSolve] = useState(false)
+  // dimension-name quiz on the drawing; answers are kept per problem (key)
+  const [tagState, setTagState] = useState<{ k: string; v: Partial<Record<DimName, DimName>> }>({ k: '', v: {} })
+  const generate = () => {
+    const r = rng(Math.floor(Math.random() * 1e9))
+    // exposure A needs H ≥ 18.3 m (60 ft) for speed-up, so problems use B or C with H ≥ 4.5 m (15 ft)
+    const h = randInt(r, 15, 60, 5)
+    // L_h between H and 4H keeps H/L_h in 0.25–1, so H/L_h ≥ 0.2 always holds and > 0.5 tests the cap
+    const l = randInt(r, h, Math.min(120, 4 * h), 5)
+    setHill(pick(r, ['escarpment', 'ridge', 'hill3d'] as Hill[]))
+    setExp(pick(r, ['B', 'C'] as Exposure[]))
+    setDown(r() < 0.7)
+    setH(h)
+    setLh(l)
+    setX(randInt(r, 0, Math.min(120, 2 * l), 5))
+    setHb(randInt(r, 10, 60, 5))
+    setSolve(true)
+  }
   const zs = [0.25, 0.5, 0.75, 1].map((f) => f * hb)
+  const key = hashKey(JSON.stringify([hill, exp, H, Lh, x, down, hb]))
+  const id = (k: string) => `wind:kzt:${key}:${k}`
+  const k0 = kzt({ hill, exp, H, Lh, x, downwind: down, z: hb })
+  const solveRows = [hb / 2, hb].map((z) => ({ z, ...kzt({ hill, exp, H, Lh, x, downwind: down, z }) }))
   const W = 620,
-    Hs = 240
-  const sc = 2.2
-  const crestX = 300
+    Hs = 256
+  // scale the scene so the whole slope, the building and its roof always fit (top 44 px is for the labels)
+  const sx = down ? x : -x
+  const left = Math.max(2 * Lh, -sx + 20) * 1.08
+  const right = Math.max(hill === 'escarpment' ? 0.35 * left : 2 * Lh * 1.08, sx + 25)
+  const base = Hs - 40
+  const sc = Math.min((W - 60) / (left + right), (base - 44) / (H + hb))
+  const crestX = 40 + left * sc
   const ground = (xx: number) => {
-    // xx: px from crest (+ downwind)
+    // xx: ft from crest (+ downwind)
     if (hill === 'escarpment') return xx >= 0 ? H : xx > -2 * Lh ? H * (1 + xx / (2 * Lh)) : 0
     const dist = Math.abs(xx)
     return dist < 2 * Lh ? H * (1 - dist / (2 * Lh)) : 0
   }
+  const Y = (ft: number) => base - ft * sc
   const pts: string[] = []
-  for (let px = -280; px <= 300; px += 4) pts.push(`${crestX + px},${Hs - 30 - ground(px / sc) * sc}`)
-  const bx = crestX + (down ? x : -x) * sc
-  const by = Hs - 30 - ground(down ? x : -x) * sc
+  for (let px = 0; px <= W; px += 2) pts.push(`${px},${Y(ground((px - crestX) / sc))}`)
+  const bx = crestX + sx * sc
+  const bw = 28
+  // building base follows the slope: each wall stands on the ground under it
+  const gl = Y(ground(sx - bw / 2 / sc)),
+    gr = Y(ground(sx + bw / 2 / sc)),
+    gc = Y(ground(sx))
+  const roof = gc - hb * sc
+  const bld = `${bx - bw / 2},${gl} ${bx - bw / 2},${roof} ${bx + bw / 2},${roof} ${bx + bw / 2},${gr}`
+  const crestLeft = hill === 'escarpment' || bx > crestX
+  // crop empty sky when the scene is short (limited by width, not height)
+  const top = Math.max(0, Math.min(roof, Y(H) - 24) - 40)
+  const tags = tagState.k === key ? tagState.v : {}
+  const dims: DimName[] = x > 0 ? ['H', 'Lh', 'x'] : ['H', 'Lh']
+  const allTagged = dims.every((d) => tags[d])
+  const nTagOk = dims.filter((d) => tags[d] === d).length
+  const cycle = (d: DimName) => {
+    const i = tags[d] ? DIM_NAMES.indexOf(tags[d]!) : -1
+    setTagState({ k: key, v: { ...tags, [d]: DIM_NAMES[(i + 1) % DIM_NAMES.length] } })
+  }
+  const tag = (d: DimName, cx: number, cy: number) => (
+    <DimTag cx={cx} cy={cy} pick={tags[d]} state={allTagged ? tags[d] === d : null} onClick={() => cycle(d)} />
+  )
+  const xL = crestX - Lh * sc
+  // a short hill has no room under the L_h line: its blank goes above the crest and the crest label above that
+  const lhAbove = (H / 2) * sc < 28
+  const hillName = hill === 'escarpment' ? 'a 2-D escarpment' : hill === 'ridge' ? 'a 2-D ridge' : 'a 3-D axisymmetric hill'
   return (
-    <div className="grid lg:grid-cols-[1.3fr_1fr] gap-4">
+    <div className="grid cq-lg:grid-cols-[1.3fr_1fr] gap-4">
       <div>
-        <div className="flex flex-wrap gap-2 mb-2">
-          <Seg value={hill} onChange={setHill} items={[{ v: 'escarpment', label: '2-D escarpment' }, { v: 'ridge', label: '2-D ridge' }, { v: 'hill3d', label: '3-D hill' }]} />
-          <Seg value={exp} onChange={setExp} items={[{ v: 'A', label: 'A' }, { v: 'B', label: 'B' }, { v: 'C', label: 'C' }]} />
-          <Seg value={down ? 'd' : 'u'} onChange={(v) => setDown(v === 'd')} items={[{ v: 'u', label: 'upwind of crest' }, { v: 'd', label: 'downwind' }]} />
+        <div className="flex flex-wrap items-center gap-2 mb-2">
+          <button className="btn" onClick={generate}>
+            🎲 Randomly generate
+          </button>
+          {solve ? (
+            <button className="text-sm text-accent underline" onClick={() => setSolve(false)}>
+              back to the explorer (shows the answers)
+            </button>
+          ) : (
+            <>
+              <Seg value={hill} onChange={setHill} items={[{ v: 'escarpment', label: '2-D escarpment' }, { v: 'ridge', label: '2-D ridge' }, { v: 'hill3d', label: '3-D hill' }]} />
+              <Seg value={exp} onChange={setExp} items={[{ v: 'A', label: 'A' }, { v: 'B', label: 'B' }, { v: 'C', label: 'C' }]} />
+              <Seg value={down ? 'd' : 'u'} onChange={(v) => setDown(v === 'd')} items={[{ v: 'u', label: 'upwind of crest' }, { v: 'd', label: 'downwind' }]} />
+            </>
+          )}
         </div>
-        <svg viewBox={`0 0 ${W} ${Hs}`} className="w-full h-auto">
+        {solve && (
+          <div className="rounded-xl border border-line bg-panel2/50 p-3 text-sm leading-relaxed mb-2">
+            A {hb} ft tall building stands {x === 0 ? 'right at the crest' : `${x} ft ${down ? 'downwind' : 'upwind'} of the crest`} of {hillName}, H = {H} ft, L<sub>h</sub> = {Lh} ft. Exposure {exp}. Find K₁ and K₂, then K₃ and K<sub>zt</sub> at mid-height (z = {fmt(hb / 2)} ft) and at the roof (z = {hb} ft).
+          </div>
+        )}
+        <svg viewBox={`0 ${top} ${W} ${Hs - top}`} className="w-full h-auto">
+          <line x1={0} y1={base} x2={W} y2={base} stroke="var(--c-line)" strokeDasharray="3 4" />
           <polyline points={pts.join(' ')} fill="none" stroke="var(--c-mute)" strokeWidth={2} />
-          <rect x={bx - 18} y={by - hb * sc} width={36} height={hb * sc} fill="var(--c-panel2)" stroke="var(--c-ink)" />
-          <circle cx={crestX} cy={Hs - 30 - H * sc} r={3} fill="var(--c-accent)" />
-          <text x={crestX} y={Hs - 36 - H * sc} textAnchor="middle" fontSize={10} fill="var(--c-accent)">
+          <polygon points={bld} fill="var(--c-panel2)" stroke="var(--c-ink)" />
+          <circle cx={crestX} cy={Y(H)} r={3} fill="var(--c-accent)" />
+          <text x={lhAbove ? crestX : crestLeft ? crestX - 6 : crestX + 6} y={lhAbove ? Y(H) - 32 : Y(H) - 6} textAnchor={lhAbove ? 'middle' : crestLeft ? 'end' : 'start'} fontSize={10} fill="var(--c-accent)">
             crest
           </text>
-          <text x={30} y={30} fontSize={13} fontWeight={700} fill="var(--c-load)">
+          {/* blank dimension lines: base level to crest; crest to the half-height point upwind; crest to building */}
+          <line x1={crestX} y1={Y(H)} x2={crestX} y2={base + (x > 0 ? 16 : 0)} stroke="var(--c-line)" strokeDasharray="2 3" />
+          <line x1={11} y1={Y(H)} x2={crestX} y2={Y(H)} stroke="var(--c-line)" strokeDasharray="2 3" />
+          <line x1={16} y1={base} x2={16} y2={Y(H)} stroke="var(--c-faint)" />
+          <line x1={xL} y1={Y(H / 2) - 4} x2={xL} y2={Y(H / 2) + 4} stroke="var(--c-faint)" />
+          <line x1={xL} y1={Y(H / 2)} x2={crestX} y2={Y(H / 2)} stroke="var(--c-faint)" />
+          {x > 0 && (
+            <>
+              <line x1={bx} y1={gc} x2={bx} y2={base + 16} stroke="var(--c-line)" strokeDasharray="2 3" />
+              <line x1={crestX} y1={base + 12} x2={bx} y2={base + 12} stroke="var(--c-faint)" />
+            </>
+          )}
+          {tag('H', 36, base - Y(H) < 26 ? Y(H) - 14 : (base + Y(H)) / 2)}
+          {tag('Lh', (xL + crestX) / 2, lhAbove ? Y(H) - 16 : Y(H / 2) + 15)}
+          {x > 0 && tag('x', (crestX + bx) / 2, base + 24)}
+          <text x={bx + bw / 2 + 5} y={(gc + roof) / 2 + 4} fontSize={11} fill="var(--c-faint)">
+            {hb}
+          </text>
+          <text x={30} y={top + 22} fontSize={13} fontWeight={700} fill="var(--c-load)">
             Wind →
           </text>
+          <text x={W - 8} y={top + 22} textAnchor="end" fontSize={10} fill="var(--c-faint)">
+            ft, drawn to scale
+          </text>
         </svg>
-        <div className="grid md:grid-cols-2 gap-x-4">
-          <Slider label="Hill height H" value={H} min={5} max={60} onChange={setH} unit=" ft" />
-          <Slider label="L_h" value={Lh} min={10} max={120} onChange={setLh} unit=" ft" />
-          <Slider label="x from crest" value={x} min={0} max={120} onChange={setX} unit=" ft" />
-          <Slider label="Building height" value={hb} min={5} max={60} onChange={setHb} unit=" ft" />
+        <p className="text-xs text-faint mb-1">
+          Tap each <b>?</b> on the drawing to name that dimension (H, L<sub>h</sub> or x).{' '}
+          {allTagged && <span className={nTagOk === dims.length ? 'text-good' : 'text-bad'}>{nTagOk === dims.length ? 'All correct ✓' : `${nTagOk}/${dims.length} correct — keep tapping the red ones`}</span>}
+        </p>
+        {!solve && (
+          <div className="grid cq-md:grid-cols-2 gap-x-4">
+            <Slider label="Hill height H" value={H} min={5} max={60} onChange={setH} unit=" ft" />
+            <Slider label="L_h" value={Lh} min={10} max={120} onChange={setLh} unit=" ft" />
+            <Slider label="x from crest" value={x} min={0} max={120} onChange={setX} unit=" ft" />
+            <Slider label="Building height" value={hb} min={5} max={60} onChange={setHb} unit=" ft" />
+          </div>
+        )}
+      </div>
+      {solve ? (
+        <div key={key} className="text-sm space-y-3">
+          <div className="rounded-xl border border-line p-3 space-y-1">
+            <div className="text-xs font-bold uppercase tracking-wider text-faint">Your checkpoints</div>
+            <Answer id={id('K1')} label="K₁" value={k0.K1} abs={0.003} compact />
+            <Answer id={id('K2')} label="K₂" value={k0.K2} abs={0.003} compact />
+          </div>
+          <CheckTable rows={solveRows} rowKey={(r) => String(r.z)} given={[{ label: 'z (ft)', get: (r) => fmt(r.z) }]} cols={KZT_COLS} idp={id('tbl')} />
+          <details>
+            <summary className="cursor-pointer text-accent font-semibold">Full solution</summary>
+            <div className="mt-2 space-y-3">
+              {solveRows.map((r) => (
+                <KztSolution key={r.z} hill={hill} exp={exp} H={H} Lh={Lh} x={x} downwind={down} z={r.z} unit="ft" />
+              ))}
+            </div>
+          </details>
         </div>
-      </div>
-      <div className="text-sm">
-        <table className="tbl">
-          <thead>
-            <tr>
-              <th>z</th>
-              <th>K₁</th>
-              <th>K₂</th>
-              <th>K₃</th>
-              <th>Kzt</th>
-            </tr>
-          </thead>
-          <tbody>
-            {zs.map((z) => {
-              const k = kzt({ hill, exp, H, Lh, x, downwind: down, z })
-              return (
-                <tr key={z}>
-                  <td>{fmt(z)}</td>
-                  <td>{fmt(k.K1, 3)}</td>
-                  <td>{fmt(k.K2, 3)}</td>
-                  <td>{fmt(k.K3, 3)}</td>
-                  <td className="font-bold">{fmt(k.Kzt, 3)}</td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-        <Md>{`Speed-up is largest **at the crest, near the ground**. K₂ decays with distance from the crest (μ = ${down ? KZT_PARAMS[hill].muDown : KZT_PARAMS[hill].muUp}), K₃ with height (γ = ${KZT_PARAMS[hill].gamma}). H/L_h > 0.5 → use 0.5 and L_h = 2H. Conditions: H/L_h ≥ 0.2 and H ≥ 4.5 m (B, C) / 18.3 m (A), isolated, protruding, building in the upper half/near the crest — otherwise Kzt = 1.`}</Md>
-      </div>
+      ) : (
+        <div className="text-sm">
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>z</th>
+                <th>K₁</th>
+                <th>K₂</th>
+                <th>K₃</th>
+                <th>Kzt</th>
+              </tr>
+            </thead>
+            <tbody>
+              {zs.map((z) => {
+                const k = kzt({ hill, exp, H, Lh, x, downwind: down, z })
+                return (
+                  <tr key={z}>
+                    <td>{fmt(z)}</td>
+                    <td>{fmt(k.K1, 3)}</td>
+                    <td>{fmt(k.K2, 3)}</td>
+                    <td>{fmt(k.K3, 3)}</td>
+                    <td className="font-bold">{fmt(k.Kzt, 3)}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+          <Md>{`Speed-up is largest **at the crest, near the ground**. K₂ decays with distance from the crest (μ = ${down ? KZT_PARAMS[hill].muDown : KZT_PARAMS[hill].muUp}), K₃ with height (γ = ${KZT_PARAMS[hill].gamma}). H/L_h > 0.5 → use 0.5 and L_h = 2H. Conditions: H/L_h ≥ 0.2 and H ≥ 4.5 m (B, C) / 18.3 m (A), isolated, protruding, building in the upper half/near the crest — otherwise Kzt = 1.`}</Md>
+        </div>
+      )}
     </div>
   )
 }
@@ -306,12 +593,33 @@ function Simplified() {
   const [exp, setExp] = useState<Exposure>('B')
   const [I, setI] = useState(1.15)
   const [Kz2, setKzt] = useState(1)
+  const [prob, setProb] = useState<SimpProblem | null>(null)
   const mph = Vms * MS_TO_MPH
   const lam = lambdaFactor(hm, exp)
   const base = ps30(mph, '0-5')
+  const top = (
+    <div className="flex flex-wrap items-center gap-2">
+      <button className="btn" onClick={() => setProb(randomSimp(Math.floor(Math.random() * 1e9)))}>
+        🎲 Randomly generate
+      </button>
+      {prob && (
+        <button className="text-sm text-accent underline" onClick={() => setProb(null)}>
+          back to the explorer
+        </button>
+      )}
+    </div>
+  )
+  if (prob)
+    return (
+      <div className="space-y-3">
+        {top}
+        <SimplifiedPractice key={JSON.stringify(prob)} p={prob} />
+      </div>
+    )
   return (
     <div className="space-y-2 text-sm">
-      <div className="grid md:grid-cols-3 gap-x-6">
+      {top}
+      <div className="grid cq-md:grid-cols-3 gap-x-6">
         <Slider label="V" value={Vms} min={40} max={85} step={0.1} onChange={setV} unit=" m/s" />
         <Slider label="mean roof h" value={hm} min={4.6} max={18.3} step={0.1} onChange={setHm} unit=" m" />
         <Slider label="I" value={I} min={0.77} max={1.15} step={0.01} onChange={setI} />
@@ -361,8 +669,8 @@ function Simplified() {
 function Overview() {
   return (
     <div>
-      <Section title="BNBC 2020 wind provisions at a glance" right={<div className="w-72 hidden md:block"><TopicFrequency topic="wind" /></div>}>
-        <div className="grid md:grid-cols-2 gap-4">
+      <Section title="BNBC 2020 wind provisions at a glance" right={<div className="w-72 hidden cq-md:block"><TopicFrequency topic="wind" /></div>}>
+        <div className="grid cq-md:grid-cols-2 gap-4">
           <Md>{`**Three procedures**: Simplified (new, from ASCE 7-05), Analytical (detailed), Wind-tunnel.
 
 **Velocity pressure**
@@ -400,7 +708,7 @@ $$p = qGC_p - q_i(GC_{pi})$$
         </div>
       </Section>
       <Section title="Definitions examiners ask for">
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid cq-md:grid-cols-2 gap-4">
           <Md>{`**Exposure** (upwind roughness):
 - **A** — urban/suburban/wooded, prevailing ≥ 792 m or 20h upwind.
 - **C** — flat unobstructed, mud/salt flats, water outside cyclone regions, ≥ 1524 m or 20h.

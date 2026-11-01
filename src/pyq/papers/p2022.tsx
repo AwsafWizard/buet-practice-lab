@@ -1,11 +1,12 @@
 // 2022-23 term final (held 20 May 2024). Scan pages 58–69.
 import type { PYQ } from '../types'
 import { solve } from '../../engine/frame2d'
+import { isCW, rotK, rotPos, rotWord } from '../../engine/sign'
 import { influenceLine, ildAt, ildExtremes } from '../../engine/ild'
 import { cantileverMethod, gridModel, portalMethod, xBraced, type GridFrame } from '../../engine/approx'
 import { absoluteMaxMoment, offsets, ssShearILD, trainExtremes, type Train } from '../../engine/moving'
 import { virtualWork } from '../../engine/vw'
-import { stiffenedSuspension } from '../../engine/cable'
+import { hangerGirder, stiffenedSuspension } from '../../engine/cable'
 import { gustRigid, kzt, MS_TO_MPH, PSF_TO_KPA, storeyForces, TERRAIN, type KztInput } from '../../engine/wind'
 import { sdc, siteFromN } from '../../engine/eq'
 import { beamOf, H, Mo, model, P, Pm, truss, Wn } from '../../kit/builders'
@@ -30,7 +31,7 @@ const lab2: Record<string, string> = { AD: '(100)', BE: '(200)', CF: '(100)', DG
 // ---------------------------------------------------------------- Q2(b) frame, Fig 4
 const f4 = model('A:0,20 B:8,20 C:24,20 D:8,0 E:34,0', 'A-B B-C D-B E-C', 'D:pin E:roller', [P('A', 16, '16k'), Pm('BC', 8, 20, '20k'), Wn('EC', 4, undefined, { label: '4 k/ft ⟂' })])
 // ---------------------------------------------------------------- Q3(a) X-braced truss, Fig 5
-const t5 = truss('A:0,0 B:16,0 C:32,0 D:48,0 E:0,20 F:16,20 G:32,20 H:48,20', 'A-B B-C C-D E-F F-G G-H A-E B-F C-G D-H A-F E-B B-G F-C C-H G-D', 'A:pin D:roller', [P('B', 40, '40k'), P('C', 80, '80k')])
+const t5 = truss('A:0,0 B:16,0 C:32,0 D:48,0 E:0,20 F:16,20 G:32,20 H:48,20', 'A-B B-C C-D E-F F-G G-H A-E B-F C-G D-H A-F E-B B-G F-C C-H G-D', 'A:pin D:roller', [P('B', -40, '40k ↑'), P('C', -80, '80k ↑')])
 const pairs5: [string, string][] = [
   ['AF', 'EB'],
   ['BG', 'FC'],
@@ -38,7 +39,9 @@ const pairs5: [string, string][] = [
 ]
 const x5 = xBraced(t5, pairs5, 'tension')
 const f5 = (id: string) => x5.forces.get(id) ?? 0
-const RA5 = (40 * 32 + 80 * 16) / 48
+// Fig. 5 loads push UP at B and C (arrowheads at the joints, tails below), so R_A and R_D act downward.
+const RA5 = -(40 * 32 + 80 * 16) / 48
+const TF5 = (v: number) => `${fmt(Math.abs(v))}${Math.abs(v) < 1e-6 ? '' : v > 0 ? ' k (T)' : ' k (C)'}`
 // ---------------------------------------------------------------- Q3(b) shear at L/4, 100 ft
 const train3: Train = { P: [12, 12, 20, 20, 30, 30, 30, 20], gaps: [12, 12, 15, 10, 10, 10, 12] }
 const ild3 = ssShearILD(100, 25)
@@ -52,7 +55,7 @@ const f8 = model('A:0,6 D:0,16 C*:16,16 E:32,16 B:32,0', 'A-D D-C C-E B-E', 'A:p
 // ---------------------------------------------------------------- Q5(a) VW rotation of b, Fig 9
 const f9 = model('a:0,0 b:0,20 c:20,20 d:20,-10', 'a-b b-c d-c', 'a:pin d:roller', [H('b', 15, '15k'), P('c', 15, '15k'), H('c', 10, '10k')])
 const EI9 = (id: string) => (E * (id === 'ab' ? 600 : 900)) / 144
-const vw5 = () => virtualWork(f9, f9.loads, [Mo('b', 1)], { EI: EI9 })
+const vw5 = () => virtualWork(f9, f9.loads, [Mo('b', rotK())], { EI: EI9 }) // unit couple in the positive rotation sense
 // ---------------------------------------------------------------- Q5(b) suspension bridge, Fig 10
 const loads5b = [
   { x: 120, P: 150 },
@@ -60,17 +63,7 @@ const loads5b = [
   { x: 420, P: 150 },
 ]
 const sus = stiffenedSuspension({ L: 600, h: 40, xh: 300, loads: loads5b })
-const susExt = (() => {
-  let max = { x: 0, M: -Infinity },
-    min = { x: 0, M: Infinity }
-  for (let i = 0; i <= 6000; i++) {
-    const x = i / 10
-    const M = sus.M(x)
-    if (M > max.M) max = { x, M }
-    if (M < min.M) min = { x, M }
-  }
-  return { max, min }
-})()
+const susExt = hangerGirder({ L: 600, panel: 60, q: sus.q, loads: loads5b })
 // ---------------------------------------------------------------- Q6(a) VW beam deflection, Fig 11
 const b11 = beamOf('a:0:pin b:7 c:12 d:17 e:24:roller', [P('b', 5, '5k'), P('c', 10, '10k'), P('d', 5, '5k')])
 const EI11 = (id: string) => (E * (id === 'ab' || id === 'de' ? 750 : 1125)) / 144
@@ -291,10 +284,11 @@ Fig. 4: horizontal beam A–C at 20 ft height (A is a free overhang end, 8 ft le
     pages: PG.A3,
     text: `Determine the member forces of **AB, AF, BF, BG, FG, FC and EF** of the indeterminate truss shown in Fig. 5, using appropriate assumptions. Assume the diagonals are slender.
 
-Fig. 5: 3 panels @ 16 ft, height 20 ft; bottom chord A–B–C–D, top chord E–F–G–H; both diagonals in every panel (AF/EB, BG/FC, CH/GD). A pinned, D on rollers; 40 k at B and 80 k at C.`,
+Fig. 5: 3 panels @ 16 ft, height 20 ft; bottom chord A–B–C–D, top chord E–F–G–H; both diagonals in every panel (AF/EB, BG/FC, CH/GD). A pinned, D on rollers; 40 k at B and 80 k at C, both acting **upward**.`,
     figure: () => <Figure model={t5} />,
     checks: () => [
-      { key: 'FC', label: 'Force in FC (T +, C −)', value: f5('FC'), unit: 'k' },
+      { key: 'AF', label: 'Force in AF (T +, C −)', value: f5('AF'), unit: 'k' },
+      { key: 'BG', label: 'Force in BG', value: f5('BG'), unit: 'k' },
       { key: 'BF', label: 'Force in BF', value: f5('BF'), unit: 'k' },
       { key: 'FG', label: 'Force in FG', value: f5('FG'), unit: 'k' },
       { key: 'EF', label: 'Force in EF', value: f5('EF'), unit: 'k' },
@@ -303,20 +297,20 @@ Fig. 5: 3 panels @ 16 ft, height 20 ft; bottom chord A–B–C–D, top chord E�
       <div className="space-y-3 text-sm">
         <Md>{`**Assumption:** slender diagonals buckle under the smallest compression, so in each panel **only the diagonal that would be in tension works**; the other is taken as zero. With one diagonal per panel the truss becomes determinate.
 
-**Which diagonal?** Reactions: $R_A = \\dfrac{40(32) + 80(16)}{48} = ${fmt(RA5)}$ k, $R_D = ${fmt(120 - RA5)}$ k. Panel shears (left part): panel AB $= +${fmt(RA5)}$ (up), panel BC $= ${fmt(RA5)} - 40 = +${fmt(RA5 - 40)}$, panel CD $= ${fmt(RA5)} - 120 = ${fmt(RA5 - 120)}$. Positive shear must be carried downward by the diagonal on the left part → diagonals sloping **down to the right** (E–B, F–C) are in tension; negative shear in panel CD → **C–H** is in tension. So AF, BG and GD = 0.
+**Which diagonal?** Both loads act **upward**, so the reactions act downward: $R_A = \\dfrac{40(32) + 80(16)}{48} = ${fmt(-RA5)}$ k (↓), $R_D = ${fmt(120 + RA5)}$ k (↓). Panel shears (left part, up +): panel AB $= ${fmt(RA5)}$, panel BC $= ${fmt(RA5)} + 40 = ${fmt(RA5 + 40)}$, panel CD $= ${fmt(RA5)} + 120 = +${fmt(RA5 + 120)}$. Negative shear means the diagonal must push the left part **up** → the diagonals sloping **up to the right** (A–F, B–G) are in tension; positive shear in panel CD → **G–D** is in tension. So EB, FC and CH = 0.
 
-**Forces:** diagonal: $F\\sin\\theta = V_{panel}$ with $\\sin\\theta = 20/\\sqrt{16^2+20^2} = 0.781$: $F_{FC} = ${fmt(RA5 - 40)}/0.781 = ${fmt(f5('FC'))}$ k (T). Chords by moments, e.g. $F_{FG}$: moments about C on the left part: $F_{FG}(20) = -(${fmt(RA5)}\\times32 - 40\\times16)$ → $F_{FG} = ${fmt(f5('FG'))}$ k. Verticals from joint equilibrium.`}</Md>
+**Forces:** diagonal: $F\\sin\\theta = |V_{panel}|$ with $\\sin\\theta = 20/\\sqrt{16^2+20^2} = 0.781$: $F_{AF} = ${fmt(-RA5)}/0.781 = ${fmt(f5('AF'))}$ k (T), $F_{BG} = ${fmt(-(RA5 + 40))}/0.781 = ${fmt(f5('BG'))}$ k (T). Chords by moments, e.g. $F_{FG}$: cut panel BC (FG, BG, BC) and take moments about B, where BG and BC meet: $F_{FG}(20) = -R_A(16) = -(${fmt(RA5)}\\times16)$ → $F_{FG} = ${fmt(f5('FG'))}$ k. Verticals from joint equilibrium.`}</Md>
         <TrussSolution model={t5} asked={['AB', 'AF', 'BF', 'BG', 'FG', 'FC', 'EF']} forces={x5.forces} note={<>Diagonals assumed inactive (compression, buckled): {x5.removed.join(', ')}. Forces computed on the remaining determinate truss.</>} />
         <p>
           <b>
-            AB = {fmt(f5('AB'))}, AF = {fmt(f5('AF'))}, BF = {fmt(Math.abs(f5('BF')))} k (C), BG = {fmt(f5('BG'))}, FG = {fmt(Math.abs(f5('FG')))} k (C), FC = {fmt(f5('FC'))} k (T), EF = {fmt(Math.abs(f5('EF')))} k (C).
+            AB = {TF5(f5('AB'))}, AF = {TF5(f5('AF'))}, BF = {TF5(f5('BF'))}, BG = {TF5(f5('BG'))}, FG = {TF5(f5('FG'))}, FC = {TF5(f5('FC'))}, EF = {TF5(f5('EF'))}.
           </b>
         </p>
       </div>
     ),
     notes: [
-      'The 40 k and 80 k arrows in the scan are drawn as lines hanging below B and C with the arrowheads at the joints; they are read as downward (gravity) loads. If they were meant upward, every force reverses and the other diagonal of each panel becomes the active one.',
-      'AB = 0: with no horizontal load, the pin at A gives no horizontal reaction and joint A has only AE, AB and the inactive AF.',
+      'The 40 k and 80 k arrows in the scan hang below B and C with the arrowheads at the joints, i.e. they push the truss upward. That flips the panel shears, so the up-to-the-right diagonals AF and BG (and GD in the last panel) are the active ones.',
+      'Joint A check: the downward reaction R_A is balanced entirely by the vertical component of AF, so AE = 0 and AB takes AF’s horizontal component (compression).',
     ],
   },
   {
@@ -341,7 +335,7 @@ Fig. 5: 3 panels @ 16 ft, height 20 ft; bottom chord A–B–C–D, top chord E�
       const e = trainExtremes(ild3, train3)
       return (
         <div className="space-y-2 text-sm">
-          <Md>{`Shear ILD at 25 ft: −0.25 just left and +0.75 just right of the section, linear to 0 at both supports. For **maximum positive shear** the train should sit mostly on the long positive part with a wheel just right of the section. Bring wheels across one by one; moving the next wheel up to the section changes the shear by $\\Delta V = -P_{\\text{passing}} + \\dfrac{W\\,\\Delta x}{L}$ (W = load on the span). Keep advancing while ΔV is positive.`}</Md>
+          <Md>{`Shear ILD at 25 ft: −0.25 just left and +0.75 just right of the section, linear to 0 at both supports. The train travels right → left (wheel 1 leads). For **maximum positive shear** the train should sit mostly on the long positive part with a wheel just right of the section. Bring wheels across one by one; moving the next wheel up to the section changes the shear by $\\Delta V = -P_{\\text{passing}} + \\dfrac{W\\,\\Delta x}{L}$ (W = load on the span). Keep advancing while ΔV is positive: the light 12 k and 20 k wheels are worth pushing across, and **wheel 4 (the second 20 k) just right of the section** governs.`}</Md>
           <TrainOnILD ild={ild3} t={train3} span={[0, 100]} section={25} peak={{ x: 25, side: 1 }} what="shear at 25 ft" />
           <p>
             <b>Maximum shear at the quarter point = {fmt(e.max.value)} k</b> (the largest negative shear is only {fmt(e.min.value)} k).
@@ -349,7 +343,7 @@ Fig. 5: 3 panels @ 16 ft, height 20 ft; bottom chord A–B–C–D, top chord E�
         </div>
       )
     },
-    notes: ['The train may enter from either end; both directions are checked exhaustively.'],
+    notes: ['Train taken as travelling right to left (wheel 1 leads).'],
   },
   {
     id: '2022-23-A4a',
@@ -465,13 +459,13 @@ Fig. 9: column a–b, 20 ft ($I_1$), pinned at a; beam b–c, 20 ft ($I_2$); col
           <Md>{`**Real system.** The roller at d gives only a vertical reaction, so the pin at a takes all horizontal load: $a_x = 15 + 10 = 25$ k (←). Moments about a: $d_y(20) = 15(20) + 10(20) + 15(20)$ → $d_y = 40$ k ↑, $a_y = 25$ k ↓.
 Moments: column a–b: $M = 25y$ (0 → 500 k-ft at b); beam b–c: $M = 500 - 25x$ (500 → 0); column c–d: only axial force → $M = 0$.
 
-**Virtual system.** Unit couple at b. It produces only a vertical reaction couple $\\pm 1/20$ at a and d, so $m = 0$ in both columns and $m$ in b–c goes linearly from 1 (at b) to 0 (at c).
+**Virtual system.** Unit ${rotPos()} couple at b. It produces only a vertical reaction couple $\\pm 1/20$ at a and d, so $m = 0$ in both columns and $m$ in b–c goes linearly from ${isCW() ? '−1' : '1'} (at b) to 0 (at c).
 
 $$\\theta_b = \\int\\frac{Mm}{EI}dx = \\frac{1}{EI_2}\\cdot\\frac{1}{3}(500)(1)(20) = \\frac{3333.3}{29000\\times900/144} = ${fmt(Math.abs(v.total), 5)}\\text{ rad}$$`}</Md>
-          <VWSolution model={f9} real={f9.loads} virtual={[Mo('b', 1)]} opts={{ EI: EI9 }} what="θb" resultUnit="rad" unitNote="EI in k-ft² (E·I/144); virtual load = unit counter-clockwise couple at b, so a negative result means clockwise." />
+          <VWSolution model={f9} real={f9.loads} virtual={[Mo('b', rotK())]} opts={{ EI: EI9 }} what="θb" resultUnit="rad" unitNote={`EI in k-ft² (E·I/144); virtual load = unit ${rotPos()} couple at b, so a negative result means ${isCW() ? 'counter-clockwise' : 'clockwise'}.`} />
           <p>
             <b>
-              θ<sub>b</sub> = {fmt(Math.abs(v.total), 5)} rad ({fmt((Math.abs(v.total) * 180) / Math.PI, 3)}°) {v.total < 0 ? 'clockwise' : 'counter-clockwise'}
+              θ<sub>b</sub> = {fmt(Math.abs(v.total), 5)} rad ({fmt((Math.abs(v.total) * 180) / Math.PI, 3)}°) {rotWord(v.total)}
             </b>
           </p>
         </div>

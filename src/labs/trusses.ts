@@ -1,4 +1,5 @@
 // Parametric truss library for labs.
+import { fmtLen, type Dim } from '../components/StructureView'
 import type { Load, Member, Model, SNode } from '../engine/model'
 
 export type TrussType = 'pratt' | 'howe' | 'warren' | 'roof' | 'parker' | 'xbraced'
@@ -44,7 +45,8 @@ export function buildTruss(s: TrussSpec): { model: Model; pairs: [string, string
     for (let k = 1; k < n; k++) if (s.loads[k - 1]) loads.push({ kind: 'node', node: U(k), fy: -s.loads[k - 1] })
     return { model: { nodes, members, supports: [{ node: L(0), type: 'pin' }, { node: L(n), type: 'roller' }], loads }, pairs }
   }
-  const topH = (k: number) => (s.type === 'parker' ? h * (0.65 + 0.35 * Math.sin((Math.PI * k) / n)) : h)
+  // Parker heights rounded to the nearest 0.5 so they can be printed on the figure
+  const topH = (k: number) => (s.type === 'parker' ? Math.round(2 * h * (0.65 + 0.35 * Math.sin((Math.PI * k) / n))) / 2 : h)
   if (s.type === 'warren') {
     for (let k = 1; k < n; k++) nodes.push({ id: U(k), x: k * w, y: h })
     bar(L(0), U(1))
@@ -70,6 +72,26 @@ export function buildTruss(s: TrussSpec): { model: Model; pairs: [string, string
   }
   for (let k = 1; k < n; k++) if (s.loads[k - 1]) loads.push({ kind: 'node', node: L(k), fy: -s.loads[k - 1] })
   return { model: { nodes, members, supports: [{ node: L(0), type: 'pin' }, { node: L(n), type: 'roller' }], loads }, pairs }
+}
+
+/** height dimensions beside the verticals — one per distinct height, left half + middle */
+export function heightDims(m: Model, unit = '′'): Dim[] {
+  const nm = new Map(m.nodes.map((n) => [n.id, n]))
+  const xs = m.nodes.map((n) => n.x)
+  const mid = (Math.min(...xs) + Math.max(...xs)) / 2
+  const seen = new Set<string>()
+  const out: Dim[] = []
+  for (const mem of m.members) {
+    const a = nm.get(mem.i)!
+    const b = nm.get(mem.j)!
+    if (Math.abs(a.x - b.x) > 1e-6 || a.x > mid + 1e-6) continue
+    const [lo, hi] = a.y < b.y ? [a, b] : [b, a]
+    const key = (hi.y - lo.y).toFixed(3)
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push({ from: [lo.x, lo.y], to: [hi.x, hi.y], text: fmtLen(hi.y - lo.y, unit), off: 12 })
+  }
+  return out
 }
 
 /** members crossing a vertical line x = xc */

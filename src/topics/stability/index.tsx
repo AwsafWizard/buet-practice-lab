@@ -116,7 +116,7 @@ function Builder() {
   const mm = { ...m, nodes: m.nodes.filter((n) => used.has(n.id)), supports: m.supports.filter((s) => used.has(s.node)) }
   const d = useMemo(() => determinacy(mm), [mm])
   return (
-    <div className="grid lg:grid-cols-[1.4fr_1fr] gap-4">
+    <div className="grid cq-lg:grid-cols-[1.4fr_1fr] gap-4">
       <div className="rounded-xl bg-bg/60 border border-line p-2">
         <StructureView model={mm} showLoads={false} maxHeight={300} wobble={!d.stable} onMemberClick={(id) => setRemoved(new Set([...removed, id]))}>
           {(t) => (
@@ -175,34 +175,70 @@ function Builder() {
   )
 }
 
+// ---------------------------------------------------------------- DOSI / DOKI formula table (shared by Overview and Approach)
+function FormulaTable() {
+  return (
+    <div>
+      <div className="overflow-x-auto mb-3">
+        <table className="tbl">
+          <thead>
+            <tr>
+              <th>Structure (DOF / joint)</th>
+              <th>DOSI</th>
+              <th>DOKI</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              ['Plane truss', 'u, v', 'b + r - 2j', '2j - r'],
+              ['Plane frame', 'u, v, \\theta', '3m + r - 3j - c', '3j - r'],
+              ['Space truss', 'u, v, w', 'b + r - 3j', '3j - r'],
+              ['Space frame', 'u, v, w, \\theta_{x,y,z}', '6m + r - 6j - c', '6j - r'],
+            ].map(([s, dof, dosi, doki]) => (
+              <tr key={s}>
+                <td className="txt">
+                  <div>{s}</div>
+                  <div className="text-xs text-faint"><Tex>{dof}</Tex></div>
+                </td>
+                <td className="whitespace-nowrap"><Tex>{dosi}</Tex></td>
+                <td className="whitespace-nowrap"><Tex>{doki}</Tex></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="grid cq-md:grid-cols-2 gap-4">
+        <Md>{`- *b* or *m* = members, *r* = support reactions, *j* = joints (**including support joints**).
+- *c* = equations of condition: an internal hinge joining *n* members gives $c = n - 1$; a released member end gives 1.
+- DOKI = (DOF per joint) × *j* − *r*: every joint's DOFs minus the ones the supports restrain.`}</Md>
+        <Md>{`**Notes for frames**
+- **Support reactions (r):** a fixed support gives 3, a pin 2, a roller 1.
+- **Internal hinges:** each hinge releases moment, so subtract the releases from DOSI: $3m + r - 3j - c$. For DOKI, each hinge adds an extra rotation DOF: $3j - r + c$.`}</Md>
+      </div>
+    </div>
+  )
+}
+
 function Overview() {
   return (
     <div>
-      <Section title="Two different questions" right={<div className="w-72 hidden md:block"><TopicFrequency topic="stability" /></div>}>
+      <Section title="Two different questions" right={<div className="w-72 hidden cq-md:block"><TopicFrequency topic="stability" /></div>}>
         <Md>{`- **Static indeterminacy (DOSI)** — how many *unknown forces* exceed the equilibrium equations. Needed for the **flexibility (force) method**: redundants are the unknowns.
 - **Kinematic indeterminacy (DOKI)** — how many independent *joint displacements* (translations + rotations) are free. Needed for the **stiffness (displacement) method**.
 - **Stability** — whether the supports and members can hold the structure in equilibrium under *any* load.`}</Md>
       </Section>
       <Section title="Formulas (Prof. Nazrul Islam’s notation)">
-        <div className="grid md:grid-cols-2 gap-4">
-          <div>
-            <Tex block>{`\\text{2D truss: } \\text{DOSI} = b + r - 2j`}</Tex>
-            <Tex block>{`\\text{3D truss: } \\text{DOSI} = b + r - 3j`}</Tex>
-            <Tex block>{`\\text{2D frame: } \\text{DOSI} = 3m + r - (3j + c)`}</Tex>
-            <Tex block>{`\\text{3D frame: } \\text{DOSI} = 6m + r - (6j + c)`}</Tex>
-            <Md>{`*c* = equations of condition: an internal hinge joining *n* members gives $c = n - 1$; a released member end gives 1.`}</Md>
-          </div>
-          <div>
-            <Md>{`**DOKI** = DOF at free joints + DOF at support joints + extra rotations at hinges.
+        <FormulaTable />
+        <Md className="mt-3">{`**DOKI** = DOF at free joints + DOF at support joints + extra rotations at hinges.
 - plane truss joint: 2 (δx, δy); beam/plane frame joint: 3 (δx, δy, θ); space frame: 6.
 - a support removes the restrained DOFs (pin: 2, roller: 1, fixed: 3).
 - a hinge joining two members has **one translation pair + two rotations**.
 - *ignoring axial deformation*, members can't change length → fewer independent translations (a portal on fixed bases: 2 rotations + 1 sway = **3**).`}</Md>
-          </div>
-        </div>
       </Section>
       <Section title="Stability">
-        <Md>{`- **DOSI < 0** → *statically unstable* (partial constraints: too few reactions or members).
+        <Md>{`**Count first:** truss DOSI $= b + r - 2j$, DOKI $= 2j - r$ · frame DOSI $= 3m + r - 3j - c$, DOKI $= 3j - r + c$ (space: $b + r - 3j$ / $3j - r$ and $6m + r - 6j - c$ / $6j - r$).
+
+- **DOSI < 0** → *statically unstable* (partial constraints: too few reactions or members).
 - **DOSI = 0** → determinate; **DOSI > 0** → indeterminate — *if* stable.
 - **Geometrically unstable** (improper constraints): the count is fine but reactions are **all parallel** or **all concurrent** (meet at one point), or a part of the structure forms a mechanism (a truss panel without a diagonal, three hinges in a line).`}</Md>
         <Callout kind="exam">2023-24 asked DOSI and DOKI for a braced tower and an irregular frame (6 marks). Jan-2021 asked DOSI of four structures (8 marks). Quick marks — learn it once.</Callout>
@@ -214,17 +250,20 @@ function Overview() {
 function Approach() {
   return (
     <div>
+      <Section title="Formulas">
+        <FormulaTable />
+      </Section>
       <Section title="Recipe">
         <Steps>
           <Step n={1} title="Decide truss or frame">All joints pinned and loads at joints → truss formula; otherwise frame formula.</Step>
           <Step n={2} title="Count carefully">m (or b) = every member between two joints; j = every joint incl. supports and free ends; r = reaction components; c = releases.</Step>
-          <Step n={3} title="Apply the formula">DOSI &lt; 0 → unstable. Otherwise…</Step>
+          <Step n={3} title="Apply the formula">Truss: b + r − 2j; frame: 3m + r − 3j − c. DOSI &lt; 0 → unstable. Otherwise…</Step>
           <Step n={4} title="Inspect the arrangement">Parallel / concurrent reactions? A non-triangulated panel? Three hinges in line? → geometrically unstable.</Step>
-          <Step n={5} title="DOKI">Free DOF of each joint − support restraints + extra hinge rotations. State whether axial deformation is ignored.</Step>
+          <Step n={5} title="DOKI">Free DOF of each joint − support restraints + extra hinge rotations: truss 2j − r, frame 3j − r + c. State whether axial deformation is ignored.</Step>
         </Steps>
       </Section>
       <Section title="Lecture examples, solved">
-        <div className="grid md:grid-cols-3 gap-3">
+        <div className="grid cq-md:grid-cols-3 gap-3">
           <DeterminacyCard m={beamOf('A:0:fixed B:20:roller')} label="Propped cantilever" />
           <DeterminacyCard m={frame1x2} label="2-storey frame (fixed + pin) — DOSI 5, DOKI 13" />
           <DeterminacyCard m={frame2x2} label="2-bay 2-storey frame — DOSI 11, DOKI 19" />
@@ -241,7 +280,7 @@ function Lab() {
   return (
     <div>
       <Section title="Classify the structure" sub="Decide stable/unstable, then DOSI and DOKI. Reveal shows the count and the reasoning; unstable ones wobble.">
-        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">
+        <div className="grid cq-md:grid-cols-2 cq-xl:grid-cols-3 gap-3">
           {GALLERY.map((g, i) => (
             <QuizCard key={g.name} g={g} i={i} />
           ))}

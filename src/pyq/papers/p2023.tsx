@@ -14,6 +14,7 @@ import { Md, Tex } from '../../components/ui'
 import { StructureView } from '../../components/StructureView'
 import { fmt } from '../../components/DiagramView'
 import { reducedLL } from '../../engine/llr'
+import { isCW, rotPos, rotTag } from '../../engine/sign'
 
 const PG = { A1: [70], A2: [71], A3: [71, 72, 73], A4: [73, 74], B5: [74, 75], B6: [75], B7: [76], B8: [76, 77] }
 
@@ -32,7 +33,11 @@ const q1a = (() => {
   const m2 = { ...beamOf('a:0 b:20:pin c:40 d:60:roller'), EI: EIg }
   const r2 = solve(m2, [P('c', 20)])
   const aLive = r2.disp('a').uy * 12
-  return { J, dRd, elastic, rigid, db, aLive }
+  // alternative: jack force stays 90 k → a drops back onto its support; 20 k at c on simple span a–d, deflection at b
+  const bLive = (20 * 20 * 20 * (60 ** 2 - 20 ** 2 - 20 ** 2)) / (6 * EIg * 60) // ft, downward
+  const RaAlt = (60 * 60 + 20 * 20 - J * 40) / 60 // k, must be ≥ 0 for a to sit on its support
+  const dbAlt = (elastic - bLive) * 12
+  return { J, dRd, elastic, rigid, db, aLive, bLive, RaAlt, dbAlt }
 })()
 
 // ---------------------------------------------------------------- Q1(b) truss relative deflection
@@ -86,8 +91,8 @@ const eq3 = { Z: 0.36, occ: 4 as const, site: site3, system: 'SMF_rc' as const, 
 
 // ---------------------------------------------------------------- Q3(c) determinacy
 const tower = truss(
-  'a:0,0 b:6,0 c:0,8 d:6,8 e:0,16 f:6,16',
-  'a-b c-d e-f a-c c-e b-d d-f ad=a-d bc=b-c cf=c-f de=d-e',
+  'a:0,0 b:6,0 c:0,8 d:6,8 e:0,16 f:6,16 g:3,4 h:3,12',
+  'a-b c-d e-f a-c c-e b-d d-f a-g g-d b-g g-c c-h h-f d-h h-e',
   'a:roller b:pin',
 )
 const frame3c = model(
@@ -168,10 +173,15 @@ export const Q2023: PYQ[] = [
         <Md>{`**Rigid-body part** — the chord itself rotates about d so that a rises 1 in: at b (40 ft from d) $\\delta = \\tfrac{40}{60}(1) = ${fmt(q1a.rigid, 3)}$ in ↑.`}</Md>
         <Tex block>{`\\Delta_b = ${fmt(q1a.elastic * 12, 3)} + ${fmt(q1a.rigid, 3)} = \\mathbf{${fmt(q1a.db, 3)}}\\text{ in}\\ \\uparrow`}</Tex>
         <Md>{`**Live load 20 k at c.** Once lifted, the jack is locked, so b acts as a support and does **not** move further: net deflection at b stays ${fmt(q1a.db, 3)} in ↑. The free end a moves instead: girder on b (jack) and d, 20 k at c → a moves ${fmt(Math.abs(q1a.aLive), 3)} in ${q1a.aLive > 0 ? 'up' : 'down'} (overhang rotates).`}</Md>
+        <Md>{`*Alternative reading (jack force held constant at ${fmt(q1a.J)} k).* The 20 k adds $20(20) = 400$ k-ft about d that the jack cannot resist, so the girder rotates until **a lands back on its support** ($R_a = (3600 + 400 - ${fmt(q1a.J)}\times40)/60 = ${fmt(q1a.RaAlt, 2)}$ k ≥ 0 ✓). Now it is a simple span a–d carrying the jack force and the 20 k; the 20 k at c deflects b by $\dfrac{Pbx(L^2-b^2-x^2)}{6EIL} = \dfrac{20(20)(20)(3600-400-400)}{6EI(60)} = ${fmt(q1a.bLive * 12, 2)}$ in ↓, so $\Delta_b = ${fmt(q1a.elastic * 12, 2)} - ${fmt(q1a.bLive * 12, 2)} = ${fmt(q1a.dbAlt, 2)}$ in ↑ (measured from the original position; the 1 in rigid lift is lost).`}</Md>
         <p className="text-xs text-faint">I = 250 in⁴ makes the numbers large; the method is what earns the marks.</p>
       </div>
     ),
-    notes: ['Assumed the jack is locked after lifting (acts as a support for the live load). If your teacher treats the jack force as constant, b would move instead — state your assumption in the exam.'],
+    notes: [
+      'Part 1 (jacking) is unambiguous: J = 90 k, Δb = elastic (90 k up at b on simple span a–d, relative to chord a–d) + rigid rotation about d that lifts a by 1 in.',
+      'Part 2 is genuinely ambiguous. Main answer: the hydraulic jack is locked after lifting (a closed jack is a rigid support), so b does not move further and a rises. The solution also works the other reading — jack force held constant, a drops back onto its support — which gives a b deflection that actually changes. State your assumption in the exam.',
+      'Fig. 1: a is a pin, d a roller, 3 × 20 ft. I = 250 in⁴ is as printed (it makes the deflections unrealistically large).',
+    ],
   },
   {
     id: '2023-24-A1b',
@@ -275,11 +285,12 @@ The unit horizontal load produces **no axial force** (n = 0), so the 6 k vertica
     topics: ['code'],
     title: 'Live load reduction for an interior column',
     pages: [72],
-    text: `Column layout of a three-storied residential building is shown (grid spacings: 1–2 = 4 m, 2–3 = 8 m; A–B = 6 m, B–C = 3 m). Find the reduced live load for the column at **grid B-2** at Level-1 and Level-2. $L = L_0\\left(0.25 + \\dfrac{4.57}{\\sqrt{K_{LL}A_T}}\\right)$, $L_0 = 2.4$ kN/m², $K_{LL} = 4$ (interior column).`,
+    text: `Column layout of a three-storied residential building is shown (grid spacings: 1–2 = 4 m, 2–3 = 8 m; A–B = 6 m, B–C = 3 m). Find the reduced live load for the column at **grid B-2** at Level-1, Level-2 and Level-3 (the printed paper said “Level-2 and Level-3”; “Level-1,” was added by hand). $L = L_0\\left(0.25 + \\dfrac{4.57}{\\sqrt{K_{LL}A_T}}\\right)$, $L_0 = 2.4$ kN/m², $K_{LL} = 4$ (interior column).`,
     figure: () => <GridPlan />,
     checks: () => [
-      { key: 'L2', label: 'Reduced LL, Level-2 column', value: reducedLL({ L0: 2.4, KLL: 4, AT: 27, floorsSupported: 1 }).L, unit: 'kN/m²' },
-      { key: 'L1', label: 'Reduced LL, Level-1 column', value: reducedLL({ L0: 2.4, KLL: 4, AT: 54, floorsSupported: 2 }).L, unit: 'kN/m²' },
+      { key: 'L3', label: 'Reduced LL, Level-3 column (1 floor)', value: reducedLL({ L0: 2.4, KLL: 4, AT: 27, floorsSupported: 1 }).L, unit: 'kN/m²' },
+      { key: 'L2', label: 'Reduced LL, Level-2 column (2 floors)', value: reducedLL({ L0: 2.4, KLL: 4, AT: 54, floorsSupported: 2 }).L, unit: 'kN/m²' },
+      { key: 'L1', label: 'Reduced LL, Level-1 column (3 floors)', value: reducedLL({ L0: 2.4, KLL: 4, AT: 81, floorsSupported: 3 }).L, unit: 'kN/m²' },
     ],
     solution: () => (
       <div className="space-y-2 text-sm">
@@ -287,13 +298,17 @@ The unit horizontal load produces **no axial force** (n = 0), so the 6 k vertica
         <LLRSolution
           L0={2.4}
           rows={[
-            { label: 'Level-2 column (1 floor)', AT: 27, KLL: 4, floors: 1 },
-            { label: 'Level-1 column (2 floors)', AT: 54, KLL: 4, floors: 2, ATnote: '2 × 27 m²' },
+            { label: 'Level-3 column (1 floor)', AT: 27, KLL: 4, floors: 1 },
+            { label: 'Level-2 column (2 floors)', AT: 54, KLL: 4, floors: 2, ATnote: '2 × 27 m²' },
+            { label: 'Level-1 column (3 floors)', AT: 81, KLL: 4, floors: 3, ATnote: '3 × 27 m²' },
           ]}
         />
       </div>
     ),
-    notes: ['Roof live load is not reduced by this formula (it has its own R₁R₂ rule), so the floors counted are the typical floors above each column, following the lecture example.'],
+    notes: [
+      'The paper asks for Level-1, Level-2 and Level-3 and gives only the floor live load 2.4 kN/m², so every level is treated as a 2.4 kN/m² floor and the column at Level-n carries the floors at and above it (Level-3: 1 floor, Level-2: 2, Level-1: 3).',
+      'Lecture-example reading (Lec 4-5): in a 3-storey building the top level is the roof, whose live load is not reduced by this formula (own R₁R₂ rule). Then Level-3 is the roof (no reduction by this formula), Level-2 carries 1 floor (= the Level-3 value above) and Level-1 carries 2 floors (= the Level-2 value above). State which you use.',
+    ],
   },
   {
     id: '2023-24-A3c',
@@ -306,22 +321,23 @@ The unit horizontal load produces **no axial force** (n = 0), so the 6 k vertica
     pages: [73],
     text: `Determine the degree of static indeterminacy (DOSI) and degree of kinematic indeterminacy (DOKI) for the structures in Fig. 5.`,
     figure: () => (
-      <div className="grid md:grid-cols-2 gap-2">
+      <div className="grid cq-md:grid-cols-2 gap-2">
         <StructureView model={tower} nodeLabels={false} showLoads={false} maxHeight={220} />
         <StructureView model={frame3c} nodeLabels={false} showLoads={false} maxHeight={220} />
       </div>
     ),
     checks: () => [
       { key: 'd1', label: 'Tower truss: DOSI', value: 2 },
-      { key: 'k1', label: 'Tower truss: DOKI', value: 9 },
+      { key: 'k1', label: 'Tower truss: DOKI', value: 13 },
       { key: 'd2', label: 'Frame: DOSI', value: 13 },
     ],
     solution: () => (
-      <div className="grid md:grid-cols-2 gap-3">
-        <DeterminacyCard m={tower} label="(1) X-braced tower (diagonals not connected at crossings)" />
+      <div className="grid cq-md:grid-cols-2 gap-3">
+        <DeterminacyCard m={tower} label="(1) X-braced tower (diagonals pinned at the crossings)" />
         <DeterminacyCard m={frame3c} label="(2) Frame — fixed + 2 pins" />
       </div>
     ),
+    notes: ['Fig. 5 (tower): the scan shows a joint dot where each pair of diagonals crosses, so the crossings are taken as pinned joints (8 joints, 15 bars, r = 3 → DOSI 2, DOKI 13). If the diagonals pass each other unconnected: 6 joints, 11 bars → DOSI still 2, DOKI 9. Left support roller, right support pin.'],
   },
   {
     id: '2023-24-A4a',
@@ -470,7 +486,7 @@ Open: every wall ≥ 80 % open. Partially enclosed: (i) $A_o \\ge 1.10A_{oi}$, (
     checks: () => [{ key: 'v', label: 'Maximum (positive) shear', value: trainExtremes(ild5, train5).max.value, unit: 'k' }],
     solution: () => (
       <div className="space-y-2 text-sm">
-        <Md>{`Shear ILD at 25 ft: −0.25 just left, +0.75 just right of the section. For **maximum positive shear** put a wheel just right of the section with as much load as possible on the positive part (right of the section) and little on the negative part. Move the train wheel by wheel: the shear changes by $\\Delta V = -P_{passing} + \\dfrac{W\\,\\Delta x}{L}$ — keep going while ΔV > 0.`}</Md>
+        <Md>{`Shear ILD at 25 ft: −0.25 just left, +0.75 just right of the section. The train travels right → left, so the 15 k wheel leads. For **maximum positive shear** put a wheel just right of the section with as much load as possible on the positive part (right of the section) and little on the negative part. Move the train wheel by wheel: the shear changes by $\\Delta V = -P_{passing} + \\dfrac{W\\,\\Delta x}{L}$ — keep going while ΔV > 0. Letting the 15 k wheel cross (12 ft move) gains a little; letting a 30 k wheel cross does not, so **wheel 2 (the first 30 k) just right of the section** governs, only slightly above wheel 1 there.`}</Md>
         <TrainOnILD ild={ild5} t={train5} span={[0, 100]} section={25} peak={{ x: 25, side: 1 }} what="shear at 25 ft" />
       </div>
     ),
@@ -561,6 +577,7 @@ Open: every wall ≥ 80 % open. Partially enclosed: (i) $A_o \\ge 1.10A_{oi}$, (
         <MaxEffect ild={ild7('GF')} w={6} P={24} label="Member GF" />
       </div>
     ),
+    notes: ['The paper does not say which chord is loaded; supports are at the bottom chord, so a through truss with the live load at the bottom panel points A–E is assumed.'],
   },
   {
     id: '2023-24-B7b',
@@ -578,7 +595,7 @@ Open: every wall ≥ 80 % open. Partially enclosed: (i) $A_o \\ge 1.10A_{oi}$, (
     ],
     solution: () => (
       <div className="space-y-3 text-sm">
-        <Md>{`The wording mixes two classic questions, so both are shown. **(1) Max moment at midspan** — triangular ILD with peak $L/4 = 20$ at x = 40; try each wheel at the peak (criterion: the average load left of the section ≈ average on the whole span).`}</Md>
+        <Md>{`The wording mixes two classic questions, so both are shown. **(1) Max moment at midspan** — triangular ILD with peak $L/4 = 20$ at x = 40; try each wheel at the peak with the train travelling right → left (criterion: the average load left of the section ≈ average on the whole span); wheel 3 at midspan governs.`}</Md>
         <TrainOnILD ild={ssMomentILD(80, 40)} t={train7} span={[0, 80]} section={40} peak={{ x: 40, side: 1 }} what="moment at midspan" resUnit="k-ft" />
         <Md>{`**(2) Absolute maximum moment** — occurs under a wheel near the resultant when the midspan bisects that wheel and the resultant:`}</Md>
         <AbsMaxSolution L={80} t={train7} />
@@ -600,7 +617,7 @@ Open: every wall ≥ 80 % open. Partially enclosed: (i) $A_o \\ge 1.10A_{oi}$, (
       const vcd = uniformPlusConcentrated(ild8(fs8.shear(28)), 6, 25, 2)
       const me = uniformPlusConcentrated(ild8(fs8.moment(16)), 6, 25, 2)
       return [
-        { key: 'fbrc', label: '$FBR_C$ ordinate when the load is at x = 16 ft', value: ildAt(ild8(fs8.fbr(24)), 16) },
+        { key: 'fbrc', label: '$FBR_C$ ordinate for a load at the left tip of stringer C–D (x = 16 ft)', value: ildAt(ild8(fs8.fbr(24)), 16) },
         { key: 'vcd', label: 'Max negative shear in panel CD (incl. DL)', value: vcd.maxNeg.total, unit: 'k' },
         { key: 'me', label: 'Max positive moment at E (incl. DL)', value: me.maxPos.total, unit: 'k-ft' },
       ]
@@ -649,7 +666,7 @@ Open: every wall ≥ 80 % open. Partially enclosed: (i) $A_o \\ge 1.10A_{oi}$, (
         <Md>{`**Müller-Breslau**: remove the restraint that carries the function, give the released structure a unit displacement in the positive sense — the deflected shape *is* the ILD. A–B is a cantilever (fixed at A) carrying the drop-in span B–C. So:
 - $R_A$, $M_A$, $V_{A^+}$, $V_D$, $M_D$ → A–B rotates/moves as a rigid body about the fixed end, B–C follows as a straight line to 0 at C.
 - $R_C$, $V_E$, $M_E$ → A–B is fixed (can't move), only B–C moves.
-Sign convention: $M_A$ is reported as the support reaction moment (counter-clockwise +), so a load anywhere gives a positive ordinate (a cantilever reaction moment).`}</Md>
+Sign convention: $M_A$ is reported as the support reaction moment (${rotPos()} +). A downward load anywhere pushes the cantilever A–B to rotate clockwise, so the wall resists counter-clockwise: every ordinate is ${isCW() ? 'negative' : 'positive'}.`}</Md>
         <ILDStack
           model={b8}
           path={p8}
@@ -659,7 +676,7 @@ Sign convention: $M_A$ is reported as the support reaction moment (counter-clock
             { label: 'V_A+', resp: { kind: 'shear', member: 'AD', x: 0 } },
             { label: 'V_D', resp: { kind: 'shear', member: 'DB', x: 0 } },
             { label: 'V_E', resp: { kind: 'shear', member: 'BE', x: 15 } },
-            { label: 'M_A (reaction, ccw +)', resp: { kind: 'reaction', node: 'A', comp: 'm' } },
+            { label: `M_A (reaction, ${rotTag()})`, resp: { kind: 'reaction', node: 'A', comp: 'm' } },
             { label: 'M_D', resp: { kind: 'moment', member: 'DB', x: 0 } },
             { label: 'M_E', resp: { kind: 'moment', member: 'BE', x: 15 } },
           ]}

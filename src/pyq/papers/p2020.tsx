@@ -1,12 +1,13 @@
 // 2020-21 term final (held 24 Sep 2022) — scan pages 42–50.
 import type { PYQ } from '../types'
 import { solve } from '../../engine/frame2d'
+import { isCW, rotK, rotPos, rotTag, rotWord } from '../../engine/sign'
 import { influenceLine, ildAt, ildExtremes } from '../../engine/ild'
 import { sdc } from '../../engine/eq'
 import { gustFlexible, gustRigid, MS_TO_MPH, PSF_TO_KPA, storeyForces, TERRAIN } from '../../engine/wind'
 import { cantileverMethod, portalMethod, xBraced, type GridFrame } from '../../engine/approx'
 import { trainExtremes, ssMomentILD, ssShearILD, type Train } from '../../engine/moving'
-import { stiffenedSuspension, type PointLoad } from '../../engine/cable'
+import { hangerGirder, stiffenedSuspension, type PointLoad } from '../../engine/cable'
 import { virtualWork } from '../../engine/vw'
 import type { Model } from '../../engine/model'
 import { beamOf, H, members, model, Mo, nodes, P, supports, truss, Wx } from '../../kit/builders'
@@ -25,7 +26,7 @@ const E = 29000
 const f1a = model('a:0,0 b:0,10 c:12,10 d:12,0', 'a-b b-c c-d', 'a:pin d:roller', [H('b', -5, '5k')])
 const EI1a = (E * 6000) / 144 // k-ft²
 const vw1aOpts = { EI: () => EI1a }
-const vw1a = () => virtualWork(f1a, f1a.loads, [Mo('a', 1)], vw1aOpts)
+const vw1a = () => virtualWork(f1a, f1a.loads, [Mo('a', rotK())], vw1aOpts) // unit couple in the positive rotation sense
 
 // ---------------------------------------------------------------- Q1(b) truss horizontal deflection of C
 const t1b = truss('A:0,0 B:0,16 C:20,16 D:20,0', 'A-B B-C C-D A-D A-C', 'A:pin D:roller', [H('B', 5, '5k')])
@@ -56,18 +57,8 @@ const vw2aBend = () => {
 // ---------------------------------------------------------------- Q2(b) stiffened suspension girder
 const susp = { L: 120, h: 100, xh: 60, loads: [{ x: 36, P: 12 }, { x: 72, P: 10 }] as PointLoad[] }
 const sus2b = () => stiffenedSuspension(susp)
-const girderExtreme = () => {
-  const s = sus2b()
-  let max = { x: 0, M: -Infinity },
-    min = { x: 0, M: Infinity }
-  for (let i = 0; i <= 1200; i++) {
-    const x = (120 * i) / 1200
-    const M = s.M(x)
-    if (M > max.M) max = { x, M }
-    if (M < min.M) min = { x, M }
-  }
-  return { max, min }
-}
+/** class-note girder: 9 hanger pulls of q × 12 ft */
+const girder2b = () => hangerGirder({ L: 120, panel: 12, q: sus2b().q, loads: susp.loads })
 
 // ---------------------------------------------------------------- Q3(a) ILD beam with overhangs
 const b3a = beamOf('A:0 B:10:pin C:15 D:30:roller E:42')
@@ -172,7 +163,7 @@ export const Q2020: PYQ[] = [
 
 Frame: a (pin) at the bottom-left, b directly above a, c at the top-right, d (roller) below c. Height 10 ft, span 12 ft. A 5 k horizontal load acts at b towards the **left**.`,
     figure: () => <Figure model={f1a} dimY />,
-    checks: () => [{ key: 'th', label: 'Rotation of a (rad, + = counter-clockwise)', value: vw1a().total, tol: 0.03 }],
+    checks: () => [{ key: 'th', label: `Rotation of a (rad, ${rotTag()})`, value: vw1a().total, tol: 0.03 }],
     solution: () => {
       const r = vw1a()
       return (
@@ -181,12 +172,12 @@ Frame: a (pin) at the bottom-left, b directly above a, c at the top-right, d (ro
 
 **Real system:** $\\sum F_x$: $H_a = 5$ k →. $\\sum M_a = 0$: $5(10) + R_d(12) = 0 \\Rightarrow R_d = 4.17$ k ↓, $R_a = 4.17$ k ↑. Column ab: $M = 5y$ (0 → 50 k-ft); beam bc: 50 → 0; column cd: no moment (roller gives only a vertical force).
 
-**Virtual system (1 k-ft ccw at a):** $R_d = 1/12$ ↓, $R_a = 1/12$ ↑, $H_a = 0$ → ab: $m = 1$ (constant); bc: 1 → 0; cd: 0.
+**Virtual system (1 k-ft ${isCW() ? 'clockwise' : 'counter-clockwise'} at a):** ${isCW() ? '$R_d = 1/12$ ↑, $R_a = 1/12$ ↓, $H_a = 0$ → ab: $m = -1$ (constant); bc: −1 → 0; cd: 0.' : '$R_d = 1/12$ ↓, $R_a = 1/12$ ↑, $H_a = 0$ → ab: $m = 1$ (constant); bc: 1 → 0; cd: 0.'}
 
 Product integrals: ab — triangle × rectangle $= \\tfrac12(50)(1)(10) = 250$; bc — triangle × triangle (same side) $= \\tfrac13(50)(1)(12) = 200$. So $\\theta_a = 450/EI$ in magnitude, $EI = 29000\\times6000/144 = ${fmt(EI1a, 0)}$ k-ft².`}</Md>
-          <VWSolution model={f1a} real={f1a.loads} virtual={[Mo('a', 1)]} opts={vw1aOpts} what="θa" resultUnit="rad" unitNote="EI in k-ft²; result in radians. Sign: + means the joint turns the same way as the unit couple (counter-clockwise)." />
+          <VWSolution model={f1a} real={f1a.loads} virtual={[Mo('a', rotK())]} opts={vw1aOpts} what="θa" resultUnit="rad" unitNote={`EI in k-ft²; result in radians. Sign: + means the joint turns the same way as the unit couple (${rotPos()}).`} />
           <p className="text-base">
-            θ<sub>a</sub> = <b className="num">{fmt(Math.abs(r.total) * 1e4, 3)} × 10⁻⁴ rad</b> {r.total > 0 ? 'counter-clockwise' : 'clockwise'} ({fmt((Math.abs(r.total) * 180) / Math.PI, 4)}°).
+            θ<sub>a</sub> = <b className="num">{fmt(Math.abs(r.total) * 1e4, 3)} × 10⁻⁴ rad</b> {rotWord(r.total)} ({fmt((Math.abs(r.total) * 180) / Math.PI, 4)}°).
           </p>
         </div>
       )
@@ -284,30 +275,29 @@ Span between towers 10 @ 12 ft = 120 ft, cable sag 100 ft, internal hinge in the
     figure: () => <SuspFig />,
     checks: () => {
       const s = sus2b()
-      const e = girderExtreme()
+      const g = girder2b()
       return [
         { key: 'H', label: 'Cable horizontal tension H', value: s.H, unit: 'T' },
         { key: 'q', label: 'Uniform hanger load on girder q', value: s.q, unit: 'T/ft', tol: 0.03 },
         { key: 'M36', label: 'Girder moment under the 12 T load', value: s.M(36), unit: 'T-ft' },
-        { key: 'Mmin', label: 'Largest negative girder moment', value: e.min.M, unit: 'T-ft' },
+        { key: 'Mmin', label: 'Largest negative girder moment', value: g.min.M, unit: 'T-ft' },
       ]
     },
     solution: () => {
-      const s = sus2b()
-      const e = girderExtreme()
+      const g = girder2b()
       return (
         <div className="space-y-2 text-sm">
           <Md>{`**Idea.** A parabolic cable exerts a **uniform** upward load $q$ on the girder through the closely spaced hangers. The girder (simply supported on the towers) then feels the wheel loads down and $q$ up. Since $q = 8Hh/L^2$, the girder moment is $M(x) = M_0(x) - H\\,y(x)$ (simple-beam moment minus H × cable sag). The **internal hinge** gives the extra equation $M = 0$ at 60 ft, which fixes H.
 
 $M_0(60)$: $R_0 = 12(84)/120 + 10(48)/120 = 12.4$ T, $M_0(60) = 12.4(60) - 12(24) = 456$ T-ft; $y(60) = 100$ ft.`}</Md>
           <SuspensionSolution L={120} h={100} xh={60} loads={susp.loads} unit="T" lenUnit="ft" panel={12} marks={[0, 12, 24, 36, 48, 60, 72, 84, 96, 108, 120]} />
-          <Md>{`Note $qL = ${fmt(s.q * 120, 2)}$ T exceeds the applied 22 T, so the girder end reactions are **downward**: $V(0) = ${fmt(s.V(0.001), 3)}$ T. Moment under the loads: $M(36) = ${fmt(s.M(36), 2)}$, $M(72) = ${fmt(s.M(72), 2)}$ T-ft; extreme moments $+${fmt(e.max.M, 2)}$ T-ft at x ≈ ${fmt(e.max.x, 1)} ft and $${fmt(e.min.M, 2)}$ T-ft at x ≈ ${fmt(e.min.x, 1)} ft.`}</Md>
+          <Md>{`The 9 hangers lift $9 \\times ${fmt(g.F, 2)} = ${fmt(9 * g.F, 2)}$ T against the 22 T applied, so both girder end reactions are **downward**: $R_{left} = ${fmt(g.RA, 2)}$ T, $R_{right} = ${fmt(g.RB, 2)}$ T. Moment under the loads: $M(36) = ${fmt(g.M(36), 2)}$, $M(72) = ${fmt(g.M(72), 2)}$ T-ft; extreme moments $+${fmt(g.max.M, 2)}$ T-ft at ${fmt(g.max.x)} ft and $${fmt(g.min.M, 2)}$ T-ft at ${fmt(g.min.x)} ft.`}</Md>
         </div>
       )
     },
     notes: [
       'Load positions read from the sketch: the 12 T load sits at the 3rd hanger (36 ft) and the 10 T load at the 6th hanger (72 ft); the hinge is at the 5th hanger (60 ft). "T" = tons.',
-      'Classical stiffening-girder theory: girder pinned at both towers, hangers inextensible, cable parabolic → uniform hanger load.',
+      'Classical stiffening-girder theory: girder pinned at both towers, hangers inextensible, cable parabolic → equal hanger forces q × 12 ft; SFD/BMD drawn hanger by hanger as in the class notes.',
     ],
   },
   {
@@ -334,7 +324,7 @@ A (free end) at 0, B (pin) at 10 ft, C at 15 ft, D (roller) at 30 ft, E (free en
         <Md>{`Statics with a unit load at distance x from A (span B–D = 20 ft):
 - $R_B = (30 - x)/20$: 1 at B, 0 at D, **1.5** at A, **−0.6** at E (straight line over the whole beam).
 - $V_{D^-}$: load left of D → $V = R_B - 1 = -R_D$ ⇒ $-(x-10)/20$ (0 at B, −1 just left of D, +0.5 at A). Load right of D → $V = R_B = (30-x)/20$ (0 at D, −0.6 at E). The jump of +1 is **right** of D, so just left of D the ordinate is −1.
-- $M_C$ (5 ft right of B): Müller-Breslau — a hinge at C, unit relative rotation: peak $\\dfrac{5\\times15}{20} = 3.75$ at C, going to $-7.5$ at A and $-0.6\\times5\\times...$ — straight lines through B and D: at E $= \\tfrac{5}{15}(-3.75)\\times\\tfrac{12}{5}$ … i.e. the line C→D extended: $-3.75\\times12/15 = -3.0$.`}</Md>
+- $M_C$ (5 ft right of B): Müller-Breslau — a hinge at C, unit relative rotation: peak $\\dfrac{5\\times15}{20} = 3.75$ at C, zero at B and D. Extending the line C→B past B to A: $-3.75\\times10/5 = -7.5$; extending C→D past D to E: $-3.75\\times12/15 = -3.0$.`}</Md>
         <ILDStack
           model={b3a}
           path={p3a}
@@ -501,12 +491,11 @@ Background part (same as for a rigid building), exposure C: $c = ${t.c}$, $l = $
       const e = trainExtremes(ild5, train6)
       return [
         { key: 'vmax', label: 'Maximum positive shear at x = 20 ft', value: e.max.value, unit: 'k' },
-        { key: 'vmin', label: 'Maximum negative shear at x = 20 ft', value: e.min.value, unit: 'k' },
       ]
     },
     solution: () => (
       <div className="space-y-2 text-sm">
-        <Md>{`Shear ILD at the quarter point (x = 20 ft): $-0.25$ just left, $+0.75$ just right, zero at the supports. For the maximum (positive) shear the train enters from the right with a wheel **just right** of the section and its tail (heavy wheels and the 6 k/ft) over the long positive part. Moving the train one wheel forward changes the shear by $\\Delta V = -P_{passing} + W\\Delta x/L$ — keep advancing while ΔV > 0. The uniform load is included in every trial (it adds $w\\times$ area under the ILD it covers).`}</Md>
+        <Md>{`Shear ILD at the quarter point (x = 20 ft): $-0.25$ just left, $+0.75$ just right, zero at the supports. For the maximum (positive) shear the train enters from the right (travelling right → left, wheel 1 leads) with a wheel **just right** of the section and its tail (heavy wheels and the 6 k/ft) over the long positive part. Moving the train one wheel forward changes the shear by $\\Delta V = -P_{passing} + W\\Delta x/L$ — keep advancing while ΔV > 0. The uniform load is included in every trial (it adds $w\\times$ area under the ILD it covers). Wheel 2 at the section is a local peak, but the 12 ft gap in front of **wheel 6 (the first 50 k)** brings much more load on, and that position governs.`}</Md>
         <TrainOnILD ild={ild5} t={train6} span={[0, 80]} section={20} peak={{ x: 20, side: 1 }} what="shear at quarter point" />
       </div>
     ),
@@ -526,7 +515,7 @@ Background part (same as for a rigid building), exposure C: $c = ${t.c}$, $l = $
     checks: () => [{ key: 'm', label: 'Maximum moment at x = 30 ft', value: trainExtremes(ild6, train6).max.value, unit: 'k-ft' }],
     solution: () => (
       <div className="space-y-2 text-sm">
-        <Md>{`Moment ILD at x = 30 ft: triangle with peak $\\dfrac{30\\times60}{90} = 20$ ft. Criterion for the critical wheel: when a wheel is at the section, the average load per foot on the left part ($W_L/30$) should change from less to more than the average on the whole span ($W/90$) as that wheel crosses — i.e. $W_L \\approx W/3$. Each trial below includes the uniform load lying on the span.`}</Md>
+        <Md>{`Moment ILD at x = 30 ft: triangle with peak $\\dfrac{30\\times60}{90} = 20$ ft. Criterion for the critical wheel: when a wheel is at the section, the average load per foot on the left part ($W_L/30$) should change from less to more than the average on the whole span ($W/90$) as that wheel crosses — i.e. $W_L \\approx W/3$. With the train travelling right → left (wheel 1 leads), **wheel 8** at the section governs. Each trial below includes the uniform load lying on the span.`}</Md>
         <TrainOnILD ild={ild6} t={train6} span={[0, 90]} section={30} peak={{ x: 30, side: 1 }} what="moment at L/3" resUnit="k-ft" />
       </div>
     ),
@@ -547,7 +536,6 @@ Background part (same as for a rigid building), exposure C: $c = ${t.c}$, $l = $
       return [
         { key: 'y3', label: 'ILD ordinate of "a" with the unit load at L3 (60 ft)', value: ildAt(ild7(), 60) },
         { key: 'T', label: 'Maximum tension in "a"', value: e.max.value, unit: 'k' },
-        { key: 'C', label: 'Maximum compression in "a" (negative)', value: e.min.value, unit: 'k' },
       ]
     },
     solution: () => {
@@ -558,12 +546,12 @@ Background part (same as for a rigid building), exposure C: $c = ${t.c}$, $l = $
           <ILDStack model={t7} path={p7} items={[{ label: 'F_a (T +)', resp: { kind: 'force', member: 'a' } }]} />
           <TrainOnILD ild={ild7()} t={train6} span={[0, 160]} peak={{ x: 60, side: 1 }} what={'force in "a"'} />
           <p className="text-base">
-            Maximum force in "a" = <b className="num">{fmt(trainExtremes(ild7(), train6).max.value)} k (tension)</b>; the largest compression is {fmt(Math.abs(trainExtremes(ild7(), train6).min.value))} k.
+            Maximum force in "a" = <b className="num">{fmt(trainExtremes(ild7(), train6).max.value)} k (tension)</b>. With the train travelling right → left, "a" never goes into compression: by the time wheels reach the compression part (left of L3), the rest of the train and the unending 6 k/ft tail are on the larger tension part.
           </p>
         </div>
       )
     },
-    notes: ['Through truss: the deck (and the wheel loads) is on the bottom chord. The 6 k/ft trailing load is unlimited in length.'],
+    notes: ['Through truss: the deck (and the wheel loads) is on the bottom chord. The 6 k/ft trailing load is unlimited in length.', 'Train taken as travelling right to left (wheel 1 leads).'],
   },
   {
     id: '2020-21-B8',
@@ -652,9 +640,9 @@ Geometry: A (pin) and G (roller) 16 ft apart at the base; B, F at 12 ft; C, E at
           <Md>{`Each X-braced panel has one redundant. Since both diagonals act (T and C), assume they **share the panel shear equally**: in each panel one diagonal is in tension and the other in compression with the same magnitude. Diagonal length $\\sqrt{16^2+12^2} = 20$ ft → horizontal component $= 0.8F$.
 
 - Joint D: $F_{CD}(0.8) = 10$ → CD = 12.5 k (C); DE = $12.5\\times0.6 = 7.5$ k (T).
-- Panel BCEF (cut above BF): horizontal shear = 10 + 20 = 30 k (CD carries 10 k of it, so the two diagonals carry 20 k → 10 k each): $F = 10/0.8 = 12.5$ k each.
+- Panel BCEF (cut between the 12 ft and 24 ft levels through BC, BE, CF, EF): horizontal shear = 10 + 20 = 30 k, all carried by the two diagonals → 15 k each: $F = 15/0.8 = 18.75$ k (one T, one C).
 - Panel ABFG: shear = 54 k → 27 k each → 33.75 k per diagonal.
-- Verticals and horizontals then follow from joint equilibrium. Reactions: $H_A = 54$ k →, $R_G = \\dfrac{10(36) + 20(24) + 24(12)}{16} = 70.5$ k ↑, $R_A = 70.5$ k ↓.`}</Md>
+- Verticals and horizontals then follow from joint equilibrium. Reactions: $H_A = 54$ k →; $\\sum M_A$: $R_G(16) + 10(36) + 20(24) + 24(12) = 0 \\Rightarrow R_G = 70.5$ k **↓** (hold-down), $R_A = 70.5$ k ↑ — the leftward loads overturn the tower about A.`}</Md>
           <TrussSolution model={t10} asked={asked10} forces={f} note="Forces from the equal-shear assumption (average of the four statically determinate choices = each diagonal takes half the panel shear)." />
           <table className="tbl w-auto">
             <tbody>
@@ -669,7 +657,7 @@ Geometry: A (pin) and G (roller) 16 ft apart at the base; B, F at 12 ft; C, E at
         </div>
       )
     },
-    notes: ['The text lists "AO"; there is no joint O in Fig. 10 — taken as the base member AG.', 'BF and CE are drawn slightly sloped in the sketch; taken as horizontal.'],
+    notes: ['BF and CE are drawn slightly sloped in the sketch; taken as horizontal (all levels at 12 ft spacing as dimensioned).'],
   },
   {
     id: '2020-21-B11',
@@ -678,16 +666,16 @@ Geometry: A (pin) and G (roller) 16 ft apart at the base; B, F at 12 ft; C, E at
     no: '11',
     marks: 28,
     topics: ['lateral'],
-    title: 'Roof truss on two fixed columns: FP, PM, MN and column AI',
+    title: 'Roof truss on two fixed columns: GM, MN, FP and column AJI',
     pages: [45, 50],
-    text: `Analyse the truss in Fig. 11 and determine the member forces **OM (read as PM), MN and FP**, applying the necessary assumptions. Also draw (a) the shear force and (b) the bending moment diagram of the column **A–I**.
+    text: `Analyse the truss in Fig. 11 and determine the member forces **GM, MN and FP**, applying the necessary assumptions. Also draw (a) the shear force and (b) the bending moment diagram of the column **AJI**.
 
-Bent: columns at A (x = 0) and B (x = 60 ft), fixed bases. Bottom chord J–K–L–M–N–O–C at 12 ft (6 @ 10 ft); top chord I–H–G–F–P–E–D rises from 15 ft at the eaves to 16.5 ft at the ridge F. Loads (→): 5 k at I, 10 k at J and 2 k/ft on the full height of column A–I.`,
+Bent: columns at A (x = 0) and B (x = 60 ft), fixed bases. Bottom chord J–K–L–M–N–O–C at 12 ft (6 @ 10 ft); top chord I–H–G–F–P–E–D rises from 15 ft at the eaves to 16.5 ft at the ridge F. Web: J–H, H–K, H–L, G–L, **G–M**, F–M, M–P, P–N, N–E, E–O, E–C. Loads (→): 5 k at I, 10 k at J and 2 k/ft on the full height of column A–J–I.`,
     figure: () => <Figure model={{ ...m11, loads: m11.loads.slice(0, 5), supports: supports('A:fixed') }} dimY={[0, 12, 15, 16.5]} />,
     checks: () => [
-      { key: 'FP', label: 'Force in FP (T +)', value: N11('FP'), unit: 'k' },
-      { key: 'PM', label: 'Force in PM (T +)', value: N11('PM'), unit: 'k' },
+      { key: 'GM', label: 'Force in GM (T +)', value: N11('GM'), unit: 'k' },
       { key: 'MN', label: 'Force in MN (T +)', value: N11('MN'), unit: 'k' },
+      { key: 'FP', label: 'Force in FP (T +)', value: N11('FP'), unit: 'k' },
       { key: 'MA', label: 'Base moment of column A (magnitude)', value: Math.abs(r11().reaction('A').m), unit: 'k-ft' },
     ],
     solution: () => {
@@ -700,27 +688,29 @@ Bent: columns at A (x = 0) and B (x = 60 ft), fixed bases. Bottom chord J–K–
 
 **Base reactions.** Column A: $H_A = 16.5 + 2(6) = ${fmt(Math.abs(RA.rx))}$ k ←, $M_A = 16.5(6) + 2(6)(3) = ${fmt(Math.abs(RA.m))}$ k-ft. Column B: $H_B = 16.5$ k ←, $M_B = 16.5(6) = 99$ k-ft, vertical $= ${fmt(Math.abs(Rb.ry))}$ k ${Rb.ry > 0 ? '↑' : '↓'} (= ${fmt(Math.abs(RA.ry))} k ${RA.ry > 0 ? '↑' : '↓'} at A).
 
-The upper structure (truss + column tops) is now determinate. The columns are continuous through J and I, so they bend; the truss bars are pin-ended. Section through **FP, PM, MN** and moments about M (for FP) and F/P (for MN, PM):`}</Md>
-          <div className="grid sm:grid-cols-3 gap-2">
+The upper structure (truss + column tops) is now determinate. The columns are continuous through J and I, so they bend; the truss bars are pin-ended. Use the free body to the **right** of each cut (only the known forces at B's inflection point act on it):
+- Section through **GF, GM, LM** (panel 20–30 ft): $\\sum F_y$ gives **GM** (once GF is known — GF = FP by joint F, since FM is vertical).
+- Section through **FP, PM, MN** (panel 30–40 ft): moments about M give **FP**, moments about P give **MN**.`}</Md>
+          <div className="grid cq-sm:grid-cols-3 gap-2">
             {[
-              ['FP', 'FP (top chord)'],
-              ['PM', 'PM (diagonal)'],
+              ['GM', 'GM (diagonal)'],
               ['MN', 'MN (bottom chord)'],
+              ['FP', 'FP (top chord)'],
             ].map(([id, l]) => (
               <div key={id} className="rounded-lg border border-line p-2">
                 {l}: <b className="num">{TF(N11(id))}</b>
               </div>
             ))}
           </div>
-          <TrussSolution model={m11} asked={['FP', 'PM', 'MN', 'NO']} note="Truss bar forces with the inflection-point assumptions (column members shown in grey are beam-columns)." />
+          <TrussSolution model={m11} asked={['GM', 'MN', 'FP']} note="Truss bar forces with the inflection-point assumptions (column members shown in grey are beam-columns)." />
           <h4 className="font-bold">Column A–I: SFD and BMD</h4>
           <FrameSolution model={m11} kinds={['V', 'M', 'N']} only={['Aa', 'aJ', 'JI']} />
         </div>
       )
     },
     notes: [
-      'The text asks for "OM"; there is no member O–M (O and M are not adjacent). It is read as the diagonal PM, which with FP and MN forms the standard section cut — NO (bottom chord) is also shown.',
-      'Column "AB(I)" read as the left column A–J–I. Bases read as fixed (hatching as in Figs. 8–9).',
+      'The paper asks for GM, MN and FP. GM is the diagonal from G (20 ft, top chord) down to M (30 ft, bottom chord), as drawn in Fig. 11.',
+      'Column AJI = the left column A–J–I. Bases read as fixed (hatching as in Figs. 8–9). Eaves I and D at 12 + 3 = 15 ft, ridge F 1.5 ft higher; intermediate top-chord joints on straight lines.',
       'Inflection points at 6 ft (half of the 12 ft column below the bottom chord) with equal shears 16.5 k; the right lower column B–(6 ft) is a cantilever carrying that shear and is not drawn in the model.',
     ],
   },
@@ -750,7 +740,7 @@ function SuspFig() {
       ].map(([x, l]) => (
         <g key={x as number}>
           <line x1={X(x as number)} y1={gy + 4} x2={X(x as number)} y2={gy + 34} stroke="var(--c-load)" strokeWidth={2} />
-          <path d={`M${X(x as number)},${gy + 4} l-4,8 h8 z`} fill="var(--c-load)" />
+          <path d={`M${X(x as number)},${gy + 38} l-4,-8 h8 z`} fill="var(--c-load)" />
           <text x={X(x as number) + 6} y={gy + 32} fontSize={12} fill="var(--c-load)" fontWeight={700}>
             {l}
           </text>

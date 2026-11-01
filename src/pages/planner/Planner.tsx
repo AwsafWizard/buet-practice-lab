@@ -104,7 +104,7 @@ export function Planner() {
       <div className="h-1.5 rounded-full bg-line overflow-hidden mb-4">
         <div className="h-full bg-good transition-all" style={{ width: `${totalHours ? (doneHours / totalHours) * 100 : 0}%` }} />
       </div>
-      <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
+      <div className="grid cq-sm:grid-cols-2 cq-xl:grid-cols-3 gap-3">
         {days.map((d, i) => {
           const list = map.get(d) ?? []
           const hrs = list.reduce((s, b) => s + b.hours, 0)

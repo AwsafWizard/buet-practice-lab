@@ -4,6 +4,7 @@ import { StructureView } from '../../components/StructureView'
 import { Answer, Callout, Md, Section, Seg, Step, Steps, Tex } from '../../components/ui'
 import { diagramsFromResult } from '../../engine/diagrams'
 import { solve, UnstableError } from '../../engine/frame2d'
+import { rot, rotArrow, rotPos, rotTag } from '../../engine/sign'
 import type { Load, Model } from '../../engine/model'
 import { beamOf, H, model, P, Pm, W } from '../../kit/builders'
 import { FrameSolution, reactionOverlay } from '../../kit/solutions'
@@ -44,6 +45,11 @@ const TEMPLATES: Tpl[] = [
     },
   },
   {
+    name: 'Inclined-leg frame',
+    aMax: 16,
+    build: ({ a, P: p, w, H: h }) => ({ ...model('A:0,0 B:0,16 C:16,16 D:28,0', 'A-B B-C C-D', 'A:pin D:roller'), loads: [Pm('BC', a, p), ...(w ? [W('BC', w), { kind: 'dist' as const, member: 'CD', w1: -w, dir: 'y' as const, proj: true }] : []), ...(h ? [H('B', h)] : [])] }),
+  },
+  {
     name: 'L-frame (fixed base)',
     aMax: 12,
     build: ({ a, P: p, w, H: h }) => ({ ...model('A:0,0 B:0,10 C:12,10', 'A-B B-C', 'A:fixed'), loads: [Pm('BC', a, p), ...(w ? [W('BC', w)] : []), ...(h ? [H('B', h)] : [])] }),
@@ -76,7 +82,7 @@ function Sandbox() {
           </button>
         ))}
       </div>
-      <div className="grid md:grid-cols-2 gap-x-6 gap-y-1">
+      <div className="grid cq-md:grid-cols-2 gap-x-6 gap-y-1">
         <Slider label="Point load at x" value={Math.min(a, tpl.aMax)} min={0} max={tpl.aMax} step={0.5} onChange={setA} unit="′" />
         <Slider label="Point load P" value={Pv} min={0} max={50} onChange={setP} unit="k" />
         <Slider label="UDL w" value={w} min={0} max={5} step={0.5} onChange={setW} unit="k/ft" />
@@ -85,7 +91,7 @@ function Sandbox() {
       {'err' in res ? (
         <div className="text-bad text-sm">Structure is unstable.</div>
       ) : (
-        <div className="grid lg:grid-cols-2 gap-3">
+        <div className="grid cq-lg:grid-cols-2 gap-3">
           <div className="rounded-xl bg-bg/60 border border-line p-2">
             <div className="text-xs text-mute font-semibold px-1">Loads & reactions</div>
             <StructureView model={m} autoDimX maxHeight={260}>
@@ -109,7 +115,7 @@ function Sandbox() {
 // ---------------------------------------------------------------- challenge
 function makeChallenge(seed: number) {
   const r = rng(seed)
-  const t = pick(r, [0, 1, 3, 4, 5, 6])
+  const t = pick(r, [0, 1, 3, 4, 5, 6, 7])
   const tpl = TEMPLATES[t]
   const params = { a: randInt(r, 2, tpl.aMax - 2), P: randInt(r, 5, 40, 5), w: pick(r, [0, 1, 2, 3]), H: t >= 4 ? pick(r, [0, 5, 10, -10]) : 0 }
   const m = tpl.build(params)
@@ -146,7 +152,7 @@ function Challenge() {
           <div key={x.node}>
             {ch.m.supports.find((s) => s.node === x.node)?.type !== 'roller' && <Answer key={`${seed}x${x.node}`} id={`frames:lab:${seed}:${x.node}x`} label={`H at ${x.node}`} value={x.rx} unit="k" compact />}
             <Answer key={`${seed}y${x.node}`} id={`frames:lab:${seed}:${x.node}y`} label={`V at ${x.node}`} value={x.ry} unit="k" compact />
-            {Math.abs(x.m) > 1e-9 && <Answer key={`${seed}m${x.node}`} id={`frames:lab:${seed}:${x.node}m`} label={`M at ${x.node} (ccw +)`} value={x.m} unit="k-ft" compact />}
+            {Math.abs(x.m) > 1e-9 && <Answer key={`${seed}m${x.node}`} id={`frames:lab:${seed}:${x.node}m`} label={`M at ${x.node} (${rotTag()})`} value={rot(x.m)} unit="k-ft" compact />}
           </div>
         ))}
         <div className="text-xs font-bold uppercase tracking-wider text-faint mb-1 mt-3">Step 2 — the largest bending moment (magnitude)</div>
@@ -194,7 +200,7 @@ function Stepper() {
   ]
   const kind: DiagramKind = k >= 5 ? 'M' : 'V'
   return (
-    <div className="grid lg:grid-cols-[1fr_1.1fr] gap-4">
+    <div className="grid cq-lg:grid-cols-[1fr_1.1fr] gap-4">
       <div>
         <Steps>
           {steps.slice(0, k + 1).map((s, i) => (
@@ -229,7 +235,7 @@ function Stepper() {
 function Overview() {
   return (
     <div>
-      <Section title="What this topic is" right={<div className="w-72 hidden md:block"><TopicFrequency topic="frames" /></div>}>
+      <Section title="What this topic is" right={<div className="w-72 hidden cq-md:block"><TopicFrequency topic="frames" /></div>}>
         <Md>{`A **statically determinate** frame or beam can be solved with equilibrium alone: reactions first, then the internal forces in every member — **axial force N, shear V and bending moment M** — drawn as AFD, SFD and BMD.
 
 Exam questions add a twist to make the reactions interesting:
@@ -238,7 +244,7 @@ Exam questions add a twist to make the reactions interesting:
 - **inclined members** with loads per horizontal length, links, and members meeting at odd angles.`}</Md>
       </Section>
       <Section title="Relations you use every time">
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid cq-md:grid-cols-2 gap-4">
           <div>
             <Tex block>{`\\frac{dV}{dx} = -w(x),\\qquad \\frac{dM}{dx} = V`}</Tex>
             <Tex block>{`M_2 - M_1 = \\int_1^2 V\\,dx\\ \\ (\\text{area of SFD}),\\qquad V_2 - V_1 = -\\int_1^2 w\\,dx`}</Tex>
@@ -276,7 +282,8 @@ Exam questions add a twist to make the reactions interesting:
       <Section title="Sign conventions used here">
         <Md>{`- **Axial**: tension +.
 - **Shear**: + when the part to the *left* of the cut is pushed *up* (members are read left→right; columns bottom→top).
-- **Moment**: sagging + (tension at the bottom of a beam). Your teacher may ask you to draw the BMD **on the compression side** — that is the usual “positive above the axis” drawing for beams. Switch the side in the sidebar (*BMD drawn on*) and every diagram in the app follows.`}</Md>
+- **Moment**: sagging + (tension at the bottom of a beam). Your teacher may ask you to draw the BMD **on the compression side** — that is the usual “positive above the axis” drawing for beams. Switch the side in the sidebar (*BMD drawn on*) and every diagram in the app follows.
+- **Moment reactions, rotations, couples**: **${rotPos()} +** (${rotArrow()}). Switch it in the sidebar (*Rotation +*) — fixed-end moments, their ILDs and virtual-work rotations all follow. (Shear above is already the clockwise-+ convention: the pair of shears on a small element turns it clockwise.)`}</Md>
         <Callout kind="exam">Recent papers: 2022-23 had two frame questions (one with an internal hinge), 2021-22 one; older papers ask for AFD + SFD + BMD of a frame with an inclined member or a given internal shear.</Callout>
       </Section>
     </div>
@@ -342,6 +349,62 @@ const own = (id: string, level: PYQ['level'], title: string, text: string, m: Mo
 })
 
 const L1 = (loads: Load[]) => loads
+
+// Trapezoidal three-hinged frame (class sketch "Fig. 12"): inclined legs at 45°, inclined loads normal to the legs at mid-length.
+const TRAP_W = 2
+const TRAP = (() => {
+  const s = Math.SQRT1_2
+  const mid = 7 * Math.SQRT2
+  return model('A:0,0 B:14,14 C*:34,14 D:54,14 E:68,0', 'A-B B-C C-D D-E', 'A:pin E:pin', [
+    { kind: 'point', member: 'AB', a: mid, fx: 20 * s, fy: -20 * s, label: '20 k' },
+    { kind: 'point', member: 'DE', a: mid, fx: -10 * s, fy: -10 * s, label: '10 k' },
+    W('BC', TRAP_W),
+    W('CD', TRAP_W),
+  ])
+})()
+const ftrap: PYQ = {
+  id: 'own-frames-7',
+  paper: 'own',
+  level: 'exam',
+  sec: 'B',
+  no: '7',
+  marks: 28,
+  topics: ['frames'],
+  title: 'Trapezoidal three-hinged frame with inclined legs',
+  text: `Check the static determinacy of the frame shown. Draw the axial force, shear force and bending moment diagrams of the beam **BCD** and of the inclined legs **AB** and **DE**. C is an internal hinge.
+
+- A and E are pins; legs AB and DE rise 14 ft over 14 ft (45°); B–C = C–D = 20 ft.
+- 20 k acts at mid-length of AB, at 45° down and to the right (normal to AB).
+- 10 k acts at mid-length of DE, at 45° down and to the left (normal to DE).
+- Beam BCD carries a uniform load of ${TRAP_W} k/ft.`,
+  pages: [],
+  figure: () => <StructureView model={TRAP} autoDimX autoDimY maxHeight={260} />,
+  checks: () => {
+    const r = solve(TRAP)
+    return [
+      { key: 'Ey', label: 'Vertical reaction at E', value: r.reaction('E').ry, unit: 'k' },
+      { key: 'Ex', label: 'Horizontal reaction at E (→ +)', value: r.reaction('E').rx, unit: 'k' },
+      { key: 'N', label: 'Axial force in BCD (tension +)', value: r.member('BC').N(10), unit: 'k' },
+      { key: 'MB', label: 'Moment in the beam at B', value: r.member('BC').M(0), unit: 'k-ft' },
+      { key: 'NA', label: 'Axial force in leg AB just above A (tension +)', value: r.member('AB').N(0), unit: 'k' },
+    ]
+  },
+  solution: () => (
+    <>
+      <Md>{`**Determinacy.** Two pins give $r = 4$ reactions ($A_x, A_y, E_x, E_y$). Statics gives 3 equations and the internal hinge adds 1 ($M_C = 0$), so $4 = 3 + 1$ → **statically determinate** (and stable: the three hinges A, C, E are not in a line).
+
+**Method.** Resolve each inclined load into components ($20/\\sqrt2 = 14.14$ k and $10/\\sqrt2 = 7.07$ k). Take $\\sum M_A = 0$ for the whole frame and $\\sum M_C = 0$ for the right part C–D–E → two equations in $E_x, E_y$. Then $\\sum F_x, \\sum F_y$ give $A_x, A_y$. For the beam, cut just right of B: the axial force in BCD is the horizontal force carried across from the left leg ($A_x$ + the 14.14 k component), constant along BCD because the beam only carries vertical load. Check $M = 0$ at C.
+
+**Inclined legs.** Walk up each leg from its pin: resolve the pin reactions along and across the leg ($\\cos 45° = \\sin 45° = 0.707$), drop N and V by the inclined load at mid-length, and take moments about each section with horizontal / vertical lever arms. The legs' top-end values must match the beam at B and D — section 3 below shows every step.`}</Md>
+      <FrameSolution model={TRAP} kinds={['N', 'V', 'M']} />
+    </>
+  ),
+  notes: [
+    'From a class sketch ("Fig. 12"); the UDL on BCD has no value in the sketch — 2 k/ft is assumed.',
+    'Both inclined loads are read as acting at mid-length of the legs, normal to them (45° to horizontal), pushing towards the frame.',
+    'Supports A and E read as pins (hatched pin symbols).',
+  ],
+}
 const problems: PYQ[] = [
   own('1', 'warm-up', 'Overhanging beam', 'Draw SFD and BMD. Find the reactions and the maximum positive and negative moments.', { ...beamOf('A:0:pin B:20:roller C:28'), loads: L1([W('AB', 2), Pm('BC', 8, 10)]) }, (r) => [
     { key: 'B', label: 'Reaction at B', value: r.reaction('B').ry, unit: 'k' },
@@ -349,7 +412,7 @@ const problems: PYQ[] = [
   ]),
   own('2', 'warm-up', 'Gerber beam with a drop-in span', 'A–B fixed-end cantilever carries a drop-in span B–D through the hinge B. Draw SFD and BMD.', { ...beamOf('A:0:fixed B*:10 C:20 D:25:roller'), loads: L1([Pm('BC', 5, 20), W('CD', 3)]) }, (r) => [
     { key: 'D', label: 'Reaction at D', value: r.reaction('D').ry, unit: 'k' },
-    { key: 'MA', label: 'Fixed-end moment at A (ccw +)', value: r.reaction('A').m, unit: 'k-ft' },
+    { key: 'MA', label: `Fixed-end moment at A (${rotTag()})`, value: rot(r.reaction('A').m), unit: 'k-ft' },
   ]),
   own(
     '3',
@@ -386,7 +449,7 @@ const problems: PYQ[] = [
     (r) => [
       { key: 'E', label: 'Reaction at E', value: r.reaction('E').ry, unit: 'k' },
       { key: 'C', label: 'Reaction at C', value: r.reaction('C').ry, unit: 'k' },
-      { key: 'A', label: 'Moment at A (ccw +)', value: r.reaction('A').m, unit: 'k-ft' },
+      { key: 'A', label: `Moment at A (${rotTag()})`, value: rot(r.reaction('A').m), unit: 'k-ft' },
     ],
   ),
   own(
@@ -402,6 +465,7 @@ const problems: PYQ[] = [
     ['N', 'V', 'M'],
     true,
   ),
+  ftrap,
 ]
 
 const mod: TopicModule = { Overview, Approach, Lab, problems }

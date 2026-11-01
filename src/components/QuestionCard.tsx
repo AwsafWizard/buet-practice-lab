@@ -1,6 +1,8 @@
-import { Component, useMemo, useState, type ReactNode } from 'react'
+import { Component, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { givenFor, givenRefs } from '../pyq/given'
 import type { PYQ } from '../pyq/types'
+import { focusQuestion } from '../reference/drawer'
 import { useStore } from '../store'
 import { topicById } from '../topics/registry'
 import { Answer, Md, Reveal } from './ui'
@@ -41,6 +43,11 @@ export function QuestionCard({ q, topic, showPaper = true, defaultOpen = false, 
   const [scan, setScan] = useState(false)
   const [open, setOpen] = useState(defaultOpen)
   const tp = topic ?? q.topics[0]
+  const given = givenFor(q.id)
+  // opening a card puts its attached tables at the top of the code-tables drawer
+  useEffect(() => {
+    if (open && given) focusQuestion(q.id, givenRefs(q.id))
+  }, [open, given, q.id])
   const checks = useMemo(() => {
     if (!open || !q.checks) return []
     try {
@@ -81,6 +88,7 @@ export function QuestionCard({ q, topic, showPaper = true, defaultOpen = false, 
       {open && (
         <div className="px-5 pb-5 space-y-4 border-t border-line/60 pt-4">
           <Md>{q.text}</Md>
+          {given && <GivenStrip id={q.id} />}
           {q.legacy && <div className="text-xs rounded-lg p-2 bg-load/10 text-mute">{q.legacy}</div>}
           {q.figure && (
             <Boundary label="figure">
@@ -93,7 +101,7 @@ export function QuestionCard({ q, topic, showPaper = true, defaultOpen = false, 
                 {scan ? 'Hide original paper' : 'Show original paper (scan)'}
               </button>
               {scan && (
-                <div className="mt-2 grid md:grid-cols-2 gap-2">
+                <div className="mt-2 grid cq-md:grid-cols-2 gap-2">
                   {q.pages.map((pg) => (
                     <a key={pg} href={`scans/p-${String(pg).padStart(2, '0')}.jpg`} target="_blank" rel="noreferrer">
                       <img src={`scans/p-${String(pg).padStart(2, '0')}.jpg`} alt={`page ${pg}`} className="rounded-lg border border-line w-full bg-white" loading="lazy" />
@@ -142,5 +150,35 @@ export function QuestionCard({ q, topic, showPaper = true, defaultOpen = false, 
         </div>
       )}
     </article>
+  )
+}
+
+/** what the paper printed with this question; each chip opens that table in the drawer */
+function GivenStrip({ id }: { id: string }) {
+  const given = givenFor(id)!
+  const refs = givenRefs(id)
+  return (
+    <div className="rounded-xl border border-load/40 bg-load/5 px-3 py-2 text-xs flex flex-wrap items-center gap-1.5">
+      <span className="font-bold text-load mr-1">Given with the paper:</span>
+      {given.length === 0 && <span className="text-mute">no tables or formulas attached — every value is in the question text</span>}
+      {given.map((g, i) =>
+        g.ref ? (
+          <button
+            key={i}
+            className="chip hover:!border-load hover:text-ink"
+            title={`${g.what ?? g.label} — open in the code tables`}
+            onClick={() => focusQuestion(id, refs, { open: true, jump: g.ref })}
+          >
+            {g.formula ? '∑' : '▦'} {g.label}
+            {g.what && <span className="text-faint font-normal">· {g.what}</span>}
+          </button>
+        ) : (
+          <span key={i} className="chip text-mute" title="Not in the code tables drawer">
+            {g.formula ? '∑' : '▦'} {g.label}
+            {g.what && <span className="text-faint">· {g.what}</span>}
+          </span>
+        ),
+      )}
+    </div>
   )
 }

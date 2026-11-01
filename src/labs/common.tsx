@@ -24,12 +24,15 @@ export function useSeed(initial = 1) {
 
 export function Slider({ label, value, min, max, step = 1, onChange, unit }: { label: ReactNode; value: number; min: number; max: number; step?: number; onChange: (v: number) => void; unit?: string }) {
   return (
-    <label className="flex items-center gap-3 text-sm">
-      <span className="text-mute min-w-[7rem]">{label}</span>
-      <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(+e.target.value)} className="flex-1 accent-[var(--c-accent)]" />
-      <span className="num w-16 text-right">
-        {value}
-        {unit}
+    // too narrow for one row (a 3-column grid beside the drawer): the range drops below label and value
+    <label className="@container block text-sm">
+      <span className="grid grid-cols-[minmax(0,1fr)_auto] @[17rem]:grid-cols-[minmax(7rem,max-content)_minmax(0,1fr)_4rem] items-center gap-x-3">
+        <span className="text-mute">{label}</span>
+        <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(+e.target.value)} className="min-w-0 w-full col-span-2 row-start-2 @[17rem]:col-span-1 @[17rem]:col-start-2 @[17rem]:row-start-1 accent-[var(--c-accent)]" />
+        <span className="num text-right @[17rem]:col-start-3 @[17rem]:row-start-1">
+          {value}
+          {unit}
+        </span>
       </span>
     </label>
   )
@@ -72,5 +75,5 @@ export function Card({ title, children, className }: { title?: ReactNode; childr
 }
 
 export function Grid2({ children }: { children: ReactNode }) {
-  return <div className="grid lg:grid-cols-2 gap-4">{children}</div>
+  return <div className="grid cq-lg:grid-cols-2 gap-4">{children}</div>
 }

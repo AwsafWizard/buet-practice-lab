@@ -12,6 +12,12 @@ export interface Train {
   labels?: string[]
 }
 
+/**
+ * Direction of travel used everywhere: trains move from RIGHT to LEFT. Wheel 1 (the leftmost wheel
+ * as drawn) leads and the rest of the train, plus any uniform tail, trails to its right (o = -1).
+ */
+export const TRAVEL = -1 as const
+
 export interface Placement {
   value: number
   /** x of wheel 1 */
@@ -58,8 +64,8 @@ export function place(ild: ILD, t: Train, s: number, o: 1 | -1, side: -1 | 1 = 1
   return { value, s, o, wheels, udl }
 }
 
-/** Global max and min of the response over all positions and both directions of travel. */
-export function trainExtremes(ild: ILD, t: Train, directions: (1 | -1)[] = [1, -1]) {
+/** Global max and min of the response over all positions (train travelling right to left by default). */
+export function trainExtremes(ild: ILD, t: Train, directions: (1 | -1)[] = [TRAVEL]) {
   const d = offsets(t)
   const xb = [...new Set(ild.pts.map((p) => p.x))]
   const cands: { s: number; o: 1 | -1 }[] = []
@@ -69,7 +75,8 @@ export function trainExtremes(ild: ILD, t: Train, directions: (1 | -1)[] = [1, -
       for (const dk of d) for (const e of [-eps, 0, eps]) cands.push({ s: x + o * dk + e, o })
     if (t.udl) {
       const start = d[d.length - 1] + t.udl.gap
-      const ends = [start, start + (t.udl.length ?? 1e6)]
+      // an unending tail (no length) never has its far end on the span
+      const ends = t.udl.length === undefined ? [start] : [start, start + t.udl.length]
       for (const x of xb) for (const de of ends) cands.push({ s: x + o * de, o })
     }
   }
@@ -89,7 +96,7 @@ export function trainExtremes(ild: ILD, t: Train, directions: (1 | -1)[] = [1, -
  * Trial table used in hand solutions: put each wheel in turn at the ILD peak (x, side)
  * and evaluate. Mirrors how the problem is solved on paper.
  */
-export function trialsAtPeak(ild: ILD, t: Train, peakX: number, side: -1 | 1, o: 1 | -1 = 1) {
+export function trialsAtPeak(ild: ILD, t: Train, peakX: number, side: -1 | 1, o: 1 | -1 = TRAVEL) {
   const d = offsets(t)
   return t.P.map((_, k) => {
     // wheel k exactly at the peak; for jumps use the given side
@@ -146,7 +153,7 @@ export interface AbsMaxResult {
   candidates: { k: number; M: number; R: number; e: number; valid: boolean }[]
 }
 
-/** Absolute maximum moment in a simple span (resultant/centreline rule, verified by search). */
+/** Absolute maximum moment in a simple span (resultant/centreline rule, verified by search), train travelling right to left. */
 export function absoluteMaxMoment(L: number, t: Train): AbsMaxResult {
   const d = offsets(t)
   const n = t.P.length
@@ -171,7 +178,7 @@ export function absoluteMaxMoment(L: number, t: Train): AbsMaxResult {
   }
   let best: AbsMaxResult | null = null
   const candidates: AbsMaxResult['candidates'] = []
-  for (const o of [1, -1] as const) {
+  for (const o of [TRAVEL] as const) {
     for (let k = 0; k < n; k++) {
       // resultant rule with iteration on the set of wheels on the span
       let set = new Array(n).fill(true)
@@ -207,7 +214,7 @@ export function absoluteMaxMoment(L: number, t: Train): AbsMaxResult {
   // brute-force verification (piecewise quadratic, fine search)
   let brute = -Infinity
   const total = d[n - 1]
-  for (const o of [1, -1] as const)
+  for (const o of [TRAVEL] as const)
     for (let k = 0; k < n; k++) {
       const N = 4000
       for (let i = 0; i <= N; i++) {
@@ -219,7 +226,7 @@ export function absoluteMaxMoment(L: number, t: Train): AbsMaxResult {
   if (!best || brute > best.M * (1 + 2e-3) + 1e-6) {
     // resultant rule missed (e.g. a heavy wheel alone) — fall back to search result
     let b: AbsMaxResult | null = null
-    for (const o of [1, -1] as const)
+    for (const o of [TRAVEL] as const)
       for (let k = 0; k < n; k++) {
         const N = 20000
         for (let i = 0; i <= N; i++) {
@@ -237,7 +244,5 @@ export function absoluteMaxMoment(L: number, t: Train): AbsMaxResult {
 /** moment under each wheel when it is at a section x=a of a simple span (hand trial table) */
 export function ssMomentTrials(L: number, a: number, t: Train) {
   const ild = ssMomentILD(L, a)
-  return [1, -1].flatMap((o) =>
-    t.P.map((_, k) => ({ k, o: o as 1 | -1, placement: place(ild, t, a + o * offsets(t)[k], o as 1 | -1) })),
-  )
+  return t.P.map((_, k) => ({ k, o: TRAVEL, placement: place(ild, t, a + TRAVEL * offsets(t)[k], TRAVEL) }))
 }

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fmt } from '../../components/DiagramView'
-import { Answer, Callout, Md, Section, Seg, Step, Steps, Tex } from '../../components/ui'
+import { Answer, Callout, Md, Section, Step, Steps, Tex } from '../../components/ui'
 import { ildAt, type ILD } from '../../engine/ild'
-import { absoluteMaxMoment, offsets, place, ssMomentILD, ssShearILD, trainExtremes, trainLength, type Train } from '../../engine/moving'
+import { absoluteMaxMoment, offsets, place, ssMomentILD, ssShearILD, trainExtremes, trainLength, TRAVEL, type Train } from '../../engine/moving'
 import { AbsMaxSolution, PlacementView, TrainOnILD, TrainTable } from '../../kit/solutions'
 import { pick, randInt, rng, Slider, TopicFrequency, useSeed } from '../../labs/common'
 import type { PYQ } from '../../pyq/types'
@@ -63,7 +63,7 @@ function Playground({ fixed }: { fixed?: { t: Train; L: number; a: number; q: Q 
   }, [seed, fixed])
   const ild = useMemo(() => ildFor(g.q === 'absmax' ? 'moment' : g.q, g.L, g.q === 'absmax' ? g.L / 2 : g.a), [g])
   const [s, setS] = useState(g.L / 2)
-  const [o, setO] = useState<1 | -1>(1)
+  const o = TRAVEL
   const pl = place(ild, g.t, s, o, 1)
   const truth = useMemo(() => (g.q === 'absmax' ? absoluteMaxMoment(g.L, g.t).M : trainExtremes(ild, g.t).max.value), [g, ild])
   const [best, setBest] = useState(0)
@@ -92,11 +92,11 @@ function Playground({ fixed }: { fixed?: { t: Train; L: number; a: number; q: Q 
         </div>
       )}
       <TrainTable t={g.t} />
-      <div className="flex items-center gap-3">
-        <div className="flex-1">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex-1 min-w-[200px]">
           <Slider label="Wheel 1 at x" value={+s.toFixed(1)} min={o > 0 ? -2 : -len - 2} max={o > 0 ? g.L + len + 2 : g.L + 2} step={0.1} onChange={setS} unit="′" />
         </div>
-        <Seg value={o === 1 ? 'r' : 'l'} onChange={(v) => setO(v === 'r' ? 1 : -1)} items={[{ v: 'r', label: 'wheel 1 leads →' }, { v: 'l', label: '← reversed' }]} />
+        <span className="text-xs text-mute">← train travels right to left (wheel 1 leads)</span>
       </div>
       <div className="rounded-xl bg-bg/60 border border-line p-2">
         <PlacementView pl={pl} ild={ild} span={[0, g.L]} section={g.q === 'moment' || g.q === 'shear' ? g.a : undefined} title={g.q === 'absmax' ? 'Move the train — the max moment under any wheel is shown below' : `Current ${qLabel}: ${fmt(cur)}`} />
@@ -150,13 +150,14 @@ function AbsMaxLive({ L, t, s, o }: { L: number; t: Train; s: number; o: 1 | -1 
 function Overview() {
   return (
     <div>
-      <Section title="Series of moving concentrated loads" right={<div className="w-72 hidden md:block"><TopicFrequency topic="wheel" /></div>}>
+      <Section title="Series of moving concentrated loads" right={<div className="w-72 hidden cq-md:block"><TopicFrequency topic="wheel" /></div>}>
         <Md>{`A train of wheel loads (fixed spacing) crosses a span. The response under the train is Σ Pᵢ·yᵢ (ILD ordinates under the wheels). Because the ILD is piecewise straight, the maximum always occurs with **some wheel at a corner of the ILD** — at the section for shear/moment, over the support for a reaction.
 
 The art is finding *which* wheel without trying all of them.`}</Md>
+        <Callout kind="note">Convention used throughout this dashboard: the train **travels from right to left**. Wheel 1 (the leftmost wheel as drawn) leads, the rest of the train and any uniform tail trail to its right.</Callout>
       </Section>
       <Section title="Criteria (simply supported span L, section at a from the left)">
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid cq-md:grid-cols-2 gap-4">
           <div>
             <div className="font-bold">Max moment at a section</div>
             <Md>{`Move the train so a wheel crosses the section. Critical when the **average load to the left of the section ≈ the average load on the whole span**:`}</Md>

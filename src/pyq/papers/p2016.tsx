@@ -1,5 +1,6 @@
 // L-3/T-1 term final 2016-17 (held 13 Aug 2017). Scan pages 30–33 (phone photos, figures on 32–33).
 import type { PYQ } from '../types'
+import { isCW, rotK, rotPos, rotTag } from '../../engine/sign'
 import { solve } from '../../engine/frame2d'
 import { influenceLine, ildAt, ildExtremes } from '../../engine/ild'
 import { cantileverMethod, gridModel, portalMethod, xBraced, type ApproxResult, type GridFrame } from '../../engine/approx'
@@ -27,7 +28,7 @@ const vw1 = () => virtualWork(t1, t1.loads, [P('b', 1)], { EA: () => EA1 })
 const b2 = beamOf('A:0:pin B:10 C:20 D:30:roller', [P('B', 30, '30k')])
 b2.members.forEach((m) => (m.label = m.id === 'CD' ? 'I₂ = 100' : 'I₁ = 200'))
 const EI2 = (id: string) => (E * (id === 'CD' ? 100 : 200)) / 144
-const vw2 = () => virtualWork(b2, b2.loads, [Mo('A', -1)], { EI: EI2 }) // unit clockwise couple at A
+const vw2 = () => virtualWork(b2, b2.loads, [Mo('A', rotK())], { EI: EI2 }) // unit couple at A in the positive rotation sense
 
 // ---------------------------------------------------------------- Q3 frame, deflection at B
 const f3 = model('B:0,10 C:10,10 D:25,10 A:10,0', 'B-C C-D A-C', 'A:roller D:pin', [W('CD', 3, { label: '3 k/ft' })])
@@ -269,13 +270,13 @@ export const Q2016: PYQ[] = [
     pages: [30, 32],
     text: `Determine the change in slope at support **A** of the beam in Fig. 2: simply supported at A (pin) and D (roller), span 30 ft; 30 k at B (10 ft from A). $I_1 = 200$ in⁴ for A–C (20 ft), $I_2 = 100$ in⁴ for C–D (10 ft), $E = 30{,}000$ ksi.`,
     figure: () => <Figure model={b2} labels />,
-    checks: () => [{ key: 'th', label: 'Rotation at A (clockwise)', value: vw2().total, unit: 'rad', tol: 0.02 }],
+    checks: () => [{ key: 'th', label: `Rotation at A (rad, ${rotTag()})`, value: vw2().total, unit: 'rad', tol: 0.02 }],
     solution: () => (
       <div className="space-y-2 text-sm">
-        <Md>{`Apply a **unit couple** (clockwise) at A: reactions $\\mp 1/30$, $m = 1 - x/30$. Real: $R_A = 20$, $R_D = 10$ k → $M = 20x$ (A–B), $300 - 10x$ (B–C), $10(30-x)$ (C–D).
+        <Md>{`Apply a **unit couple** (${rotPos()}) at A: reactions $\\mp 1/30$, $m = ${isCW() ? '1 - x/30' : 'x/30 - 1'}$. Real: $R_A = 20$, $R_D = 10$ k → $M = 20x$ (A–B), $300 - 10x$ (B–C), $10(30-x)$ (C–D).
 $$\\theta_A = \\int\\frac{Mm}{EI}dx = \\frac{777.8 + 777.8}{EI_1} + \\frac{111.1}{EI_2},\\quad EI_1 = \\frac{30000\\times200}{144},\\ EI_2 = \\frac{EI_1}{2}$$
-Positive result → A rotates clockwise (the beam sags toward B).`}</Md>
-        <VWSolution model={b2} real={b2.loads} virtual={[Mo('A', -1)]} opts={{ EI: EI2 }} resultUnit="rad" what="θA (clockwise +)" unitNote="EI in k-ft²; the result is in radians." />
+Positive result → A rotates ${rotPos()}. The beam sags, so its left end A turns clockwise — expect a ${isCW() ? 'positive' : 'negative'} result.`}</Md>
+        <VWSolution model={b2} real={b2.loads} virtual={[Mo('A', rotK())]} opts={{ EI: EI2 }} resultUnit="rad" what={`θA (${rotTag()})`} unitNote="EI in k-ft²; the result is in radians." />
       </div>
     ),
   },
@@ -343,7 +344,7 @@ Negative → **B moves up**: the load on C–D rotates joint C so that the canti
     checks: () => [{ key: 'M', label: 'Max moment at 20 ft', value: trainExtremes(ild5, train5).max.value, unit: 'k-ft' }],
     solution: () => (
       <div className="space-y-2 text-sm">
-        <Md>{`Moment ILD at a = 20 ft: triangle with peak $a(L-a)/L = 20(60)/80 = 15$ at the section. Criterion for the critical wheel: the average load on the left segment ≥ average load on the whole span when the wheel moves just past the section, i.e. $\\dfrac{W_{left}}{a} \\approx \\dfrac{W}{L}$. Try each wheel at the section (both directions) and keep the largest $\\sum P y$ (+ $w\\times$ ILD area under the uniform load).`}</Md>
+        <Md>{`Moment ILD at a = 20 ft: triangle with peak $a(L-a)/L = 20(60)/80 = 15$ at the section. Criterion for the critical wheel: the average load on the left segment ≥ average load on the whole span when the wheel moves just past the section, i.e. $\\dfrac{W_{left}}{a} \\approx \\dfrac{W}{L}$. Try each wheel at the section, with the train travelling right → left (wheel 1 leads), and keep the largest $\\sum P y$ (+ $w\\times$ ILD area under the uniform load). **Wheel 5** (a 60 k wheel) at the section governs.`}</Md>
         <TrainOnILD ild={ild5} t={train5} span={[0, 80]} section={20} peak={{ x: 20, side: 1 }} what="moment at quarter point" resUnit="k-ft" />
       </div>
     ),
@@ -367,11 +368,11 @@ Negative → **B moves up**: the load on C–D rotates joint C so that the canti
     },
     solution: () => (
       <div className="space-y-2 text-sm">
-        <Md>{`Shear ILD at 24 ft: $-1/3$ just left, $+2/3$ just right of the section. For **max positive shear** bring the heavy part of the train onto the long (right) segment with a wheel just right of the section; each further step changes the shear by $\\Delta V = -P_{passing} + W\\,\\Delta x/L$ — stop when it turns negative. The negative maximum (train on the short segment) is also listed.`}</Md>
+        <Md>{`Shear ILD at 24 ft: $-1/3$ just left, $+2/3$ just right of the section. For **max positive shear** bring the heavy part of the train onto the long (right) segment with a wheel just right of the section; each further step changes the shear by $\\Delta V = -P_{passing} + W\\,\\Delta x/L$ — stop when it turns negative. With the train travelling right → left (wheel 1 leads), wheel 3 (first 60 k) at the section is a local peak, but pushing on until **wheel 7 (the first 75 k) is just right of the section** gives more: the 15 ft gap in front of it brings a lot of load onto the span. The negative maximum (75 k wheels on the short segment) is also listed.`}</Md>
         <TrainOnILD ild={ild6} t={train5} span={[0, 72]} section={24} peak={{ x: 24, side: 1 }} what="shear at 24 ft" />
       </div>
     ),
-    notes: ['"One-third point" taken as 24 ft from the left support (the other third point gives the same values by symmetry with the train reversed).'],
+    notes: ['"One-third point" taken as 24 ft from the left support.'],
   },
   {
     id: '2016-17-A7',
@@ -387,7 +388,7 @@ Negative → **B moves up**: the load on C–D rotates joint C so that the canti
     checks: () => [{ key: 'c', label: 'Max force in a (compression −)', value: trainExtremes(ild7(), train7).min.value, unit: 'k' }],
     solution: () => (
       <div className="space-y-2 text-sm">
-        <Md>{`Loads reach the truss at the bottom panel points. Cut panel L2–L3: the vertical component of $a$ balances the panel shear, $F_a\\sin\\theta = -V_{panel}$ ($\\sin\\theta = 20/32.02$). So the ILD of $F_a$ is the panel-shear ILD scaled by $-1/\\sin\\theta$: **compression** while the load is right of the panel, a small tension part when it is left, with a straight line across the panel. Run the train over the compression part.`}</Md>
+        <Md>{`Loads reach the truss at the bottom panel points. Cut panel L2–L3: the vertical component of $a$ balances the panel shear, $F_a\\sin\\theta = -V_{panel}$ ($\\sin\\theta = 20/32.02$). So the ILD of $F_a$ is the panel-shear ILD scaled by $-1/\\sin\\theta$: **compression** while the load is right of the panel, a small tension part when it is left, with a straight line across the panel. Run the train (travelling right → left, wheel 1 leads) over the compression part.`}</Md>
         <ILDStack model={t7} path={p7} items={[{ label: 'F_a', resp: { kind: 'force', member: 'a' } }]} />
         <TrainOnILD ild={ild7()} t={train7} span={[0, 150]} what="force in a" />
       </div>
@@ -638,7 +639,7 @@ function C11Solution() {
 - Top storey (A, A at 0, 15 ft): $\\bar x = 7.5$ ft.
 At each inflection plane: overturning moment of the loads above → $N_j = M A_j d_j/\\sum A d^2$ (left columns in tension); beam shears from vertical equilibrium of the joints, beam moments $= VL/2$, column moments from the joints from the top down.`}</Md>
       <ApproxTables r={r} />
-      <div className="grid md:grid-cols-2 gap-2">
+      <div className="grid cq-md:grid-cols-2 gap-2">
         {(['M', 'N'] as const).map((k) => (
           <div key={k} className="rounded-xl bg-bg/60 border border-line p-2">
             <div className="text-xs font-semibold text-mute">{k === 'M' ? 'BMD (beams and columns)' : 'AFD'}</div>
@@ -736,7 +737,7 @@ At every joint the **unbalanced** girder end moment is resisted by the columns, 
         </table>
         <p className="text-xs text-faint">Column moments in the bottom→top member axis, sagging (+) = tension on the right face.</p>
       </div>
-      <div className="grid md:grid-cols-3 gap-2">
+      <div className="grid cq-md:grid-cols-3 gap-2">
         {(['N', 'V', 'M'] as const).map((k) => (
           <div key={k} className="rounded-xl bg-bg/60 border border-line p-2">
             <div className="text-xs font-semibold text-mute">{k === 'N' ? 'AFD' : k === 'V' ? 'SFD' : 'BMD'}</div>

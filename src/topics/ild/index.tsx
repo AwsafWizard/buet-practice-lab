@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fmt } from '../../components/DiagramView'
+import { BeamPlayground } from './BeamPlayground'
 import { checkILD, ILDChart, ILDEditor, type Handle } from '../../components/ILDChart'
 import { makeTransform, StructureView } from '../../components/StructureView'
 import { Callout, Md, Section, Seg, Step, Steps, Tex } from '../../components/ui'
 import { ildAt, influenceLine, type ILD, type Response } from '../../engine/ild'
 import type { Model } from '../../engine/model'
 import { uniformPlusConcentrated } from '../../engine/moving'
+import { rotTag } from '../../engine/sign'
 import { beamOf, pathOf } from '../../kit/builders'
 import { ILDStack, MaxEffect } from '../../kit/solutions'
 import { pick, rng, Slider, TopicFrequency, useSeed } from '../../labs/common'
-import type { PYQ } from '../../pyq/types'
+import type { Check, PYQ } from '../../pyq/types'
 import { useStore } from '../../store'
 import type { TopicModule } from '../modules'
 
@@ -35,7 +37,7 @@ function functionsFor(m: Model): Fn[] {
   const nodes = [...m.nodes].sort((a, b) => a.x - b.x)
   for (const s of m.supports) {
     out.push({ label: `Reaction R_${s.node}`, resp: { kind: 'reaction', node: s.node, comp: 'y' } })
-    if (s.type === 'fixed') out.push({ label: `Moment M_${s.node} (reaction, ccw +)`, resp: { kind: 'reaction', node: s.node, comp: 'm' } })
+    if (s.type === 'fixed') out.push({ label: `Moment M_${s.node} (reaction, ${rotTag()})`, resp: { kind: 'reaction', node: s.node, comp: 'm' } })
   }
   for (const n of nodes) {
     const right = m.members.find((x) => x.i === n.id)
@@ -249,7 +251,7 @@ function MaxExplorer() {
   return (
     <div className="space-y-2">
       <Seg value={fn} onChange={setFn} items={[{ v: 'M', label: 'Moment at S' }, { v: 'V', label: 'Shear at S' }]} />
-      <div className="grid md:grid-cols-3 gap-x-4">
+      <div className="grid cq-md:grid-cols-3 gap-x-4">
         <Slider label="moving w" value={w} min={0} max={6} step={0.5} onChange={setW} unit=" k/ft" />
         <Slider label="roving P" value={P} min={0} max={60} step={5} onChange={setP} unit=" k" />
         <Slider label="dead w_d" value={wd} min={0} max={4} step={0.5} onChange={setWd} unit=" k/ft" />
@@ -266,11 +268,11 @@ function MaxExplorer() {
 function Overview() {
   return (
     <div>
-      <Section title="What an influence line is" right={<div className="w-72 hidden md:block"><TopicFrequency topic="ild" /></div>}>
+      <Section title="What an influence line is" right={<div className="w-72 hidden cq-md:block"><TopicFrequency topic="ild" /></div>}>
         <Md>{`An **influence line** for a function (a reaction, the shear or moment at one fixed section) is a graph whose **ordinate at x = value of that function when a unit load stands at x**. Don't confuse it with a BMD: the BMD shows the moment *everywhere* for *one* load case; an ILD shows the moment at *one* point for a load *anywhere*.
 
 For **statically determinate** structures every ILD is made of **straight lines**, with kinks only at supports, hinges and the section (shear jumps by 1 at the section).`}</Md>
-        <div className="grid md:grid-cols-3 gap-3 mt-2 text-sm">
+        <div className="grid cq-md:grid-cols-3 gap-3 mt-2 text-sm">
           <div className="card p-3">
             <b>Reaction R_A (simple span)</b>
             <br />1 at A → 0 at B; extends linearly over overhangs.
@@ -300,7 +302,7 @@ function Approach() {
   return (
     <div>
       <Section title="Two ways to draw any ILD">
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid cq-md:grid-cols-2 gap-4">
           <div>
             <div className="font-bold mb-1">1 · Statical (equilibrium) method</div>
             <Steps>
@@ -335,6 +337,9 @@ function Approach() {
 function Lab() {
   return (
     <div>
+      <Section title="Beam playground" sub="Build any beam — supports and hinges wherever you like — then drag the load and the section S. SFD, BMD and the influence lines at S all update live.">
+        <BeamPlayground />
+      </Section>
       <Section title="Guess the shape" sub="Random determinate beam, random function. Shape it, check it — repeat until it's instant.">
         <GuessGame />
       </Section>
@@ -343,7 +348,7 @@ function Lab() {
 }
 
 // ---------------------------------------------------------------- own problems
-const ownI = (id: string, level: PYQ['level'], title: string, text: string, spec: string, items: { label: string; resp: Response }[], max?: { w: number; P: number; wd?: number; item: number; sign: 'pos' | 'neg' }): PYQ => {
+const ownI = (id: string, level: PYQ['level'], title: string, text: string, spec: string, items: { label: string; resp: Response }[], max?: { w: number; P: number; wd?: number; item: number; sign: 'pos' | 'neg' | 'mag' }): PYQ => {
   const m = beamOf(spec)
   const path = { kind: 'members' as const, members: pathOf(m) }
   const ild = (k: number) => influenceLine(m, path, items[k].resp)
@@ -360,14 +365,16 @@ const ownI = (id: string, level: PYQ['level'], title: string, text: string, spec
     pages: [],
     figure: () => <StructureView model={m} showLoads={false} autoDimX maxHeight={220} />,
     checks: () => {
-      const out = items.map((it, k) => {
+      const out: Check[] = items.map((it, k) => {
         const d = ild(k)
         const ex = d.pts.reduce((a, b) => (Math.abs(b.y) > Math.abs(a.y) ? b : a))
         return { key: `k${k}`, label: `${it.label}: largest ordinate (with sign)`, value: ex.y }
       })
       if (max) {
         const r = uniformPlusConcentrated(ild(max.item), max.w, max.P, max.wd ?? 0)
-        out.push({ key: 'max', label: `Max ${max.sign === 'pos' ? 'positive' : 'negative'} ${items[max.item].label}`, value: max.sign === 'pos' ? r.maxPos.total : r.maxNeg.total })
+        const name = items[max.item].label
+        if (max.sign === 'mag') out.push({ key: 'max', label: `Largest ${name} (magnitude)`, value: Math.max(Math.abs(r.maxPos.total), Math.abs(r.maxNeg.total)), magnitude: true })
+        else out.push({ key: 'max', label: `Max ${max.sign === 'pos' ? 'positive' : 'negative'} ${name}`, value: max.sign === 'pos' ? r.maxPos.total : r.maxNeg.total })
       }
       return out
     },
@@ -396,7 +403,7 @@ const problems: PYQ[] = [
     { label: 'M_A', resp: { kind: 'reaction', node: 'A', comp: 'm' } },
     { label: 'V_E', resp: { kind: 'shear', member: 'ED', x: 0, side: 1 } },
     { label: 'M_E', resp: { kind: 'moment', member: 'ED', x: 0 } },
-  ], { w: 3, P: 40, wd: 2, item: 0, sign: 'pos' }),
+  ], { w: 3, P: 40, wd: 2, item: 0, sign: 'mag' }),
   ownI('4', 'challenge', 'Two hinges', 'A (pin) – B (roller 12) – C hinge (16) – S (22) – D (roller 28) – E hinge (32) – F (roller 44). ILDs for R_D, V_S, M_S, M_D.', 'A:0:pin B:12:roller C*:16 S:22 D:28:roller E*:32 F:44:roller', [
     { label: 'R_D', resp: { kind: 'reaction', node: 'D', comp: 'y' } },
     { label: 'V_S', resp: { kind: 'shear', member: 'SD', x: 0, side: 1 } },

@@ -101,7 +101,7 @@ function LLRGame() {
   const y1 = j < g.ys.length - 1 ? (g.ys[j] + g.ys[j + 1]) / 2 : g.ys[j]
   const key = `${seed}-${i}-${j}`
   return (
-    <div className="grid lg:grid-cols-[1fr_1fr] gap-4">
+    <div className="grid cq-lg:grid-cols-[1fr_1fr] gap-4">
       <div>
         <svg viewBox={`0 0 ${X(g.xs[g.xs.length - 1]) + 50} ${Y(g.ys[g.ys.length - 1]) + 40}`} className="w-full h-auto">
           <rect x={X(x0)} y={Y(y0)} width={(x1 - x0) * S} height={(y1 - y0) * S} fill="var(--c-accent)" opacity={0.22} />
@@ -162,7 +162,7 @@ function RoofCalc() {
   const [L0, setL0] = useState(1)
   const r = roofLL({ L0, At, F })
   return (
-    <div className="grid md:grid-cols-2 gap-4 text-sm">
+    <div className="grid cq-md:grid-cols-2 gap-4 text-sm">
       <div className="space-y-2">
         <Slider label="Tributary area A_t" value={At} min={5} max={80} onChange={setAt} unit=" m²" />
         <Slider label="F (0.12 × slope %)" value={F} min={0} max={14} step={0.5} onChange={setF} />
@@ -179,13 +179,13 @@ function RoofCalc() {
 function Overview() {
   return (
     <div>
-      <Section title="Why building codes" right={<div className="w-72 hidden md:block"><TopicFrequency topic="code" /></div>}>
+      <Section title="Why building codes" right={<div className="w-72 hidden cq-md:block"><TopicFrequency topic="code" /></div>}>
         <Md>{`Codes protect people from everyday disasters — fire (Chawkbazar, Feb 2019; FR Tower, Mar 2019), floods, cyclones, earthquakes and collapse from deterioration. They are **minimum requirements**: “an ounce of prevention today vs. a pound of suffering in the future.” When they work nobody notices; when they fail, society demands stronger codes.
 
 The oldest example is the **Code of Hammurabi** (~2000 BC): a builder whose building collapsed and killed the owner was put to death.`}</Md>
       </Section>
       <Section title="BNBC 2020 in one screen">
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid cq-md:grid-cols-2 gap-4">
           <Md>{`**History**: BC Act 1952 → HBRI draft 1993 → Act amended 2006 + BNBC by SRO 2006 → update project 2009 → submitted 2015 → **gazetted as BNBC-2020, February 2021**.
 
 **Structure**: Vol 1 — Parts 2–5 (administration, general requirements, fire protection, materials); **Vol 2 — Part 6 Structural Design**, Part 7 construction practice & safety; Vol 3 — Parts 8–10 (services, alterations, signs).
@@ -200,7 +200,7 @@ The oldest example is the **Code of Hammurabi** (~2000 BC): a builder whose buil
       </Section>
       <Section title="Live-load reduction (Sec 2.3.13)">
         <Tex block>{`L = L_0\\left(0.25 + \\frac{4.57}{\\sqrt{K_{LL}A_T}}\\right)\\quad\\text{for } K_{LL}A_T \\ge 37.16\\text{ m}^2,\\qquad L \\ge \\begin{cases}0.50L_0 & \\text{one floor}\\\\0.40L_0 & \\text{two or more}\\end{cases}`}</Tex>
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid cq-md:grid-cols-2 gap-4">
           <table className="tbl">
             <thead>
               <tr>
@@ -318,8 +318,9 @@ const problems: PYQ[] = [
     },
     solution: () => {
       const r = roofLL({ L0: 1, At: 30, F: 3 })
-      return <Tex block>{`F = 0.12\\times25 = 3 \\le 4 \\Rightarrow R_2 = 1;\\ R_1 = 1.2 - 0.001(30) = ${fmt(r.R1, 3)};\\ L_r = 1.0\\times${fmt(r.R1, 3)}\\times1 = ${fmt(r.raw, 3)} \\Rightarrow \\mathbf{${fmt(r.Lr, 3)}}\\text{ kN/m}^2`}</Tex>
+      return <Tex block>{`F = 0.12\\times25 = 3 \\le 4 \\Rightarrow R_2 = 1;\\ R_1 = 1.2 - 0.011(30) = ${fmt(r.R1, 3)};\\ L_r = 1.0\\times${fmt(r.R1, 3)}\\times1 = ${fmt(r.raw, 3)} \\Rightarrow \\mathbf{${fmt(r.Lr, 3)}}\\text{ kN/m}^2`}</Tex>
     },
+    notes: ['R₁ uses 1.2 − 0.011·A_t (continuous between 18.58 and 55.74 m²). The Lec 4-5 slide prints 0.001, which would give R₁ = 1.17 here; mention the constant you use in the exam.'],
   },
 ]
 

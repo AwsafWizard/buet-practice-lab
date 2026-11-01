@@ -21,8 +21,12 @@ export function reducedLL(p: { L0: number; KLL: number; AT: number; floorsSuppor
   return { KA, applies, factor, raw, minFrac, min: minFrac * p.L0, L, reductionPct: (1 - L / p.L0) * 100 }
 }
 
+/**
+ * Roof live-load reduction. R₁ uses the SI constant 0.011 (continuous: 1.0 at 18.58 m², 0.6 at 55.74 m²);
+ * the Lec 4-5 slide prints 0.001, which would jump to 1.18 at 18.58 m².
+ */
 export function roofLL(p: { L0: number; At: number; F: number }) {
-  const R1 = p.At <= 18.58 ? 1 : p.At >= 55.74 ? 0.6 : 1.2 - 0.001 * p.At
+  const R1 = p.At <= 18.58 ? 1 : p.At >= 55.74 ? 0.6 : 1.2 - 0.011 * p.At
   const R2 = p.F <= 4 ? 1 : p.F >= 12 ? 0.6 : 1.2 - 0.05 * p.F
   const raw = p.L0 * R1 * R2
   const Lr = Math.min(Math.max(raw, 0.6), 1.0)

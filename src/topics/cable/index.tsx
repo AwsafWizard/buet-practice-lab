@@ -29,7 +29,7 @@ function CableExplorer() {
     ymax = Math.max(...ys, dh, 0)
   const Y = (y: number) => 40 + ((ymax - y) / Math.max(ymax - ymin, 1)) * (Hh - 80)
   return (
-    <div className="grid lg:grid-cols-[1.4fr_1fr] gap-4">
+    <div className="grid cq-lg:grid-cols-[1.4fr_1fr] gap-4">
       <div className="rounded-xl bg-bg/60 border border-line p-2">
         <svg viewBox={`0 0 ${W} ${Hh}`} className="w-full h-auto">
           <line x1={X(0)} y1={Y(0)} x2={X(L)} y2={Y(dh)} stroke="var(--c-faint)" strokeDasharray="5 4" />
@@ -76,7 +76,7 @@ function BridgeExplorer() {
   const s = useMemo(() => stiffenedSuspension({ L, h, xh: 500, loads: [{ x: xp, P }] }), [P, xp])
   return (
     <div className="space-y-2">
-      <div className="grid md:grid-cols-2 gap-x-6">
+      <div className="grid cq-md:grid-cols-2 gap-x-6">
         <Slider label="Load P" value={P} min={10} max={100} step={5} onChange={setP} unit=" k" />
         <Slider label="at x" value={xp} min={50} max={950} step={10} onChange={setXp} unit=" ft" />
       </div>
@@ -91,7 +91,7 @@ function BridgeExplorer() {
 function Overview() {
   return (
     <div>
-      <Section title="Cables" right={<div className="w-72 hidden md:block"><TopicFrequency topic="cable" /></div>}>
+      <Section title="Cables" right={<div className="w-72 hidden cq-md:block"><TopicFrequency topic="cable" /></div>}>
         <Md>{`A cable carries load by tension only; its horizontal component **H is constant** (vertical loads).
 - **General cable theorem**: at any point, $H\\cdot y = M_{beam}$, where y = sag measured from the chord and $M_{beam}$ = moment in a simple beam of the same span and loading.
 - **Uniform load per horizontal length (parabola)**: $H = \\dfrac{wL^2}{8h}$, $T_{max} = \\sqrt{H^2 + V^2}$ at the higher support, length ≈ $L\\left(1 + \\tfrac83 n^2 - \\tfrac{32}{5}n^4\\right)$ with $n = h/L$.
@@ -114,7 +114,7 @@ function Approach() {
   return (
     <div>
       <Section title="Recipes">
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid cq-md:grid-cols-2 gap-4">
           <Steps>
             <Step n={1} title="Cable with point loads">Simple-beam moment at the point of known sag → H = M/y. Sag elsewhere y = M/H. Segment tension T = H/cos θ.</Step>
             <Step n={2} title="Length">Σ segment lengths (point loads) or the parabola formula.</Step>
@@ -137,11 +137,63 @@ function Approach() {
   )
 }
 
+/** sketch for the quick drill: level supports, parabolic cable, sag dimensioned at midspan */
+function DrillSketch() {
+  const W = 460,
+    H = 190,
+    x0 = 50,
+    x1 = W - 50,
+    yS = 60,
+    yM = 140
+  const xm = (x0 + x1) / 2
+  const cable = `M${x0},${yS} Q${xm},${2 * yM - yS} ${x1},${yS}`
+  const arrows = Array.from({ length: 9 }, (_, i) => x0 + ((i + 1) * (x1 - x0)) / 10)
+  const yAt = (x: number) => {
+    const t = (x - x0) / (x1 - x0)
+    return yS + 4 * (yM - yS) * t * (1 - t)
+  }
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-md h-auto mb-3">
+      <defs>
+        <marker id="dl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--c-load)" />
+        </marker>
+        <marker id="dd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--c-mute)" />
+        </marker>
+      </defs>
+      {[x0, x1].map((x) => (
+        <g key={x}>
+          <path d={`M${x - 10},${yS + 12} L${x},${yS} L${x + 10},${yS + 12} z`} fill="none" stroke="var(--c-member)" strokeWidth={1.5} />
+          <line x1={x - 14} y1={yS + 12} x2={x + 14} y2={yS + 12} stroke="var(--c-member)" strokeWidth={1.5} />
+        </g>
+      ))}
+      <line x1={x0} y1={yS} x2={x1} y2={yS} stroke="var(--c-faint)" strokeDasharray="5 4" />
+      {arrows.map((x) => (
+        <line key={x} x1={x} y1={yAt(x) - 26} x2={x} y2={yAt(x) - 3} stroke="var(--c-load)" strokeWidth={1.4} markerEnd="url(#dl)" />
+      ))}
+      <text x={xm} y={yS - 30} fontSize={12} textAnchor="middle" fill="var(--c-load)" fontWeight={700}>
+        w = 2 k / horizontal ft
+      </text>
+      <path d={cable} fill="none" stroke="var(--c-accent)" strokeWidth={2.5} />
+      <line x1={xm} y1={yS + 2} x2={xm} y2={yM - 2} stroke="var(--c-mute)" strokeWidth={1.2} markerStart="url(#dd)" markerEnd="url(#dd)" />
+      <text x={xm + 8} y={(yS + yM) / 2 + 4} fontSize={12} fill="var(--c-ink)" fontWeight={700}>
+        h = 50 ft (sag)
+      </text>
+      <line x1={x0} y1={H - 22} x2={x1} y2={H - 22} stroke="var(--c-mute)" strokeWidth={1.2} markerStart="url(#dd)" markerEnd="url(#dd)" />
+      <text x={xm} y={H - 8} fontSize={12} textAnchor="middle" fill="var(--c-ink)">
+        L = 600 ft
+      </text>
+    </svg>
+  )
+}
+
 function Lab() {
   const c = parabolicCable({ L: 600, w: 2, h: 50 })
   return (
     <div>
-      <Section title="Quick drill — parabolic cable" sub="Span 600 ft, uniform 2 k per horizontal ft, sag 50 ft, level supports">
+      <Section title="Quick drill — parabolic cable" sub="Span L = 600 ft between level supports; uniform load 2 k per horizontal ft; cable dips h = 50 ft below the supports at midspan (the sag)">
+        <DrillSketch />
         <Answer id="cable:drill:H" label="H" value={c.H} unit="k" />
         <Answer id="cable:drill:T" label="T_max" value={c.Tmax} unit="k" />
         <Answer id="cable:drill:L" label="Cable length" value={c.length} unit="ft" />

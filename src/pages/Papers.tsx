@@ -20,7 +20,7 @@ function PaperList() {
     <div>
       <h1 className="text-2xl font-extrabold mb-1">Past papers & mock exams</h1>
       <p className="text-sm text-mute mb-5">All 13 term finals, newest first. Open a paper to browse it question by question, or start a timed mock.</p>
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid cq-sm:grid-cols-2 cq-lg:grid-cols-3 gap-3">
         {[...PAPERS].reverse().map((p) => {
           const qs = pyqForPaper(p.id)
           const solved = qs.filter((q) => qStatus[q.id] === 'solved').length

@@ -37,7 +37,7 @@ export default function TopicPage() {
           <h1 className="text-2xl font-extrabold">{meta.title}</h1>
           <p className="text-sm text-mute">{meta.blurb}</p>
         </div>
-        <div className="hidden sm:flex items-center gap-3">
+        <div className="hidden cq-sm:flex items-center gap-3">
           <div className="text-right text-xs text-mute">
             <div>
               <span className="num text-ink font-semibold">{solved}</span>/{pyqs.length} past questions solved

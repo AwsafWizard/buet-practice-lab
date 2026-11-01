@@ -1,8 +1,12 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { NavLink, Route, Routes, useLocation } from 'react-router-dom'
+import { CodeDrawer, usePageGroup } from './components/CodeDrawer'
+import { TimeCounter } from './components/TimeCounter'
 import { Ring } from './components/ui'
 import { ALL_PYQ } from './pyq'
-import { exportState, topicStats, useStore } from './store'
+import { useDrawer } from './reference/drawer'
+import { exportState, useStore } from './store'
+import { ARTIFACT, useSyncStatus, type SyncStatus } from './sync'
 import { SECTION_LABEL, TOPICS } from './topics/registry'
 import { TopicIcon } from './topics/icons'
 import { EXAM_DATE } from './pages/planner/template'
@@ -12,11 +16,16 @@ const TopicPage = lazy(() => import('./pages/TopicPage'))
 const Papers = lazy(() => import('./pages/Papers'))
 const Formulas = lazy(() => import('./pages/Formulas'))
 const QuestionPage = lazy(() => import('./pages/QuestionPage'))
+const ScreenTime = lazy(() => import('./pages/ScreenTime'))
 
 export default function App() {
   const theme = useStore((s) => s.theme)
+  const rotSign = useStore((s) => s.rotSign)
   const [open, setOpen] = useState(false)
   const loc = useLocation()
+  const pageGroup = usePageGroup()
+  const drawer = useDrawer()
+  const drawerOpen = drawer.open && pageGroup !== null
   useEffect(() => {
     document.documentElement.dataset.theme = theme
   }, [theme])
@@ -27,11 +36,13 @@ export default function App() {
   return (
     <div className="min-h-full flex">
       <Sidebar open={open} onClose={() => setOpen(false)} />
-      <div className="flex-1 min-w-0 flex flex-col">
+      {/* wide screens: the open code-tables drawer pushes the page instead of covering it (the wide drawer only on very wide screens) */}
+      <div className={'flex-1 min-w-0 flex flex-col transition-[padding] duration-200 ' + (drawerOpen ? (drawer.wide ? 'min-[1800px]:pr-[760px]' : 'xl:pr-[440px]') : '')}>
         <Header onMenu={() => setOpen(true)} />
-        <main className="flex-1 px-4 md:px-8 py-6 max-w-[1180px] w-full mx-auto">
+        <main className="@container/page flex-1 px-4 md:px-8 py-6 max-w-[1180px] w-full mx-auto">
           <Suspense fallback={<div className="text-mute p-10">Loading…</div>}>
-            <Routes>
+            {/* re-mount the page when the rotation sign convention flips so every value and label follows */}
+            <Routes key={rotSign}>
               <Route path="/" element={<Overview />} />
               <Route path="/topic/:id" element={<TopicPage />} />
               <Route path="/topic/:id/:tab" element={<TopicPage />} />
@@ -39,6 +50,7 @@ export default function App() {
               <Route path="/papers/:paper" element={<Papers />} />
               <Route path="/q/:qid" element={<QuestionPage />} />
               <Route path="/formulas" element={<Formulas />} />
+              <Route path="/time" element={<ScreenTime />} />
               <Route path="*" element={<Overview />} />
             </Routes>
           </Suspense>
@@ -47,14 +59,19 @@ export default function App() {
           CE 311 Practice Lab · solutions computed by built-in solvers · BNBC 2020 provisions as taught in class. Double-check anything that looks off against your notes.
         </footer>
       </div>
+      {pageGroup && <CodeDrawer pageGroup={pageGroup} />}
     </div>
   )
 }
 
 function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const attempts = useStore((s) => s.attempts)
+  const qStatus = useStore((s) => s.qStatus)
   const groups: ('B' | 'A' | 'X')[] = ['B', 'A', 'X']
-  const counts = (id: string) => ALL_PYQ.filter((q) => q.topics.includes(id as never)).length
+  // ring = share of this topic's term-final questions marked solved
+  const pyqStats = (id: string) => {
+    const qs = ALL_PYQ.filter((q) => q.topics.includes(id as never))
+    return { total: qs.length, solved: qs.filter((q) => qStatus[q.id] === 'solved').length }
+  }
   const link = (to: string, label: React.ReactNode, end = false) => (
     <NavLink
       to={to}
@@ -90,13 +107,15 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
             {link('/', <><span className="w-6 text-center">◎</span> Overview & plan</>, true)}
             {link('/papers', <><span className="w-6 text-center">▤</span> Past papers & mocks</>)}
             {link('/formulas', <><span className="w-6 text-center">∑</span> Formulas & tables</>)}
+            {link('/time', <><span className="w-6 text-center">⏱</span> Screen time</>)}
           </div>
           {groups.map((g) => (
             <div key={g}>
               <div className="px-3 text-[10.5px] uppercase tracking-wider text-faint font-bold mb-1">{SECTION_LABEL[g]}</div>
               <div className="space-y-0.5">
                 {TOPICS.filter((t) => t.section === g).map((t) => {
-                  const st = topicStats(attempts, t.id)
+                  const { total, solved } = pyqStats(t.id)
+                  const pct = total ? Math.round((solved / total) * 100) : 0
                   return (
                     <NavLink
                       key={t.id}
@@ -107,8 +126,10 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
                     >
                       <TopicIcon id={t.id} color={t.color} />
                       <span className="flex-1 truncate">{t.short}</span>
-                      <span className="text-[10px] text-faint num">{counts(t.id)}Q</span>
-                      <Ring value={st.tried ? st.acc : 0} size={18} stroke={2.6} color={t.color} />
+                      <span className="text-[10px] text-faint num">{total}Q</span>
+                      <span title={`${solved}/${total} TF questions solved (${pct}%)`}>
+                        <Ring value={total ? solved / total : 0} size={18} stroke={2.6} color={t.color} />
+                      </span>
                     </NavLink>
                   )
                 })}
@@ -122,17 +143,30 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   )
 }
 
+type ArtifactWindow = {
+  claude?: { use(name: 'downloads'): Promise<{ save(r: { filename: string; data: string }): Promise<unknown> } | null> }
+}
+
 function SidebarFooter() {
   const theme = useStore((s) => s.theme)
   const setTheme = useStore((s) => s.setTheme)
   const side = useStore((s) => s.bmdSide)
   const setSide = useStore((s) => s.setBmdSide)
+  const rotSign = useStore((s) => s.rotSign)
+  const setRotSign = useStore((s) => s.setRotSign)
   const importState = useStore((s) => s.importState)
-  const download = () => {
+  const download = async () => {
+    const filename = `ce311-progress-${new Date().toISOString().slice(0, 10)}.json`
+    if (ARTIFACT) {
+      // the Artifact viewer blocks plain downloads; its save prompt asks the viewer first
+      const downloads = await (window as unknown as ArtifactWindow).claude?.use('downloads')
+      await downloads?.save({ filename, data: exportState() }).catch(() => {})
+      return
+    }
     const blob = new Blob([exportState()], { type: 'application/json' })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
-    a.download = `ce311-progress-${new Date().toISOString().slice(0, 10)}.json`
+    a.download = filename
     a.click()
   }
   const upload = () => {
@@ -159,6 +193,13 @@ function SidebarFooter() {
           {side === 'compression' ? 'compression side' : 'tension side'}
         </button>
       </div>
+      <div className="flex items-center justify-between">
+        <span className="text-mute" title="Positive sense for moment reactions, rotations and unit couples (bending moment stays sagging +, shear stays clockwise +)">Rotation +</span>
+        <button className="btn !py-0.5 !px-2 !text-xs" onClick={() => setRotSign(rotSign === 'cw' ? 'ccw' : 'cw')}>
+          {rotSign === 'cw' ? '↻ clockwise' : '↺ counter-clockwise'}
+        </button>
+      </div>
+      {ARTIFACT && <SyncLine />}
       <div className="flex gap-2">
         <button className="btn !py-0.5 !px-2 !text-xs flex-1 justify-center" onClick={download}>
           ⤓ Export progress
@@ -167,6 +208,25 @@ function SidebarFooter() {
           ⤒ Import
         </button>
       </div>
+    </div>
+  )
+}
+
+const SYNC_TEXT: Record<SyncStatus, [string, string]> = {
+  off: ['', ''],
+  connecting: ['text-faint', 'Connecting…'],
+  local: ['text-faint', 'This device only (sign in to sync)'],
+  saving: ['text-mute', 'Saving…'],
+  synced: ['text-good', '✓ Synced across devices'],
+  error: ['text-bad', 'Sync failed, saved on this device'],
+}
+
+function SyncLine() {
+  const [cls, text] = SYNC_TEXT[useSyncStatus()]
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-mute">Progress</span>
+      <span className={cls}>{text}</span>
     </div>
   )
 }
@@ -186,7 +246,8 @@ function Header({ onMenu }: { onMenu: () => void }) {
         <div className="text-sm">
           <span className="font-bold num text-accent">{days}</span> <span className="text-mute">days to go<span className="hidden sm:inline"> · exam 31 Oct</span></span>
         </div>
-        <div className="ml-auto flex items-center gap-4 text-sm">
+        <div className="ml-auto flex items-center gap-3 sm:gap-4 text-sm">
+          <TimeCounter />
           <span className="text-mute" title="Daily streak — check at least one answer a day">
             🔥 <span className="num text-ink font-semibold">{streak.count}</span>
           </span>

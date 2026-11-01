@@ -1,7 +1,12 @@
 node_modules
 dist
 dist-single
+dist-artifact
 *.log
 
 # course PDFs stay local
 Notes and Files/
+
+# CE 315 notes and PDFs stay local
+CE315 Notes/
+tsconfig.tsbuildinfo

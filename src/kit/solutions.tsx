@@ -6,12 +6,14 @@ import { diagramsFromResult, type DiagramMember } from '../engine/diagrams'
 import { solve, type Result } from '../engine/frame2d'
 import { influenceLine, ildAt, ordinates, type ILD, type LoadPath, type Response } from '../engine/ild'
 import type { Load, Model } from '../engine/model'
-import { absoluteMaxMoment, offsets, place, trainExtremes, uniformPlusConcentrated, type Placement, type Train } from '../engine/moving'
+import { absoluteMaxMoment, offsets, place, trainExtremes, TRAVEL, uniformPlusConcentrated, type Placement, type Train } from '../engine/moving'
 import { virtualWork, type VWOptions } from '../engine/vw'
 import { DiagramView, fmt, KIND_NAME, type DiagramKind } from '../components/DiagramView'
 import { ILDChart } from '../components/ILDChart'
 import { makeTransform, StructureView, type Transform } from '../components/StructureView'
 import { Seg, Tex } from '../components/ui'
+import { isInclined } from '../engine/inclined'
+import { InclinedMembers } from './inclined'
 
 const arrowX = (v: number) => (v > 0 ? '→' : v < 0 ? '←' : '')
 const arrowY = (v: number) => (v > 0 ? '↑' : v < 0 ? '↓' : '')
@@ -112,6 +114,7 @@ export function FrameSolution({
   lenUnit = '′',
   mUnit,
   only,
+  inclined = true,
   children,
 }: {
   model: Model
@@ -121,17 +124,20 @@ export function FrameSolution({
   lenUnit?: string
   mUnit?: string
   only?: string[]
+  /** add per-member diagrams + hand calculation for inclined members */
+  inclined?: boolean
   children?: ReactNode
 }) {
   const r = useMemo(() => solve(model, loads ?? model.loads), [model, loads])
   const dms = useMemo(() => diagramsFromResult(model, r), [model, r])
   const [kind, setKind] = useState<DiagramKind>(kinds.includes('M') ? 'M' : kinds[0])
   const mu = mUnit ?? `${unit}-${lenUnit === ' m' ? 'm' : 'ft'}`
+  const incl = useMemo(() => (inclined ? model.members.filter((m) => (!only || only.includes(m.id)) && isInclined(model, m.id)).map((m) => m.id) : []), [model, only, inclined])
   return (
     <div className="space-y-4">
       <div>
         <h4 className="font-bold mb-1">1 · Free body &amp; reactions</h4>
-        <div className="grid md:grid-cols-[1.4fr_1fr] gap-3 items-center">
+        <div className="grid cq-md:grid-cols-[1.4fr_1fr] gap-3 items-center">
           <div className="rounded-xl bg-bg/60 border border-line p-2">
             <StructureView model={model} loads={loads} forceUnit={unit} lenUnit={lenUnit} autoDimX maxHeight={280}>
               {reactionOverlay(r, model, unit)}
@@ -156,6 +162,7 @@ export function FrameSolution({
           {KIND_NAME[kind]} — {kind === 'M' ? 'sagging (+) plotted per your BMD-side setting (sidebar).' : kind === 'V' ? 'shear + when the left part is pushed up (members read left→right / bottom→top).' : 'tension +.'}
         </p>
       </div>
+      {incl.length > 0 && <InclinedMembers model={model} r={r} dms={dms} ids={incl} unit={unit} lenUnit={lenUnit} mu={mu} />}
       <MemberEndTable dms={dms} unit={unit} mu={mu} only={only} />
     </div>
   )
@@ -226,7 +233,7 @@ export function TrussSolution({ model, loads, asked, unit = 'k', lenUnit = '′'
   const rows = (asked ?? model.members.map((m) => m.id)).map((id) => ({ id, v: f.get(id) ?? 0 }))
   return (
     <div className="space-y-3">
-      <div className="grid md:grid-cols-[1.5fr_1fr] gap-3 items-start">
+      <div className="grid cq-md:grid-cols-[1.5fr_1fr] gap-3 items-start">
         <div className="rounded-xl bg-bg/60 border border-line p-2">
           <StructureView model={model} loads={loads} memberColor={color} memberLabels={labels} forceUnit={unit} lenUnit={lenUnit} maxHeight={300}>
             {given ? undefined : reactionOverlay(r, model, unit)}
@@ -339,7 +346,7 @@ export function MaxEffect({ ild, w, P, wd = 0, label, unit = 'k', resUnit }: { i
   return (
     <div className="text-sm space-y-1">
       <div className="font-semibold">{label}</div>
-      <div className="grid sm:grid-cols-2 gap-x-6">
+      <div className="grid cq-sm:grid-cols-2 gap-x-6">
         <div>
           Positive area <span className="num">A⁺ = {fmt(r.areas.pos, 3)}</span>, negative area <span className="num">A⁻ = {fmt(r.areas.neg, 3)}</span>
           <br />
@@ -420,6 +427,9 @@ export function PlacementView({ pl, ild, span, section, unit = 'k', title }: { p
         {[span[0], span[1]].map((x, i) => (
           <path key={i} d={`M${X(x)},${by + 2} l-9,14 h18 z`} fill="var(--c-panel2)" stroke="var(--c-mute)" strokeWidth={1.5} />
         ))}
+        <text x={W - 8} y={14} fontSize={10.5} textAnchor="end" fill="var(--c-faint)">
+          ← direction of travel
+        </text>
         {section !== undefined && <line x1={X(section)} y1={by - 70} x2={X(section)} y2={by + 18} stroke="var(--c-accent2)" strokeDasharray="4 3" strokeWidth={1.5} />}
         {pl.wheels.map((w) => (
           <g key={w.k} opacity={w.on ? 1 : 0.3}>
@@ -452,15 +462,10 @@ export function TrainOnILD({ ild, t, span, section, peak, unit = 'k', resUnit, w
   const trials = useMemo(() => {
     if (!peak) return []
     const d = offsets(t)
-    const rows: { k: number; o: 1 | -1; value: number }[] = []
-    for (const o of [1, -1] as const)
-      t.P.forEach((_, k) => {
-        rows.push({ k, o, value: place(ild, t, peak.x + o * d[k], o, peak.side).value })
-      })
-    return rows
+    return t.P.map((_, k) => ({ k, value: place(ild, t, peak.x + TRAVEL * d[k], TRAVEL, peak.side).value }))
   }, [ild, t, peak])
   const ru = resUnit ?? unit
-  const best = trials.length ? trials.reduce((a, b) => (b.value > a.value ? b : a)) : null
+  const best = trials.length ? trials.reduce((a, b) => (b.value > a.value + 1e-9 ? b : a)) : null
   return (
     <div className="space-y-3">
       <TrainTable t={t} unit={unit} />
@@ -472,29 +477,23 @@ export function TrainOnILD({ ild, t, span, section, peak, unit = 'k', resUnit, w
               <thead>
                 <tr>
                   <th>Wheel at critical point</th>
-                  <th>Train heading →</th>
-                  <th>Train heading ←</th>
+                  <th>Response</th>
                 </tr>
               </thead>
               <tbody>
-                {t.P.map((_, k) => {
-                  const a = trials.find((r) => r.k === k && r.o === 1)!
-                  const b = trials.find((r) => r.k === k && r.o === -1)!
-                  return (
-                    <tr key={k} className={best && (best === a || best === b) ? 'hl' : ''}>
-                      <td className="txt">Wheel {k + 1}</td>
-                      <td>{fmt(a.value)}</td>
-                      <td>{fmt(b.value)}</td>
-                    </tr>
-                  )
-                })}
+                {trials.map((r) => (
+                  <tr key={r.k} className={best === r ? 'hl' : ''}>
+                    <td className="txt">Wheel {r.k + 1}</td>
+                    <td>{fmt(r.value)}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
-          <p className="text-xs text-faint mt-1">“→”: wheel 1 leads, the rest of the train trails to its left. “←”: train reversed. In exams the direction is usually fixed by the figure — use the column matching your problem.</p>
+          <p className="text-xs text-faint mt-1">Train travelling right → left: wheel 1 (leftmost in the figure) leads, the rest of the train trails to its right.</p>
         </div>
       )}
-      <div className="grid md:grid-cols-2 gap-3">
+      <div className="grid cq-md:grid-cols-2 gap-3">
         <div className="rounded-xl bg-bg/60 border border-line p-2">
           <PlacementView pl={ext.max} ild={ild} span={span} section={section} unit={unit} title={`Max (+) ${what}: ${fmt(ext.max.value)} ${ru}`} />
         </div>
@@ -502,7 +501,7 @@ export function TrainOnILD({ ild, t, span, section, peak, unit = 'k', resUnit, w
           <PlacementView pl={ext.min} ild={ild} span={span} section={section} unit={unit} title={`Max (−) ${what}: ${fmt(ext.min.value)} ${ru}`} />
         </div>
       </div>
-      <p className="text-xs text-faint">The two diagrams come from checking every wheel at every ILD corner in both directions (exhaustive) — they confirm the hand trial above.</p>
+      <p className="text-xs text-faint">The two diagrams come from checking every wheel at every ILD corner with the train travelling right → left (exhaustive) — they confirm the hand trial above.</p>
     </div>
   )
 }
@@ -689,7 +688,7 @@ export function VWSolution({ model, real, virtual, opts, unitNote, result, scale
   return (
     <div className="space-y-3 text-sm">
       {!allTruss && (
-        <div className="grid md:grid-cols-2 gap-3">
+        <div className="grid cq-md:grid-cols-2 gap-3">
           <div className="rounded-xl bg-bg/60 border border-line p-2">
             <div className="text-xs font-semibold text-mute px-1">Real system — M diagram</div>
             <DiagramView model={model} members={dR} kind="M" />

@@ -7,6 +7,7 @@ import { ApproxSolution } from '../../kit/solutions'
 import { pick, randInt, rng, TopicFrequency, useSeed } from '../../labs/common'
 import type { PYQ } from '../../pyq/types'
 import type { TopicModule } from '../modules'
+import { FramePlayground } from './FramePlayground'
 
 function genFrame(seed: number): GridFrame {
   const r = rng(seed)
@@ -163,12 +164,43 @@ function Guided({ g, method, seed }: { g: GridFrame; method: 'portal' | 'cantile
       ),
     },
     {
-      title: 'Axial forces & diagrams',
-      body: <ApproxSolution g={g} method={method} />,
+      title: 'Axial forces (AFD) — every member',
+      body: (
+        <div>
+          <Md>{`**Columns** — vertical equilibrium of each joint, roof down: $N = N_{above} \\pm$ beam shears at the top joint${method === 'cantilever' ? ' (you already have these from step 2 — use them as a check)' : ''}. Windward side in tension.
+**Beams** — horizontal equilibrium of each joint, along the floor from the loaded end: $\\Sigma F_x = 0$ with the load and the column shears above and below. Tension $+$, compression $-$.`}</Md>
+          {r.columns
+            .map((row, s) => ({ row, s }))
+            .reverse()
+            .map(({ row, s }) => (
+              <div key={'nc' + s} className="mt-2">
+                <div className="text-xs font-semibold text-mute">Storey {s + 1} columns</div>
+                {row.map((c) => (
+                  <Answer key={c.name} id={id(`Nc${s}-${c.col}`)} label={`Column ${c.name} (T +)`} value={c.axial} unit="k" compact />
+                ))}
+              </div>
+            ))}
+          {r.beams
+            .map((row, l) => ({ row, l }))
+            .reverse()
+            .map(({ row, l }) => (
+              <div key={'nb' + l} className="mt-2">
+                <div className="text-xs font-semibold text-mute">Level {l + 1} beams</div>
+                {row.map((b) => (
+                  <Answer key={b.name} id={id(`Nb${l}-${b.bay}`)} label={`Beam ${b.name} (T +)`} value={b.axial} unit="k" compact />
+                ))}
+              </div>
+            ))}
+        </div>
+      ),
+    },
+    {
+      title: 'Diagrams — compare your AFD, SFD, BMD',
+      body: <ApproxSolution g={g} method={method} kinds={['N', 'V', 'M']} />,
     },
   ]
   return (
-    <div className="grid lg:grid-cols-[1fr_1.1fr] gap-4">
+    <div className="grid cq-lg:grid-cols-[1fr_1.1fr] gap-4">
       <div>
         <Steps>
           {steps.slice(0, stage + 1).map((s, i) => (
@@ -194,7 +226,7 @@ function Guided({ g, method, seed }: { g: GridFrame; method: 'portal' | 'cantile
           <Sway g={g} r={r} />
         </div>
       </div>
-      {stage === steps.length - 1 && <div className="lg:col-span-2">{steps[steps.length - 1].body}</div>}
+      {stage === steps.length - 1 && <div className="cq-lg:col-span-2">{steps[steps.length - 1].body}</div>}
     </div>
   )
 }
@@ -219,9 +251,9 @@ function Trainer() {
 function Overview() {
   return (
     <div>
-      <Section title="Approximate analysis for lateral loads" right={<div className="w-72 hidden md:block"><TopicFrequency topic="lateral" /></div>}>
+      <Section title="Approximate analysis for lateral loads" right={<div className="w-72 hidden cq-md:block"><TopicFrequency topic="lateral" /></div>}>
         <Md>{`A building frame is highly indeterminate. For wind/earthquake (lateral, joint) loads the columns and beams bend in **double curvature**, so we *assume* where the moment is zero and turn the frame into a determinate one.`}</Md>
-        <div className="grid md:grid-cols-2 gap-4 mt-2">
+        <div className="grid cq-md:grid-cols-2 gap-4 mt-2">
           <div className="card p-4">
             <div className="font-bold mb-1">Portal method (low-rise, shear-type)</div>
             <Md>{`1. Inflection point at **mid-height of every column**.
@@ -270,7 +302,7 @@ function Approach() {
       </Section>
       <Section title="Worked example (2-bay, 2-storey; areas A, 2A, A)">
         <Tex block>{`\\text{Loads } 20\\text{ k (roof)},\\ 40\\text{ k (1st floor)};\\quad V_2 = 20,\\ V_1 = 60\\text{ k}`}</Tex>
-        <div className="grid lg:grid-cols-2 gap-4">
+        <div className="grid cq-lg:grid-cols-2 gap-4">
           <div>
             <div className="font-bold mb-1">Portal</div>
             <ApproxSolution g={g} method="portal" kinds={['M']} />
@@ -288,6 +320,9 @@ function Approach() {
 function Lab() {
   return (
     <div>
+      <Section title="Frame playground" sub="Build a frame and load it sideways. The portal / cantilever answer sits next to an exact stiffness analysis, so you can see when the assumptions hold and when they don't.">
+        <FramePlayground />
+      </Section>
       <Section title="Guided trainer" sub="Random frame. Fill each step, check, then move on — the frame sways on the right with the assumed inflection points.">
         <Trainer />
       </Section>

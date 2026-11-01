@@ -3,6 +3,18 @@
 
 export type Exposure = 'A' | 'B' | 'C'
 
+/** basic wind speeds (m/s, Table 6.2.8) for the locations used in past papers */
+export const CITY_V: Record<string, number> = {
+  Dhaka: 65.7,
+  "Cox's Bazar": 80,
+  Chittagong: 80,
+  Comilla: 61.4,
+  Mymensingh: 67.4,
+  Narayanganj: 61.1,
+  Rangamati: 56.7,
+  Tangail: 50.6,
+}
+
 /** Table 6.2.10 terrain exposure constants */
 export const TERRAIN: Record<
   Exposure,

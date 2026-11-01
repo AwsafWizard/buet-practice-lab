@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { rotArrow, rotK, rotPos, rotTag } from '../../engine/sign'
 import { DiagramView, fmt } from '../../components/DiagramView'
 import { StructureView } from '../../components/StructureView'
 import { Answer, Callout, Md, Section, Seg, Step, Steps, Tex } from '../../components/ui'
@@ -93,7 +94,7 @@ function Explorer() {
   const [node, setNode] = useState('B')
   const [dir, setDir] = useState<'v' | 'h' | 'r'>('v')
   const nodeOk = ex.m.nodes.some((n) => n.id === node) ? node : ex.m.nodes[1].id
-  const virt: Load[] = [{ kind: 'node', node: nodeOk, ...(dir === 'v' ? { fy: -1 } : dir === 'h' ? { fx: 1 } : { m: -1 }) }]
+  const virt: Load[] = [{ kind: 'node', node: nodeOk, ...(dir === 'v' ? { fy: -1 } : dir === 'h' ? { fx: 1 } : { m: rotK() }) }]
   const res = useMemo(() => {
     try {
       return virtualWork({ ...ex.m, EI: ex.EI }, ex.m.loads, virt)
@@ -115,11 +116,11 @@ function Explorer() {
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <span className="text-mute">Unit load at</span>
         <Seg size="xs" value={nodeOk} onChange={setNode} items={ex.m.nodes.map((n) => ({ v: n.id, label: n.id }))} />
-        <Seg size="xs" value={dir} onChange={setDir} items={[{ v: 'v', label: 'vertical ↓' }, { v: 'h', label: 'horizontal →' }, { v: 'r', label: 'unit couple ↻' }]} />
+        <Seg size="xs" value={dir} onChange={setDir} items={[{ v: 'v', label: 'vertical ↓' }, { v: 'h', label: 'horizontal →' }, { v: 'r', label: `unit couple ${rotArrow()}` }]} />
       </div>
       {res ? (
         <>
-          <div className="grid md:grid-cols-2 gap-3">
+          <div className="grid cq-md:grid-cols-2 gap-3">
             <div className="rounded-xl bg-bg/60 border border-line p-2">
               <div className="text-xs text-mute font-semibold">Real loads — M</div>
               <DiagramView model={ex.m} members={dR} kind="M" showLoads maxHeight={240} />
@@ -130,7 +131,7 @@ function Explorer() {
             </div>
           </div>
           <div className="text-sm">
-            <Tex>{`\\Delta = \\sum\\int\\frac{Mm}{EI}dx = `}</Tex> <b className="num">{fmt(res.total * (dir === 'r' ? 1 : 12), 5)}</b> {dir === 'r' ? 'rad' : 'in'} {dir === 'r' ? '(+ = clockwise)' : dir === 'v' ? '(+ = downward)' : '(+ = to the right)'} · EI = {fmt(ex.EI, 0)} k-ft² (E = 29000 ksi)
+            <Tex>{`\\Delta = \\sum\\int\\frac{Mm}{EI}dx = `}</Tex> <b className="num">{fmt(res.total * (dir === 'r' ? 1 : 12), 5)}</b> {dir === 'r' ? 'rad' : 'in'} {dir === 'r' ? `(+ = ${rotPos()})` : dir === 'v' ? '(+ = downward)' : '(+ = to the right)'} · EI = {fmt(ex.EI, 0)} k-ft² (E = 29000 ksi)
           </div>
         </>
       ) : (
@@ -143,7 +144,7 @@ function Explorer() {
 function Overview() {
   return (
     <div>
-      <Section title="Unit-load (virtual work) method" right={<div className="w-72 hidden md:block"><TopicFrequency topic="vw" /></div>}>
+      <Section title="Unit-load (virtual work) method" right={<div className="w-72 hidden cq-md:block"><TopicFrequency topic="vw" /></div>}>
         <Md>{`To find a displacement Δ at a point, apply a **unit virtual load** there in the direction of Δ (a unit **couple** for a rotation, a **pair** of opposite unit loads for a relative displacement), find the internal forces it causes (m, n, v), then
 $$1\\cdot\\Delta = \\sum\\int\\frac{Mm}{EI}dx + \\sum\\frac{NnL}{AE} + \\sum\\int\\frac{K\\,Vv}{GA}dx + \\sum n\\,\\Delta L_{fab} - \\sum r\\,\\Delta_{support}$$
 - beams & frames: bending term (add axial / shear when asked — K = 1.2 rectangular, $G = E/2(1+\\nu)$);
@@ -198,7 +199,11 @@ function Lab() {
 }
 
 // ---------------------------------------------------------------- own problems
-const vwP = (id: string, level: PYQ['level'], title: string, text: string, m: Model, virt: Load[], opts: Parameters<typeof virtualWork>[3], unit: 'in' | 'rad', what: string): PYQ => ({
+const vwP = (id: string, level: PYQ['level'], title: string, text: string, m: Model, virtual: Load[] | (() => Load[]), opts: Parameters<typeof virtualWork>[3], unit: 'in' | 'rad', label: string | (() => string)): PYQ => {
+  // functions are read when shown, so the rotation sign convention can change at run time
+  const virt = () => (typeof virtual === 'function' ? virtual() : virtual)
+  const what = () => (typeof label === 'function' ? label() : label)
+  return {
   id: `own-vw-${id}`,
   paper: 'own',
   level,
@@ -210,9 +215,10 @@ const vwP = (id: string, level: PYQ['level'], title: string, text: string, m: Mo
   text,
   pages: [],
   figure: () => <StructureView model={m} autoDimX autoDimY={m.nodes.some((n) => n.y !== 0)} memberLabels maxHeight={240} />,
-  checks: () => [{ key: 'd', label: what, value: virtualWork(m, m.loads, virt, opts).total * (unit === 'in' ? 12 : 1), unit }],
-  solution: () => <VWSolution model={m} real={m.loads} virtual={virt} opts={opts} scale={unit === 'in' ? 12 : 1} resultUnit={unit} what={what} />,
-})
+  checks: () => [{ key: 'd', label: what(), value: virtualWork(m, m.loads, virt(), opts).total * (unit === 'in' ? 12 : 1), unit }],
+  solution: () => <VWSolution model={m} real={m.loads} virtual={virt()} opts={opts} scale={unit === 'in' ? 12 : 1} resultUnit={unit} what={what()} />,
+  }
+}
 const tr = truss('A:0,0 B:15,0 C:30,0 D:15,12', 'A-B B-C A-D D-C D-B', 'A:pin C:roller', [P('B', 30), { kind: 'node', node: 'D', fx: 10 }])
 tr.members.forEach((x) => (x.label = x.id === 'DB' ? '(2)' : '(4)'))
 const step = { ...beamOf('A:0:fixed B:10 C:20'), loads: [P('C', 8), W('AB', 1)] }
@@ -223,7 +229,7 @@ const problems: PYQ[] = [
   vwP('1', 'warm-up', 'Stepped cantilever', 'Cantilever A–C, I = 600 in⁴ on A–B and 300 in⁴ on B–C (E = 29000 ksi), 1 k/ft on A–B and 8 k at C. Tip deflection.', step, [{ kind: 'node', node: 'C', fy: -1 }], {}, 'in', 'Δ_C (down)'),
   vwP('2', 'exam', 'Truss joint deflection', 'Truss areas in brackets (in²), E = 29000 ksi; 30 k down at B and 10 k horizontal at D. Vertical deflection of B.', tr, [{ kind: 'node', node: 'B', fy: -1 }], { EA: (id) => (id === 'DB' ? 2 : 4) * E }, 'in', 'Δ_B (down)'),
   vwP('3', 'exam', 'Portal frame sway', 'Pin at A, roller at D, EI = const (I = 800 in⁴). 8 k at B and 2 k/ft on the beam. Horizontal deflection of C.', fr, [H('C', 1)], {}, 'in', 'Δ_C (→)'),
-  vwP('4', 'challenge', 'Rotation at a roller', 'Same frame: rotation of joint C (unit couple).', fr, [{ kind: 'node', node: 'C', m: -1 }], {}, 'rad', 'θ_C (clockwise +)'),
+  vwP('4', 'challenge', 'Rotation at a roller', 'Same frame: rotation of joint C (unit couple).', fr, () => [{ kind: 'node', node: 'C', m: rotK() }], {}, 'rad', () => `θ_C (${rotTag()})`),
 ]
 
 const mod: TopicModule = { Overview, Approach, Lab, problems }

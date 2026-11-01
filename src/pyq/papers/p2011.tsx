@@ -1,10 +1,11 @@
 // 2011-12 term final (held 25 Jul 2013), scan pages 17–20. 280 marks, 28 per question (5 of 7 per section).
 import { useMemo, useState } from 'react'
+import { isCW, rotK, rotPos, rotTag, rotWord } from '../../engine/sign'
 import type { PYQ } from '../types'
 import { solve } from '../../engine/frame2d'
 import { influenceLine, ildAt, ildExtremes } from '../../engine/ild'
 import { portalMethod, xBraced, type GridFrame } from '../../engine/approx'
-import { stiffenedSuspension } from '../../engine/cable'
+import { hangerGirder, stiffenedSuspension } from '../../engine/cable'
 import { linearMember, normalise, type DiagramMember } from '../../engine/diagrams'
 import { ssMomentILD, trainExtremes, uniformPlusConcentrated, type Train } from '../../engine/moving'
 import { virtualWork } from '../../engine/vw'
@@ -85,7 +86,7 @@ const vw5 = () => virtualWork(b5, b5.loads, [P('B', 1)], vw5opts)
 // ---------------------------------------------------------------- A6 cantilever slope
 const b6 = beamOf('A:0:fixed B:10 C:20 D:25', [P('B', 20, '20k'), P('C', 10, '10k'), H('D', 5, '5k')])
 const vw6opts = { EI: (id: string) => (E30 * (id === 'AB' ? 400 : 200)) / 144, EA: (id: string) => E30 * (id === 'AB' ? 15 : 10), axial: true }
-const vw6 = () => virtualWork(b6, b6.loads, [Mo('D', 1)], vw6opts)
+const vw6 = () => virtualWork(b6, b6.loads, [Mo('D', rotK())], vw6opts) // unit couple in the positive rotation sense
 
 // ---------------------------------------------------------------- A7 frame deflection
 const f7 = model('A:0,0 C:0,12 D:10,12 E:15,12 B:15,0', 'A-C C-D D-E B-E', 'A:pin B:roller', [H('C', 10, '10k')])
@@ -346,8 +347,8 @@ Span 10 @ 100 ft = 1000 ft, cable sag 60 ft, stiffening girders hinged at the to
     figure: () => <StructureView model={sm3} autoDimX={[0, 400, 500, 700, 1000]} maxHeight={260} />,
     checks: () => {
       const s = s3()
-      let mx = 0
-      for (let x = 0; x <= 1000; x += 1) mx = Math.max(mx, Math.abs(s.M(x)))
+      const g = hangerGirder({ L: 1000, panel: 100, q: s.q, loads: sus3.loads })
+      const mx = Math.max(g.max.M, -g.min.M)
       return [
         { key: 'H', label: 'Horizontal cable tension H', value: s.H, unit: 'k' },
         { key: 'hg', label: 'Hanger force (spacing 100 ft)', value: s.q * 100, unit: 'k' },
@@ -357,13 +358,14 @@ Span 10 @ 100 ft = 1000 ft, cable sag 60 ft, stiffening girders hinged at the to
     },
     solution: () => {
       const s = s3()
+      const g = hangerGirder({ L: 1000, panel: 100, q: s.q, loads: sus3.loads })
       return (
         <div className="space-y-2 text-sm">
           <Md>{`Treat girder + cable as one system. A parabolic cable puts a **uniform** upward hanger load $q$ on the girder, and $q = 8Hh/L^2$. The central hinge (zero girder moment) gives the extra equation for $H$: the girder moment there equals the simple-beam moment minus $H$ × cable sag.
 
 Simple beam: $R_{left} = 30(600)/1000 + 50(300)/1000 = 33$ k; $M_0(500) = 33(500) - 30(100) = 13{,}500$ k-ft.`}</Md>
           <SuspensionSolution {...sus3} panel={100} />
-          <Md>{`Each hanger carries **${fmt(s.q * 100)} k** (all 9 hangers equal). The girder reactions at the towers come out ${s.V(0) < 0 ? 'downward' : 'upward'} (${fmt(s.V(0))} k at the left) because the hangers lift more (${fmt(s.q * 1000)} k) than the 80 k applied.`}</Md>
+          <Md>{`Each hanger carries **${fmt(g.F)} k** (all 9 hangers equal). They lift ${fmt(9 * g.F)} k in all against the 80 k applied, so the girder reactions at the towers come out ${g.RA < 0 ? 'downward' : 'upward'} at the left (${fmt(g.RA)} k) and ${g.RB < 0 ? 'downward' : 'upward'} at the right (${fmt(g.RB)} k); the end half-panels go straight into the towers.`}</Md>
         </div>
       )
     },
@@ -424,10 +426,10 @@ $$\\Delta_B = \\int_0^{10}\\frac{(43x - x^2)(0.6x)}{EI_1}dx + \\int_0^{15}\\frac
       const th = vw6().total
       return (
         <div className="space-y-2 text-sm">
-          <Md>{`Virtual system: **unit couple at D**. Its moment is $m = 1$ everywhere and it causes no axial force ($n = 0$), so the 5 k axial load (and the areas) do not affect the slope. With x from D: $M = 0$ on DC, $M = -10(x-5)$ on CB, $M = -10(x-5) - 20(x-15)$ on BA.
+          <Md>{`Virtual system: **unit ${rotPos()} couple at D**. Its moment is $m = ${isCW() ? '-1' : '1'}$ everywhere and it causes no axial force ($n = 0$), so the 5 k axial load (and the areas) do not affect the slope. With x from D: $M = 0$ on DC, $M = -10(x-5)$ on CB, $M = -10(x-5) - 20(x-15)$ on BA.
 $$\\theta_D = \\int\\frac{Mm}{EI}dx = \\frac{1}{EI_2}\\int_5^{15}10(x-5)dx + \\frac{1}{EI_1}\\int_{15}^{25}[10(x-5) + 20(x-15)]dx$$`}</Md>
-          <VWSolution model={b6} real={b6.loads} virtual={[Mo('D', 1)]} opts={vw6opts} what="θ_D (ccw +)" resultUnit="rad" unitNote="EI in k-ft², EA in k; the axial column is zero because the unit couple gives n = 0." />
-          <Md>{`$\\theta_D = ${fmt(Math.abs(th), 5)}$ rad ${th < 0 ? '**clockwise**' : '**counter-clockwise**'} $= ${fmt((Math.abs(th) * 180) / Math.PI, 3)}°$. The fixed end does not rotate, so this is also the change in slope from A to D.`}</Md>
+          <VWSolution model={b6} real={b6.loads} virtual={[Mo('D', rotK())]} opts={vw6opts} what={`θ_D (${rotTag()})`} resultUnit="rad" unitNote="EI in k-ft², EA in k; the axial column is zero because the unit couple gives n = 0." />
+          <Md>{`$\\theta_D = ${fmt(Math.abs(th), 5)}$ rad **${rotWord(th)}** $= ${fmt((Math.abs(th) * 180) / Math.PI, 3)}°$. The fixed end does not rotate, so this is also the change in slope from A to D.`}</Md>
         </div>
       )
     },
@@ -670,7 +672,7 @@ Because the chords are not parallel, each ILD comes from a section through panel
     checks: () => [{ key: 'm', label: 'Maximum moment at 20 ft', value: trainExtremes(ild14, train14).max.value, unit: 'k-ft' }],
     solution: () => (
       <div className="space-y-2 text-sm">
-        <Md>{`Moment ILD at a = 20 ft: triangle with peak $\\dfrac{20\\times60}{80} = 15$ at x = 20. **Criterion:** the moment is maximum with a wheel at the section when the average load to the left of the section equals the average load on the whole span. Moving the train left by $\\delta$ changes M by $\\delta\\left(\\dfrac{W a}{L} - W_L\\right)$, so keep moving while $W_L/a < W/L$. In practice put each heavy wheel at the peak in turn and compare. The trailing 8 k/ft adds to the response when it is on the span.`}</Md>
+        <Md>{`Moment ILD at a = 20 ft: triangle with peak $\\dfrac{20\\times60}{80} = 15$ at x = 20. **Criterion:** the moment is maximum with a wheel at the section when the average load to the left of the section equals the average load on the whole span. Moving the train left by $\\delta$ changes M by $\\delta\\left(\\dfrac{W a}{L} - W_L\\right)$, so keep moving while $W_L/a < W/L$. In practice put each heavy wheel at the peak in turn and compare, with the train travelling right → left (wheel 1 leads); wheel 4 at the section governs. The trailing 8 k/ft adds to the response when it is on the span.`}</Md>
         <TrainOnILD ild={ild14} t={train14} span={[0, 80]} section={20} peak={{ x: 20, side: 1 }} what="moment at 20 ft" resUnit="k-ft" />
       </div>
     ),

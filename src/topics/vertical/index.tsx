@@ -21,7 +21,7 @@ function GirderDemo() {
   const d = useMemo(() => diagramsFromResult(m, r), [m, r])
   return (
     <div className="space-y-2">
-      <div className="grid md:grid-cols-2 gap-x-6">
+      <div className="grid cq-md:grid-cols-2 gap-x-6">
         <Slider label="Span L" value={L} min={10} max={40} onChange={setL} unit=" ft" />
         <Slider label="w" value={w} min={1} max={10} step={0.5} onChange={setW} unit=" k/ft" />
       </div>
@@ -41,11 +41,11 @@ function FrameCalc() {
   const r = useMemo(() => verticalApprox(g, [[w1, w2], [w1, w2]]), [w1, w2])
   return (
     <div className="space-y-2">
-      <div className="grid md:grid-cols-2 gap-x-6">
+      <div className="grid cq-md:grid-cols-2 gap-x-6">
         <Slider label="w on left bays" value={w1} min={0} max={8} step={0.5} onChange={setW1} unit=" k/ft" />
         <Slider label="w on right bays" value={w2} min={0} max={8} step={0.5} onChange={setW2} unit=" k/ft" />
       </div>
-      <div className="grid lg:grid-cols-[1fr_1.2fr] gap-3">
+      <div className="grid cq-lg:grid-cols-[1fr_1.2fr] gap-3">
         <div className="rounded-xl bg-bg/60 border border-line p-2">
           <StructureView model={gridModel(g)} showLoads={false} autoDimX autoDimY maxHeight={260} />
         </div>
@@ -103,7 +103,7 @@ function FrameCalc() {
 function Overview() {
   return (
     <div>
-      <Section title="Approximate analysis for gravity loads" right={<div className="w-72 hidden md:block"><TopicFrequency topic="vertical" /></div>}>
+      <Section title="Approximate analysis for gravity loads" right={<div className="w-72 hidden cq-md:block"><TopicFrequency topic="vertical" /></div>}>
         <Md>{`Assumptions for each girder of a building frame under uniform vertical load w:
 1. **Inflection points at 0.1L** from each end (the end restraint is between pinned (0) and fixed (0.211L)).
 2. **Zero axial force** in the girders.

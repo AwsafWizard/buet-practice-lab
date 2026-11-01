@@ -4,20 +4,25 @@ import { KLL } from '../engine/llr'
 import { PRODUCT_TABLE } from '../engine/vw'
 import { KZT_PARAMS, LAMBDA_TABLE, TERRAIN, type Exposure } from '../engine/wind'
 
+declare const __ARTIFACT__: boolean
+const CAN_PRINT = typeof __ARTIFACT__ === 'undefined' || !__ARTIFACT__
+
 export default function Formulas() {
   return (
     <div>
       <div className="flex items-end justify-between mb-5">
         <div>
           <h1 className="text-2xl font-extrabold">Formulas & tables</h1>
-          <p className="text-sm text-mute">Everything on one page for the last two days. Print it (Ctrl + P) — the sidebar hides automatically.</p>
+          <p className="text-sm text-mute">Everything on one page for the last two days.{CAN_PRINT && ' Print it (Ctrl + P) — the sidebar hides automatically.'}</p>
         </div>
-        <button className="btn no-print" onClick={() => window.print()}>
-          🖨 Print
-        </button>
+        {CAN_PRINT && (
+          <button className="btn no-print" onClick={() => window.print()}>
+            🖨 Print
+          </button>
+        )}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-5">
+      <div className="grid cq-lg:grid-cols-2 gap-5">
         <Section title="Stability & determinacy">
           <Tex block>{`\\text{2D truss: } b + r - 2j,\\quad \\text{2D frame: } 3m + r - (3j + c),\\quad \\text{3D: } b + r - 3j,\\ 6m + r - (6j + c)`}</Tex>
           <Md>{`< 0 unstable · = 0 determinate · > 0 indeterminate (if stable). Parallel or concurrent reactions, non-triangulated panels → geometrically unstable. DOKI = free joint DOF − restraints + extra hinge rotations.`}</Md>
@@ -84,7 +89,7 @@ export default function Formulas() {
               ))}
             </tbody>
           </table>
-          <Tex block>{`L_r = L_0R_1R_2,\\ 0.6 \\le L_r \\le 1.0;\\ R_1 = 1.2 - 0.001A_t,\\ R_2 = 1.2 - 0.05F`}</Tex>
+          <Tex block>{`L_r = L_0R_1R_2,\\ 0.6 \\le L_r \\le 1.0;\\ R_1 = 1.2 - 0.011A_t,\\ R_2 = 1.2 - 0.05F`}</Tex>
         </Section>
 
         <Section title="Earthquake (BNBC 2020)">

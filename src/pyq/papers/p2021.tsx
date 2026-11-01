@@ -1,5 +1,6 @@
 // 2021-22 term final (held 6 Apr 2023) — scan pages 51–57.
 import type { PYQ } from '../types'
+import { isCW, rot, rotK, rotPos, rotTag, rotWord } from '../../engine/sign'
 import type { Load, Model } from '../../engine/model'
 import { solve } from '../../engine/frame2d'
 import { influenceLine, ildAt, ildExtremes } from '../../engine/ild'
@@ -17,7 +18,7 @@ import { Md, Tex } from '../../components/ui'
 import { StructureView } from '../../components/StructureView'
 import { fmt } from '../../components/DiagramView'
 
-const PG = { A1: [51], A2: [52], A3a: [52], A3b: [53], A4a: [53, 56], A4bc: [54], B: [54, 55, 57] }
+const PG = { A1: [51, 56], A2: [52, 56], A3a: [52, 56], A3b: [53], A4a: [53, 56], A4bc: [54], B: [54, 55, 57] }
 const E = 29000
 
 // ---------------------------------------------------------------- Q1(a) truss lifted on a jack at b
@@ -61,7 +62,7 @@ const curve1b = () => {
 const EI2a = (E * 3000) / 144
 // hinge at e modelled as a release on the e-end of member e–c only, so node e carries the rotation of b–e
 const f2a = model('a:0,0 b:0,12 e:8,12 c:16,12 d:16,0', 'a-b b-e oe-c c-d', 'a:pin d:pin', [P('e', 50, '50k')], { EI: EI2a })
-const vw2a = () => virtualWork(f2a, f2a.loads, [Mo('e', 1, '1 k-ft')], { EI: () => EI2a })
+const vw2a = () => virtualWork(f2a, f2a.loads, [Mo('e', rotK(), '1 k-ft')], { EI: () => EI2a }) // unit couple in the positive rotation sense
 
 // ---------------------------------------------------------------- Q2(b) stiffening truss under a parabolic cable
 const L2b = 360,
@@ -270,7 +271,7 @@ Fig. 3: pinned supports a and d, columns a–b and d–c 12 ft high, beam b–c 
     checks: () => {
       const t = vw2a().total
       return [
-        { key: 'th', label: 'Rotation of b–e at e (rad, + ccw)', value: t, tol: 0.03 },
+        { key: 'th', label: `Rotation of b–e at e (rad, ${rotTag()})`, value: t, tol: 0.03 },
         { key: 'H', label: 'Horizontal reaction at a (real)', value: Math.abs(solve(f2a).reaction('a').rx), unit: 'k' },
       ]
     },
@@ -280,12 +281,12 @@ Fig. 3: pinned supports a and d, columns a–b and d–c 12 ft high, beam b–c 
       return (
         <div className="space-y-3 text-sm">
           <Md>{`**Real system** (three-hinged frame, symmetric): $V_a = V_d = 25$ k. Left part about e: $25(8) - H(12) = 0 \\Rightarrow H = ${fmt(Math.abs(r.reaction('a').rx))}$ k. Column moments grow to $H\\cdot12 = 200$ k-ft at b and c, falling linearly to 0 at e.`}</Md>
-          <Md>{`**Virtual system**: a unit couple applied to the **end of member b–e** at e (left side of the hinge only). Right part about e: $8V_d + 12H_d = 0$; overall $\\sum M_a$: $16V_d + 1 = 0 \\Rightarrow V_d = -1/16$, $H_d = 1/24$. Then $\\theta_{e,left} = \\sum\\int \\dfrac{Mm}{EI}dx$ with $EI = 29000(3000)/144 = ${fmt(EI2a, 0)}$ k-ft².`}</Md>
-          <VWSolution model={f2a} real={f2a.loads} virtual={[Mo('e', 1)]} opts={{ EI: () => EI2a }} what="θ (just left of e), rad, + ccw" />
-          <p className="text-xs text-faint">Check with the stiffness solver: rotation of the b–e end at e = {fmt(r.disp('e').rz, 6)} rad.</p>
+          <Md>{`**Virtual system**: a unit ${rotPos()} couple applied to the **end of member b–e** at e (left side of the hinge only). Right part about e: $8V_d + 12H_d = 0$; overall $\\sum M_a$ (ccw +): ${isCW() ? '$16V_d - 1 = 0 \\Rightarrow V_d = 1/16$, $H_d = -1/24$' : '$16V_d + 1 = 0 \\Rightarrow V_d = -1/16$, $H_d = 1/24$'}. Then $\\theta_{e,left} = \\sum\\int \\dfrac{Mm}{EI}dx$ with $EI = 29000(3000)/144 = ${fmt(EI2a, 0)}$ k-ft².`}</Md>
+          <VWSolution model={f2a} real={f2a.loads} virtual={[Mo('e', rotK())]} opts={{ EI: () => EI2a }} what={`θ (just left of e), rad, ${rotTag()}`} />
+          <p className="text-xs text-faint">Check with the stiffness solver: rotation of the b–e end at e = {fmt(rot(r.disp('e').rz), 6)} rad ({rotTag()}).</p>
           <p>
             <b>
-              θ = {fmt(Math.abs(t), 6)} rad ({t > 0 ? 'counter-clockwise' : 'clockwise'}) = {fmt((Math.abs(t) * 180) / Math.PI, 4)}°
+              θ = {fmt(Math.abs(t), 6)} rad ({rotWord(t)}) = {fmt((Math.abs(t) * 180) / Math.PI, 4)}°
             </b>
           </p>
         </div>
@@ -334,8 +335,8 @@ Fig. 4: span 12 @ 30 ft = 360 ft between towers, cable sag 30 ft, truss depth 20
       )
     },
     notes: [
-      'The question text says "member a-c"; the brief listed "3-C" — the scan clearly marks the end diagonal a–c.',
-      'Load position read from the hand sketch: the 50 k arrow is under the first bottom-chord joint right of mid-span (x = 210 ft).',
+      'Member asked: a–c, the end diagonal from the left support a (bottom chord) up to the first top-chord joint c, marked with a tick in the sketch.',
+      'Load position read from the hand sketch (zoomed): the 50 k arrow sits directly under the first bottom-chord joint right of the mid-span hinge (x = 210 ft).',
       'Truss hinge at mid-span read from the sketch (top chord broken at the centre, diagonals meet at the bottom centre joint). Without it the system would be indeterminate.',
       'Truss supported vertically at both towers; hangers assumed equally loaded (parabolic cable).',
     ],
@@ -349,7 +350,7 @@ Fig. 4: span 12 @ 30 ft = 360 ft between towers, cable sag 30 ft, truss depth 20
     topics: ['eq'],
     title: 'Earthquake: 3-storey office at Chittagong (SDC, V, F at Level 2)',
     pages: PG.A3a,
-    text: `A 3-storied RC office building is at Chittagong (Zone 3). Storey height 3 m, base to GF 1.5 m, site class **SB**, plan 20 m × 20 m. $Z = 0.28$, $I = 1.00$, $\\eta = 1.2$. Dead load incl. self-weight 6 kN/m², live load 2.4 kN/m² (typical floors), roof live load 1 kN/m². Self-weight of all pedestals 100 kN. GF has an RC floor carrying typical floor loads. Determine the appropriate structural system, seismic design category (SDC), earthquake base shear and the storey force at **Level 2** (BNBC 2020, Tables 1–3).`,
+    text: `A 3-storied RC office building is at Chittagong (Zone 3). Storey height 3 m, base to GF 1.5 m, site class **SB**, plan 20 m × 20 m. $Z = 0.28$, $I = 1.00$, $\\eta = 1.2$. Dead load incl. self-weight 6 kN/m², live load 2.4 kN/m² (typical floors), roof live load 1 kN/m². Self-weight of all pedestals 100 kN. GF has an RC floor carrying typical floor loads. Determine the appropriate structural system, seismic design category (SDC), earthquake base shear and the storey force at **Level 2** (BNBC 2020, Tables 1–3; the normalized acceleration response spectrum $C_s$ equations are given with the question).`,
     checks: () => {
       const r = eqResult(eq3)
       return [
@@ -418,7 +419,7 @@ Fig. 4: span 12 @ 30 ft = 360 ft between towers, cable sag 30 ft, truss depth 20
     pages: PG.A4a,
     text: `A six-storied RC residential building (Fig. 6) is on a 2-D escarpment. Find the topographic factor at the **top of the building**. Exposure C, occupancy category II; the first two speed-up conditions are met. Use Table 4; $K_2 = 1 - \\dfrac{|x|}{\\mu L_h}$, $K_3 = e^{-\\gamma z/L_h}$.
 
-Fig. 6: building 75 ft wide, 60 ft tall, its leeward... windward face 25 ft behind the crest; escarpment height 30 ft over a horizontal run of 70 ft; wind blows from the low side toward the building.`,
+Fig. 6: building 75 ft wide and 60 ft tall on the upper plateau, its windward (right) face 25 ft from the crest; escarpment height 30 ft over a horizontal run of 70 ft; wind blows from the low side up the slope toward the building.`,
     figure: () => <EscarpmentFig />,
     checks: () => {
       const r = kzt(kzt4a)
@@ -438,7 +439,12 @@ Fig. 6: building 75 ft wide, 60 ft tall, its leeward... windward face 25 ft behi
         </p>
       </div>
     ),
-    notes: ['H/Lh = 30/35 = 0.86 exceeds 0.5, so the code caps it: H/Lh = 0.5 and Lh = 2H = 60 ft for K2 and K3.', 'Units cancel in every ratio, so feet are used directly.'],
+    notes: [
+      'H/Lh = 30/35 = 0.86 exceeds 0.5, so the code caps it: H/Lh = 0.5 and Lh = 2H = 60 ft for K2 and K3.',
+      'Table 4 (printed with the paper, BNBC exposure naming): 2-D escarpment, Exposure C → K1/(H/Lh) = 0.95, γ = 2.5, μ = 4 downwind of the crest.',
+      'x = 25 ft taken from the crest to the windward face of the building; z = 60 ft (roof) above the building\'s ground level.',
+      'Units cancel in every ratio, so feet are used directly.',
+    ],
   },
   {
     id: '2021-22-A4b',
@@ -713,7 +719,7 @@ Because stringer 2 overhangs c by 20 ft, its tip (x = 35 ft) gives $FBR_c = 50/3
       const big = Math.abs(e.max.value) >= Math.abs(e.min.value) ? e.max.value : e.min.value
       return (
         <div className="space-y-3 text-sm">
-          <Md>{`Shear ILD at x = 24 ft: $-24/72 = -1/3$ just left, $+2/3$ just right, straight to 0 at the supports. For **maximum positive shear**, put a wheel just right of the section with the train heading so that most load lies on the positive part. Moving the next wheel up to the section changes the shear by $\\Delta V = -P_{\\text{passing}} + \\dfrac{W\\,\\Delta x}{L}$ (W = load on span): keep advancing while ΔV is positive. The heavy 35 k wheels make it worth trying the train in both directions.`}</Md>
+          <Md>{`Shear ILD at x = 24 ft: $-24/72 = -1/3$ just left, $+2/3$ just right, straight to 0 at the supports. For **maximum positive shear**, the train travels right → left (wheel 1 leads) and a wheel stops just right of the section. Moving the next wheel up to the section changes the shear by $\\Delta V = -P_{\\text{passing}} + \\dfrac{W\\,\\Delta x}{L}$ (W = load on span): keep advancing while ΔV is positive. The spacings are wide (12–15 ft), so each step brings a lot of load on and the light leading wheels are worth pushing across; the maximum comes with **wheel 6 just right of the section** and the two 35 k wheels on the long positive part.`}</Md>
           <TrainOnILD ild={ild10} t={train10} span={[0, 72]} section={24} peak={{ x: 24, side: 1 }} what="shear at 24 ft" />
           <p>
             <b>Maximum shear at the third-point = {fmt(Math.abs(big))} k</b> ({big > 0 ? 'positive' : 'negative'}); the other sense peaks at {fmt(big > 0 ? e.min.value : e.max.value)} k.
@@ -721,7 +727,7 @@ Because stringer 2 overhangs c by 20 ft, its tip (x = 35 ft) gives $FBR_c = 50/3
         </div>
       )
     },
-    notes: ['The train (85 ft) is longer than the span, so only some wheels are on the beam at a time; the exhaustive search covers both directions of travel.'],
+    notes: ['The train (85 ft) is longer than the span, so only some wheels are on the beam at a time; train taken as travelling right to left (wheel 1 leads).'],
   },
   {
     id: '2021-22-B11',

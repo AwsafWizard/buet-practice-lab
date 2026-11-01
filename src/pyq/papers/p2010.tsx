@@ -266,7 +266,9 @@ Points 1–7 at 0, 6, 16, 31, 37, 43, 51 ft. Girder simply supported at 1 (pin) 
     },
     solution: () => (
       <div className="space-y-2 text-sm">
-        <Md>{`Shear ILD at 30 ft: $-30/80 = -0.375$ just left, $+0.625$ just right of the section, straight to 0 at both supports. For **maximum positive shear**, bring the train from the right so that a wheel sits just right of the section. Advancing the next wheel to the section changes the shear by $\\Delta V = -P_1 + \\dfrac{W\\,\\Delta x}{L}$ (wheel 1 drops onto the negative side). Keep advancing while $\\Delta V > 0$.`}</Md>
+        <Md>{`Shear ILD at 30 ft: $-30/80 = -0.375$ just left, $+0.625$ just right of the section, straight to 0 at both supports. The train travels right → left (wheel 1 leads). For **maximum positive shear** a wheel sits just right of the section. Advancing the next wheel to the section changes the shear by $\\Delta V = -P_1 + \\dfrac{W\\,\\Delta x}{L}$ (wheel 1 drops onto the negative side). Keep advancing while $\\Delta V > 0$: moving the two 20 k wheels across pays off, so **wheel 3 (the first 60 k) just right of the section** governs.
+
+The largest negative shear comes after the wheels have left the span: the 30 ft uniform tail then lies exactly on the negative part (0 to 30 ft), $V = -5 \\times \\tfrac12(30)(0.375) = -28.1$ k.`}</Md>
         <TrainOnILD ild={ild3} t={train3} span={[0, 80]} section={30} peak={{ x: 30, side: 1 }} what="shear at 30 ft" />
       </div>
     ),
@@ -290,7 +292,7 @@ Fig. 4: roller B at 0; internal hinge C at 15 ft; roller D at 25 ft; F at 45 ft;
     ],
     solution: () => (
       <div className="space-y-2 text-sm">
-        <Md>{`**ILD of $R_D$.** C–D–E is a beam on D and E with a 10 ft overhang to the hinge C. A load on it gives $R_D = (65 - x)/40$, i.e. **1.25 at C**, 1 at D, 0 at E. The drop-in span B–C passes $x/15$ of a load to C, so the ILD falls linearly from 1.25 at C to 0 at B. The peak is at the hinge C. Try each heavy wheel at C, with the train approaching from either side, and keep the best.`}</Md>
+        <Md>{`**ILD of $R_D$.** C–D–E is a beam on D and E with a 10 ft overhang to the hinge C. A load on it gives $R_D = (65 - x)/40$, i.e. **1.25 at C**, 1 at D, 0 at E. The drop-in span B–C passes $x/15$ of a load to C, so the ILD falls linearly from 1.25 at C to 0 at B. The peak is at the hinge C. Try each heavy wheel at C, with the train travelling right → left (wheel 1 leads), and keep the best.`}</Md>
         <ILDStack model={b4} path={p4} items={[{ label: 'R_D', resp: { kind: 'reaction', node: 'D', comp: 'y' } }]} showTable={false} />
         <TrainOnILD ild={ild4RD()} t={train3} span={[0, 65]} section={15} peak={{ x: 15, side: 1 }} what="R_D" />
       </div>

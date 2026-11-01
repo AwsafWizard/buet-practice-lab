@@ -102,6 +102,36 @@ export function stiffenedSuspension(p: { L: number; h: number; xh: number; loads
   return { H, q, M, V, Tmax, ys, M0h }
 }
 
+/**
+ * Class-note view of the same girder: the uniform q is really the n − 1 interior hangers,
+ * each pulling up F = q·d at a panel point; the end half-panels (q·d/2) go straight into the
+ * towers. Panel-point moments equal stiffenedSuspension's M, so the hinge stays at M = 0;
+ * between hangers the BMD is straight and the SFD steps by F at each hanger.
+ */
+export function hangerGirder(p: { L: number; panel: number; q: number; loads: PointLoad[]; w?: number }) {
+  const { L, panel, q, loads } = p
+  const w = p.w ?? 0
+  const n = Math.round(L / panel)
+  const F = q * panel
+  const hangers: PointLoad[] = Array.from({ length: n - 1 }, (_, i) => ({ x: (i + 1) * panel, P: -F }))
+  const all = [...loads, ...hangers]
+  const M = (x: number) => simpleBeamM(L, x, all, w)
+  /** shear just left of x (just right of x when side = 1) */
+  const V = (x: number, side: -1 | 1 = -1) => simpleBeamV(L, side > 0 ? x + 1e-9 : x, all, w)
+  const RA = V(0, 1)
+  const RB = -V(L)
+  const breaks = [...new Set([0, L, ...all.map((l) => l.x)])].sort((a, b) => a - b)
+  let max = { x: 0, M: 0 },
+    min = { x: 0, M: 0 }
+  const cand = w ? [...breaks, ...Array.from({ length: 2001 }, (_, i) => (L * i) / 2000)] : breaks
+  for (const x of cand) {
+    const m = M(x)
+    if (m > max.M) max = { x, M: m }
+    if (m < min.M) min = { x, M: m }
+  }
+  return { n, F, hangers, RA, RB, M, V, breaks, max, min }
+}
+
 /** Three-hinged parabolic arch (supports level), crown hinge at xc, rise h, loads vertical */
 export function threeHingedArch(p: { L: number; h: number; xc?: number; loads: PointLoad[]; udl?: { w: number; a: number; b: number } }) {
   const { L, h, loads } = p

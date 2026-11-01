@@ -1,9 +1,10 @@
 // 2008-09 term final (held 22 Mar 2010) — 14 questions × 21 marks (answer 5 + 5).
 import type { PYQ } from '../types'
 import { solve } from '../../engine/frame2d'
+import { isCW, rot, rotTag } from '../../engine/sign'
 import { influenceLine, ildAt, ildExtremes, type ILD, type Response } from '../../engine/ild'
 import { trainExtremes, ssShearILD, uniformPlusConcentrated, type Train } from '../../engine/moving'
-import { cablePointLoads, parabolicCable, stiffenedSuspension, simpleBeamM, type PointLoad } from '../../engine/cable'
+import { cablePointLoads, hangerGirder, parabolicCable, stiffenedSuspension, simpleBeamM, type PointLoad } from '../../engine/cable'
 import { beamOf, floorSystem, H, model, Mo, P, truss, Wv, Wx } from '../../kit/builders'
 import { Figure, FrameSolution, ILDStack, MaxEffect, TrainOnILD, TrainTable, TrussSolution } from '../../kit/solutions'
 import { SuspensionSolution } from '../../kit/cables'
@@ -109,17 +110,7 @@ const fig9 = (() => {
 // ---------------------------------------------------------------- Q10 suspension bridge (Fig. 7)
 const s10in = { L: 1000, h: 100, xh: 500, loads: [{ x: 300, P: 20 }, { x: 600, P: 20 }] }
 const s10 = stiffenedSuspension(s10in)
-const s10ext = (() => {
-  let max = { x: 0, M: 0 }
-  let min = { x: 0, M: 0 }
-  for (let i = 0; i <= 10000; i++) {
-    const x = i / 10
-    const M = s10.M(x)
-    if (M > max.M) max = { x, M }
-    if (M < min.M) min = { x, M }
-  }
-  return { max, min }
-})()
+const s10ext = hangerGirder({ L: 1000, panel: 100, q: s10.q, loads: s10in.loads })
 const fig10 = bridgeModel(1000, 100, 10, [500], s10in.loads)
 
 // ---------------------------------------------------------------- Q11 beam (Fig. 8)
@@ -264,17 +255,16 @@ Floor beams at panel points 1–6 (x = 0, 12, 24, 36, 48, 60 ft); girder support
       const e = trainExtremes(ild3, T3)
       return [
         { key: 'vmax', label: 'Maximum positive shear at the quarter point', value: e.max.value, unit: 'k' },
-        { key: 'vmin', label: 'Maximum negative shear (as a negative number)', value: e.min.value, unit: 'k' },
       ]
     },
     solution: () => (
       <div className="space-y-2 text-sm">
-        <Md>{`Shear ILD at 20 ft: $-0.25$ just left, $+0.75$ just right of the section. For max positive shear, the train approaches from the right and a wheel stops **just right of the section**. Advancing by one spacing $a$ changes the shear by $\\Delta V = W a/L - P_{crossing}$: with wheel 1 at the section, moving wheel 2 up gains $W(4)/80$ but loses 12 k; moving on to wheel 3 (the first 48 k) gains $W(10)/80$ and loses the second 12 k, etc. Compare the trials below (the 5 k/ft trailer enters the span when the train is far enough on).`}</Md>
+        <Md>{`Shear ILD at 20 ft: $-0.25$ just left, $+0.75$ just right of the section. The train travels right → left (wheel 1 leads), so for max positive shear a wheel stops **just right of the section** with the rest of the train behind it on the long positive part. Advancing by one spacing $a$ changes the shear by $\\Delta V = W a/L - P_{crossing}$: with wheel 1 at the section, moving wheel 2 up gains $W(4)/80$ but loses 12 k; moving on to wheel 3 (the first 48 k) gains $W(10)/80$ and loses the second 12 k, etc. Compare the trials below (the 5 k/ft trailer enters the span when the train is far enough on). Wheel 3 at the section wins. With the light wheels leading, the shear never turns negative: by the time wheels sit on the short negative part, much more load is on the positive part behind them.`}</Md>
         <TrainOnILD ild={ild3} t={T3} span={[0, 80]} section={20} peak={{ x: 20, side: 1 }} what="shear at L/4" />
         <Md>{`**Answer:** $V_{max} = \\mathbf{${fmt(trainExtremes(ild3, T3).max.value)}}$ k.`}</Md>
       </div>
     ),
-    notes: ['Fig. 3 read as wheels 12, 12, 48 ×6, 12, 12 k at spacings 4, 10, 6, 6, 12, 6, 6, 10, 4 ft, then an 8 ft gap to a uniform 5 k/ft load of unspecified (unlimited) length.'],
+    notes: ['Fig. 3 read as wheels 12, 12, 48 ×6, 12, 12 k at spacings 4, 10, 6, 6, 12, 6, 6, 10, 4 ft, then an 8 ft gap to a uniform 5 k/ft load of unspecified (unlimited) length.', 'Train taken as travelling right to left (wheel 1 leads, the uniform load trails).'],
   },
   {
     id: '2008-09-A4',
@@ -350,7 +340,7 @@ Through truss, 9 @ 16 ft = 144 ft, pin at L₀, roller at L₉, loads on the bot
 $$\\frac{W_1}{40} \\lt \\frac{W_2 + P_k}{60}\\quad\\text{and}\\quad \\frac{W_1 + P_k}{40} \\gt \\frac{W_2}{60}$$
 i.e. the average load per foot on the left span changes sign relative to the right span as $P_k$ crosses B.`}</Md>
           <TrainOnILD ild={ild5} t={T3} span={[0, 100]} section={40} peak={{ x: 40, side: 1 }} what="pier reaction" />
-          <Md>{`**Answer:** maximum pier reaction $= \\mathbf{${fmt(e.max.value)}}$ k, with ${w1 ? `wheel ${w1.k + 1} (${fmt(w1.P)} k) on the pier` : 'the position shown'}, train ${e.max.o === 1 ? 'heading right (wheel 1 leading on the 60 ft span)' : 'heading left (wheel 1 leading on the 40 ft span)'}.`}</Md>
+          <Md>{`**Answer:** maximum pier reaction $= \\mathbf{${fmt(e.max.value)}}$ k, with ${w1 ? `wheel ${w1.k + 1} (${fmt(w1.P)} k) on the pier` : 'the position shown'}, train heading left (wheel 1 leading on the 40 ft span).`}</Md>
         </div>
       )
     },
@@ -612,7 +602,7 @@ Horizontal member C–D–E–F–G–H at 15 ft height: C (0), D (10), E (26), 
       return [
         { key: 'by', label: 'Vertical reaction at B (↑ +)', value: r.reaction('B').ry, unit: 'k' },
         { key: 'ay', label: 'Vertical reaction at A (↑ +)', value: r.reaction('A').ry, unit: 'k' },
-        { key: 'ma', label: 'Moment reaction at A (ccw +)', value: r.reaction('A').m, unit: 'k-ft' },
+        { key: 'ma', label: `Moment reaction at A (${rotTag()})`, value: rot(r.reaction('A').m), unit: 'k-ft' },
         { key: 'mc', label: 'Moment in IJ just below C (sagging +, member read J→C)', value: r.member('JC').M(8), unit: 'k-ft' },
       ]
     },
@@ -620,13 +610,13 @@ Horizontal member C–D–E–F–G–H at 15 ft height: C (0), D (10), E (26), 
       const r = solve(f12)
       return (
         <div className="space-y-3 text-sm">
-          <Md>{`**Right part F–G–H + column G–B** (free body cut at the hinge F): unknowns hinge forces $F_x, F_y$ and $B_y$. $\\sum M_F = 0$ (ccw +): $B_y(10) - 60\\left(10 + \\tfrac{12}{3}\\right) - 20(5) = 0 \\Rightarrow B_y = ${fmt(r.reaction('B').ry)}$ k — the triangle resultant $\\tfrac12(10)(12) = 60$ k acts 4 ft right of G (14 ft from F), and the 20 k ← acts 5 ft below the hinge level (clockwise about F). $\\sum F_x$: the hinge pushes the right part 20 k →, so the left part receives 20 k ←; $\\sum F_y$: the hinge pushes the left part up with $${fmt(r.reaction('B').ry)} - 60 = ${fmt(r.reaction('B').ry - 60)}$ k.
+          <Md>{`**Right part F–G–H + column G–B** (free body cut at the hinge F): unknowns hinge forces $F_x, F_y$ and $B_y$. $\\sum M_F = 0$ (${rotTag()}): $${isCW() ? '-B_y(10) + 60\\left(10 + \\tfrac{12}{3}\\right) + 20(5)' : 'B_y(10) - 60\\left(10 + \\tfrac{12}{3}\\right) - 20(5)'} = 0 \\Rightarrow B_y = ${fmt(r.reaction('B').ry)}$ k — the triangle resultant $\\tfrac12(10)(12) = 60$ k acts 4 ft right of G (14 ft from F), and the 20 k ← acts 5 ft below the hinge level (clockwise about F). $\\sum F_x$: the hinge pushes the right part 20 k →, so the left part receives 20 k ←; $\\sum F_y$: the hinge pushes the left part up with $${fmt(r.reaction('B').ry)} - 60 = ${fmt(r.reaction('B').ry - 60)}$ k.
 
 **Left part**: hinge forces, 70 k at E, the 80 k horizontal load on CJ (resultant 4 ft below C), the 50 k-ft couple at I; the fixed support A balances everything.
 
 **IJ** is a cantilever from C: I–C carries only the couple (constant M = 50 k-ft, zero shear); C–J carries the 10 k/ft load as a cantilever (shear 0 at J → 80 k at C, moment 0 → $10(8)^2/2 = 320$ k-ft at C).`}</Md>
           <FrameSolution model={f12} only={[...CH, ...IJ]} />
-          <Md>{`**Reactions:** $B_y = ${fmt(r.reaction('B').ry)}$ k, $A_x = ${fmt(r.reaction('A').rx)}$ k, $A_y = ${fmt(r.reaction('A').ry)}$ k, $M_A = ${fmt(r.reaction('A').m)}$ k-ft (ccw +).`}</Md>
+          <Md>{`**Reactions:** $B_y = ${fmt(r.reaction('B').ry)}$ k, $A_x = ${fmt(r.reaction('A').rx)}$ k, $A_y = ${fmt(r.reaction('A').ry)}$ k, $M_A = ${fmt(rot(r.reaction('A').m))}$ k-ft (${rotTag()}).`}</Md>
         </div>
       )
     },

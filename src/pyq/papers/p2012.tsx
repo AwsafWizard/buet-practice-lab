@@ -1,5 +1,6 @@
 // 2012-13 term final (held 10 May 2014) — scan pages 21–25 (figures hand-drawn; read from images).
 import type { PYQ } from '../types'
+import { isCW, rotK, rotPos, rotTag } from '../../engine/sign'
 import { solve } from '../../engine/frame2d'
 import { influenceLine, ildAt, ildExtremes } from '../../engine/ild'
 import { cantileverMethod, type GridFrame } from '../../engine/approx'
@@ -172,7 +173,7 @@ const tower = (() => {
 // ============================================================================ Q13 rotation at E
 const f13 = model('A:0,0 B:18,0 D:28,0 E:38,0 C:28,-8', 'A-B B-D D-E C-D', 'A:fixed', [P('B', 5, '5k'), Mo('C', -60, '60 k-ft')])
 const EI13 = (E * 72) / 144
-const vw13 = () => virtualWork(f13, f13.loads, [Mo('E', 1)], { EI: () => EI13 })
+const vw13 = () => virtualWork(f13, f13.loads, [Mo('E', rotK())], { EI: () => EI13 }) // unit couple in the positive rotation sense
 
 // ============================================================================ Q14 vertical loads
 const vf14 = verticalFrame({
@@ -342,7 +343,7 @@ Müller-Breslau: every ILD is piecewise straight with kinks at 2, 4, 5, 7.`}</Md
     checks: () => [{ key: 'm', label: 'Max moment at 20 ft', value: trainExtremes(ild5, train5).max.value, unit: 'k-ft' }],
     solution: () => (
       <div className="space-y-2 text-sm">
-        <Md>{`Moment ILD at 20 ft: triangle with peak $20(60)/80 = 15$. **Criterion:** the critical wheel at the section makes the average load on the left 20 ft ≈ average on the whole 80 ft, i.e. $W_{left} \\approx W/4$ as that wheel crosses. The uniform tail (8 k/ft) adds $w\\times$(area of the ILD it covers). Both directions of travel are checked.`}</Md>
+        <Md>{`Moment ILD at 20 ft: triangle with peak $20(60)/80 = 15$. **Criterion:** the critical wheel at the section makes the average load on the left 20 ft ≈ average on the whole 80 ft, i.e. $W_{left} \\approx W/4$ as that wheel crosses. The uniform tail (8 k/ft) adds $w\\times$(area of the ILD it covers). The train travels right → left (wheel 1 leads, the uniform tail trails); wheel 4 (an 80 k wheel) at the section governs.`}</Md>
         <TrainOnILD ild={ild5} t={train5} span={[0, 80]} section={20} peak={{ x: 20, side: 1 }} what="moment at 20 ft" resUnit="k-ft" />
       </div>
     ),
@@ -626,11 +627,11 @@ $$\\delta_{BD} = \\sum\\frac{NnL}{AE}\\times12\\ \\text{(in)}$$`}</Md>
     pages: PG.B13,
     text: `Find the rotation at end E of the structure in Fig. 10. Cantilever A–E fixed at A: 5 k at B (18 ft from A), D at 28 ft, free end E at 38 ft; an 8 ft bracket hangs below D with a 60 k-ft couple at its end C. $I = 72$ in⁴, $E = 30000$ ksi.`,
     figure: () => <Figure model={f13} dimY />,
-    checks: () => [{ key: 'th', label: 'Rotation at E (rad, + = counter-clockwise)', value: vw13().total, unit: 'rad', tol: 0.02 }],
+    checks: () => [{ key: 'th', label: `Rotation at E (rad, ${rotTag()})`, value: vw13().total, unit: 'rad', tol: 0.02 }],
     solution: () => (
       <div className="space-y-2 text-sm">
-        <Md>{`Unit couple at E (ccw): $m = 1$ (constant, hogging sign per convention) on A–E, zero in the bracket. Real moments: the bracket transmits the 60 k-ft couple to D unchanged, so A–D carries the couple; A–B also carries the 5 k cantilever moment. D–E is unloaded. Then $\\theta_E = \\int Mm/EI\\,dx$, $EI = 30000(72)/144 = ${fmt(EI13)}$ k-ft².`}</Md>
-        <VWSolution model={f13} real={f13.loads} virtual={[Mo('E', 1)]} opts={{ EI: () => EI13 }} resultUnit="rad" what="θ_E" unitNote="+ = counter-clockwise." />
+        <Md>{`Unit couple at E (${rotPos()}): $m = ${isCW() ? '-1' : '1'}$ (constant, ${isCW() ? 'hogging' : 'sagging'}) on A–E, zero in the bracket. Real moments: the bracket transmits the 60 k-ft couple to D unchanged, so A–D carries the couple; A–B also carries the 5 k cantilever moment. D–E is unloaded. Then $\\theta_E = \\int Mm/EI\\,dx$, $EI = 30000(72)/144 = ${fmt(EI13)}$ k-ft².`}</Md>
+        <VWSolution model={f13} real={f13.loads} virtual={[Mo('E', rotK())]} opts={{ EI: () => EI13 }} resultUnit="rad" what="θ_E" unitNote={`+ = ${rotPos()}.`} />
       </div>
     ),
     notes: ['Couple at C read as 60 k-ft clockwise from the sketch; AB read as 18 ft (blurred).', 'Bending only (no A given).'],

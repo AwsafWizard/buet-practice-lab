@@ -1,5 +1,6 @@
 // 2015-16 term final (held 29 Jan 2017) — scan pages 26–29.
 import { useState } from 'react'
+import { isCW, rotK, rotPos, rotTag, rotWord } from '../../engine/sign'
 import type { PYQ } from '../types'
 import { solve } from '../../engine/frame2d'
 import { influenceLine, ildAt, ildExtremes } from '../../engine/ild'
@@ -279,7 +280,7 @@ const ild9 = (id: string) => influenceLine(t9, p9, { kind: 'force', member: id }
 const E = 30000
 const b10 = beamOf('A:0:pin B:15 C:20:roller D:26', [W('AB', 3, { label: '3 k/ft' }), P('B', 10, '10k')])
 const EI10 = (id: string) => (E * (id === 'AB' ? 200 : 100)) / 144
-const vw10 = () => virtualWork(b10, b10.loads, [Mo('D', 1)], { EI: EI10 })
+const vw10 = () => virtualWork(b10, b10.loads, [Mo('D', rotK())], { EI: EI10 }) // unit couple in the positive rotation sense
 
 // ============================================================================ Q11 frame deflection at F
 const f11 = model('C:-9,12 D:-4,12 E:0,12 F:8,12 G:16,12 A:0,0 B:16,0', 'C-D D-E E-F F-G A-E B-G', 'A:pin B:roller', [Mo('C', 50, '50 k-ft'), P('D', 20, '20k'), W('EF', 5, { label: '5 k/ft' })])
@@ -615,14 +616,14 @@ Müller-Breslau shapes: release the function, give a unit displacement; segments
     pages: PG.B10,
     text: `Calculate the change in slope at "D" of the beam in Fig. 9. A pinned, roller at C; AB = 15 ft with $I_1 = 200$ in⁴ carrying 3 k/ft, 10 k at B; BC = 5 ft and overhang CD = 6 ft with $I_2 = 100$ in⁴. $E = 30{,}000$ ksi.`,
     figure: () => <Figure model={b10} />,
-    checks: () => [{ key: 'th', label: 'Rotation at D (rad, + = counter-clockwise)', value: vw10().total, unit: 'rad', tol: 0.03 }],
+    checks: () => [{ key: 'th', label: `Rotation at D (rad, ${rotTag()})`, value: vw10().total, unit: 'rad', tol: 0.03 }],
     solution: () => (
       <div className="space-y-2 text-sm">
-        <Md>{`Virtual system: a **unit couple at D** (counter-clockwise). Its moment diagram: reactions $\\mp 1/20$ at A and C, so $m$ grows linearly from 0 at A to 1 at C and stays 1 on the overhang (CD carries no real moment — free end, no load). Hence only A–C contributes:
+        <Md>{`Virtual system: a **unit couple at D** (${rotPos()}). Its moment diagram: reactions $\\mp 1/20$ at A and C, so $m$ grows linearly from 0 at A to ${isCW() ? '−1' : '1'} at C and stays ${isCW() ? '−1' : '1'} on the overhang (CD carries no real moment — free end, no load). Hence only A–C contributes:
 $$\\theta_D = \\int_A^C \\frac{Mm}{EI}dx,\\qquad EI_1 = \\frac{30000(200)}{144},\\ EI_2 = \\frac{30000(100)}{144}\\ \\text{k-ft}^2$$`}</Md>
-        <VWSolution model={b10} real={b10.loads} virtual={[Mo('D', 1)]} opts={{ EI: EI10 }} resultUnit="rad" what="θ_D" unitNote="+ = counter-clockwise (same sense as the virtual couple)." />
+        <VWSolution model={b10} real={b10.loads} virtual={[Mo('D', rotK())]} opts={{ EI: EI10 }} resultUnit="rad" what="θ_D" unitNote={`+ = ${rotPos()} (same sense as the virtual couple).`} />
         <p>
-          θ<sub>D</sub> = <b className="num">{fmt(Math.abs(vw10().total), 5)} rad</b> {vw10().total > 0 ? 'counter-clockwise' : 'clockwise'} (the sagging span A–C rotates the overhang upward).
+          θ<sub>D</sub> = <b className="num">{fmt(Math.abs(vw10().total), 5)} rad</b> {rotWord(vw10().total)} (the sagging span A–C rotates the overhang upward).
         </p>
       </div>
     ),
@@ -675,7 +676,9 @@ $$\\Delta_F = \\sum\\int\\frac{Mm}{EI}dx + \\sum\\frac{NnL}{AE}$$`}</Md>
     },
     solution: () => (
       <div className="space-y-2 text-sm">
-        <Md>{`Section at $L/3 = 22$ ft: shear ILD $-1/3$ just left, $+2/3$ just right. For maximum positive shear the train comes from the right, a heavy wheel just right of the section. Moving the train forward by one wheel spacing changes the shear by $\\Delta V = \\dfrac{W\\,\\Delta x}{L} - P_{passing}$ (W = load on the span) — stop when ΔV turns negative. With the train reversed (heavy end first) the uniform tail matters too; both directions are checked.`}</Md>
+        <Md>{`Section at $L/3 = 22$ ft: shear ILD $-1/3$ just left, $+2/3$ just right. The train travels right → left, so the 15 k wheel leads. For maximum positive shear a wheel sits just right of the section. Moving the train forward by one wheel spacing changes the shear by $\\Delta V = \\dfrac{W\\,\\Delta x}{L} - P_{passing}$ (W = load on the span) — stop when ΔV turns negative. Letting the 15 k wheel cross (10 ft move) pays off; letting the first 60 k wheel cross (5 ft) does not, so **wheel 2 just right of the section** governs. The first 70 k wheel at the section (wheel 7) comes close but is smaller.
+
+The largest negative shear occurs late, with the four 70 k wheels on the short negative part (wheel 10 just left of the section) and the uniform tail starting on the positive part.`}</Md>
         <TrainOnILD ild={ild12} t={train11} span={[0, 66]} section={22} peak={{ x: 22, side: 1 }} what="shear at 22 ft" />
       </div>
     ),
@@ -693,7 +696,7 @@ $$\\Delta_F = \\sum\\int\\frac{Mm}{EI}dx + \\sum\\frac{NnL}{AE}$$`}</Md>
     checks: () => [{ key: 'm', label: 'Max moment at 20 ft', value: trainExtremes(ild13, train11).max.value, unit: 'k-ft' }],
     solution: () => (
       <div className="space-y-2 text-sm">
-        <Md>{`Moment ILD at $a = 20$ ft: triangle, peak $a(L-a)/L = 15$. **Criterion:** a wheel sits at the section when the average load on the left part (20 ft) equals the average load on the whole span: $W_{left}/a \\approx W/L$, i.e. the load on the left 20 ft ≈ W/4 as the critical wheel crosses the section.`}</Md>
+        <Md>{`Moment ILD at $a = 20$ ft: triangle, peak $a(L-a)/L = 15$. **Criterion:** a wheel sits at the section when the average load on the left part (20 ft) equals the average load on the whole span: $W_{left}/a \\approx W/L$, i.e. the load on the left 20 ft ≈ W/4 as the critical wheel crosses the section. With the train travelling right → left (wheel 1 leads), **wheel 4** at the section governs.`}</Md>
         <TrainOnILD ild={ild13} t={train11} span={[0, 80]} section={20} peak={{ x: 20, side: 1 }} what="moment at 20 ft" resUnit="k-ft" />
       </div>
     ),

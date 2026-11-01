@@ -426,7 +426,7 @@ $$\\Delta_c = 2\\left[\\frac{\\int_0^8 (12x)(0.5x)dx}{EI_1} + \\frac{\\int_0^6 (
     pages: [38, 39],
     text: `Determine the degree of static indeterminacy (DOSI) of the structures in Fig. 10: (a) a column fixed at top and bottom with a beam from its mid-height to a pin, propped by a pinned vertical; (b) a 3-bay, 2-storey frame with fixed outer bases and pinned inner bases; (c) a space frame of 6 pinned columns with a rigid roof grid; (d) a truss with crossing (unconnected) diagonals, pinned and roller-supported at the right wall.`,
     figure: () => (
-      <div className="grid md:grid-cols-2 gap-2">
+      <div className="grid cq-md:grid-cols-2 gap-2">
         <StructureView model={d10a} nodeLabels={false} showLoads={false} maxHeight={200} />
         <StructureView model={d10b} nodeLabels={false} showLoads={false} maxHeight={200} />
         <SpaceFrameFig />
@@ -441,7 +441,7 @@ $$\\Delta_c = 2\\left[\\frac{\\int_0^8 (12x)(0.5x)dx}{EI_1} + \\frac{\\int_0^6 (
     ],
     solution: () => (
       <div className="space-y-3 text-sm">
-        <div className="grid md:grid-cols-2 gap-3">
+        <div className="grid cq-md:grid-cols-2 gap-3">
           <DeterminacyCard m={d10a} label="(a) Frame: two fixed ends + two pins" />
           <DeterminacyCard m={d10b} label="(b) 3-bay, 2-storey frame" />
           <div className="rounded-xl border border-line p-3">
@@ -470,7 +470,7 @@ Check with closed loops: 7 independent loops (ground as one node) × 6 = 42, min
     topics: ['eq'],
     title: 'EQ base shear as % of W: 5-storey commercial at Comilla',
     pages: [39, 41],
-    text: `Calculate the earthquake base shear as a percentage of the seismic dead load of a 5-storied RC commercial building with an assembly hall at Comilla (BNBC 2020). Occupancy category III, structural system IMF, storey height 3 m, GF height 2 m, site class SB, plan 20 m × 20 m. $Z = 0.2$, $I = 1.25$, $R = 5$, damping correction factor $\\eta = 1.2$. (Seismic dead load need not be calculated.) Use Table 1 (site factors) and the normalised spectrum $C_s$ equations.`,
+    text: `Calculate the earthquake base shear as a percentage of the seismic dead load of a 5-storied RC commercial building with an assembly house at Comilla (BNBC 2020). Occupancy category III, structural system IMF, storey height 3 m, GF height 2 m, site class SB, plan 20 m × 20 m. $Z = 0.2$, $I = 1.25$, $R = 5$, damping correction factor $\\eta = 1.2$. (Seismic dead load need not be calculated.) Use Table 1 (site factors) and the normalised spectrum $C_s$ equations.`,
     checks: () => [
       { key: 'T', label: 'Period T', value: eq10.per.T, unit: 's', tol: 0.01 },
       { key: 'Cs', label: 'Normalised spectrum $C_s$', value: eq10.c.Cs },
@@ -489,7 +489,7 @@ Check with closed loops: 7 independent loops (ground as one node) × 6 = 42, min
         </div>
       )
     },
-    notes: ['h_n taken as 2 m (GF) + 5 × 3 m = 17 m, i.e. the 5 storeys sit above a 2 m GF/plinth level as in other BUET papers. If GF is read as the first of the five storeys (h_n = 2 + 4×3 = 14 m) T = 0.50 s and Cs = 2.5Sη → 12 %.', 'Z, I, R and η are given, so they are used directly.'],
+    notes: ['h_n taken as 2 m (GF) + 5 × 3 m = 17 m, i.e. the 5 storeys sit above a 2 m GF/plinth level as in other BUET papers. If GF is read as the first of the five storeys (h_n = 2 + 4×3 = 14 m): T = 0.501 s (just above T_C = 0.5 s), Cs ≈ 3.59 → V ≈ 12.0 % of W.', 'Z, I, R and η are given, so they are used directly.'],
   },
   {
     id: '2019-20-B11',
@@ -554,7 +554,7 @@ function Q3Solution() {
 - Plane at mid-height of the top storey (22 ft): $M = 10(28-22) = 60$ k-ft → $N_{BC} = 60(20)/800 = 1.5$ k (T).
 - Beam shears from joint equilibrium (C: $V_{CD} = N_{BC}$; B: $V_{BF} = N_{AB} - N_{BC}$), beam end moments $= V L/2$, then column moments from the joints, top down, and column shear $= M/(h/2)$.`}</Md>
       <ApproxTables r={r} />
-      <div className="grid md:grid-cols-3 gap-2">
+      <div className="grid cq-md:grid-cols-3 gap-2">
         {(['N', 'V', 'M'] as const).map((k) => (
           <div key={k} className="rounded-xl bg-bg/60 border border-line p-2">
             <div className="text-xs font-semibold text-mute">{k === 'N' ? 'AFD' : k === 'V' ? 'SFD' : 'BMD'} — column ABC</div>

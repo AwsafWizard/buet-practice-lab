@@ -25,7 +25,7 @@ export default function Overview() {
 
   return (
     <div>
-      <div className="grid lg:grid-cols-[1.5fr_1fr] gap-5 mb-5">
+      <div className="grid cq-lg:grid-cols-[1.5fr_1fr] gap-5 mb-5">
         <div className="card p-6 relative overflow-hidden">
           <div className="absolute -right-10 -top-10 opacity-[0.07]">
             <svg width="260" height="200" viewBox="0 0 24 18">
@@ -33,7 +33,7 @@ export default function Overview() {
             </svg>
           </div>
           <div className="text-sm text-mute">{greet} 👋</div>
-          <h1 className="text-2xl md:text-3xl font-extrabold mt-1">
+          <h1 className="text-2xl cq-md:text-3xl font-extrabold mt-1">
             <span className="text-accent num">{days}</span> days to CE 311
           </h1>
           <p className="text-mute mt-1 text-sm">Term final on Saturday, 31 October. One topic at a time — learn it, play with it, then beat the past papers.</p>
@@ -84,7 +84,7 @@ export default function Overview() {
 
       <Section title="What the exam actually asks" sub="Every sub-question of 13 term finals (2007-08 → 2023-24), sorted by topic. Darker = more questions.">
         <Heatmap />
-        <div className="grid md:grid-cols-3 gap-3 mt-4 text-sm">
+        <div className="grid cq-md:grid-cols-3 gap-3 mt-4 text-sm">
           <Insight title="Format since 2020-21">Two sections, 4 questions each, answer any 3 per section — roughly 46⅔ marks per question, ~30 minutes each.</Insight>
           <Insight title="Latest paper (2023-24)">Section A: virtual work, wind, earthquake, live-load reduction, DOSI/DOKI, building codes. Section B: portal, cantilever, wheel loads, truss, truss ILD, floor beam, Müller-Breslau.</Insight>
           <Insight title="Never skipped">Wheel loads, lateral loads (portal/cantilever) and influence lines appear in every recent paper. Wind has 11 parts in the last 3 papers alone.</Insight>
@@ -93,7 +93,7 @@ export default function Overview() {
 
       {(['B', 'A', 'X'] as const).map((g) => (
         <Section key={g} title={SECTION_LABEL[g]}>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid cq-sm:grid-cols-2 cq-lg:grid-cols-3 gap-3">
             {TOPICS.filter((x) => x.section === g).map((tp) => {
               const st = topicStats(attempts, tp.id)
               const n = ALL_PYQ.filter((q) => q.topics.includes(tp.id)).length

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fmt } from '../../components/DiagramView'
 import { checkILD, ILDChart, ILDEditor, type Handle } from '../../components/ILDChart'
-import { makeTransform, StructureView } from '../../components/StructureView'
+import { makeTransform, StructureView, type Dim } from '../../components/StructureView'
 import { Callout, Md, Section, Step, Steps, Tex } from '../../components/ui'
 import { ildAt, influenceLine, type ILD, type Response } from '../../engine/ild'
 import type { Model } from '../../engine/model'
@@ -9,10 +9,11 @@ import { uniformPlusConcentrated } from '../../engine/moving'
 import { beamOf, floorSystem } from '../../kit/builders'
 import { ILDStack, MaxEffect } from '../../kit/solutions'
 import { pick, rng, Slider, TopicFrequency, useSeed } from '../../labs/common'
-import { buildTruss, TRUSS_NAMES, type TrussType } from '../../labs/trusses'
+import { buildTruss, heightDims, TRUSS_NAMES, type TrussType } from '../../labs/trusses'
 import type { PYQ } from '../../pyq/types'
 import { useStore } from '../../store'
 import type { TopicModule } from '../modules'
+import { FloorPlayground } from './FloorPlayground'
 
 // ---------------------------------------------------------------- load path animation
 function LoadPath() {
@@ -117,10 +118,10 @@ function GuessPanel({ kind }: { kind: 'floor' | 'truss' }) {
   const g = useMemo(() => {
     if (kind === 'floor') {
       const f = genFloor(seed)
-      return { model: f.fs.model as Model, label: f.label, truth: f.truth, xs: f.xs, highlight: undefined as string | undefined }
+      return { model: f.fs.model as Model, label: f.label, truth: f.truth, xs: f.xs, highlight: undefined as string | undefined, dims: undefined as Dim[] | undefined }
     }
     const tr = genTrussILD(seed)
-    return { model: tr.model, label: tr.label, truth: tr.truth, xs: tr.model.nodes.filter((q) => q.id.startsWith('L')).map((q) => q.x), highlight: tr.mem }
+    return { model: tr.model, label: tr.label, truth: tr.truth, xs: tr.model.nodes.filter((q) => q.id.startsWith('L')).map((q) => q.x), highlight: tr.mem, dims: heightDims(tr.model) }
   }, [seed, kind])
   const handles: Handle[] = useMemo(() => {
     const out: Handle[] = []
@@ -152,7 +153,7 @@ function GuessPanel({ kind }: { kind: 'floor' | 'truss' }) {
         </button>
       </div>
       <div className="rounded-xl bg-bg/60 border border-line p-2">
-        <StructureView model={g.model} showLoads={false} autoDimX={g.xs} maxWidth={820} maxHeight={300} memberColor={g.highlight ? { [g.highlight]: 'var(--c-load)' } : undefined} />
+        <StructureView model={g.model} showLoads={false} autoDimX={g.xs} dims={g.dims} maxWidth={820} maxHeight={300} memberColor={g.highlight ? { [g.highlight]: 'var(--c-load)' } : undefined} />
         <ILDEditor truth={g.truth} handles={handles} values={values} setValues={setValues} minX={t.minX} maxX={t.maxX} maxWidth={t.W} pad={70} revealed={revealed} results={results} />
       </div>
       <div className="flex gap-2 items-center text-sm">
@@ -191,12 +192,12 @@ function Counters() {
   })
   return (
     <div className="space-y-2">
-      <div className="grid md:grid-cols-3 gap-x-4">
+      <div className="grid cq-md:grid-cols-3 gap-x-4">
         <Slider label="dead w_d" value={wd} min={0} max={5} step={0.5} onChange={setWd} unit=" k/ft" />
         <Slider label="moving w" value={wl} min={0} max={6} step={0.5} onChange={setWl} unit=" k/ft" />
         <Slider label="roving P" value={P} min={0} max={100} step={5} onChange={setP} unit=" k" />
       </div>
-      <div className="grid lg:grid-cols-[1.3fr_1fr] gap-3">
+      <div className="grid cq-lg:grid-cols-[1.3fr_1fr] gap-3">
         <div className="rounded-xl bg-bg/60 border border-line p-2">
           <StructureView model={t.model} showLoads={false} autoDimX maxHeight={240} memberColor={Object.fromEntries(rows.map((r) => [r.id, r.maxC < 0 ? 'var(--c-bad)' : 'var(--c-good)']))} />
         </div>
@@ -229,7 +230,7 @@ function Counters() {
 function Overview() {
   return (
     <div>
-      <Section title="Floor systems" right={<div className="w-72 hidden md:block"><TopicFrequency topic="floor" /></div>}>
+      <Section title="Floor systems" right={<div className="w-72 hidden cq-md:block"><TopicFrequency topic="floor" /></div>}>
         <Md>{`Bridges and many buildings carry the deck on **stringers**, which sit on **floor beams**, which bring the load to the **girders** (or truss panel points). The girder (or truss) is loaded **only at the panel points**, so:
 - every girder/truss ILD is **straight between panel points**;
 - ordinate at a panel point = the ordinate of the ordinary (direct-loading) ILD there;
@@ -272,6 +273,9 @@ function Approach() {
 function Lab() {
   return (
     <div>
+      <Section title="Floor system playground" sub="Build the girder, place the floor beams, then drag the load along the deck. Watch the stringers hand it to the floor beams, and the girder diagrams and ILDs update live.">
+        <FloorPlayground />
+      </Section>
       <Section title="Floor system ILD — guess at the panel points">
         <GuessPanel kind="floor" />
       </Section>

@@ -3,7 +3,7 @@ import type { PYQ } from '../types'
 import { solve } from '../../engine/frame2d'
 import { influenceLine, ildAt, ildExtremes, simplify, type ILD, type LoadPath } from '../../engine/ild'
 import { absoluteMaxMoment, ssMomentILD, ssShearILD, trainExtremes, uniformPlusConcentrated, type Train } from '../../engine/moving'
-import { cablePointLoads, parabolicCable, simpleBeamM, stiffenedSuspension } from '../../engine/cable'
+import { cablePointLoads, hangerGirder, parabolicCable, simpleBeamM, stiffenedSuspension } from '../../engine/cable'
 import type { Model } from '../../engine/model'
 import { beamOf, F, floorSystem, model, P, pathOf, Pm, truss } from '../../kit/builders'
 import { AbsMaxSolution, Figure, FrameSolution, ILDStack, MaxEffect, TrainOnILD, TrainTable, TrussSolution, type ILDItem } from '../../kit/solutions'
@@ -186,6 +186,7 @@ const loads13 = [
   { x: 400, P: 60 },
 ]
 const s13 = stiffenedSuspension({ L: 500, h: 55, xh: 250, loads: loads13 })
+const g13 = hangerGirder({ L: 500, panel: 50, q: s13.q, loads: loads13 })
 const fig13 = (() => {
   const xs = [0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500]
   const yc = (x: number) => 65 - (4 * 55 * x * (500 - x)) / 250000
@@ -352,12 +353,12 @@ Fig. 4: 12, 12, 12, 12, 24, 24, 24, 24, 48, 48, 48, 48 k at spacings 4, 4, 4, 8,
     },
     solution: () => (
       <div className="space-y-3 text-sm">
-        <Md>{`Shear ILD at 20 ft: $-20/80 = -0.25$ just left, $+0.75$ just right. For maximum positive shear put a wheel just right of the section with the heavy part of the train on the long positive segment. Moving the train by one wheel spacing changes the shear by $\\Delta V = -P_{passing} + W\\Delta x/L$; stop when ΔV turns negative. With the 48 k wheels the train is best placed with its **heavy end at the section** (the 48 k group trailing the light wheels), so that no wheel lies on the negative part.`}</Md>
+        <Md>{`Shear ILD at 20 ft: $-20/80 = -0.25$ just left, $+0.75$ just right. The train travels right → left, so the light 12 k wheels lead. For maximum positive shear start with wheel 1 just right of the section and advance one wheel at a time: $\\Delta V = W\\Delta x/L - P_{passing}$ (W = load on the span after the move). Passing a 12 k wheel costs only 12 k while the heavy wheels behind keep coming on, so it pays to push all four 12 k wheels onto the short negative part: **wheel 5 (the first 24 k) just right of the section** gives the maximum (moving on to wheel 6 gives exactly the same value, $\\Delta V = 0$).`}</Md>
         <TrainOnILD ild={ssShearILD(80, 20)} t={t4} span={[0, 80]} section={20} peak={{ x: 20, side: 1 }} what="shear at 20 ft" />
         <Md>{`**Maximum shear = ${fmt(trainExtremes(ssShearILD(80, 20), t4).max.value)} k** (positive).`}</Md>
       </div>
     ),
-    notes: ['The direction of travel is not fixed by the paper, so both directions were searched; the maximum has the 12 k wheels leading toward the right support and the last 48 k wheel just right of the section.'],
+    notes: ['Train taken as travelling right to left (wheel 1, the 12 k end drawn on the left, leads).'],
   },
   {
     id: '2007-08-A5',
@@ -719,10 +720,10 @@ Fig. 13: span 10 @ 50 ft = 500 ft, cable sag 55 ft, stiffening girder hinged at 
 
 $R_A^0 = (80\\cdot300 + 60\\cdot100)/500 = 60$ k, $M_0(250) = 60(250) - 80(50) = 11000$ k-ft → $H = 11000/55 = 200$ k.`}</Md>
         <SuspensionSolution L={500} h={55} xh={250} loads={loads13} panel={50} />
-        <Md>{`Girder reactions at the towers: $V(0) = R_A^0 - qL/2 = 60 - ${fmt((s13.q * 500) / 2)} = ${fmt(s13.V(0))}$ k; key moments: **${fmt(s13.M(200))} k-ft** under the 80 k load, **${fmt(s13.M(100))} k-ft** at 100 ft, **${fmt(s13.M(400))} k-ft** under the 60 k load.`}</Md>
+        <Md>{`Girder reactions at the towers (9 hangers of $F = ${fmt(g13.F)}$ k; each end half-panel goes straight to its tower): $R_A = R_A^0 - 9F/2 = 60 - ${fmt((9 * g13.F) / 2)} = ${fmt(g13.RA)}$ k (downward), $R_C = ${fmt(g13.RB)}$ k; key moments: **${fmt(s13.M(200))} k-ft** under the 80 k load, **${fmt(s13.M(100))} k-ft** at 100 ft, **${fmt(s13.M(400))} k-ft** under the 60 k load.`}</Md>
       </div>
     ),
-    notes: ['Load positions read from Fig. 13: 80 k at the 4th panel point (200 ft) and 60 k at the 8th (400 ft).', 'Girder ends A and C are hinged on the towers; hangers at every 50 ft are idealised as a uniform load (parabolic cable).'],
+    notes: ['Load positions read from Fig. 13: 80 k at the 4th panel point (200 ft) and 60 k at the 8th (400 ft).', 'Girder ends A and C are hinged on the towers; H comes from the uniform-q idealisation (parabolic cable); the diagrams then use the 9 equal hanger forces q × 50 ft, as in the class notes.'],
   },
   {
     id: '2007-08-B14',

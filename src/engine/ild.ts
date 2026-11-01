@@ -3,9 +3,10 @@
 
 import { assemble, type Result, type System } from './frame2d'
 import type { Load, Model } from './model'
+import { rot } from './sign'
 
 export type Response =
-  | { kind: 'reaction'; node: string; comp: 'x' | 'y' | 'm' }
+  | { kind: 'reaction'; node: string; comp: 'x' | 'y' | 'm' } // m in the chosen rotation convention (./sign)
   | { kind: 'shear' | 'moment' | 'axial'; member: string; x: number; side?: -1 | 1 }
   | { kind: 'force'; member: string } // truss bar force (tension +)
   | { kind: 'custom'; fn: (r: Result) => number }
@@ -41,7 +42,7 @@ export function evaluate(r: Result, resp: Response): number {
   switch (resp.kind) {
     case 'reaction': {
       const rr = r.reaction(resp.node)
-      return resp.comp === 'x' ? rr.rx : resp.comp === 'y' ? rr.ry : rr.m
+      return resp.comp === 'x' ? rr.rx : resp.comp === 'y' ? rr.ry : rot(rr.m)
     }
     case 'shear':
       return r.member(resp.member).V(resp.x, resp.side ?? 1)
