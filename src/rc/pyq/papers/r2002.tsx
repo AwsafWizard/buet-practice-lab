@@ -71,14 +71,17 @@ function Fig2() {
         [37, '+1/14'],
         [48, '−1/16'],
       ].map(([x, l], i) => (
-        <T key={i} x={X(x as number)} y={yB - 34} s={11} c={STEEL}>
+        <T key={i} x={X(x as number)} y={yB - 52} s={11} c={STEEL}>
           {l as string}
         </T>
       ))}
       <DimH x1={X(0.5)} x2={X(24)} y={yB + 82} label="24′-0″ clear" />
       <DimH x1={X(25)} x2={X(48.5)} y={yB + 82} label="24′-0″ clear" />
-      <T x={540} y={40} s={11} c={MUTE}>
-        T-section, 5″ slab
+      <T x={540} y={18} s={11} c={MUTE}>
+        Section 1-1: T-section, 5″ slab
+      </T>
+      <T x={30} y={yB - 52} s={11} c={STEEL} a="end">
+        ACI
       </T>
     </Fig>
   )
@@ -95,17 +98,11 @@ function Fig6() {
       ))}
       <DimH x1={60 + 6 * s} x2={60 + 150 * s} y={yS + 34} label="12′" />
       <DimH x1={60 + 150 * s} x2={60 + 294 * s} y={yS + 34} label="12′" />
-      <T x={330} y={yS - 70} s={11}>
-        upstand (inverted) beams 12″ wide, depth not given
+      <T x={300} y={22} s={11}>
+        Sec. A–A: upstand (inverted) beams 12″ wide (depth not given), 5″ slab at the bottom
       </T>
-      <T x={330} y={yS + 26} s={11}>
-        5″ slab at the bottom
-      </T>
-      <T x={480} y={60} a="start" s={11} c={MUTE}>
-        16 ft cantilever
-      </T>
-      <T x={480} y={76} a="start" s={11} c={MUTE}>
-        from the support face
+      <T x={300} y={40} s={11} c={MUTE}>
+        the slab and beams cantilever 16 ft from the support face (into the page)
       </T>
     </Fig>
   )
@@ -118,7 +115,10 @@ function Fig9() {
   return (
     <Fig w={600} h={210}>
       <rect x={X(-0.5)} y={y} width={41 * s} height={24} fill={CONC} stroke={INK} />
-      <Udl x1={X(-0.5)} x2={X(40.5)} y={y} label="3 k/ft (factored)" />
+      <Udl x1={X(-0.5)} x2={X(40.5)} y={y} />
+      <T x={X(35)} y={y - 22} c={LOAD}>
+        3 k/ft (factored)
+      </T>
       {[10, 20, 30].map((x) => (
         <PLoad key={x} x={X(x)} y={y - 18} label="30 k" len={30} />
       ))}

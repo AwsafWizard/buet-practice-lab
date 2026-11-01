@@ -77,7 +77,7 @@ function Fig6() {
       <rect x={xc} y={yT} width={16 * s} height={h} fill={CONC} stroke={INK} />
       <Ln x1={X(16)} y1={yT - 30} x2={X(16)} y2={yT + h + 150} c={MUTE} dash="6 3" />
       <T x={X(16)} y={yT - 34} s={11} c={MUTE}>
-        ℄ midspan
+        midspan
       </T>
       {/* top bars */}
       <polyline points={`${xc - 30},${yT + 24} ${xc - 30},${yT + 5} ${X(12)},${yT + 5}`} fill="none" stroke={STEEL} strokeWidth={2.4} />
@@ -110,7 +110,7 @@ function Fig6() {
       <DimH x1={xc} x2={X(6)} y={262} label="6′" />
       <DimH x1={X(6)} x2={X(10)} y={262} label="4′" />
       <DimH x1={X(10)} x2={X(16)} y={262} label="6′" />
-      <DimH x1={xc} x2={X(16)} y={284} label="16′ (face to ℄)" />
+      <DimH x1={xc} x2={X(16)} y={284} label="16′ (column face to midspan)" />
       <T x={xc - 12} y={16} s={11}>
         18″ col.
       </T>
@@ -227,7 +227,7 @@ function SectionSketch({ kind }: { kind: 'T' | 'R' }) {
         <Bars x1={x0 + 2.5 * s} x2={x0 + bw - 2.5 * s} y={20 + 25 * s - 2.5 * s} n={4} r={0.5 * s} />
         <Bars x1={x0 + 2.5 * s} x2={x0 + bw - 2.5 * s} y={20 + 25 * s - 2.5 * s - 2 * s} n={3} r={0.5 * s} />
         <Bars x1={x0 + 2.4 * s} x2={x0 + bw - 2.4 * s} y={20 + 2.4 * s} n={3} r={0.375 * s} />
-        <DimV y1={20} y2={20 + 25 * s} x={x0 + bw + 26} label="25″" />
+        <DimV y1={20} y2={20 + 25 * s} x={x0 - 16} label="25″" left />
         <DimV y1={20} y2={20 + 5 * s} x={30} label="5″" left />
         <DimH x1={x0} x2={x0 + bw} y={20 + 25 * s + 16} label="13″" below />
         <T x={x0 + bw + 50} y={20 + 23 * s} a="start" s={11}>

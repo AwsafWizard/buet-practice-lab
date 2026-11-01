@@ -509,11 +509,11 @@ export function detailSol(list: readonly (readonly [string, number])[], note = '
               </T>
             )
           })}
-          <T x={20} y={196} a="start" s={11} c={STEEL}>
-            top:
+          <T x={598} y={196} a="end" s={11} c={STEEL}>
+            top
           </T>
-          <T x={20} y={222} a="start" s={11} c={LOAD}>
-            bottom:
+          <T x={598} y={222} a="end" s={11} c={LOAD}>
+            bottom
           </T>
         </FourSpanFig>
       </Sol>
@@ -1178,8 +1178,7 @@ export function CoverSketch() {
       <rect x={72} y={32} width={86} height={136} fill="none" stroke={STEEL} strokeWidth={2} rx={4} />
       <Bars x1={84} x2={146} y={155} n={3} r={6} />
       <Bars x1={82} x2={148} y={44} n={2} r={4} />
-      <DimH x1={60} x2={72} y={110} label="" />
-      <T x={66} y={100} s={11}>
+      <T x={56} y={114} a="end" s={11}>
         1½″
       </T>
       <T x={115} y={196} s={11}>
@@ -1190,7 +1189,9 @@ export function CoverSketch() {
         <Ln key={i} x1={275 + i * 38} y1={124} x2={275 + i * 38} y2={124} />
       ))}
       <Bars x1={275} x2={465} y={122} n={6} r={3.5} />
-      <DimV y1={125.5} y2={130} x={490} label="¾″ clear" />
+      <T x={490} y={134} a="start" s={11}>
+        ¾″
+      </T>
       <T x={370} y={160} s={11}>
         slab: ¾″ clear cover
       </T>

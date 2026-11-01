@@ -711,7 +711,7 @@ export function cantSlabSteps(r: CantSlabResult, factorNote?: string): St[] {
     },
     {
       t: 'Bars',
-      md: `Bottom: **#${r.bar} @ ${f(r.pos.s)} in c/c** ($\\le 3h$, 18 in). Top over the cantilever support: alternate bottom bars cranked up (one per ${f(r.extra.width)} in) + ${r.extra.sExtra ? `**extra #${r.bar} @ ${f(r.extra.sExtra)} in c/c**` : 'no extra bars needed'} (or straight top bars #${r.bar} @ ${f(r.straight.s)} in). Top bars run ${f(r.topExt, 2)} ft into the span. T&S: **#3 @ ${f(r.ts.s)} in c/c** perpendicular.`,
+      md: `Bottom: **#${r.bar} @ ${f(r.pos.s)} in c/c** ($\\le 3h$, 18 in). Top over the cantilever support: alternate bottom bars cranked up (one per ${f(r.extra.width)} in) + ${r.extra.sExtra ? `**extra #${r.bar} @ ${f(Math.min(r.extra.sExtra, r.smax))} in c/c**${r.extra.sExtra > r.smax ? ' (calculated ' + f(r.extra.sExtra) + ' in; spacing limit used)' : ''}` : 'no extra bars needed'} (or straight top bars #${r.bar} @ ${f(r.straight.s)} in). Top bars run ${f(r.topExt, 2)} ft into the span. T&S: **#3 @ ${f(r.ts.s)} in c/c** perpendicular.`,
     },
     {
       t: 'Shear',
@@ -765,7 +765,7 @@ export function SlabSketch({ r, beams = false }: { r: CantSlabResult; beams?: bo
         {`bottom #${r.bar} @ ${f(r.pos.s)}″ c/c, alternate bars cranked (orange)`}
       </T>
       <T x={300} y={44} s={11}>
-        {r.extra.sExtra ? `extra top #${r.bar} @ ${f(r.extra.sExtra)}″ c/c (dashed), ${f(ext, 2)}′ past the support face` : `top: cranked bars suffice, ${f(ext, 2)}′ past the support face`}
+        {r.extra.sExtra ? `extra top #${r.bar} @ ${f(Math.min(r.extra.sExtra, r.smax))}″ c/c (dashed), ${f(ext, 2)}′ past the support face` : `top: cranked bars suffice, ${f(ext, 2)}′ past the support face`}
       </T>
       {cl > 0 && <DimH x1={X(0)} x2={xs1} y={yT + t + 20} label={`${f(cl)}′`} below />}
       <DimH x1={xs1 + bw * s} x2={xs2} y={yT + t + 20} label={`${f(sp)}′ clear`} below />
