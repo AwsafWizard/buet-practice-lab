@@ -13,6 +13,7 @@ import { wu as wuOf } from '../../engine/materials'
 import type { RcQ, RcTopicModule } from '../../types'
 import { CutoffSketch, StdCutoffFig } from './figs'
 import { BondDesignProblems } from './DesignProblems'
+import { BarGeoExplainer } from './geo'
 import { BondLab } from './lab'
 import { BOND_THEORY } from './theory'
 import { PickSection } from '../../components/PickDrill'
@@ -110,6 +111,10 @@ function Approach() {
           <Step n={7} title="Minimums">ld ≥ 12 in; ldh ≥ max(8db, 6 in); ldc ≥ 8 in; laps ≥ 12 in.</Step>
           <Step n={8} title="Compare and round up">Available length (column depth − cover, distance to the free end …) vs required; round up to the whole inch.</Step>
         </Steps>
+      </Section>
+
+      <Section title="Clear spacing, clear cover and cb" sub="Table 6.1 uses CLEAR distances (bar surface to surface); Eq. 6.4 uses distances to the bar CENTRE. Change the section and watch every step.">
+        <BarGeoExplainer />
       </Section>
 
       <Section title="Which formula?" sub="Start from how the bar ends.">

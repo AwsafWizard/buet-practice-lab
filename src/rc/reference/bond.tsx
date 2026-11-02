@@ -6,6 +6,7 @@ import { Md, Tex } from '../../components/ui'
 import { Lookup, NumIn, ok, RT } from '../../reference/common'
 import { bar, compressionLap, ldcCalc, ldhCalc, ldSimplified, MM_BAR_IDS, standardCutoffs, tableA10, tableA11, US_BAR_IDS } from '../engine/bond'
 import { CutoffRulesFig, ftIn, HookFig, StdCutoffFig } from '../topics/bond/figs'
+import { BarGeoExplainer } from '../topics/bond/geo'
 import { useUsed, type RcRefItem } from './pane'
 
 function BarPick({ v, set }: { v: string; set: (s: string) => void }) {
@@ -371,6 +372,7 @@ function StepsBody() {
 
 export const BOND_ITEMS: RcRefItem[] = [
   { id: 'b-ld', group: 'bond', title: 'Development length in tension — simplified & general', tag: 'Table 6.1 · Eq. 6.4', keywords: 'ld development length straight bar tension 25 20 cb Ktr confinement', Body: LdBody },
+  { id: 'b-geo', group: 'bond', title: 'Clear spacing, clear cover and cb', tag: 'Table 6.1 · Eq. 6.4', keywords: 'clear spacing clear cover cb centre to centre c/c half spacing splitting plane bar fit one layer', Body: BarGeoExplainer },
   { id: 'b-psi', group: 'bond', title: 'ψ and λ modification factors', tag: 'ACI 25.4.2.5', keywords: 'psi top bar epoxy lightweight lambda size factor', Body: PsiBody },
   { id: 'b-hook', group: 'bond', title: 'Hooked bars: ldh and hook geometry', tag: 'Eq. 6.6 · ACI 25.3', keywords: 'hook ldh standard hook 90 180 bend diameter 12db', Body: HookBody },
   { id: 'b-ldc', group: 'bond', title: 'Development in compression', tag: 'Eq. 6.10', keywords: 'ldc compression column dowel', Body: LdcBody },

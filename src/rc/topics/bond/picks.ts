@@ -325,7 +325,7 @@ const cb: PickSkill = {
       options: choices(r, L(g.cb), [L(g.cSide), L(g.halfSpacing), L(g.spacingCC), L(g.clearSpacing), L(g.clearSide)]),
       answer: L(g.cb),
       why: `cb = smaller of bar **centre** to the nearest face (1.5 + 0.375 + db/2 = ${f(g.cSide, 3)} in) and **half** the centre-to-centre spacing (${f(g.spacingCC, 3)}/2 = ${f(g.halfSpacing, 3)} in) → ${f(g.cb, 3)} in. Clear distances are for Table 6.1, not cb.`,
-      ref: 'b-ld',
+      ref: 'b-geo',
     }
   },
 }
