@@ -11,6 +11,8 @@ import { PanelPlan } from './plan'
 import { TwoWaySolution } from './solution'
 import { TWOWAY_THEORY } from './theory'
 import { TwoWayDesign } from './DesignProblems'
+import { PickSection } from '../../components/PickDrill'
+import { TWOWAY_PICKS } from './picks'
 
 const TID = 'rc-twoway'
 const E = (s: string): Edges => ({ top: s.includes('t'), right: s.includes('r'), bottom: s.includes('b'), left: s.includes('l') })
@@ -271,6 +273,7 @@ function Approach() {
 function Lab() {
   return (
     <div>
+      <PickSection topic="rc-twoway" skills={TWOWAY_PICKS} />
       <Section title="Design problems" sub="A floor plan with several panels: identify panel S1's case from its neighbours, then design it in the class order and check each step.">
         <TwoWayDesign />
       </Section>

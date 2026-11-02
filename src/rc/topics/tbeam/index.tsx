@@ -12,6 +12,8 @@ import { Badge, BarsSel, f, FC_OPTS, Flow, FY_OPTS, newSeed, Num, ProblemBox, Se
 import { ReviewSolution } from '../doubly/solve'
 import { TBeamDesign } from './DesignProblems'
 import { BeffSolution, FloorSolution, RectDesignSolution, RectReviewSolution, TDesignSolution, TReviewSolution, TSketch, WsdSolution } from './solve'
+import { PickSection } from '../../components/PickDrill'
+import { TBEAM_PICKS } from './picks'
 
 const TOPIC = 'rc-tbeam'
 
@@ -611,6 +613,7 @@ const problems: RcQ[] = [
 function LabTab() {
   return (
     <div className="space-y-6">
+      <PickSection topic="rc-tbeam" skills={TBEAM_PICKS} />
       <TBeamDesign />
       <Lab />
     </div>

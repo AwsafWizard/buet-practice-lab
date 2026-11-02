@@ -11,6 +11,8 @@ import { BarsSel, Badge, f, FC_OPTS, Flow, FY_OPTS, newSeed, Num, ProblemBox, Se
 import { DesignSolution, DoublySketch, ReviewSolution } from './solve'
 import { DesignProblems } from '../singly/DesignProblems'
 import { D_FAMILIES, makeDoublyDesign } from './design'
+import { PickSection } from '../../components/PickDrill'
+import { DOUBLY_PICKS } from './picks'
 
 const TOPIC = 'rc-doubly'
 
@@ -329,6 +331,7 @@ function Lab() {
   const [mode, setMode] = useState<'review' | 'design'>('review')
   return (
     <div>
+      <PickSection topic="rc-doubly" skills={DOUBLY_PICKS} />
       <Section title="Design problems" sub="b × h fixed by architecture, M_u above the singly limit → compression steel, f′s from the strain, bars and review. 🎲 for a new one.">
         <DesignProblems topic={TOPIC} families={D_FAMILIES} make={makeDoublyDesign} />
       </Section>

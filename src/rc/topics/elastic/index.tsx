@@ -15,6 +15,8 @@ import { BAR_OPTS, Checks, COUNT_OPTS, FC_OPTS, Num, Prompt, Sel, useMark } from
 import { SectionSketch, SolSteps, StageDiagram } from './ui'
 import { DesignProblems } from '../singly/DesignProblems'
 import { E_FAMILIES, makeElasticDesign } from './design'
+import { PickSection } from '../../components/PickDrill'
+import { ELASTIC_PICKS } from './picks'
 
 const T = 'rc-elastic'
 
@@ -387,6 +389,7 @@ function Lab() {
   const [random, setRandom] = useState(false)
   return (
     <div>
+      <PickSection topic="rc-elastic" skills={ELASTIC_PICKS} />
       <Section title="Design problems" sub="WSD design from the loads (k, j, R, d, A_s), WSD with the section fixed (compression steel?), and the service-load check of a USD beam. 🎲 for a new one.">
         <DesignProblems topic={T} families={E_FAMILIES} make={makeElasticDesign} note="Service loads (no load factors) in WSD; ft, kip, in, ksi; moments in k-ft. Answers within 2 % are accepted." />
       </Section>

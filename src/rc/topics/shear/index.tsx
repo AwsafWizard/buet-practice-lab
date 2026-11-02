@@ -8,6 +8,8 @@ import { ShearDesignProblems } from './DesignProblems'
 import { ShearLab } from './Lab'
 import { layoutText, ShearSolution } from './Solution'
 import { SHEAR_THEORY } from './theory'
+import { PickSection } from '../../components/PickDrill'
+import { SHEAR_PICKS } from './picks'
 
 const f2 = (v: number) => fmt(v, 2)
 
@@ -212,6 +214,7 @@ export default mod
 function ShearLabPage() {
   return (
     <div className="space-y-6">
+      <PickSection topic="rc-shear" skills={SHEAR_PICKS} />
       <ShearDesignProblems />
     <Section title="Stirrup design lab" sub="Build the beam (or 🎲), fill the checkpoints, then make the layout pass and open the full solution. The code pane highlights the case you are in.">
       <ShearLab />

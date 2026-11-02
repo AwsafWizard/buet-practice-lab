@@ -97,6 +97,13 @@ export function groupOfRcRef(id: string | undefined): RcRefGroup | null {
   return p === 'm' ? 'mat' : p === 'f' ? 'flex' : p === 's' ? 'shear' : p === 'b' ? 'bond' : p === 'sl' ? 'slab' : p === 'st' ? 'steps' : null
 }
 
+/** open the pane on one item (its group, expanded, scrolled to) */
+export function openRcRef(id: string) {
+  const group = groupOfRcRef(id)
+  if (!group) return
+  setPane({ open: true, focus: null, group, expanded: state.expanded.includes(id) ? state.expanded : [...state.expanded, id], jump: id })
+}
+
 export const RC_GROUP_LABEL: Record<RcRefGroup, string> = { mat: 'Materials & bars', flex: 'Flexure', shear: 'Shear & torsion', bond: 'Bond', slab: 'Slabs', steps: 'Steps' }
 export const RC_GROUP_ORDER: RcRefGroup[] = ['mat', 'flex', 'shear', 'bond', 'slab', 'steps']
 

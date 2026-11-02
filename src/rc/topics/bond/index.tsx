@@ -15,6 +15,8 @@ import { CutoffSketch, StdCutoffFig } from './figs'
 import { BondDesignProblems } from './DesignProblems'
 import { BondLab } from './lab'
 import { BOND_THEORY } from './theory'
+import { PickSection } from '../../components/PickDrill'
+import { BOND_PICKS } from './picks'
 
 const f = (v: number, d = 2) => fmt(v, d)
 const T = ({ children }: { children: string }) => <Tex block>{children}</Tex>
@@ -171,6 +173,7 @@ function Approach() {
 function Lab() {
   return (
     <div className="space-y-6">
+      <PickSection topic="rc-bond" skills={BOND_PICKS} />
       <BondDesignProblems />
       <BondLab />
     </div>

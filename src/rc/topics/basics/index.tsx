@@ -13,6 +13,8 @@ import type { RcQ, RcTheoryItem, RcTopicModule } from '../../types'
 import { Checks, Num, Prompt, Sel, useMark } from '../elastic/inputs'
 import { SolSteps } from '../elastic/ui'
 import { PhiChart } from '../singly/charts'
+import { PickSection } from '../../components/PickDrill'
+import { BASICS_PICKS } from './picks'
 
 const T = 'rc-basics'
 
@@ -259,6 +261,7 @@ function Approach() {
 function Lab() {
   return (
     <div>
+      <PickSection topic="rc-basics" skills={BASICS_PICKS} />
       <Section title="Loads → w_u → M_u" sub="The first step of every beam design. Line loads or floor loads over a tributary width.">
         <LoadsLab />
       </Section>

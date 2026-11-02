@@ -10,6 +10,8 @@ import { CantSketch, ContSketch } from './sketch'
 import { CantSolution, CoefSolution } from './solution'
 import { ONEWAY_THEORY } from './theory'
 import { OneWayDesign } from './DesignProblems'
+import { PickSection } from '../../components/PickDrill'
+import { ONEWAY_PICKS } from './picks'
 
 const TID = 'rc-oneway'
 const END_OPTS: { v: EndSupport; label: string }[] = (['spandrel', 'column', 'unrestrained'] as EndSupport[]).map((v) => ({ v, label: END_LABEL[v] }))
@@ -434,6 +436,7 @@ function Lab() {
   const [tab, setTab] = useState<'cont' | 'cant'>('cont')
   return (
     <div>
+      <PickSection topic="rc-oneway" skills={ONEWAY_PICKS} />
       <Section title="Design problems" sub="A full paper-style question each roll: floor plan or strip, loads, materials. Work it in the class order, check each step, then open the full solution.">
         <OneWayDesign />
       </Section>

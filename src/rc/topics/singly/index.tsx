@@ -14,6 +14,8 @@ import { SectionSketch, SolSteps } from '../elastic/ui'
 import { PhiChart, StrainLimits } from './charts'
 import { makeSinglyDesign, S_FAMILIES } from './design'
 import { DesignProblems } from './DesignProblems'
+import { PickSection } from '../../components/PickDrill'
+import { SINGLY_PICKS } from './picks'
 
 const T = 'rc-singly'
 
@@ -482,6 +484,7 @@ function Lab() {
   const [mode, setMode] = useState<'review' | 'design' | 'limits'>('review')
   return (
     <div>
+      <PickSection topic="rc-singly" skills={SINGLY_PICKS} />
       <Section title="Design problems" sub="Paper-style design from the beam and its loads: self-weight, w_u, M_u, d, A_s, bars, ε_t check. 🎲 for a new one; full solution at the bottom.">
         <DesignProblems topic={T} families={S_FAMILIES} make={makeSinglyDesign} />
       </Section>

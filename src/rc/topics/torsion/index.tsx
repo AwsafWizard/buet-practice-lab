@@ -9,6 +9,8 @@ import { spandrelTorque, threshold, torsionCheck, torsionSection, TOR_SHAPES, ty
 import { markUsed } from '../../reference/pane'
 import type { RcQ, RcTopicModule } from '../../types'
 import { TORSION_THEORY } from './theory'
+import { PickSection } from '../../components/PickDrill'
+import { TORSION_PICKS } from './picks'
 
 const f2 = (v: number) => fmt(v, 2)
 
@@ -348,9 +350,12 @@ function TorsionLab() {
 
 function Lab() {
   return (
+    <>
+    <PickSection topic="rc-torsion" skills={TORSION_PICKS} />
     <Section title="Threshold-torsion lab" sub="Section shape, flange rule, Tcr, φTth and the neglect decision. Torsion design itself is not in the syllabus.">
       <TorsionLab />
     </Section>
+    </>
   )
 }
 
