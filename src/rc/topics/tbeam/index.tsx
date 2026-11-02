@@ -432,7 +432,7 @@ const theory: RcTheoryItem[] = [
         <path d="M10,28 C90,26 140,6 180,4 C220,6 270,26 350,28" fill="none" stroke="var(--c-bad)" strokeWidth={2} />
         <rect x={115} y={4} width={130} height={24} fill="var(--c-accent)" fillOpacity={0.2} stroke="var(--c-accent)" strokeDasharray="3 2" />
         <text x={180} y={104} fontSize={10} textAnchor="middle" fill="var(--c-mute)">
-          actual flange stress (red) vs uniform stress over beff (blue)
+          actual flange stress (red) vs uniform stress over beff (amber)
         </text>
       </svg>
     ),

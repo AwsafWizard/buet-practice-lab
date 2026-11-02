@@ -234,7 +234,7 @@ export function SpacingChart({ dsg, layouts }: { dsg: ShearDesign; layouts: Reco
         )
       })}
       <text x={X(0)} y={H - 4} fontSize={9.5} fill="var(--c-faint)">
-        blue: required spacing s(x) (top = not required) · bars: your spacing, green OK, red too wide
+        amber line: required spacing s(x) (top = not required) · bars: your spacing, green OK, red too wide
       </text>
     </svg>
   )
