@@ -51,7 +51,7 @@ export function ShearSolution({ bm, sec, dsg, layouts, barLabel = '#3 two-legged
       <div className="font-bold">2. Concrete shear strength (φ = {phi})</div>
       <Tex block>{`\\phi V_c = \\phi\\,2\\lambda\\sqrt{f'_c}\\,b_wd = ${phi}\\times2\\times${lim.lambda}\\times${f2(sqrt)}\\times${sec.bw}\\times${sec.d}/1000 = ${f2(lim.phiVc)}\\ \\text{k},\\quad \\tfrac12\\phi V_c = ${f2(lim.halfPhiVc)}\\ \\text{k}`}</Tex>
       <Tex block>{`\\phi4\\sqrt{f'_c}b_wd = ${f2(lim.phiVs4)}\\ \\text{k},\\quad \\phi8\\sqrt{f'_c}b_wd = ${f2(lim.phiVs8)}\\ \\text{k},\\quad V_{u,\\max} = \\phi V_c + \\phi8\\sqrt{f'_c}b_wd = ${f2(lim.VuMax)}\\ \\text{k}`}</Tex>
-      <Tex block>{`\\left(\\tfrac{A_v}{s}\\right)_{\\min} = \\max\\left(\\frac{0.75\\sqrt{f'_c}b_w}{f_y}, \\frac{50b_w}{f_y}\\right) = \\max(${f4(lim.avsMin1)},\\ ${f4(lim.avsMin2)}) = ${f4(lim.avsMin)}\\ \\text{in}^2/\\text{in};\\quad A_v = ${f2(lim.Av)}\\ \\text{in}^2\\ (${barLabel})`}</Tex>
+      <Tex block>{`\\left(\\tfrac{A_v}{s}\\right)_{\\min} = \\max\\left(\\frac{0.75\\sqrt{f'_c}b_w}{f_y}, \\frac{50b_w}{f_y}\\right) = \\max(${f4(lim.avsMin1)},\\ ${f4(lim.avsMin2)}) = ${f4(lim.avsMin)}\\ \\text{in}^2/\\text{in};\\quad A_v = ${f2(lim.Av)}\\ \\text{in}^2\\ \\text{(${barLabel.replace(/#/g, '\\#')})}`}</Tex>
       {distinctRuns(dsg).map(({ run: r, same }, k) => {
         const a = shearAt(r.Vd, sec)
         const lay = lays[r.id]

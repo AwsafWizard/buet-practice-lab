@@ -3,11 +3,14 @@ import { fmt } from '../../../components/DiagramView'
 import { checkLayout, type RunLayout, type ShearBeam, type ShearDesign, type ShearRun } from '../../engine/shear'
 
 const W = 680,
-  M = 46
+  M = 46,
+  MR = 76 // right margin: room for the φVc / φVc/2 labels
 
 function xScale(Ltot: number) {
-  return (x: number) => M + (x / Ltot) * (W - 2 * M)
+  return (x: number) => M + (x / Ltot) * (W - M - MR)
 }
+/** rough width of an svg text run (px) */
+const textW = (t: string, fs: number) => t.length * fs * 0.58
 /** beam x (ft) of a point u (in) along a run */
 export const runX = (r: ShearRun, u: number) => r.face + (r.dir * u) / 12
 
@@ -20,6 +23,24 @@ export function BeamLoads({ bm, dsg }: { bm: ShearBeam; dsg: ShearDesign }) {
   const P = bm.P ?? []
   const Pmax = Math.max(1, ...P.map((p) => p.P + (p.PL ?? 0)))
   const hasW = (bm.wD ?? 0) + (bm.wL ?? 0) > 0 || !!bm.selfWeight
+  const wText = (bm.factored ? `w = ${fmt(bm.wD ?? 0, 2)} k/ft` : `w_D = ${fmt(bm.wD ?? 0, 2)}, w_L = ${fmt(bm.wL ?? 0, 2)} k/ft`) + (bm.selfWeight ? ` + self-wt ${fmt(dg.wsw, 3)}` : '')
+  // point-load labels: right of the arrow unless that runs off the svg
+  const pLab = P.map((p) => {
+    const t = `${fmt(p.P, 1)}${p.PL ? `+${fmt(p.PL, 1)}L` : ''} k`
+    const w = textW(t, 10)
+    const flip = X(p.x) + 4 + w > W - 2
+    return { t, flip, x0: flip ? X(p.x) - 6 - w : X(p.x) - 6, x1: flip ? X(p.x) + 6 : X(p.x) + 6 + w }
+  })
+  // w label: right-aligned in the widest stretch not taken by a load arrow or its label
+  const taken = pLab.map((l) => [l.x0, l.x1]).sort((a, b) => a[0] - b[0])
+  let gap = [X(0), X(0)],
+    cur = X(0)
+  for (const [a, b] of [...taken, [X(dg.Ltot), X(dg.Ltot)]]) {
+    const e = Math.min(a, X(dg.Ltot))
+    if (e - cur > gap[1] - gap[0]) gap = [cur, e]
+    cur = Math.max(cur, b)
+  }
+  const wFits = gap[1] - gap[0] >= textW(wText, 10)
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
       <defs>
@@ -30,9 +51,8 @@ export function BeamLoads({ bm, dsg }: { bm: ShearBeam; dsg: ShearDesign }) {
       {hasW && (
         <g>
           <rect x={X(0)} y={y0 - 16} width={X(dg.Ltot) - X(0)} height={10} fill="var(--c-load, #f59e0b)" fillOpacity={0.25} stroke="var(--c-load, #f59e0b)" strokeWidth={0.8} />
-          <text x={X(dg.Ltot)} y={y0 - 19} fontSize={10} textAnchor="end" fill="var(--c-mute)">
-            {bm.factored ? `w = ${fmt(bm.wD ?? 0, 2)} k/ft` : `w_D = ${fmt(bm.wD ?? 0, 2)}, w_L = ${fmt(bm.wL ?? 0, 2)} k/ft`}
-            {bm.selfWeight ? ` + self-wt ${fmt(dg.wsw, 3)}` : ''}
+          <text x={wFits ? gap[1] : (gap[0] + gap[1]) / 2} y={y0 - 19} fontSize={10} textAnchor={wFits ? 'end' : 'middle'} fill="var(--c-mute)">
+            {wText}
           </text>
         </g>
       )}
@@ -41,9 +61,8 @@ export function BeamLoads({ bm, dsg }: { bm: ShearBeam; dsg: ShearDesign }) {
         return (
           <g key={i}>
             <line x1={X(p.x)} x2={X(p.x)} y1={y0 - 18 - len} y2={y0 - 3} stroke="var(--c-load, #f59e0b)" strokeWidth={2} markerEnd="url(#shl-ar)" />
-            <text x={X(p.x) + 4} y={y0 - 20 - len + 10} fontSize={10} fill="var(--c-ink)" className="num">
-              {fmt(p.P, 1)}
-              {p.PL ? `+${fmt(p.PL, 1)}L` : ''} k
+            <text x={pLab[i].flip ? X(p.x) - 4 : X(p.x) + 4} y={y0 - 20 - len + 10} fontSize={10} textAnchor={pLab[i].flip ? 'end' : 'start'} fill="var(--c-ink)" className="num">
+              {pLab[i].t}
             </text>
           </g>
         )
@@ -84,11 +103,18 @@ export function BeamLoads({ bm, dsg }: { bm: ShearBeam; dsg: ShearDesign }) {
 export function VuDiagram({ dsg, d, showMarks = true }: { dsg: ShearDesign; d: number; showMarks?: boolean }) {
   const { dg, lim, runs } = dsg
   const X = xScale(dg.Ltot)
-  const H = 250,
+  const vs = [...dg.env.flatMap((e) => [e.Vmax, e.Vmin]), ...dg.pts.map((p) => p.V)]
+  const vmax = Math.max(lim.phiVc * 1.15, ...vs.map(Math.abs))
+  // only give the negative (or positive) half room when the shear actually goes there, e.g. not for a cantilever
+  const hasPos = Math.max(...vs) > 0.02 * vmax,
+    hasNeg = Math.min(...vs) < -0.02 * vmax
+  const hi = hasPos ? vmax : 0.08 * vmax,
+    lo = hasNeg ? -vmax : -0.08 * vmax
+  const H = hasPos && hasNeg ? 250 : 180,
     top = 18,
     bot = 26
-  const vmax = Math.max(lim.phiVc * 1.15, ...dg.env.map((e) => Math.max(Math.abs(e.Vmax), Math.abs(e.Vmin))))
-  const Y = (v: number) => top + ((vmax - v) / (2 * vmax)) * (H - top - bot)
+  const Y = (v: number) => top + ((hi - v) / (hi - lo)) * (H - top - bot)
+  const labSg = hasPos ? 1 : -1
   const multi = dg.cases.length > 1
   const path = (get: (e: (typeof dg.env)[number]) => number) => dg.env.map((e, i) => `${i ? 'L' : 'M'}${X(e.x).toFixed(1)},${Y(get(e)).toFixed(1)}`).join(' ')
   const main = dg.pts.map((p, i) => `${i ? 'L' : 'M'}${X(p.x).toFixed(1)},${Y(p.V).toFixed(1)}`).join(' ')
@@ -109,11 +135,11 @@ export function VuDiagram({ dsg, d, showMarks = true }: { dsg: ShearDesign; d: n
       )}
       <path d={main} fill="none" stroke="var(--c-accent)" strokeWidth={2} />
       {lines.map(([v, lab, dash]) =>
-        [1, -1].map((sg) => (
+        [1, -1].filter((sg) => (sg === 1 ? hasPos : hasNeg)).map((sg) => (
           <g key={lab + sg}>
             <line x1={X(0)} x2={X(dg.Ltot)} y1={Y(sg * v)} y2={Y(sg * v)} stroke={v === lim.phiVc ? 'var(--c-good)' : 'var(--c-load, #f59e0b)'} strokeDasharray={dash} strokeWidth={1.2} />
-            {sg === 1 && (
-              <text x={X(dg.Ltot) + 3} y={Y(v) + 3} fontSize={9.5} fill="var(--c-mute)" className="num">
+            {sg === labSg && (
+              <text x={X(dg.Ltot) + 3} y={Y(sg * v) + 3} fontSize={9.5} fill="var(--c-mute)" className="num">
                 {lab} {fmt(v, 1)}
               </text>
             )}
