@@ -13,6 +13,7 @@ import { TWOWAY_THEORY } from './theory'
 import { TwoWayDesign } from './DesignProblems'
 import { PickSection } from '../../components/PickDrill'
 import { TWOWAY_PICKS } from './picks'
+import { TwoWaySpacingSim } from './SpacingSim'
 
 const TID = 'rc-twoway'
 const E = (s: string): Edges => ({ top: s.includes('t'), right: s.includes('r'), bottom: s.includes('b'), left: s.includes('l') })
@@ -274,6 +275,9 @@ function Lab() {
   return (
     <div>
       <PickSection topic="rc-twoway" skills={TWOWAY_PICKS} />
+      <Section title="Bar spacing simulator" sub="Set the middle-strip and column-strip spacings both ways and watch the bar mesh redraw on the panel. Middle strips are checked for strength and 2h, column strips for the 1.5× rule, As,min and 2h.">
+        <TwoWaySpacingSim />
+      </Section>
       <Section title="Design problems" sub="A floor plan with several panels: identify panel S1's case from its neighbours, then design it in the class order and check each step.">
         <TwoWayDesign />
       </Section>

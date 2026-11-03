@@ -12,6 +12,7 @@ import { ONEWAY_THEORY } from './theory'
 import { OneWayDesign } from './DesignProblems'
 import { PickSection } from '../../components/PickDrill'
 import { ONEWAY_PICKS } from './picks'
+import { OneWaySpacingSim } from './SpacingSim'
 
 const TID = 'rc-oneway'
 const END_OPTS: { v: EndSupport; label: string }[] = (['spandrel', 'column', 'unrestrained'] as EndSupport[]).map((v) => ({ v, label: END_LABEL[v] }))
@@ -437,6 +438,9 @@ function Lab() {
   return (
     <div>
       <PickSection topic="rc-oneway" skills={ONEWAY_PICKS} />
+      <Section title="Bar spacing simulator" sub="Pick the bar size and spacing for the bottom bars, the extra top bars over the support and the T&S bars. The sections redraw live and every spacing rule is checked as you move the sliders.">
+        <OneWaySpacingSim />
+      </Section>
       <Section title="Design problems" sub="A full paper-style question each roll: floor plan or strip, loads, materials. Work it in the class order, check each step, then open the full solution.">
         <OneWayDesign />
       </Section>
