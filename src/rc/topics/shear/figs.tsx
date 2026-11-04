@@ -328,3 +328,192 @@ export function CaseChart({ Vu, phiVc }: { Vu?: number; phiVc?: number }) {
     </svg>
   )
 }
+
+// ---------------------------------------------------------------- forces at a diagonal crack (no web steel)
+/** arrow from (x1,y1) to (x2,y2), head at the end */
+function Ar({ x1, y1, x2, y2, c, dash }: { x1: number; y1: number; x2: number; y2: number; c: string; dash?: boolean }) {
+  const a = Math.atan2(y2 - y1, x2 - x1)
+  const hx = x2 - 8 * Math.cos(a),
+    hy = y2 - 8 * Math.sin(a)
+  const px = 4 * Math.sin(a),
+    py = -4 * Math.cos(a)
+  return (
+    <g stroke={c} fill={c}>
+      <line x1={x1} y1={y1} x2={hx} y2={hy} strokeWidth={dash ? 1.2 : 2} strokeDasharray={dash ? '4 3' : undefined} />
+      <polygon points={`${hx + px},${hy + py} ${hx - px},${hy - py} ${x2},${y2}`} stroke="none" />
+    </g>
+  )
+}
+
+/** label with a subscript, e.g. V + cz */
+function Lb({ x, y, b, s, c = 'var(--c-ink)', end }: { x: number; y: number; b: string; s?: string; c?: string; end?: boolean }) {
+  return (
+    <text x={x} y={y} fill={c} fontWeight={600} textAnchor={end ? 'end' : 'start'}>
+      {b}
+      {s && (
+        <tspan dy={3} fontSize={9}>
+          {s}
+        </tspan>
+      )}
+    </text>
+  )
+}
+
+/** horizontal dimension with end ticks, label above */
+function Dim({ x1, x2, y, b, s }: { x1: number; x2: number; y: number; b: string; s?: string }) {
+  return (
+    <g stroke="var(--c-mute)">
+      <line x1={x1} x2={x2} y1={y} y2={y} />
+      <line x1={x1} x2={x1} y1={y - 5} y2={y + 5} />
+      <line x1={x2} x2={x2} y1={y - 5} y2={y + 5} />
+      <g stroke="none">
+        <Lb x={(x1 + x2) / 2 - 6} y={y - 4} b={b} s={s} c="var(--c-mute)" />
+      </g>
+    </g>
+  )
+}
+
+/** Nilson Fig 4.7 / 5.7: (a) where the free body comes from and why T_b follows M_a, (b) the free body itself */
+export function CrackedShearFig() {
+  const ink = 'var(--c-ink)',
+    mute = 'var(--c-mute)',
+    load = 'var(--c-load, #f59e0b)',
+    comp = 'var(--c-comp)',
+    steel = 'var(--c-steel)',
+    shear = 'var(--c-shear)',
+    mom = 'var(--c-moment)'
+  // (a) beam 40–620, P1 = 0.5 at s = 60, P2 = 2 at s = 380 → R_l = 1.138; M drawn to scale (max 64 px)
+  const mY = (s: number) => {
+    const M = s <= 60 ? 1.138 * s : s <= 380 ? 1.138 * s - 0.5 * (s - 60) : 0.862 * (580 - s)
+    return 124 + (64 * M) / 272.4
+  }
+  // (b) free body: top 280, bottom 440, steel 418; crack from bottom (350,440) to its tip a (470,322);
+  // it crosses the steel at b ≈ (356,418); V_i is drawn right of the crack, parallel to it (−0.8, 0.6)
+  const crack = 'M350,440 C353,395 410,332 470,322'
+  return (
+    <svg viewBox="0 0 640 580" className="w-full h-auto max-w-2xl" fontSize={12} fill={ink}>
+      {/* ---------------- (a) */}
+      <text x={8} y={14} fontSize={11} fill={mute} fontWeight={700}>
+        (a) Beam with a diagonal crack; the shaded part left of it is the free body
+      </text>
+      <rect x={40} y={34} width={580} height={60} fill="var(--c-conc)" stroke={ink} />
+      <path d="M40,34 H265 V46 C236,54 212,74 210,94 H40 Z" fill="var(--c-accent)" fillOpacity={0.18} />
+      <line x1={44} x2={616} y1={86} y2={86} stroke={steel} strokeWidth={2.5} />
+      <path d="M210,94 C212,74 236,54 265,46" fill="none" stroke={comp} strokeWidth={2} />
+      {[380, 420, 460, 500].map((x) => (
+        <line key={x} x1={x} x2={x + 2} y1={94} y2={72} stroke={comp} strokeWidth={1} />
+      ))}
+      <path d="M40,94 l-7,12 h14 z M620,94 l-7,12 h14 z" fill="none" stroke={mute} />
+      <Ar x1={100} y1={24} x2={100} y2={33} c={load} />
+      <Lb x={106} y={30} b="P" s="1" c={load} />
+      <Ar x1={420} y1={18} x2={420} y2={33} c={load} />
+      <Lb x={426} y={26} b="P" s="2" c={load} />
+      <text x={204} y={90} fill={comp} fontWeight={700} textAnchor="end">
+        b
+      </text>
+      <text x={270} y={50} fill={comp} fontWeight={700}>
+        a
+      </text>
+      <polygon points={[40, 100, 420, 620].map((x) => `${x},${x === 40 || x === 620 ? 124 : mY(x - 40)}`).join(' ') + ' 620,124 40,124'} fill={mom} fillOpacity={0.15} stroke={mom} />
+      <line x1={210} x2={210} y1={124} y2={mY(170)} stroke={mom} strokeWidth={2} />
+      <line x1={265} x2={265} y1={124} y2={mY(225)} stroke={mom} strokeWidth={2} />
+      <line x1={210} x2={210} y1={94} y2={124} stroke={mute} strokeDasharray="2 3" />
+      <line x1={265} x2={265} y1={46} y2={124} stroke={mute} strokeDasharray="2 3" />
+      <Lb x={204} y={mY(170) + 12} b="M" s="b" c={mom} end />
+      <Lb x={271} y={mY(225) + 12} b="M" s="a" c={mom} />
+      <text x={30} y={134} fill={mom} textAnchor="end">
+        M
+      </text>
+      <text x={8} y={212} fontSize={11.5} fill={mute}>
+        After cracking, the bar at b carries T
+        <tspan dy={3} fontSize={9}>b</tspan>
+        <tspan dy={-3}> ≈ M</tspan>
+        <tspan dy={3} fontSize={9}>a</tspan>
+        <tspan dy={-3}>/z, set by the moment at the crack tip a (M</tspan>
+        <tspan dy={3} fontSize={9}>a</tspan>
+        <tspan dy={-3}> {'>'} M</tspan>
+        <tspan dy={3} fontSize={9}>b</tspan>
+        <tspan dy={-3}>).</tspan>
+      </text>
+
+      {/* ---------------- (b) */}
+      <text x={8} y={248} fontSize={11} fill={mute} fontWeight={700}>
+        (b) Free body left of the crack, with every force acting on it
+      </text>
+      <path d="M80,280 H470 V322 C410,332 353,395 350,440 H80 Z" fill="var(--c-conc)" stroke={ink} />
+      <path d={crack} fill="none" stroke={comp} strokeWidth={2.2} />
+      <line x1={84} x2={356} y1={418} y2={418} stroke={steel} strokeWidth={3} />
+      <text x={344} y={412} fill={comp} fontWeight={700} textAnchor="end">
+        b
+      </text>
+      <text x={462} y={318} fill={comp} fontWeight={700} textAnchor="end">
+        a
+      </text>
+      {/* external */}
+      <Ar x1={100} y1={492} x2={100} y2={442} c={load} />
+      <Lb x={108} y={486} b="R" s="l" c={load} />
+      <Ar x1={210} y1={258} x2={210} y2={279} c={load} />
+      <Lb x={218} y={268} b="P" s="1" c={load} />
+      {/* compression zone */}
+      <Ar x1={560} y1={294} x2={472} y2={294} c={comp} />
+      <Lb x={566} y={298} b="C" c={comp} />
+      <Ar x1={486} y1={302} x2={486} y2={346} c={comp} />
+      <Lb x={494} y={340} b="V" s="cz" c={comp} />
+      {/* aggregate interlock along the crack */}
+      <Ar x1={446} y1={352} x2={404} y2={384} c={shear} />
+      <Ar x1={446} y1={352} x2={446} y2={384} c={shear} dash />
+      <Ar x1={446} y1={384} x2={404} y2={384} c={shear} dash />
+      <Lb x={452} y={348} b="V" s="i" c={shear} />
+      <Lb x={452} y={374} b="V" s="iy" c={shear} />
+      <Lb x={418} y={400} b="V" s="ix" c={shear} />
+      {/* steel */}
+      <Ar x1={358} y1={418} x2={432} y2={418} c={steel} />
+      <Lb x={438} y={422} b="T" s="b" c={steel} />
+      <Ar x1={356} y1={422} x2={356} y2={472} c={steel} />
+      <Lb x={364} y={468} b="V" s="d" c={steel} />
+      {/* lever arms */}
+      <line x1={562} x2={596} y1={294} y2={294} stroke={mute} strokeDasharray="2 3" />
+      <line x1={476} x2={596} y1={418} y2={418} stroke={mute} strokeDasharray="2 3" />
+      <line x1={590} x2={590} y1={294} y2={418} stroke={mute} />
+      <line x1={585} x2={595} y1={294} y2={294} stroke={mute} />
+      <line x1={585} x2={595} y1={418} y2={418} stroke={mute} />
+      <Lb x={596} y={360} b="z" c={mute} />
+      <line x1={470} x2={470} y1={324} y2={530} stroke={mute} strokeDasharray="2 3" />
+      <line x1={356} x2={356} y1={476} y2={506} stroke={mute} strokeDasharray="2 3" />
+      <line x1={210} x2={210} y1={282} y2={506} stroke={mute} strokeDasharray="2 3" strokeOpacity={0.5} />
+      <line x1={100} x2={100} y1={494} y2={530} stroke={mute} strokeDasharray="2 3" />
+      <Dim x1={100} x2={210} y={502} b="x" s="1" />
+      <Dim x1={356} x2={470} y={502} b="p" />
+      <Dim x1={100} x2={470} y={526} b="x" s="a" />
+      <text x={8} y={554} fontSize={11.5}>
+        ΣF
+        <tspan dy={3} fontSize={9}>y</tspan>
+        <tspan dy={-3}>: V</tspan>
+        <tspan dy={3} fontSize={9}>ext</tspan>
+        <tspan dy={-3}> = R</tspan>
+        <tspan dy={3} fontSize={9}>l</tspan>
+        <tspan dy={-3}> − P₁ = V</tspan>
+        <tspan dy={3} fontSize={9}>cz</tspan>
+        <tspan dy={-3}> + V</tspan>
+        <tspan dy={3} fontSize={9}>d</tspan>
+        <tspan dy={-3}> + V</tspan>
+        <tspan dy={3} fontSize={9}>iy</tspan>
+      </text>
+      <text x={8} y={573} fontSize={11.5}>
+        ΣM about a: T
+        <tspan dy={3} fontSize={9}>b</tspan>
+        <tspan dy={-3}>·z = M</tspan>
+        <tspan dy={3} fontSize={9}>ext,a</tspan>
+        <tspan dy={-3}> − V</tspan>
+        <tspan dy={3} fontSize={9}>d</tspan>
+        <tspan dy={-3}>·p + V</tspan>
+        <tspan dy={3} fontSize={9}>i</tspan>
+        <tspan dy={-3}>·m ≈ M</tspan>
+        <tspan dy={3} fontSize={9}>ext,a</tspan>
+        <tspan dy={-3} fill={mute}>   (m = lever arm of V</tspan>
+        <tspan dy={3} fontSize={9} fill={mute}>i</tspan>
+        <tspan dy={-3} fill={mute}> about a)</tspan>
+      </text>
+    </svg>
+  )
+}

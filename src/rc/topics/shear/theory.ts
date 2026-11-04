@@ -1,4 +1,5 @@
 import type { RcTheoryItem } from '../../types'
+import { CrackedShearFig } from './figs'
 
 const T = 'rc-shear' as const
 
@@ -83,7 +84,7 @@ Rule of thumb: compression from the reaction and the load on top ⇒ d; anything
     topic: T,
     q: 'With neat sketches, show the components that resist shear at a diagonally cracked section of a beam **without** web reinforcement. (How does an RC beam without stirrups resist shear?)',
     seen: ['2023-24', '2009-10'],
-    a: `Draw the free body of the beam left of a diagonal crack: the reaction $R_l$, load $P_1$, the crack rising from the tension steel to the compression zone, and the internal forces.
+    a: `Draw the free body of the beam left of a diagonal crack (sketch below): the reaction $R_l$, load $P_1$, the crack rising from the tension steel to the compression zone, and the internal forces.
 
 $$V_{ext} = R_l - P_1 = V_{int} = V_{cz} + V_d + V_{iy}$$
 
@@ -95,6 +96,7 @@ $$V_{ext} = R_l - P_1 = V_{int} = V_{cz} + V_d + V_{iy}$$
 Moment equilibrium about the compression resultant: $T_b z \\approx M_{ext,a}$. The **steel force at the bottom of the crack is set by the moment at the crack tip (point a)**, which is larger than the moment at the same section before cracking.
 
 Together $V_c = V_{cz} + V_d + V_{iy}$ is the "concrete contribution". The code takes it conservatively as $V_c = 2\\lambda\\sqrt{f'_c}b_wd$, the lower-bound line through the test data.`,
+    Fig: CrackedShearFig,
   },
   {
     id: 'ts-truss-derive',
