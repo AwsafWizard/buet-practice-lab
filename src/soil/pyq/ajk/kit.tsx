@@ -434,3 +434,45 @@ export function NcCuCdSolution({ s3, devU, devD }: { s3: number; devU: number; d
     </Sol>
   )
 }
+
+// ---------------------------------------------------------------- p′–q plot (modified failure envelope, Kf line)
+export function PQPlot({ pts, a, alpha, width = 520, height = 260 }: { pts: { p: number; q: number }[]; a: number; alpha: number; width?: number; height?: number }) {
+  const L = 44,
+    B = 30,
+    Tm = 12,
+    Rm = 12
+  const pmax = Math.max(10, ...pts.map((x) => x.p)) * 1.15
+  const ta = Math.tan((alpha * Math.PI) / 180)
+  const qmax = Math.max(10, ...pts.map((x) => x.q), a + pmax * ta) * 1.1
+  const k = Math.min((width - L - Rm) / pmax, (height - B - Tm) / qmax)
+  const X = (p: number) => L + p * k
+  const Y = (q: number) => height - B - q * k
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="w-full" role="img" aria-label="p′–q diagram">
+      <line x1={L} x2={width - Rm} y1={Y(0)} y2={Y(0)} stroke="var(--c-ink)" />
+      <line x1={L} x2={L} y1={Tm} y2={Y(0)} stroke="var(--c-ink)" />
+      <text x={width - Rm} y={Y(0) + 14} fontSize={10} textAnchor="end" fill="var(--c-ink)">
+        p′ = (σ′1 + σ′3)/2 (kPa)
+      </text>
+      <text x={L + 4} y={Tm + 8} fontSize={10} fill="var(--c-ink)">
+        q = (σ1 − σ3)/2 (kPa)
+      </text>
+      <line x1={X(0)} y1={Y(a)} x2={X(pmax)} y2={Y(a + pmax * ta)} stroke="var(--c-accent2)" strokeWidth={1.6} />
+      <text x={X(pmax) - 4} y={Y(a + pmax * ta) + 14} fontSize={9.5} textAnchor="end" fill="var(--c-accent2)">
+        Kf line: q = {f2(a)} + p′ tan {f2(alpha)}°
+      </text>
+      <circle cx={X(0)} cy={Y(a)} r={3} fill="var(--c-accent2)" />
+      <text x={X(0) + 5} y={Y(a) - 5} fontSize={9.5} fill="var(--c-accent2)">
+        a = {f2(a)}
+      </text>
+      {pts.map((x, i) => (
+        <g key={i}>
+          <circle cx={X(x.p)} cy={Y(x.q)} r={4} fill="var(--c-load)" />
+          <text x={X(x.p) + 5} y={Y(x.q) + 13} fontSize={9} fill="var(--c-mute)">
+            ({f1(x.p)}, {f1(x.q)})
+          </text>
+        </g>
+      ))}
+    </svg>
+  )
+}
