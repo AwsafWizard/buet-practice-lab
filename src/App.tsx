@@ -21,9 +21,11 @@ const QuestionPage = lazy(() => import('./pages/QuestionPage'))
 const ScreenTime = lazy(() => import('./pages/ScreenTime'))
 
 const RcApp = lazy(() => import('./rc/RcApp'))
+const SmApp = lazy(() => import('./soil/SmApp'))
 
-export type CourseKey = 'home' | 'ce311' | 'ce315'
-export const courseOf = (pathname: string): CourseKey => (pathname === '/' ? 'home' : pathname.startsWith('/ce315') ? 'ce315' : 'ce311')
+export type CourseKey = 'home' | 'ce311' | 'ce315' | 'ce341'
+export const courseOf = (pathname: string): CourseKey =>
+  pathname === '/' ? 'home' : pathname.startsWith('/ce315') ? 'ce315' : pathname.startsWith('/ce341') ? 'ce341' : 'ce311'
 
 export default function App() {
   const theme = useStore((s) => s.theme)
@@ -34,7 +36,7 @@ export default function App() {
   }, [theme])
   useEffect(() => {
     document.documentElement.dataset.course = course
-    document.title = course === 'ce315' ? 'CE 315 Practice Lab' : course === 'ce311' ? 'CE 311 Practice Lab' : 'Practice Lab'
+    document.title = course === 'home' ? 'Practice Lab' : `CE ${course.slice(2)} Practice Lab`
   }, [course])
   useEffect(() => {
     window.scrollTo({ top: 0 })
@@ -42,7 +44,7 @@ export default function App() {
   }, [loc.pathname, course])
   return (
     <Suspense fallback={<div className="text-mute p-10">Loading…</div>}>
-      {course === 'home' ? <CoursePicker /> : course === 'ce315' ? <RcApp /> : <Ce311App />}
+      {course === 'home' ? <CoursePicker /> : course === 'ce315' ? <RcApp /> : course === 'ce341' ? <SmApp /> : <Ce311App />}
     </Suspense>
   )
 }
@@ -147,7 +149,7 @@ type ArtifactWindow = {
   claude?: { use(name: 'downloads'): Promise<{ save(r: { filename: string; data: string }): Promise<unknown> } | null> }
 }
 
-export function SidebarFooter({ course }: { course: 'ce311' | 'ce315' }) {
+export function SidebarFooter({ course }: { course: 'ce311' | 'ce315' | 'ce341' }) {
   const theme = useStore((s) => s.theme)
   const setTheme = useStore((s) => s.setTheme)
   const side = useStore((s) => s.bmdSide)

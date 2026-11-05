@@ -54,7 +54,7 @@ const emit = () => {
 /** which course the open page belongs to (App sets html[data-course]) */
 const courseNow = () => {
   const c = typeof document !== 'undefined' ? document.documentElement.dataset.course : undefined
-  return c === 'ce311' || c === 'ce315' ? c : undefined
+  return c === 'ce311' || c === 'ce315' || c === 'ce341' ? c : undefined
 }
 
 function flush() {

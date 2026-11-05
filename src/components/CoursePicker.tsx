@@ -4,12 +4,14 @@ import { Link } from 'react-router-dom'
 import { ALL_PYQ } from '../pyq'
 import { RC_ALL } from '../rc/pyq'
 import { RC_EXAM_DATE } from '../rc/plan'
+import { SM_ALL } from '../soil/pyq'
+import { SM_EXAM_DATE } from '../soil/plan'
 import { EXAM_DATE } from '../pages/planner/template'
 import { today, useStore } from '../store'
 import { Ring } from './ui'
 
 interface Course {
-  key: 'ce311' | 'ce315'
+  key: 'ce311' | 'ce315' | 'ce341'
   code: string
   name: string
   exam: string
@@ -22,6 +24,17 @@ interface Course {
 }
 
 export const COURSES: Course[] = [
+  {
+    key: 'ce341',
+    code: 'CE 341',
+    name: 'Principles of Soil Mechanics',
+    exam: SM_EXAM_DATE,
+    home: '/ce341',
+    qids: SM_ALL.map((q) => q.id),
+    checkPrefix: (k) => k.startsWith('sm-'),
+    light: { bg: '#fbfcf5', ink: '#20261a', mute: '#5c6650', acc: '#4d7c0f', line: '#d6dcc6' },
+    dark: { bg: '#161b12', ink: '#e9efdd', mute: '#a3ad92', acc: '#a3e635', line: '#2f3a26' },
+  },
   {
     key: 'ce315',
     code: 'CE 315',
@@ -40,7 +53,7 @@ export const COURSES: Course[] = [
     exam: EXAM_DATE,
     home: '/ce311',
     qids: ALL_PYQ.map((q) => q.id),
-    checkPrefix: (k) => !k.startsWith('rc-'),
+    checkPrefix: (k) => !k.startsWith('rc-') && !k.startsWith('sm-'),
     light: { bg: '#fffdf8', ink: '#1d2433', mute: '#5e6575', acc: '#0e7490', line: '#ddd5c4' },
     dark: { bg: '#111a2b', ink: '#e6edf7', mute: '#96a3ba', acc: '#38bdf8', line: '#23314c' },
   },

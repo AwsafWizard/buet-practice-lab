@@ -35,6 +35,8 @@
   --color-axial: var(--c-axial);
   --color-steel: var(--c-steel);
   --color-conc: var(--c-conc);
+  --color-water: var(--c-water);
+  --color-soil: var(--c-soil);
 }
 
 :root,
@@ -59,6 +61,8 @@
   --c-axial: #b45309;
   --c-steel: #334155;
   --c-conc: #e7e2d6;
+  --c-water: #2563eb;
+  --c-soil: #c8b48a;
   --grid: rgba(29, 36, 51, 0.05);
   color-scheme: light;
 }
@@ -84,6 +88,8 @@
   --c-axial: #fcd34d;
   --c-steel: #cbd5e1;
   --c-conc: #1c2740;
+  --c-water: #60a5fa;
+  --c-soil: #6b5a3c;
   --grid: rgba(56, 189, 248, 0.05);
   color-scheme: dark;
 }
@@ -137,6 +143,59 @@
   --grid: rgba(251, 191, 36, 0.06);
 }
 
+/* CE 341 (soil mechanics): moss, light and dark */
+[data-course='ce341'][data-theme='light'],
+[data-course='ce341']:not([data-theme]) {
+  --c-bg: #eff1e8;
+  --c-panel: #fbfcf5;
+  --c-panel2: #eceee0;
+  --c-line: #d6dcc6;
+  --c-ink: #20261a;
+  --c-mute: #5c6650;
+  --c-faint: #98a189;
+  --c-accent: #4d7c0f;
+  --c-accent2: #9a3412;
+  --c-load: #9a3412;
+  --c-good: #15803d;
+  --c-bad: #be123c;
+  --c-tension: #1d4ed8;
+  --c-comp: #b91c1c;
+  --c-member: #20261a;
+  --c-moment: #7c3aed;
+  --c-shear: #0f766e;
+  --c-axial: #b45309;
+  --c-steel: #44403c;
+  --c-conc: #e4e2d3;
+  --c-water: #2563eb;
+  --c-soil: #c8b48a;
+  --grid: rgba(77, 124, 15, 0.08);
+}
+[data-course='ce341'][data-theme='dark'] {
+  --c-bg: #10140d;
+  --c-panel: #161b12;
+  --c-panel2: #1d2418;
+  --c-line: #2f3a26;
+  --c-ink: #e9efdd;
+  --c-mute: #a3ad92;
+  --c-faint: #6c7760;
+  --c-accent: #a3e635;
+  --c-accent2: #fdba74;
+  --c-load: #fdba74;
+  --c-good: #4ade80;
+  --c-bad: #fb7185;
+  --c-tension: #60a5fa;
+  --c-comp: #f87171;
+  --c-member: #e9efdd;
+  --c-moment: #c4b5fd;
+  --c-shear: #5eead4;
+  --c-axial: #fcd34d;
+  --c-steel: #d6d3d1;
+  --c-conc: #262c1f;
+  --c-water: #60a5fa;
+  --c-soil: #6b5a3c;
+  --grid: rgba(163, 230, 53, 0.05);
+}
+
 html,
 body,
 #root {
@@ -161,6 +220,12 @@ body {
     radial-gradient(var(--grid) 1.4px, transparent 1.9px);
   background-size: 23px 23px, 31px 31px, 47px 47px;
   background-position: 0 0, 9px 15px, 21px 5px;
+}
+/* CE 341: faint wavy soil strata instead of the blueprint grid */
+[data-course='ce341'] body {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='120'%3E%3Cg fill='none' stroke='%2384a05a' stroke-opacity='0.13' stroke-width='1'%3E%3Cpath d='M0 22 Q60 14 120 22 T240 22'/%3E%3Cpath d='M0 61 Q60 69 120 59 T240 61'/%3E%3Cpath d='M0 97 Q60 90 120 99 T240 97'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 240px 120px;
 }
 /* course picker: neutral page */
 [data-course='home'] body {

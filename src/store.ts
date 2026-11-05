@@ -32,6 +32,20 @@ export type RcTopicId =
   | 'rc-oneway'
   | 'rc-twoway'
 
+/** CE 341 (soil mechanics) topics; the sm- prefix keeps their check ids apart */
+export type SmTopicId =
+  | 'sm-wv'
+  | 'sm-plast'
+  | 'sm-class'
+  | 'sm-struct'
+  | 'sm-shear'
+  | 'sm-lep'
+  | 'sm-comp'
+  | 'sm-perm'
+  | 'sm-seep'
+  | 'sm-consol'
+  | 'sm-stress'
+
 export interface Attempt {
   tries: number
   correct: boolean
@@ -41,7 +55,7 @@ export interface Attempt {
 
 export interface PlanBlock {
   id: string
-  topic: TopicId | RcTopicId | 'mixed' | 'mock' | 'setup'
+  topic: TopicId | RcTopicId | SmTopicId | 'mixed' | 'mock' | 'setup'
   title: string
   hours: number
   kind: 'learn' | 'practice' | 'revise' | 'mock'
@@ -78,6 +92,8 @@ interface State {
   planner: PlannerState | null
   /** CE 315's own study plan */
   planner315: PlannerState | null
+  /** CE 341's own study plan */
+  planner341: PlannerState | null
   qStatus: Record<string, 'todo' | 'tried' | 'solved' | 'review'>
   mockScores: Record<string, { at: number; secA: number; secB: number; note?: string }>
   timeLog: TimeLog
@@ -85,7 +101,7 @@ interface State {
   courseLog: TimeLog
   timeAdjust: TimeAdjust
   timeGoal: number // hours per day
-  /** when each setting / question status last changed (keys: planner, planner315, timeGoal, bmdSide, rotSign, q:<id>), so syncing keeps the later one */
+  /** when each setting / question status last changed (keys: planner, planner315, planner341, timeGoal, bmdSide, rotSign, q:<id>), so syncing keeps the later one */
   stamps: Record<string, number>
   setTheme(t: 'dark' | 'light'): void
   setBmdSide(s: 'compression' | 'tension'): void
@@ -94,6 +110,7 @@ interface State {
   reveal(id: string): void
   setPlanner(p: PlannerState): void
   setPlanner315(p: PlannerState): void
+  setPlanner341(p: PlannerState): void
   setQStatus(id: string, s: 'todo' | 'tried' | 'solved' | 'review'): void
   saveMock(id: string, secA: number, secB: number, note?: string): void
   addTime(device: string, day: string, seconds: number, course?: string): void
@@ -122,6 +139,7 @@ const initial = {
   activity: {},
   planner: null,
   planner315: null as PlannerState | null,
+  planner341: null as PlannerState | null,
   qStatus: {},
   mockScores: {},
   timeLog: {} as TimeLog,
@@ -165,6 +183,7 @@ export const useStore = create<State>()(
       reveal: (id) => set({ revealed: { ...get().revealed, [id]: true } }),
       setPlanner: (planner) => set({ planner, stamps: stamp(get().stamps, 'planner') }),
       setPlanner315: (planner315) => set({ planner315, stamps: stamp(get().stamps, 'planner315') }),
+      setPlanner341: (planner341) => set({ planner341, stamps: stamp(get().stamps, 'planner341') }),
       setQStatus: (id, s) => set({ qStatus: { ...get().qStatus, [id]: s }, stamps: stamp(get().stamps, 'q:' + id) }),
       saveMock: (id, secA, secB, note) => set({ mockScores: { ...get().mockScores, [id]: { at: Date.now(), secA, secB, note } } }),
       addTime(device, day, seconds, course) {
@@ -197,8 +216,8 @@ useStore.subscribe((s) => setClockwise(s.rotSign !== 'ccw'))
 
 export function exportState(): string {
   const s = useStore.getState()
-  const { attempts, revealed, xp, streak, activity, planner, planner315, qStatus, mockScores, timeLog, courseLog, timeAdjust, timeGoal, stamps, theme, bmdSide, rotSign } = s
-  return JSON.stringify({ attempts, revealed, xp, streak, activity, planner, planner315, qStatus, mockScores, timeLog, courseLog, timeAdjust, timeGoal, stamps, theme, bmdSide, rotSign }, null, 1)
+  const { attempts, revealed, xp, streak, activity, planner, planner315, planner341, qStatus, mockScores, timeLog, courseLog, timeAdjust, timeGoal, stamps, theme, bmdSide, rotSign } = s
+  return JSON.stringify({ attempts, revealed, xp, streak, activity, planner, planner315, planner341, qStatus, mockScores, timeLog, courseLog, timeAdjust, timeGoal, stamps, theme, bmdSide, rotSign }, null, 1)
 }
 
 /** mastery of a topic: correct checks / total checks seen with that topic prefix */

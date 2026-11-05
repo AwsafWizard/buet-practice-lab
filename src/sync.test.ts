@@ -9,6 +9,7 @@ const base = (over: Partial<Progress> = {}): Progress => ({
   activity: {},
   planner: null,
   planner315: null,
+  planner341: null,
   qStatus: {},
   mockScores: {},
   timeLog: {},
