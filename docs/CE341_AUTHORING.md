@@ -11,7 +11,7 @@ Good models to read before writing: CE 315 `src/rc/topics/shear/` (index + Lab +
 | Topic module | `src/soil/topics/<t>/index.tsx` (+ any files inside that folder) — default export `SmTopicModule` {Overview, Approach, Lab, problems, theory}; `src/soil/topics/<t>/picks.ts` exports `<T>_PICKS` (already wired) |
 | Engines | `src/soil/engine/<name>.ts` + `<name>.test.ts`; shared `src/soil/engine/units.ts` (γw etc.) belongs to the shell |
 | Chart pane | `src/soil/reference/<group>.tsx` exporting `<G>_ITEMS: SmRefItem[]` (already wired in `reference/index.ts`) |
-| Past papers | `src/soil/pyq/papers/s<year>.tsx` exporting `S<YEAR>: SmQ[]` (already wired in `pyq/index.ts`) |
+| Past papers | `src/soil/pyq/ajk/s<year>.tsx` (AJK sir's half, `A<YEAR>`) and `src/soil/pyq/sjmy/s<year>.tsx` (SJMY sir's half, `B<YEAR>`), e.g. `ajk/s2023.tsx` → `A2023`, `sjmy/sjan21.tsx` → `BJAN21` (already wired and sorted in `pyq/index.ts`) |
 
 Topic folders: `wv plast class struct shear lep comp perm seep consol stress` (ids `sm-wv` …). Shared files (`types.ts`, `registry.ts`, `store.ts`, components, pages, `engine/units.ts`) are NOT yours: work around locally and say so in your report.
 
