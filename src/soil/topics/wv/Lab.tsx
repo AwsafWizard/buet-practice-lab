@@ -64,7 +64,7 @@ export function randomWv(seed: number): WvIn {
     const Vs = V / (1 + e)
     const w = r2(6 + 8 * r(), 1)
     const Ws = Gs * 1000 * Vs
-    return { u: 'kg', rows: [{ key: 'W', v: Math.round(Ws * (1 + w / 100)) }, { key: 'w', v: w }, { key: 'Gs', v: Gs }], cyl: { on: false, D: 1.5, H: 3, inch: true }, story: `Das Ex. 3.2 type: a moist soil of ${V} m³ has a mass of ${Math.round(Ws * (1 + w / 100))} kg at w = ${w} %, Gs = ${Gs}. Find ρ, ρd, e, n, S and the volume of water.` }
+    return { u: 'kg', rows: [{ key: 'V', v: V }, { key: 'W', v: Math.round(Ws * (1 + w / 100)) }, { key: 'w', v: w }, { key: 'Gs', v: Gs }], cyl: { on: false, D: 1.5, H: 3, inch: true }, story: `Das Ex. 3.2 type: a moist soil of ${V} m³ has a mass of ${Math.round(Ws * (1 + w / 100))} kg at w = ${w} %, Gs = ${Gs}. Find ρ, ρd, e, n, S and the volume of water.` }
   }
   if (t === 'das34') {
     const gd = Math.round(95 + 20 * r())
@@ -72,8 +72,9 @@ export function randomWv(seed: number): WvIn {
     return { u: 'lb', rows: [{ key: 'gd', v: gd }, { key: 'w', v: w }, { key: 'S', v: 100 }], cyl: { on: false, D: 1.5, H: 3, inch: true }, story: `Das Ex. 3.4 type: a saturated soil has γd = ${gd} pcf and w = ${w} %. Find γsat, Gs and e.` }
   }
   if (t === 'field') {
-    const w = r2(10 + 12 * r(), 1)
-    const g = r2(17.5 + 2 * r(), 2)
+    const e = 0.5 + 0.35 * r()
+    const w = r2(((0.45 + 0.45 * r()) * e * 100) / Gs, 1)
+    const g = r2(((Gs + (w / 100) * Gs) * 9.81) / (1 + e), 2)
     return { u: 'kN', rows: [{ key: 'g', v: g }, { key: 'w', v: w }, { key: 'Gs', v: Gs }], cyl: { on: false, D: 1.5, H: 3, inch: true }, story: `2017-18 Q5(b) type: a sand above the water table has w = ${w} % and γ = ${g} kN/m³, Gs = ${Gs}. Find e, S, γd and γsat.` }
   }
   if (t === 'eS') {
@@ -82,7 +83,7 @@ export function randomWv(seed: number): WvIn {
     return { u: 't', rows: [{ key: 'e', v: e }, { key: 'S', v: S }, { key: 'Gs', v: Gs }], cyl: { on: false, D: 1.5, H: 3, inch: true }, story: `A soil has e = ${e}, S = ${S} %, Gs = ${Gs}. Find w, ρ, ρd, ρsat (t/m³) and n.` }
   }
   const n = Math.round(30 + 15 * r())
-  const w = r2(8 + 15 * r(), 1)
+  const w = r2(((0.3 + 0.6 * r()) * (n / (100 - n)) * 100) / Gs, 1)
   return { u: 'kN', rows: [{ key: 'n', v: n }, { key: 'w', v: w }, { key: 'Gs', v: Gs }], cyl: { on: false, D: 1.5, H: 3, inch: true }, story: `A soil has porosity ${n} % and water content ${w} %, Gs = ${Gs}. Find e, S, γ, γd and the percent air voids.` }
 }
 
