@@ -1,6 +1,7 @@
 // σ / u / σ′ profile builder: layers, water table (or standing water), capillary zone, upward / downward seepage
 // across one layer. Draws the soil column and the three diagrams with their controlling ordinates.
 
+import { useMark } from './useMark'
 import { useState } from 'react'
 import { fmt } from '../../../components/DiagramView'
 import { Md, Reveal, Seg } from '../../../components/ui'
@@ -9,7 +10,6 @@ import { pick, randInt, rng, Slider, useSeed } from '../../../labs/common'
 import { NumIn } from '../../../reference/common'
 import { profile, stressAt, type ProfileIn, type SoilLayer, type StressPt } from '../../engine/stresses'
 import { GW } from '../../engine/units'
-import { markUsed } from '../../reference/pane'
 
 const f2 = (v: number) => fmt(v, 2)
 const SOILS = ['Clay', 'Sand', 'Silt', 'Silty clay', 'Gravel']
@@ -184,7 +184,7 @@ export function ProfileLab() {
   const p = toProfileIn(s)
   const pts = profile(p)
   const tot = s.layers.reduce((a, l) => a + l.H, 0)
-  markUsed('w-eff', { flow: s.flow })
+  useMark('w-eff', { flow: s.flow })
   const idp = `sm-seep:lab:prof:${hashKey(JSON.stringify(s))}`
   const setLayer = (k: number, q: Partial<SoilLayer>) => setS({ ...s, layers: s.layers.map((l, i) => (i === k ? { ...l, ...q } : l)) })
   const rows = pts.map((q, i) => ({ ...q, key: `${i}` }))

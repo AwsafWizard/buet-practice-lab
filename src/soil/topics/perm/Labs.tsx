@@ -1,6 +1,7 @@
 // Permeability labs: constant / falling-head permeameter with an animated standpipe, layered deposits (both
 // directions, with the flow picture), pumping tests (confined / unconfined) and capillary rise.
 
+import { useMark } from '../seep/useMark'
 import { useEffect, useRef, useState } from 'react'
 import { fmt } from '../../../components/DiagramView'
 import { Answer, Md, Reveal, Seg } from '../../../components/ui'
@@ -9,7 +10,6 @@ import { pick, randInt, rng, Slider, useSeed } from '../../../labs/common'
 import { Row, StatusBox } from '../../../labs/playground'
 import { NumIn } from '../../../reference/common'
 import { capRiseSoil, capRiseTube, constantHead, darcy, fallingHead, headAfter, kBand, layered, porosityFromDry, pumpConfined, pumpUnconfined, scaleFallTime, type KLayer } from '../../engine/permeability'
-import { markUsed } from '../../reference/pane'
 
 const f2 = (v: number) => fmt(v, 2)
 const f3 = (v: number) => fmt(v, 3)
@@ -113,16 +113,16 @@ function Permeameter({ s, k }: { s: PermState; k: number }) {
             <text x={136} y={yBase - (s.h2 || s.h1 * 0.6) * k1 + 3} fontSize={9} fill="var(--c-mute)">
               h2
             </text>
-            <text x={60} y={yh + 4} fontSize={10} textAnchor="end" fill="var(--c-water)">
+            <text x={4} y={yh - 3} fontSize={10} fill="var(--c-water)">
               h = {f2(head)}
             </text>
-            <line x1={62} y1={yh} x2={110} y2={yh} stroke="var(--c-water)" strokeDasharray="2 2" />
+            <line x1={4} y1={yh} x2={110} y2={yh} stroke="var(--c-water)" strokeDasharray="2 2" />
           </g>
         ) : (
           <g>
             <rect x={90} y={yh} width={70} height={Math.max(0, ySoilTop - yh)} fill="var(--c-water)" opacity={0.3} stroke="var(--c-ink)" />
             <path d={`M160,${yh + 4}L185,${yh + 4}L185,${yh + 30}`} stroke="var(--c-water)" fill="none" strokeWidth={2} />
-            <text x={60} y={yh + 4} fontSize={10} textAnchor="end" fill="var(--c-water)">
+            <text x={4} y={yh - 3} fontSize={10} fill="var(--c-water)">
               constant h = {s.h}
             </text>
           </g>
@@ -177,7 +177,7 @@ export function PermeameterLab() {
   const { seed, next } = useSeed(6)
   const R = permResults(s)
   const id = (k: string) => `sm-perm:lab:meter:${hashKey(JSON.stringify(s))}:${k}`
-  markUsed('w-k', { band: kBand(R.k) })
+  useMark('w-k', { band: kBand(R.k) })
   const up = (p: Partial<PermState>) => setS({ ...s, ...p })
   return (
     <div className="space-y-3">
@@ -453,7 +453,7 @@ export function CapLab() {
   const [C, setC] = useState(0.3)
   const ht = capRiseTube(d / 1000)
   const hs = capRiseSoil(e, D10 / 10, C) / 100
-  markUsed('w-cap', { soil: hs > 7.5 ? 'Clay' : hs > 1.2 ? 'Silt' : hs > 0.15 ? 'Fine sand' : 'Coarse sand' })
+  useMark('w-cap', { soil: hs > 7.5 ? 'Clay' : hs > 1.2 ? 'Silt' : hs > 0.15 ? 'Fine sand' : 'Coarse sand' })
   const id = (x: string) => `sm-perm:lab:cap:${hashKey(JSON.stringify([d, e, D10, C]))}:${x}`
   const tubes = [d * 4, d * 2, d]
   const hmax = Math.max(...tubes.map((x) => capRiseTube(x / 1000)))

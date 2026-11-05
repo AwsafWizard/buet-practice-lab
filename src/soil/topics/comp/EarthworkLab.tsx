@@ -1,6 +1,7 @@
 // Earthwork calculator: fill volume (or embankment section) at its spec → solids → borrow-pit volume, loose volume and
 // truck loads, water to add, and the cost of one or two borrow areas. Solids are conserved through every state.
 
+import { useMark } from '../seep/useMark'
 import { useState } from 'react'
 import { fmt } from '../../../components/DiagramView'
 import { Answer, Md, Reveal, Seg } from '../../../components/ui'
@@ -8,7 +9,7 @@ import { hashKey } from '../../../labs/CheckTable'
 import { StatusBox } from '../../../labs/playground'
 import { NumIn } from '../../../reference/common'
 import { borrowPlan, embankmentArea, gdOf, type SourcePlan, type State } from '../../engine/compaction'
-import { markUsed, openSmRef } from '../../reference/pane'
+import { openSmRef } from '../../reference/pane'
 
 const f2 = (v: number) => fmt(v, 2)
 const big = (v: number) => (Math.abs(v) >= 1e5 ? v.toLocaleString('en-US', { maximumFractionDigits: 0 }) : fmt(v, 2))
@@ -208,7 +209,7 @@ export function EarthworkLab() {
   const id = (k: string) => `sm-comp:lab:earth:${hashKey(JSON.stringify(ew))}:${k}`
   const upd = (p: Partial<EW>) => setEw({ ...ew, ...p })
   const setSrc = (k: number, p: Partial<Src>) => upd({ srcs: ew.srcs.map((s, i) => (i === k ? { ...s, ...p } : s)) })
-  markUsed('w-field', { earth: 1 })
+  useMark('w-field', { earth: 1 })
   const best = res.length > 1 && res.every((r) => r.total) ? [...res].sort((a, b) => a.total - b.total)[0] : null
   return (
     <div className="space-y-3">

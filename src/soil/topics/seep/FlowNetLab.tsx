@@ -2,6 +2,7 @@
 // Drag the pile tip, base, water levels and widths; the finite-difference Laplace solution redraws live
 // (coarse grid while dragging, fine grid + extrapolation when you let go). Click anywhere for a piezometer.
 
+import { useMark } from './useMark'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { fmt } from '../../../components/DiagramView'
 import { Answer, Md, Reveal, Seg, Tex } from '../../../components/ui'
@@ -11,7 +12,7 @@ import { Row, StatusBox, Tries } from '../../../labs/playground'
 import { NumIn } from '../../../reference/common'
 import { dam, exitGradient, netLines, pointInfo, sheetPile, sheetPileExact, solveNet, terzaghiHeave, uplift, type FlowGeom, type FlowSol } from '../../engine/flownet'
 import { GW } from '../../engine/units'
-import { markUsed, openSmRef } from '../../reference/pane'
+import { openSmRef } from '../../reference/pane'
 import { frameOf, MiniChart, NetView, type Frame, type Handle, type NetKind } from './NetView'
 
 const f2 = (v: number) => fmt(v, 2)
@@ -223,7 +224,7 @@ export function FlowNetLab() {
   const kEff = st.k * Math.sqrt(st.kr)
   const kShow = st.k * (kUnit === 'cm/s' ? 100 : kUnit === 'mm/s' ? 1000 : 1)
   const shapeStr = f3(sol.shape)
-  markUsed('w-flownet', { shape: shapeStr })
+  useMark('w-flownet', { shape: shapeStr })
   const id = (k: string) => `sm-seep:lab:net:${hashKey(JSON.stringify([st, probe && [Math.round(probe.x * 10), Math.round(probe.z * 10)]]))}:${k}`
   const xScale = view === 'tr' && st.kr !== 1 ? Math.sqrt(1 / st.kr) : 1
   const fsH = R.heave?.FS

@@ -1,5 +1,6 @@
 // Proctor lab (edit or 🎲 test points → curve, peak, ZAV, energy toggle) and the field-spec checker (2017-18 Q5 style).
 
+import { useMark } from '../seep/useMark'
 import { useState } from 'react'
 import { fmt } from '../../../components/DiagramView'
 import { Answer, Choice, Md, Reveal, Seg, Tex } from '../../../components/ui'
@@ -8,7 +9,7 @@ import { pick, randInt, rng, useSeed } from '../../../labs/common'
 import { StatusBox } from '../../../labs/playground'
 import { NumIn } from '../../../reference/common'
 import { checkSpec, fieldTest, gdAtS, modelCurve, monotoneCubic, proctorCurve, proctorPeak, satOf, shiftForEnergy, zav, type Pt } from '../../engine/compaction'
-import { markUsed, openSmRef } from '../../reference/pane'
+import { openSmRef } from '../../reference/pane'
 import { CompactionChart, GWU, UNIT_LABEL, type FieldPt, type GUnit, type Series } from './figs'
 
 const f1 = (v: number) => fmt(v, 1)
@@ -61,7 +62,7 @@ function PointTable({ pts, onChange, unit }: { pts: Pt[]; onChange: (p: Pt[]) =>
             <th>w (%)</th>
             {pts.map((p, k) => (
               <td key={k}>
-                <input className="field w-16 !py-0.5 num" type="number" step={0.1} value={+(p.w * 100).toFixed(2)} onChange={(e) => onChange(pts.map((q, i) => (i === k ? { ...q, w: +e.target.value / 100 } : q)))} />
+                <input className="field w-20 !py-0.5 !px-1.5 num" type="number" step={0.1} value={+(p.w * 100).toFixed(2)} onChange={(e) => onChange(pts.map((q, i) => (i === k ? { ...q, w: +e.target.value / 100 } : q)))} />
               </td>
             ))}
             <td rowSpan={2}>
@@ -81,7 +82,7 @@ function PointTable({ pts, onChange, unit }: { pts: Pt[]; onChange: (p: Pt[]) =>
             <th>γd ({UNIT_LABEL[unit]})</th>
             {pts.map((p, k) => (
               <td key={k}>
-                <input className="field w-16 !py-0.5 num" type="number" step={unit === 't' ? 0.005 : 0.05} value={p.gd} onChange={(e) => onChange(pts.map((q, i) => (i === k ? { ...q, gd: +e.target.value } : q)))} />
+                <input className="field w-20 !py-0.5 !px-1.5 num" type="number" step={unit === 't' ? 0.005 : 0.05} value={p.gd} onChange={(e) => onChange(pts.map((q, i) => (i === k ? { ...q, gd: +e.target.value } : q)))} />
               </td>
             ))}
           </tr>
@@ -118,7 +119,7 @@ export function ProctorLab() {
   const mcurve = modPts ? proctorCurve(modPts) : monotoneCubic(Array.from({ length: 9 }, (_, k) => ({ w: est!.omc + (k - 4) * 0.02, gd: modelCurve(est!, set.Gs, est!.omc + (k - 4) * 0.02, gw) })))
   const series: Series[] = [{ pts: set.std, curve, color: 'var(--c-accent)', label: set.label.startsWith('Jan') ? 'Modified' : 'Standard', peak: pk }]
   if (view === 'both' && !set.label.startsWith('Jan')) series.push({ pts: modPts ?? [], curve: mcurve, color: 'var(--c-load)', label: modPts ? 'Modified' : 'Modified (estimated)', peak: mpk, faint: !modPts })
-  markUsed('w-proctor', { energy: view === 'both' ? 'mod' : 'std' })
+  useMark('w-proctor', { energy: view === 'both' ? 'mod' : 'std' })
   const id = (k: string) => `sm-comp:lab:proctor:${hashKey(JSON.stringify(set))}:${k}`
   const dg = set.unit === 't' ? 3 : 2
   const ws = [...new Set([...set.std, ...(modPts ?? [])].map((p) => p.w))].sort((a, b) => a - b)

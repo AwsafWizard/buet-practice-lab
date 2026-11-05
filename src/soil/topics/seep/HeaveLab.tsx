@@ -9,7 +9,6 @@ import { pick, randInt, rng, Slider, useSeed } from '../../../labs/common'
 import { StatusBox } from '../../../labs/playground'
 import { eFromN, excavationHeave, filterDepth, gsubFromGsE, icrFromGsE, sandHead, type HeaveIn } from '../../engine/stresses'
 import { GW } from '../../engine/units'
-import { markUsed } from '../../reference/pane'
 
 const f2 = (v: number) => fmt(v, 2)
 const f3 = (v: number) => fmt(v, 3)
@@ -113,7 +112,6 @@ function ExcavationLab() {
   const { seed, next } = useSeed(9)
   const o = exIn(s)
   const r = excavationHeave(o, s.d, s.FS)
-  markUsed('w-eff', { heave: f2(r.FS) })
   const id = (k: string) => `sm-seep:lab:heave:${hashKey(JSON.stringify(s))}:${k}`
   return (
     <div className="space-y-3">
