@@ -17,3 +17,6 @@ CE341/
 # local Supabase keys
 .env
 .env.local
+
+# personal progress exports
+practice-lab-progress-*.json
