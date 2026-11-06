@@ -34,7 +34,7 @@ interface PaneState {
   hl: Record<string, Record<string, number | string>>
 }
 
-const KEY = 'ce341-code-pane'
+const KEY = 'ce341-chart-pane'
 let state: PaneState = load()
 const subs = new Set<() => void>()
 

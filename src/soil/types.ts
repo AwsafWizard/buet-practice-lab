@@ -61,7 +61,7 @@ export const SM_PAPERS: SmPaper[] = [
 export const smPaperById = (id: string) => SM_PAPERS.find((p) => p.id === id)
 export const smPaperLabel = (id: string) => smPaperById(id)?.label ?? id
 
-/** something the paper printed with a question; `ref` = code-pane item id */
+/** something the paper printed with a question; `ref` = chart-pane item id */
 export interface SmGiven {
   label: string
   what?: string

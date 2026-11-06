@@ -6,7 +6,7 @@ import { groupOfSmRef, givenRefIds, paneWidth, SM_GROUP_LABEL, SM_GROUP_ORDER, f
 
 const Panel = lazy(() => import('./Panel'))
 
-/** the code-pane group that belongs to the current CE 341 page */
+/** the chart-pane group that belongs to the current CE 341 page */
 export function useSmPageGroup(): SmRefGroup {
   const { pathname } = useLocation()
   const parts = pathname.split('/').filter(Boolean) // ['ce341', 'topic', id, tab]

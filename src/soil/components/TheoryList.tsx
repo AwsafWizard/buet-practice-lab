@@ -31,7 +31,7 @@ export function TheoryList({ items, showTopic = false }: { items: SmTheoryItem[]
         ))}
       </div>
       {list.map((it) => (
-        <TheoryCard key={it.id} it={it} showTopic={showTopic} />
+        <TheoryCard key={key(it)} it={it} showTopic={showTopic} />
       ))}
       {!list.length && <div className="text-mute text-sm">Nothing here.</div>}
     </div>

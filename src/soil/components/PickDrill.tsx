@@ -1,5 +1,5 @@
 // "Which one?" drill: a situation is given, pick the formula / factor / case / value that applies.
-// Each topic supplies PickSkill generators (seeded); answers come from the engines or the code-pane rules.
+// Each topic supplies PickSkill generators (seeded); answers come from the engines or the chart-pane rules.
 
 import { useMemo, useState, type ReactNode } from 'react'
 import { Md, Section, Tex } from '../../components/ui'
@@ -17,7 +17,7 @@ export interface PickQ {
   answer: string
   /** markdown: why that one */
   why: string
-  /** code-pane item that holds the rule */
+  /** chart-pane item that holds the rule */
   ref?: string
   /** keep the options in the given order (cases, ranges); otherwise they are shuffled */
   ordered?: boolean
@@ -146,7 +146,7 @@ export function PickDrill({ topic, skills, n = 6, intro }: { topic: string; skil
 /** the Lab-tab section that holds a topic's drill */
 export function PickSection({ topic, skills }: { topic: string; skills: PickSkill[] }) {
   return (
-    <Section title="Which one? Pick the formula, factor or case" sub="Each card gives a situation. Pick what applies, then read why and jump to the code-pane table. Click a skill chip to leave it out.">
+    <Section title="Which one? Pick the formula, factor or case" sub="Each card gives a situation. Pick what applies, then read why and jump to the chart-pane table. Click a skill chip to leave it out.">
       <PickDrill topic={topic} skills={skills} />
     </Section>
   )
