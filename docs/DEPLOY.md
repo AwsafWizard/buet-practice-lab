@@ -9,7 +9,7 @@ The private phone Artifact is separate and keeps working as before.
 1. Go to supabase.com → **Sign in with GitHub** → **New project** (any name, free plan, pick a region near Dhaka, e.g. Singapore). Save the database password it shows; you won't need it here.
 2. When the project is ready: **SQL Editor** → **New query** → paste the whole of `supabase/schema.sql` → **Run**. It creates the `progress` table, the row rules (each user can only touch their own rows) and live updates.
 3. **Authentication → URL Configuration**: set **Site URL** to your Vercel address from step 2 below (e.g. `https://buet-practice-lab.vercel.app`) and add the same address under **Redirect URLs**. (Email sign-in links open this address.)
-4. **Project Settings → API**: copy the **Project URL** and the **anon public** key. Both are safe to publish.
+4. Copy two values, both safe to publish: the **Project URL** `https://<project-ref>.supabase.co` (the ref is the id in the dashboard address; also under **Connect** or **Settings → Data API**) and the **publishable key** `sb_publishable_…` from **Settings → API Keys** (older projects call it the *anon public* key, `eyJ…`; either works). Never use a secret / service_role key.
 
 Email sign-in is on by default. Supabase's built-in mailer sends only a few emails per hour; for many users, add an SMTP provider later (Authentication → Emails → SMTP).
 
