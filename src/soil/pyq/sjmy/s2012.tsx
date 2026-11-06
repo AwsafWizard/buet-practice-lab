@@ -363,8 +363,7 @@ export const B2012: SmQ[] = [
         { key: 'dp', label: 'Total Δp (footing + fill)', value: r.dp, unit: 'psf' },
         { key: 'S', label: '(i) Consolidation settlement', value: r.S, unit: 'in', tol: 0.03 },
         { key: 'Tv', label: '(ii) $T_v$ for 6″', value: r.Tv, tol: 0.03 },
-        { key: 'tp', label: '(ii) Time for 6″ with cv as printed (7.8×10³ in²/s)', value: r.tPrint, unit: 's', tol: 0.04 },
-        { key: 'th', label: '(ii) Time for 6″ if cv = 7.8×10⁻³ in²/s', value: r.tHand / 3600, unit: 'hours', tol: 0.04 },
+        { key: 'th', label: '(ii) Time for 6″ (cv = 7.8×10⁻³ in²/s)', value: r.tHand / 3600, unit: 'hours', tol: 0.04 },
         { key: 'S6', label: '(iii) Settlement in 6 months', value: r.S6p, unit: 'in', tol: 0.03 },
       ]
     },
@@ -379,16 +378,17 @@ export const B2012: SmQ[] = [
           <Md>{`(With the 2:1 method, $\\Delta p_f = 75000/(10 \\times 10) = 750$ psf, S = ${f2(r.S21)} in.)`}</Md>
           <Head>(ii) Time for 6 in</Head>
           <Md>{`Drained at both faces (granular fill above, sand and gravel below): $d = H/2 = 5$ ft = ${f0(r.d)} in. $U = 6/${f2(r.S)} = ${f2(r.U)}$ % (< 60 %) → $T_v = \\frac{\\pi}{4}(${f4(r.U / 100)})^2 = ${f4(r.Tv)}$.`}</Md>
-          <Tex block>{`t = \\frac{T_vd^2}{c_v} = \\frac{${f4(r.Tv)} \\times ${f0(r.d)}^2}{7.8\\times10^{3}} = ${f3(r.tPrint)}\\ \\text{s (as printed)};\\qquad \\text{with } 7.8\\times10^{-3}:\\ ${f0(r.tHand)}\\ \\text{s} = ${f2(r.tHand / 3600)}\\ \\text{h}`}</Tex>
+          <Tex block>{`t = \\frac{T_vd^2}{c_v} = \\frac{${f4(r.Tv)} \\times ${f0(r.d)}^2}{7.8\\times10^{-3}} = ${f0(r.tHand)}\\ \\text{s} = ${f2(r.tHand / 3600)}\\ \\text{h}`}</Tex>
+          <Md>{`(Read literally, the scan's $7.8\\times10^{3}$ in²/s would give ${f3(r.tPrint)} s — a missing minus sign, so it is not used.)`}</Md>
           <Head>(iii) In 6 months</Head>
           <Md>{`$T_v = c_vt/d^2$ is enormous for either reading of cv (U = ${f0(r.U6p)} %, ${f0(r.U6h)} % with 10⁻³), so consolidation is complete: $S_{6\\,mo} ≈ ${f2(r.S6p)}$ in.`}</Md>
-          <Result>{`(i) S ≈ **${f2(r.S)} in** (${f0(r.S * 25.4)} mm); (ii) 6″ in **${f2(r.tPrint)} s** with cv as printed — practically instantly — or ≈ **${f2(r.tHand / 3600)} hours** if cv = 7.8 × 10⁻³ in²/s; (iii) ≈ **${f2(r.S6p)} in** (complete) at 6 months.`}</Result>
-          <Note>The scan prints cv = 7.8×10³ in²/sec with no minus sign; the handnote reads 7.8×10⁻³. Both are far too fast for a silty clay (10⁻³ in²/s is about 1700 ft²/yr), so only (i) and (iii) are robust.</Note>
+          <Result>{`(i) S ≈ **${f2(r.S)} in** (${f0(r.S * 25.4)} mm); (ii) 6″ in ≈ **${f2(r.tHand / 3600)} hours** (cv = 7.8 × 10⁻³ in²/s); (iii) ≈ **${f2(r.S6p)} in** (complete) at 6 months.`}</Result>
+          <Note>The scan prints cv = 7.8×10³ in²/sec with no minus sign; it is read as 7.8×10⁻³ (as the handnote). Even that is very fast for a silty clay (about 1700 ft²/yr), which is why the times are short.</Note>
         </Sol>
       )
     },
     notes: [
-      'cv: the scan clearly shows "7.8×10³ in²/sec" (no minus sign). The main answer follows the scan; the handnote reads 7.8×10⁻³ in²/s (≈ 19 hours for 6″). Either way the 6-month settlement is the full settlement.',
+      'cv: the scan clearly shows "7.8×10³ in²/sec" (no minus sign). It is taken as a misprint for 7.8×10⁻³ in²/s (as the handnote: ≈ 19 hours for 6″); the literal reading gives a fraction of a second. Either way the 6-month settlement is the full settlement.',
       'Saturated e0 = wGs is assumed although the WT is drawn at the clay base (as the handnote). Δp is taken at mid-depth below the footing centre (Boussinesq); the 2:1 method gives 12.5 in.',
     ],
   },
