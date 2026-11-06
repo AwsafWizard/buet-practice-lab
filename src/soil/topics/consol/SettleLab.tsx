@@ -118,7 +118,7 @@ export function SettleLab() {
           🎲 Random exam-style profile
         </button>
         <select
-          className="field !py-1 !text-xs"
+          className="field !py-1 !text-xs max-w-full"
           value=""
           onChange={(e) => {
             const p = SETTLE_PRESETS.find((x) => x.key === e.target.value)

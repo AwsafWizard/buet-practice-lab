@@ -41,7 +41,10 @@ function dpLine(inp: SettleIn, s: SubOut) {
   const zm = s.zMid - L.Df
   const zb = s.zBot - L.Df
   if (inp.avg === 'simpson')
-    return String.raw`\Delta p_t = ${one(zt)} = ${f2(s.dpTop)},\ \Delta p_m = ${one(zm)} = ${f2(s.dpMid)},\ \Delta p_b = ${one(zb)} = ${f2(s.dpBot)};\quad \Delta p_{av} = \tfrac{${f2(s.dpTop)} + 4(${f2(s.dpMid)}) + ${f2(s.dpBot)}}{6} = ${f2(s.dp)}\ \text{kPa}`
+  {
+    const eq = (z: number, v: number) => (z <= 1e-9 ? f2(v) : `${one(z)} = ${f2(v)}`)
+    return String.raw`\begin{aligned}\Delta p_t &= ${eq(zt, s.dpTop)},\quad \Delta p_m = ${eq(zm, s.dpMid)},\\ \Delta p_b &= ${eq(zb, s.dpBot)};\quad \Delta p_{av} = \tfrac{${f2(s.dpTop)} + 4(${f2(s.dpMid)}) + ${f2(s.dpBot)}}{6} = ${f2(s.dp)}\ \text{kPa}\end{aligned}`
+  }
   return String.raw`z = ${f2(zm)}\ \text{m below the base: } \Delta p = ${one(zm)} = ${f2(s.dp)}\ \text{kPa}`
 }
 

@@ -15,6 +15,7 @@ export function NewmarkChart({
   z = 1,
   rects,
   meshes,
+  circles,
   label = true,
   showRadii = false,
 }: {
@@ -25,6 +26,8 @@ export function NewmarkChart({
   rects?: Rect[]
   /** covered fraction per [ring][sector] */
   meshes?: number[][]
+  /** circular loaded areas (plan, metres) */
+  circles?: { cx: number; cy: number; r: number }[]
   label?: boolean
   showRadii?: boolean
 }) {
@@ -52,13 +55,16 @@ export function NewmarkChart({
         {rects?.map((r, i) => (
           <rect key={i} x={cx + Math.min(r.x1, r.x2) * k} y={cy - Math.max(r.y1, r.y2) * k} width={Math.abs(r.x2 - r.x1) * k} height={Math.abs(r.y2 - r.y1) * k} fill="var(--c-load)" fillOpacity={0.12} stroke="var(--c-load)" strokeWidth={1.4} />
         ))}
+        {circles?.map((c, i) => (
+          <circle key={'c' + i} cx={cx + c.cx * k} cy={cy - c.cy * k} r={c.r * k} fill="var(--c-load)" fillOpacity={0.12} stroke="var(--c-load)" strokeWidth={1.4} />
+        ))}
       </g>
       {radii.slice(1).map((r, i) => (
         <circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke="var(--c-ink)" strokeWidth={i === 8 ? 1.2 : 0.8} />
       ))}
       {Array.from({ length: NEWMARK_SECTORS }, (_, j) => {
         const a = j * da
-        return <line key={j} x1={cx + radii[1] * Math.cos(a) * 0} y1={cy} x2={cx + far * Math.cos(a)} y2={cy - far * Math.sin(a)} stroke="var(--c-ink)" strokeWidth={0.6} opacity={0.8} clipPath={`url(#nm-clip-${size})`} />
+        return <line key={j} x1={cx} y1={cy} x2={cx + far * Math.cos(a)} y2={cy - far * Math.sin(a)} stroke="var(--c-ink)" strokeWidth={0.6} opacity={0.8} clipPath={`url(#nm-clip-${size})`} />
       })}
       <circle cx={cx} cy={cy} r={2.5} fill="var(--c-load)" />
       {showRadii &&
