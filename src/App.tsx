@@ -9,6 +9,7 @@ import { ALL_PYQ } from './pyq'
 import { useDrawer } from './reference/drawer'
 import { exportState, useStore } from './store'
 import { ARTIFACT, useSyncStatus, type SyncStatus } from './sync'
+import { CLOUD, sendMagicLink, signOut, useCloudUser } from './cloud'
 import { SECTION_LABEL, TOPICS } from './topics/registry'
 import { TopicIcon } from './topics/icons'
 import { EXAM_DATE } from './pages/planner/template'
@@ -206,6 +207,7 @@ export function SidebarFooter({ course }: { course: 'ce311' | 'ce315' | 'ce341' 
       </>
       )}
       {ARTIFACT && <SyncLine />}
+      {CLOUD && <CloudLine />}
       <div className="flex gap-2">
         <button className="btn !py-0.5 !px-2 !text-xs flex-1 justify-center" onClick={download}>
           ⤓ Export progress
@@ -225,6 +227,61 @@ const SYNC_TEXT: Record<SyncStatus, [string, string]> = {
   saving: ['text-mute', 'Saving…'],
   synced: ['text-good', '✓ Synced across devices'],
   error: ['text-bad', 'Sync failed, saved on this device'],
+}
+
+/** public build: sign in by email link to sync progress across devices; works without an account too */
+function CloudLine() {
+  const user = useCloudUser()
+  const [cls, text] = SYNC_TEXT[useSyncStatus()]
+  const [open, setOpen] = useState(false)
+  const [email, setEmail] = useState('')
+  const [msg, setMsg] = useState<string | null>(null)
+  if (user)
+    return (
+      <div className="space-y-1">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-mute truncate" title={user.email}>
+            {user.email}
+          </span>
+          <button className="btn !py-0.5 !px-2 !text-xs" onClick={() => void signOut()}>
+            Sign out
+          </button>
+        </div>
+        <div className={'text-right ' + cls}>{text}</div>
+      </div>
+    )
+  if (!open)
+    return (
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-faint">Saved on this device</span>
+        <button className="btn !py-0.5 !px-2 !text-xs" onClick={() => setOpen(true)} title="Sync your progress across devices">
+          Sign in
+        </button>
+      </div>
+    )
+  return (
+    <form
+      className="space-y-1.5"
+      onSubmit={async (e) => {
+        e.preventDefault()
+        setMsg('Sending…')
+        const err = await sendMagicLink(email.trim())
+        setMsg(err ? `Could not send: ${err}` : 'Check your email for the sign-in link.')
+      }}
+    >
+      <div className="text-mute">Sign in to sync across devices. No password: we email you a link.</div>
+      <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="w-full rounded-md border border-line bg-panel px-2 py-1 text-xs" />
+      <div className="flex gap-2">
+        <button type="submit" className="btn btn-primary !py-0.5 !px-2 !text-xs flex-1 justify-center">
+          Email me a link
+        </button>
+        <button type="button" className="btn !py-0.5 !px-2 !text-xs" onClick={() => (setOpen(false), setMsg(null))}>
+          Cancel
+        </button>
+      </div>
+      {msg && <div className="text-faint">{msg}</div>}
+    </form>
+  )
 }
 
 function SyncLine() {

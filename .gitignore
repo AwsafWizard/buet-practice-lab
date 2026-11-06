@@ -13,3 +13,7 @@ tsconfig.tsbuildinfo
 
 # CE 341 notes and PDFs stay local
 CE341/
+
+# local Supabase keys
+.env
+.env.local

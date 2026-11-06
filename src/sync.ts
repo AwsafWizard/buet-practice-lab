@@ -1,4 +1,4 @@
-// Cross-device progress sync for the private Artifact build.
+// Cross-device progress sync: the private Artifact build (its db) and the public build (Supabase, see cloud.ts).
 // Every device keeps its own db document (progress/dev-<id>) and only ever writes that one;
 // what a device shows is the merge of its local progress with every device's document.
 // The merge only adds (later record wins, counts take the max), so a device that comes
@@ -22,7 +22,7 @@ type ClaudeWindow = { claude?: { use(name: 'db'): Promise<{ collection(path: str
 export type SyncStatus = 'off' | 'connecting' | 'local' | 'saving' | 'synced' | 'error'
 let status: SyncStatus = 'off'
 const listeners = new Set<() => void>()
-function setStatus(s: SyncStatus) {
+export function setStatus(s: SyncStatus) {
   status = s
   listeners.forEach((l) => l())
 }
@@ -103,17 +103,24 @@ export function merge(a: Progress, b: Progress): Progress {
   }
 }
 
-export async function startSync() {
-  if (!ARTIFACT) return
-  setStatus('connecting')
-  const db = await (window as unknown as ClaudeWindow).claude?.use('db').catch(() => null)
-  if (!db) return setStatus('local')
-  const coll = db.collection('progress')
-  const mine = coll.doc('dev-' + device)
+/** where the per-device documents live: the Artifact db or a Supabase table */
+export interface SyncBackend {
+  /** id of this device's own document */
+  mineId: string
+  write(state: string): Promise<void>
+  /** calls back with every device's document (state = JSON string) on start and after each change */
+  watch(next: (docs: { id: string; state?: string }[]) => void, error: () => void): () => void
+}
 
+/**
+ * Keep the local store and the backend in step: merge every device's document into local progress,
+ * write only this device's document. Returns a stop function.
+ */
+export function runSync(backend: SyncBackend): () => void {
   let ready = false // true once the first snapshot has been merged in
   let applying = false
   let written = '' // what this device's document holds
+  let stopped = false
 
   // one write at a time; changes made during a write go out right after it
   let writing = false
@@ -127,12 +134,12 @@ export async function startSync() {
         const state = payload()
         if (state === written) continue
         setStatus('saving')
-        await mine.set({ state, updatedAt: Date.now() })
+        await backend.write(state)
         written = state
-      } while (again)
-      setStatus('synced')
+      } while (again && !stopped)
+      if (!stopped) setStatus('synced')
     } catch {
-      setStatus('error')
+      if (!stopped) setStatus('error')
     } finally {
       writing = false
     }
@@ -143,28 +150,29 @@ export async function startSync() {
     timer = setTimeout(push, 1500)
   }
 
-  useStore.subscribe(() => {
+  const unsubStore = useStore.subscribe(() => {
     if (!applying && ready && payload() !== written) schedule() // a theme switch changes nothing here
   })
   // phones kill background tabs: flush a pending save when the page is hidden
-  document.addEventListener('visibilitychange', () => {
+  const onHide = () => {
     if (document.visibilityState === 'hidden' && ready && timer) {
       clearTimeout(timer)
       timer = undefined
       void push()
     }
-  })
+  }
+  if (typeof document !== 'undefined') document.addEventListener('visibilitychange', onHide)
 
-  coll.onSnapshot(
-    (snap) => {
+  const unwatch = backend.watch(
+    (docs) => {
+      if (stopped) return
       let p = progress()
       const before = JSON.stringify(p)
-      for (const d of snap.docs) {
-        const raw = d.exists ? (d.data()?.state as string | undefined) : undefined
-        if (!raw) continue
-        if (d.id === mine.id && !writing) written = raw
+      for (const d of docs) {
+        if (!d.state) continue
+        if (d.id === backend.mineId && !writing) written = d.state
         try {
-          p = merge(p, JSON.parse(raw) as Progress)
+          p = merge(p, JSON.parse(d.state) as Progress)
         } catch {
           /* a damaged document adds nothing */
         }
@@ -180,4 +188,28 @@ export async function startSync() {
     },
     () => setStatus('error'),
   )
+
+  return () => {
+    stopped = true
+    clearTimeout(timer)
+    unsubStore()
+    unwatch()
+    if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', onHide)
+    setStatus('off')
+  }
+}
+
+export async function startSync() {
+  if (!ARTIFACT) return
+  setStatus('connecting')
+  const db = await (window as unknown as ClaudeWindow).claude?.use('db').catch(() => null)
+  if (!db) return setStatus('local')
+  const coll = db.collection('progress')
+  const mine = coll.doc('dev-' + device)
+  runSync({
+    mineId: mine.id,
+    write: (state) => mine.set({ state, updatedAt: Date.now() }),
+    watch: (next, error) =>
+      coll.onSnapshot((snap) => next(snap.docs.map((d) => ({ id: d.id, state: d.exists ? (d.data()?.state as string | undefined) : undefined }))), error),
+  })
 }

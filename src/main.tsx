@@ -4,6 +4,7 @@ import { HashRouter, MemoryRouter, useLocation } from 'react-router-dom'
 import App from './App'
 import './styles.css'
 import { ARTIFACT, startSync } from './sync'
+import { startCloud } from './cloud'
 import { startTimer } from './timer'
 
 // Artifact build: routes live in memory, so remember the last page across reloads
@@ -44,3 +45,4 @@ createRoot(document.getElementById('root')!).render(
 
 startTimer()
 void startSync()
+void startCloud()
