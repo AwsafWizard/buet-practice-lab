@@ -7,6 +7,7 @@ import { openSmRef } from '../../reference/pane'
 import type { SmQ, SmTopicModule } from '../../types'
 import { EarthworkLab, EarthworkSolution, EW_PRESETS, runEarthwork, type EW } from './EarthworkLab'
 import { CompactionChart } from './figs'
+import { COMP_NEW } from './notAsked'
 import { COMP_PICKS } from './picks'
 import { CompProblems } from './Problems'
 import { PeakSolution, PROCTOR_SETS, ProctorLab, SpecLab } from './ProctorLab'
@@ -255,6 +256,7 @@ const problems: SmQ[] = [
       )
     },
   },
+  ...COMP_NEW,
 ]
 
 function CompLab() {

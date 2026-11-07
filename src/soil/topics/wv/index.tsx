@@ -9,6 +9,7 @@ import type { SmQ, SmTopicModule } from '../../types'
 import { WvExams } from './exam'
 import { PhaseStepsView } from './figs'
 import { WvLab } from './Lab'
+import { WV_NEW } from './notAsked'
 import { WV_PICKS } from './picks'
 import { WV_THEORY } from './theory'
 
@@ -189,6 +190,7 @@ const problems: SmQ[] = [
       { key: 's14', label: 'S at 14 %', value: ((0.14 * 2.7) / v.e) * 100, unit: '%' },
     ],
   }),
+  ...WV_NEW,
 ]
 void GW
 

@@ -11,6 +11,7 @@ import { ElogpLab } from './ElogpLab'
 import { ProfileFig } from './figs'
 import { DrainLab, FitLab, SecondaryLab } from './FitLab'
 import { JAN21_OED, SETTLE_PRESETS } from './gen'
+import { CONSOL_NEW } from './notAsked'
 import { CONSOL_PICKS } from './picks'
 import { ConsolProblems } from './Problems'
 import { IsochronePlayground, RateLab } from './RateLab'
@@ -256,6 +257,7 @@ Field: $d_{lab} = 12.5$ mm, $d_f = 3000$ mm (one side) → $t = 12(3000/12.5)^2 
       )
     },
   },
+  ...CONSOL_NEW,
 ]
 
 const mod: SmTopicModule = {

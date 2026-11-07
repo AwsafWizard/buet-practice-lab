@@ -8,6 +8,7 @@ import { nf } from '../../engine/phase'
 import { AashtoFig52, PlasticityChart, UsdaTriangle } from '../../reference/idx'
 import type { SmQ, SmTopicModule } from '../../types'
 import { ClassExams } from './exam'
+import { CLASS_NEW } from './notAsked'
 import { AashtoGrid, GradingCurve, UscsPath } from './figs'
 import { ClassLab } from './Lab'
 import { CLASS_PICKS } from './picks'
@@ -278,6 +279,7 @@ const problems: SmQ[] = [
       )
     },
   },
+  ...CLASS_NEW,
 ]
 
 const mod: SmTopicModule = {

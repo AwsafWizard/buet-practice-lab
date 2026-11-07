@@ -184,3 +184,14 @@ describe('earthwork (solids conserved)', () => {
     near(gdFromE(1.2, 2.7, 1) * 330000, 405000, 1e-9)
   })
 })
+
+import { rubberBalloon } from './compaction'
+describe('rubber balloon', () => {
+  it('hole volume from the volumeter readings', () => {
+    const r = rubberBalloon({ R1: 85, R2: 1318, Wwet: 2390, w: 0.124 })
+    expect(r.V).toBe(1233)
+    expect(r.rhoB).toBeCloseTo(2390 / 1233, 12)
+    expect(r.rhoD).toBeCloseTo(2390 / 1233 / 1.124, 12)
+    expect(rubberBalloon({ R1: 0, R2: 1000, Wwet: 2000, Wdry: 1800 }).w).toBeCloseTo(200 / 1800, 12)
+  })
+})

@@ -11,6 +11,7 @@ import { BulbLab } from './BulbLab'
 import { FadumBuilder, NewmarkLab } from './FadumLab'
 import { EmbFig, PlanFig, ShapeCompareFig } from './figs'
 import { LoadLab } from './LoadLab'
+import { STRESS_NEW } from './notAsked'
 import { STRESS_PICKS } from './picks'
 import { StressProblems } from './Problems'
 import { SHAPES } from './shapes'
@@ -209,6 +210,7 @@ const problems: SmQ[] = [
     ],
     solution: () => <Md>{`(i) 0.4775 × 1500/9 = **${f2(boussinesq(1500, 0, 3))} kPa**. (ii) r/z = 0.667, KB = ${f4((boussinesq(1500, 2, 3) * 9) / 1500)} → **${f2(boussinesq(1500, 2, 3))} kPa**. (iii) z = 1.225r = **${f2(2 / Math.sqrt(2 / 3))} m**, σmax = 0.0888 × 1500/4 = **${f2((0.0888 * 1500) / 4)} kPa**. (iv) KW = (1/π)/[1 + 2(0.667)²]^1.5 → ${f2((1500 / 9) * (1 / Math.PI) / (1 + 2 * (2 / 3) ** 2) ** 1.5)} kPa.`}</Md>,
   },
+  ...STRESS_NEW,
 ]
 
 const mod: SmTopicModule = {

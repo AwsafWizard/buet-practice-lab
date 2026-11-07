@@ -244,3 +244,16 @@ describe('2:1 and pressure bulbs', () => {
     expect(bulbRatio('square', 1, 0, 2)).toBeLessThan(0.11)
   })
 })
+
+import { triStripDas } from './stressdist'
+describe('triangular strip by the Das angles', () => {
+  it('matches the line-load integral everywhere', () => {
+    for (const [x, z] of [[0, 2], [3, 2], [4, 2], [-1, 3], [6, 1.5], [2, 4]]) near(triStripDas(100, 4, x, z).sigma, triStripAt(100, 4, x, z), 1e-9)
+  })
+  it('under the peak at z = B: α = π/4, δ = 0 → σz = q/4', () => {
+    const r = triStripDas(80, 5, 5, 5)
+    near(r.alpha, Math.PI / 4, 1e-12)
+    near(r.delta, 0, 1e-12)
+    near(r.sigma, 20, 1e-9)
+  })
+})

@@ -6,6 +6,7 @@ import { darcy, layered, pumpUnconfined, scaleFallTime } from '../../engine/perm
 import { openSmRef } from '../../reference/pane'
 import type { SmQ, SmTopicModule } from '../../types'
 import { CapLab, LayeredLab, LayeredSolution, LayersFig, PermeameterLab, PermSolution, PERM_DEFAULT, PumpLab, sciTex, type PermState } from './Labs'
+import { PERM_NEW } from './notAsked'
 import { PERM_PICKS } from './picks'
 import { PermProblems } from './Problems'
 import { PERM_THEORY } from './theory'
@@ -164,6 +165,7 @@ const problems: SmQ[] = [
       return <Md>{`$$k = \\frac{q\\ln(r_2/r_1)}{\\pi(h_2^2 - h_1^2)} = \\frac{0.025\\ln(50/12)}{\\pi(7.0^2 - 6.1^2)} = ${sciTex(k, 3)}\\ \\text{m/s} = ${sciTex(k * 100, 3)}\\ \\text{cm/s (coarse sand)}$$`}</Md>
     },
   },
+  ...PERM_NEW,
 ]
 
 function PermLab() {

@@ -330,3 +330,19 @@ describe('cv fitting on generated dial data', () => {
     expect(c.d100).toBeGreaterThan(c.d0)
   })
 })
+
+import { mSmear, urSmear } from './consolidation'
+describe('sand drains: equal strain with smear (Barron / Das ASM)', () => {
+  it('S = 1 (no smear) reduces to F(n)', () => {
+    for (const n of [5, 8.75, 15, 25]) near(mSmear(n, 1, 3), Fn(n), 1e-12)
+    near(urSmear(0.2, 10, 1, 5), urBarron(0.2, 10), 1e-12)
+  })
+  it('hand calculation: n = 8.75, S = 2, kh/ks = 3 → m = 2.7911', () => {
+    near(mSmear(8.75, 2, 3), 2.791122, 1e-5)
+    near(urSmear(0.18, 8.75, 2, 3), 1 - Math.exp((-8 * 0.18) / 2.791122), 1e-6)
+  })
+  it('smear always slows radial drainage', () => {
+    expect(urSmear(0.2, 10, 2, 2)).toBeLessThan(urBarron(0.2, 10))
+    expect(urSmear(0.2, 10, 2, 4)).toBeLessThan(urSmear(0.2, 10, 2, 2))
+  })
+})

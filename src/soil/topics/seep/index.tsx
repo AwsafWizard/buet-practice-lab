@@ -11,6 +11,7 @@ import type { SmQ, SmTopicModule } from '../../types'
 import { FlowNetLab, geomOf, NET_DEFAULT, netResults, NetSolution, type NetState } from './FlowNetLab'
 import { ExSolution, HeaveLabs, type ExState } from './HeaveLab'
 import { NetView } from './NetView'
+import { SEEP_NEW } from './notAsked'
 import { SEEP_PICKS } from './picks'
 import { SeepProblems } from './Problems'
 import { PROF_DEFAULT, ProfileFigure, ProfileLab, ProfileSolution, toProfileIn, type ProfState } from './ProfileLab'
@@ -297,6 +298,7 @@ const problems: SmQ[] = [
       )
     },
   },
+  ...SEEP_NEW,
 ]
 
 // ---------------------------------------------------------------- lab page

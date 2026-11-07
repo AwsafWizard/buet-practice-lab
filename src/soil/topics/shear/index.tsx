@@ -10,6 +10,7 @@ import type { SmQ, SmTopicModule } from '../../types'
 import { MohrFig, TauSigmaFig } from './figs'
 import { ShearLabSections } from './Lab'
 import { SHEAR_PICKS } from './picks'
+import { SHEAR_NEW } from './notAsked'
 import { ShearProblems } from './Problems'
 import { SHEAR_THEORY } from './theory'
 
@@ -309,6 +310,7 @@ const problems: SmQ[] = [
       )
     },
   },
+  ...SHEAR_NEW,
 ]
 
 const mod: SmTopicModule = {

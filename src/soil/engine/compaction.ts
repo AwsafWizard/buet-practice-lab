@@ -241,6 +241,17 @@ export function coreCutter(o: { D: number; L: number; W: number; wWet?: number; 
   return { V, rhoB, w, rhoD: rhoB / (1 + w) }
 }
 
+/**
+ * rubber balloon (ASTM D2167): the volumeter reads R1 with the base plate on the levelled surface and R2 with the
+ * balloon pressed into the hole; hole volume V = R2 − R1 (cm³). Soil from the hole: wet mass, and w or its dry mass.
+ */
+export function rubberBalloon(o: { R1: number; R2: number; Wwet: number; Wdry?: number; w?: number }) {
+  const V = o.R2 - o.R1
+  const w = o.w ?? (o.Wdry !== undefined ? (o.Wwet - o.Wdry) / o.Wdry : 0)
+  const rhoB = o.Wwet / V
+  return { V, w, rhoB, rhoD: rhoB / (1 + w) }
+}
+
 // ---------------------------------------------------------------- earthwork
 
 /** dry unit weight of a state given any of: γd; γ and w; e and Gs; RC × MDD */

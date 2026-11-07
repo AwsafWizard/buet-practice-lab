@@ -495,6 +495,15 @@ export const urBarron = (Tr: number, n: number) => 1 - Math.exp((-8 * Tr) / Fn(n
 export const trForUr = (Ur: number, n: number) => (-Math.log(1 - Ur) * Fn(n)) / 8
 export const combinedU = (Uv: number, Ur: number) => 1 - (1 - Uv) * (1 - Ur)
 
+/**
+ * Equal strain WITH smear (Barron; Das, Advanced Soil Mechanics p. 324–325, SJMY Lecture 20):
+ * Ur = 1 − exp(−8Tr/m), m = n²/(n² − S²) ln(n/S) − 3/4 + S²/(4n²) + (kh/ks)(n² − S²)/n² · ln S,
+ * n = re/rw, S = rs/rw (rs = outer radius of the smear zone), ks = horizontal k inside the smear zone.
+ * S = 1 (no smear) gives m = F(n).
+ */
+export const mSmear = (n: number, S: number, khks: number) => ((n * n) / (n * n - S * S)) * Math.log(n / S) - 0.75 + (S * S) / (4 * n * n) + khks * ((n * n - S * S) / (n * n)) * Math.log(S)
+export const urSmear = (Tr: number, n: number, S: number, khks: number) => 1 - Math.exp((-8 * Tr) / mSmear(n, S, khks))
+
 export function sandDrain(o: { s: number; pattern: DrainPattern; rw: number; cv: number; cvr?: number; t: number; dv: number; tv?: TvMethod }) {
   const de = deFromSpacing(o.s, o.pattern)
   const re = de / 2

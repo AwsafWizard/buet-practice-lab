@@ -71,6 +71,18 @@ export function stripAngles(B: number, x: number, z: number) {
 /** triangular strip, zero at x = 0 rising to q at x = B (point x measured from the zero edge) */
 export const triStripAt = (q: number, B: number, x: number, z: number) => linearStrip(0, 0, B, q, x, z)
 
+/**
+ * triangular strip by the textbook (Das) angles: zero at x = 0, q at x = B, point at (x, z) with x from the zero edge.
+ * α = angle subtended by the load at the point, δ = tan⁻¹((x − B)/z) = angle from the vertical to the line to the
+ * high (q) edge, negative when that edge is to the right of the point. σz = (q/π)[(x/B)α − ½ sin 2δ] (= triStripAt).
+ */
+export function triStripDas(q: number, B: number, x: number, z: number) {
+  const a1 = Math.atan(x / z)
+  const delta = Math.atan((x - B) / z)
+  const alpha = a1 - delta
+  return { alpha, delta, I: ((x / B) * alpha - 0.5 * Math.sin(2 * delta)) / Math.PI, sigma: (q / Math.PI) * ((x / B) * alpha - 0.5 * Math.sin(2 * delta)) }
+}
+
 // ---------------------------------------------------------------- embankments (Osterberg)
 
 /** Osterberg: Iz = (1/π)[((a + b)/a)(α1 + α2) − (b/a)α2], α1 + α2 = tan⁻¹((a + b)/z), α2 = tan⁻¹(b/z); point below the inner edge of the slope */

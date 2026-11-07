@@ -364,7 +364,7 @@ export interface PumpState {
 export const PUMP_DEFAULT: PumpState = { kind: 'unconf', q: 0.02, r1: 15, r2: 60, h1: 5.5, h2: 6.2, T: 4 }
 export const pumpK = (s: PumpState) => (s.kind === 'unconf' ? pumpUnconfined(s) : pumpConfined(s))
 
-function PumpFig({ s, k }: { s: PumpState; k: number }) {
+export function PumpFig({ s, k }: { s: PumpState; k: number }) {
   const W = 460
   const H = 200
   const R = s.r2 * 1.6

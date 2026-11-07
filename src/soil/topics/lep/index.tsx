@@ -9,6 +9,7 @@ import type { SmQ, SmTopicModule } from '../../types'
 import { WallFig } from './figs'
 import { toWall } from './gen'
 import { LepLabSections } from './Lab'
+import { LEP_NEW } from './notAsked'
 import { LEP_PICKS } from './picks'
 import { LepProblems } from './Problems'
 import { WallSolution } from './Solution'
@@ -235,6 +236,7 @@ const problems: SmQ[] = [
       )
     },
   },
+  ...LEP_NEW,
 ]
 
 const mod: SmTopicModule = {
