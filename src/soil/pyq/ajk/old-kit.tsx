@@ -3,6 +3,7 @@
 // sloping backfill, critical height of cuts, and the figures those questions need. Every number comes from the
 // engines in src/soil/engine; the general renderers come from ./kit.
 import type { ReactNode } from 'react'
+import { tipAxes } from '../../../components/PointTip'
 import { Md, Tex } from '../../../components/ui'
 import { coulomb, criticalHeight, crackDepth, Ka, Kp, rankineSloping, trialWedge } from '../../engine/earth'
 import { circle, failurePlane, fsOnPlane, obliquity, type Circle } from '../../engine/mohr'
@@ -216,7 +217,7 @@ export function CulmannCurve({ H, gamma, phi, delta = 0, state }: { H: number; g
   const yt: number[] = []
   for (let v = 0; v <= pMax; v += step) yt.push(v)
   return (
-    <svg viewBox={`0 0 ${W} ${Hh}`} className="w-full" style={{ maxWidth: W }} role="img" aria-label="Culmann (trial-wedge) curve">
+    <svg viewBox={`0 0 ${W} ${Hh}`} className="w-full" style={{ maxWidth: W }} role="img" aria-label="Culmann (trial-wedge) curve" {...tipAxes({ X, Y, x: 'ρ', xUnit: '°', y: 'P', yUnit: ' kN/m' })}>
       {yt.map((v) => (
         <g key={v}>
           <line x1={L} x2={W - R} y1={Y(v)} y2={Y(v)} stroke="var(--c-line)" strokeWidth={0.5} />
@@ -323,7 +324,7 @@ export function ProfilePlot({ H, curves, width = 460, height = 300, step }: { H:
   const zt: number[] = []
   for (let z = 0; z <= H + 1e-9; z += zStep) zt.push(+z.toFixed(2))
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="w-full" style={{ maxWidth: width }} role="img" aria-label="lateral pressure on the wall">
+    <svg viewBox={`0 0 ${width} ${height}`} className="w-full" style={{ maxWidth: width }} role="img" aria-label="lateral pressure on the wall" {...tipAxes({ X, Y, x: 'σh', xUnit: ' kPa', y: 'z', yUnit: ' m' })}>
       <rect x={L - 16} y={T} width={14} height={height - T - B} fill="var(--c-line)" stroke="var(--c-ink)" />
       <text x={L - 22} y={T - 8} fontSize={9.5} fill="var(--c-mute)" textAnchor="end">
         wall
@@ -346,7 +347,7 @@ export function ProfilePlot({ H, curves, width = 460, height = 300, step }: { H:
         σh (kPa) across the top, depth z (m) down the wall
       </text>
       {data.map((d, i) => (
-        <g key={i}>
+        <g key={i} data-name={data.length > 1 ? curves[i].label : undefined}>
           <polygon points={`${X(0)},${Y(0)} ${d.map((p) => `${X(p.s).toFixed(1)},${Y(p.z).toFixed(1)}`).join(' ')} ${X(0)},${Y(H)}`} fill={curves[i].color} fillOpacity={i === data.length - 1 ? 0.12 : 0} stroke="none" />
           <polyline points={d.map((p) => `${X(p.s).toFixed(1)},${Y(p.z).toFixed(1)}`).join(' ')} fill="none" stroke={curves[i].color} strokeWidth={1.7} strokeDasharray={curves[i].dash ? '5 3' : undefined} />
           <line x1={width - 150} x2={width - 132} y1={T + 14 + i * 14} y2={T + 14 + i * 14} stroke={curves[i].color} strokeWidth={1.7} strokeDasharray={curves[i].dash ? '5 3' : undefined} />

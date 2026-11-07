@@ -3,6 +3,7 @@
 // from the engines in src/soil/engine.
 import type { ReactNode } from 'react'
 import { fmt } from '../../../components/DiagramView'
+import { tipAxes } from '../../../components/PointTip'
 import { Md, Tex } from '../../../components/ui'
 import { aashto, type AashtoIn, uscs, type UscsIn } from '../../engine/classify'
 import { crackForces, solveWall, type Wall, type WallResult } from '../../engine/earth'
@@ -448,7 +449,7 @@ export function PQPlot({ pts, a, alpha, width = 520, height = 260 }: { pts: { p:
   const X = (p: number) => L + p * k
   const Y = (q: number) => height - B - q * k
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="w-full" role="img" aria-label="p′–q diagram">
+    <svg viewBox={`0 0 ${width} ${height}`} className="w-full" role="img" aria-label="p′–q diagram" {...tipAxes({ X, Y, x: 'p′', xUnit: ' kPa', y: 'q', yUnit: ' kPa' })}>
       <line x1={L} x2={width - Rm} y1={Y(0)} y2={Y(0)} stroke="var(--c-ink)" />
       <line x1={L} x2={L} y1={Tm} y2={Y(0)} stroke="var(--c-ink)" />
       <text x={width - Rm} y={Y(0) + 14} fontSize={10} textAnchor="end" fill="var(--c-ink)">
@@ -457,7 +458,7 @@ export function PQPlot({ pts, a, alpha, width = 520, height = 260 }: { pts: { p:
       <text x={L + 4} y={Tm + 8} fontSize={10} fill="var(--c-ink)">
         q = (σ1 − σ3)/2 (kPa)
       </text>
-      <line x1={X(0)} y1={Y(a)} x2={X(pmax)} y2={Y(a + pmax * ta)} stroke="var(--c-accent2)" strokeWidth={1.6} />
+      <line x1={X(0)} y1={Y(a)} x2={X(pmax)} y2={Y(a + pmax * ta)} stroke="var(--c-accent2)" strokeWidth={1.6} data-curve />
       <text x={X(pmax) - 4} y={Y(a + pmax * ta) + 14} fontSize={9.5} textAnchor="end" fill="var(--c-accent2)">
         Kf line: q = {f2(a)} + p′ tan {f2(alpha)}°
       </text>

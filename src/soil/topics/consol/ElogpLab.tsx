@@ -116,15 +116,15 @@ export function ElogpLab() {
                 const lgmax = lg(pmax)
                 return (
                   <>
-                    <path d={pathOf(env.map((q) => [q.p, q.e]), s)} fill="none" stroke="var(--c-ink)" strokeWidth={1.2} />
-                    <path d={pathOf(pts.filter((q, i) => q.stage !== 'load' || pts.slice(i + 1).some((r) => r.stage !== 'load')).map((q) => [q.p, q.e]), s)} fill="none" stroke="var(--c-mute)" strokeWidth={0.9} strokeDasharray="3 2" />
+                    <path d={pathOf(env.map((q) => [q.p, q.e]), s)} fill="none" stroke="var(--c-ink)" strokeWidth={1.2} data-name="loading" />
+                    <path d={pathOf(pts.filter((q, i) => q.stage !== 'load' || pts.slice(i + 1).some((r) => r.stage !== 'load')).map((q) => [q.p, q.e]), s)} fill="none" stroke="var(--c-mute)" strokeWidth={0.9} strokeDasharray="3 2" data-name="unload–reload" />
                     {pts.map((q, i) => (
                       <circle key={i} cx={ax(q.p)} cy={ay(q.e)} r={3} fill={q.stage === 'load' ? 'var(--c-ink)' : q.stage === 'unload' ? 'var(--c-water)' : 'var(--c-shear)'} data-tip={`${q.stage}: p′ = ${fmt(q.p, 4)} kPa, e = ${f3(q.e)}`} />
                     ))}
                     {step >= 1 && <circle cx={ax(m.p)} cy={ay(m.e)} r={6} fill="none" stroke="var(--c-load)" strokeWidth={2} data-tip={`max curvature: p′ = ${fmt(m.p, 4)} kPa, e = ${f3(m.e)}`} />}
                     {step >= 2 && <path d={line(0, xm, m.e, xm, Math.min(lgmax, xm + 1.2))} stroke="var(--c-load)" strokeWidth={1} />}
-                    {step >= 3 && <path d={line(cg.tangentSlope, xm, m.e, Math.max(lgmin, xm - 0.5), Math.min(lgmax, xm + 0.9))} stroke="var(--c-load)" strokeWidth={1} strokeDasharray="5 3" />}
-                    {step >= 4 && <path d={line(cg.bisectorSlope, xm, m.e, xm, Math.min(lgmax, xm + 1.1))} stroke="var(--c-accent)" strokeWidth={1.3} />}
+                    {step >= 3 && <path d={line(cg.tangentSlope, xm, m.e, Math.max(lgmin, xm - 0.5), Math.min(lgmax, xm + 0.9))} stroke="var(--c-load)" strokeWidth={1} strokeDasharray="5 3" data-name="tangent" />}
+                    {step >= 4 && <path d={line(cg.bisectorSlope, xm, m.e, xm, Math.min(lgmax, xm + 1.1))} stroke="var(--c-accent)" strokeWidth={1.3} data-name="bisector" />}
                     {step >= 5 && (
                       <>
                         <path d={line(vb, lg(cc.b.p), cc.b.e, Math.max(lgmin, lg(cg.pc) - 0.3), lg(cc.b.p))} stroke="var(--c-accent)" strokeWidth={1.3} strokeDasharray="6 3" />
@@ -144,7 +144,7 @@ export function ElogpLab() {
                     )}
                     {showField && fc && (
                       <>
-                        <path d={pathOf(fc.pts.map((q) => [q.p, q.e]), s)} fill="none" stroke="var(--c-moment)" strokeWidth={2} />
+                        <path d={pathOf(fc.pts.map((q) => [q.p, q.e]), s)} fill="none" stroke="var(--c-moment)" strokeWidth={2} data-name="field" />
                         <line x1={s.L} x2={ax(fc.pL)} y1={ay(fc.eL)} y2={ay(fc.eL)} stroke="var(--c-moment)" strokeDasharray="2 3" />
                         <text x={s.L + 3} y={ay(fc.eL) - 3} fontSize={9} fill="var(--c-moment)">
                           0.42e0 = {f3(fc.eL)}

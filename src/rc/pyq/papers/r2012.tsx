@@ -2,6 +2,7 @@
 // This file also holds the small SVG kit and the theory answers that the older
 // papers (r2011 … r2007) reuse: an answer lives in the newest paper that asks it.
 import { useId, type FC, type ReactNode } from 'react'
+import { tipAxes } from '../../../components/PointTip'
 import { Md, Tex } from '../../../components/ui'
 import type { Check, RcQ } from '../../types'
 import { elasticAt, f, uncracked, type SolStep } from '../../engine/elastic'
@@ -463,8 +464,10 @@ export function PhiChart() {
           </T>
         </g>
       ))}
-      <path d={path(spiral)} fill="none" stroke={C.mute} strokeWidth={1.6} strokeDasharray="6 3" />
-      <path d={path(tied)} fill="none" stroke={C.load} strokeWidth={2.2} />
+      <g {...tipAxes({ X, Y, x: 'εt', y: 'φ' })}>
+        <path d={path(spiral)} fill="none" stroke={C.mute} strokeWidth={1.6} strokeDasharray="6 3" data-name="spiral" />
+        <path d={path(tied)} fill="none" stroke={C.load} strokeWidth={2.2} data-name="tied" />
+      </g>
       <T x={X(0.0004)} y={Y(0.65) + 14} a="start" s={11}>
         tied 0.65
       </T>

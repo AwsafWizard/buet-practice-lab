@@ -113,7 +113,7 @@ export function RateLab() {
                   <>
                     {(['one', 'two'] as const).map((w) => {
                       const dd = drainPath(p.H, w)
-                      return <path key={w} d={pathOf(ts.map((tt) => [tt, (uBy((p.cv * tt) / (dd * dd), 'exact') / 100) * p.S]), s)} fill="none" stroke={w === 'one' ? 'var(--c-accent)' : 'var(--c-water)'} strokeWidth={w === p.way ? 2.2 : 1} opacity={w === p.way ? 1 : 0.6} />
+                      return <path key={w} d={pathOf(ts.map((tt) => [tt, (uBy((p.cv * tt) / (dd * dd), 'exact') / 100) * p.S]), s)} fill="none" stroke={w === 'one' ? 'var(--c-accent)' : 'var(--c-water)'} strokeWidth={w === p.way ? 2.2 : 1} opacity={w === p.way ? 1 : 0.6} data-name={w === 'one' ? 'one-way' : 'two-way'} />
                     })}
                     {t <= tEnd && <circle cx={s.X(t)} cy={s.Y(St)} r={4} fill="var(--c-load)" data-tip={`t = ${f3(t)} years, settlement = ${f3(St)} mm`} />}
                   </>

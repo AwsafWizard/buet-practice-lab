@@ -1,5 +1,6 @@
 // Consolidation drawings: the soil profile with σ′0 and Δp beside it, the e–log p stress path, isochrones, sketches.
 import { fmt } from '../../../components/DiagramView'
+import { tipAxes } from '../../../components/PointTip'
 import { loadDp, settleProfile, type CLayer, type LoadIn, type SettleIn } from '../../engine/consolidation'
 import { stressAt } from '../../engine/stresses'
 import { uRatio } from '../../engine/consolidation'
@@ -28,7 +29,7 @@ export function ProfileFig({ inp, out, width = 620 }: { inp: SettleIn; out: Retu
   let z = 0
   const load = inp.load
   return (
-    <svg viewBox={`0 0 ${width} ${top + hPx + 30}`} className="w-full" role="img" aria-label="soil profile">
+    <svg viewBox={`0 0 ${width} ${top + hPx + 30}`} className="w-full" role="img" aria-label="soil profile" {...tipAxes({ X: SX, Y, x: 'p′', xUnit: ' kPa', y: 'z', yUnit: ' m' })}>
       {inp.layers.map((l, i) => {
         const a = z
         z += l.H
@@ -88,7 +89,7 @@ export function ProfileFig({ inp, out, width = 620 }: { inp: SettleIn; out: Retu
                   {f1(load.Q)} kN{load.shape === 'strip' ? '/m' : ''} · {load.shape === 'circle' ? `D ${f1(load.B)}` : load.shape === 'strip' ? `B ${f1(load.B)}` : `${f1(load.B)}×${f1(load.L)}`} m
                 </text>
                 {load.method === '21' && (
-                  <path d={`M${x0},${Y(load.Df)} L${x0 - ((Htot - load.Df) * k) / 2},${Y(Htot)} M${x0 + bw},${Y(load.Df)} L${x0 + bw + ((Htot - load.Df) * k) / 2},${Y(Htot)}`} stroke="var(--c-load)" strokeDasharray="3 3" opacity={0.6} fill="none" />
+                  <path d={`M${x0},${Y(load.Df)} L${x0 - ((Htot - load.Df) * k) / 2},${Y(Htot)} M${x0 + bw},${Y(load.Df)} L${x0 + bw + ((Htot - load.Df) * k) / 2},${Y(Htot)}`} stroke="var(--c-load)" strokeDasharray="3 3" opacity={0.6} fill="none" data-nocurve />
                 )}
               </>
             )
@@ -112,7 +113,7 @@ export function ProfileFig({ inp, out, width = 620 }: { inp: SettleIn; out: Retu
       <text x={plotL + plotW} y={top - 6} fontSize={9} textAnchor="end" fill="var(--c-mute)">
         {f1(maxS)} kPa
       </text>
-      <path d={zs.map((zz, i) => `${i ? 'L' : 'M'}${SX(effs[i]).toFixed(1)},${Y(zz).toFixed(1)}`).join(' ')} fill="none" stroke="var(--c-ink)" strokeWidth={1.5} />
+      <path d={zs.map((zz, i) => `${i ? 'L' : 'M'}${SX(effs[i]).toFixed(1)},${Y(zz).toFixed(1)}`).join(' ')} fill="none" stroke="var(--c-ink)" strokeWidth={1.5} data-name="σ′0" />
       <path
         d={zs
           .map((zz, i) => [zz, effs[i] + dps[i]] as const)
@@ -122,6 +123,7 @@ export function ProfileFig({ inp, out, width = 620 }: { inp: SettleIn; out: Retu
         fill="none"
         stroke="var(--c-load)"
         strokeWidth={1.5}
+        data-name="σ′0 + Δp"
       />
       {inp.layers.map((l, i) =>
         l.kind === 'clay' && l.pc ? (
@@ -176,7 +178,7 @@ export function StressPathFig({ e0, p0, p1, pc, Cc, Cs, w = 340 }: { e0: number;
               pc′ = {f1(pc)}
             </text>
           )}
-          <path d={pathOf(ps.filter((p) => p >= p0 && p <= p1).concat([p1]).map((p) => [p, e(p)]), s)} fill="none" stroke={col} strokeWidth={3.2} opacity={0.85} />
+          <path d={pathOf(ps.filter((p) => p >= p0 && p <= p1).concat([p1]).map((p) => [p, e(p)]), s)} fill="none" stroke={col} strokeWidth={3.2} opacity={0.85} data-name="stress path" />
           <circle cx={s.X(p0)} cy={s.Y(e0)} r={3.5} fill="var(--c-ink)" data-tip={`p0′ = ${fmt(p0, 4)}, e0 = ${fmt(e0, 4)}`} />
           <circle cx={s.X(p1)} cy={s.Y(e(p1))} r={3.5} fill={col} data-tip={`p1′ = ${fmt(p1, 4)}, e1 = ${fmt(e(p1), 4)}`} />
           <text x={s.X(p0) - 4} y={s.Y(e0) - 6} fontSize={9} textAnchor="end" fill="var(--c-ink)">
@@ -205,7 +207,7 @@ export function IsochroneFig({ Tv, way, w = 340, many = true }: { Tv: number; wa
         <>
           {many &&
             list.map((t) => (
-              <g key={t}>
+              <g key={t} data-name={`Tv = ${t}`}>
                 <path d={pathOf(Zs.map((Z) => [uRatio(Z, t), Z]), s)} fill="none" stroke="var(--c-mute)" strokeWidth={0.8} opacity={0.6} />
                 <text x={s.X(uRatio(Zmax / 2, t)) + 2} y={s.Y(way === 'two' ? 1 : 0.95)} fontSize={7.5} fill="var(--c-mute)">
                   {t}
@@ -213,7 +215,7 @@ export function IsochroneFig({ Tv, way, w = 340, many = true }: { Tv: number; wa
               </g>
             ))}
           <path d={pathOf([[0, 0], ...Zs.map((Z) => [uRatio(Z, Tv), Z] as [number, number]), [0, Zmax]], s) + ' Z'} fill="var(--c-water)" opacity={0.18} />
-          <path d={pathOf(Zs.map((Z) => [uRatio(Z, Tv), Z]), s)} fill="none" stroke="var(--c-water)" strokeWidth={2.4} />
+          <path d={pathOf(Zs.map((Z) => [uRatio(Z, Tv), Z]), s)} fill="none" stroke="var(--c-water)" strokeWidth={2.4} data-name={`Tv = ${fmt(Tv, 3)}`} />
           {way === 'one' && <line x1={s.L} x2={s.R} y1={s.B} y2={s.B} stroke="var(--c-ink)" strokeWidth={3} />}
         </>
       )}
@@ -273,8 +275,8 @@ export function FieldCurveSketch({ oc = false }: { oc?: boolean }) {
     <Chart w={340} h={220} x={{ min: 10, max: 2000, log: true, label: "p′ (log)", minor: false }} y={{ min: 0.3, max: 0.95, label: 'e', ticks: [0.4, 0.6, 0.8] }} label="field curve sketch">
       {(s) => (
         <>
-          <path d={pathOf(ps.map((p) => [p, lab(p)]), s)} fill="none" stroke="var(--c-mute)" strokeWidth={1.3} strokeDasharray="4 3" />
-          <path d={pathOf(oc ? [[p0, e0], [pc, eb], [pL, eL]] : [[p0, e0], [pL, eL]], s)} fill="none" stroke="var(--c-accent)" strokeWidth={2} />
+          <path d={pathOf(ps.map((p) => [p, lab(p)]), s)} fill="none" stroke="var(--c-mute)" strokeWidth={1.3} strokeDasharray="4 3" data-name="lab" />
+          <path d={pathOf(oc ? [[p0, e0], [pc, eb], [pL, eL]] : [[p0, e0], [pL, eL]], s)} fill="none" stroke="var(--c-accent)" strokeWidth={2} data-name="field" />
           <line x1={s.L} x2={s.X(pL)} y1={s.Y(eL)} y2={s.Y(eL)} stroke="var(--c-load)" strokeDasharray="3 2" />
           <text x={s.L + 4} y={s.Y(eL) - 3} fontSize={9} fill="var(--c-load)">
             0.42e0

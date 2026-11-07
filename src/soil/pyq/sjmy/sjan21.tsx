@@ -84,13 +84,13 @@ function OedFig() {
       <Chart w={420} h={270} x={{ min: 4, max: 1000, log: true, label: "p (kPa, log scale)" }} y={{ min: 0.52, max: 0.77, ticks: [0.55, 0.6, 0.65, 0.7, 0.75], label: 'e' }} label="oedometer e–log p">
         {(sc) => (
           <>
-            <path d={pathOf(OED.filter((q) => q.stage === 'load').map((q) => [q.p, q.e]), sc)} fill="none" stroke="var(--c-accent)" strokeWidth={1.4} />
-            <path d={pathOf([[200, 0.67], ...OED.filter((q) => q.stage !== 'load').map((q) => [q.p, q.e] as [number, number])], sc)} fill="none" stroke="var(--c-accent)" strokeWidth={1} strokeDasharray="4 3" />
+            <path d={pathOf(OED.filter((q) => q.stage === 'load').map((q) => [q.p, q.e]), sc)} fill="none" stroke="var(--c-accent)" strokeWidth={1.4} data-name="loading" />
+            <path d={pathOf([[200, 0.67], ...OED.filter((q) => q.stage !== 'load').map((q) => [q.p, q.e] as [number, number])], sc)} fill="none" stroke="var(--c-accent)" strokeWidth={1} strokeDasharray="4 3" data-name="unloading" />
             {OED.map((q, i) => (
               <circle key={i} cx={sc.X(q.p)} cy={sc.Y(q.e)} r={2.6} fill={q.stage === 'load' ? 'var(--c-accent)' : 'var(--c-load)'} data-tip={`${q.stage}: p′ = ${q.p} kPa, e = ${f3(q.e)}`} />
             ))}
-            <path d={pathOf(xs.map((p) => [p, vir(p)] as [number, number]).filter(([, e]) => e > 0.52 && e < 0.77), sc)} fill="none" stroke="var(--c-mute)" strokeDasharray="2 3" />
-            <path d={pathOf(xs.map((p) => [p, rec(p)]), sc)} fill="none" stroke="var(--c-mute)" strokeDasharray="2 3" />
+            <path d={pathOf(xs.map((p) => [p, vir(p)] as [number, number]).filter(([, e]) => e > 0.52 && e < 0.77), sc)} fill="none" stroke="var(--c-mute)" strokeDasharray="2 3" data-name="virgin line" />
+            <path d={pathOf(xs.map((p) => [p, rec(p)]), sc)} fill="none" stroke="var(--c-mute)" strokeDasharray="2 3" data-name="recompression" />
             {[
               { p: o.cas.pc, t: `p′c ≈ ${f2(o.cas.pc)}`, c: 'var(--c-bad)' },
               { p: s.p0, t: `p′0 = ${f2(s.p0)}`, c: 'var(--c-water)' },

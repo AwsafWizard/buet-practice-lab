@@ -1,6 +1,7 @@
 // 2017-18 term final (held 23 Sep 2018), PDF pp. 31–35. No design aids attached.
 // This file also holds the drawing kit and the model answers shared by r2013–r2017.
 import type { ReactNode } from 'react'
+import { tipAxes } from '../../../components/PointTip'
 import { Md } from '../../../components/ui'
 import type { RcQ } from '../../types'
 import { SolSteps } from '../../topics/elastic/ui'
@@ -581,8 +582,10 @@ export function PhiChart() {
           </T>
         </g>
       ))}
-      <polyline points={`${x0},${Y(0.65)} ${X(0.002)},${Y(0.65)} ${X(0.005)},${Y(0.9)} ${X(0.008)},${Y(0.9)}`} fill="none" stroke={C.accent} strokeWidth={2.2} />
-      <polyline points={`${x0},${Y(0.75)} ${X(0.002)},${Y(0.75)} ${X(0.005)},${Y(0.9)}`} fill="none" stroke={C.load} strokeWidth={1.6} strokeDasharray="5 3" />
+      <g {...tipAxes({ X, Y, x: 'εt', y: 'φ' })}>
+        <polyline points={`${x0},${Y(0.65)} ${X(0.002)},${Y(0.65)} ${X(0.005)},${Y(0.9)} ${X(0.008)},${Y(0.9)}`} fill="none" stroke={C.accent} strokeWidth={2.2} data-name="tied / other" />
+        <polyline points={`${x0},${Y(0.75)} ${X(0.002)},${Y(0.75)} ${X(0.005)},${Y(0.9)}`} fill="none" stroke={C.load} strokeWidth={1.6} strokeDasharray="5 3" data-name="spiral" />
+      </g>
       <T x={X(0.001)} y={Y(0.65) + 12} s={11}>
         compression-controlled
       </T>
@@ -910,42 +913,48 @@ export function StressStrainFig({ steel }: { steel?: boolean }) {
       </T>
       <Ln x1={cx0} y1={cy0} x2={CX(0.004)} y2={cy0} />
       <Ln x1={cx0} y1={cy0} x2={cx0} y2={CY(7)} />
-      {[3, 4, 5, 6].map((fc) => (
-        <g key={fc}>
-          <polyline points={curve(fc)} fill="none" stroke={fc === 4 ? C.accent : C.mute} strokeWidth={fc === 4 ? 2.2 : 1.3} />
-          <T x={CX(0.0017 + fc * 0.0001)} y={CY(fc) - 9} s={11}>
-            {fc} ksi
-          </T>
+      <g {...tipAxes({ X: CX, Y: CY, x: 'εc', y: 'fc', yUnit: ' ksi' })}>
+        {[3, 4, 5, 6].map((fc) => (
+          <g key={fc} data-name={`f′c = ${fc} ksi`}>
+            <polyline points={curve(fc)} fill="none" stroke={fc === 4 ? C.accent : C.mute} strokeWidth={fc === 4 ? 2.2 : 1.3} />
+            <T x={CX(0.0017 + fc * 0.0001)} y={CY(fc) - 9} s={11}>
+              {fc} ksi
+            </T>
+          </g>
+        ))}
+        <Ln x1={CX(0.002)} y1={cy0} x2={CX(0.002)} y2={CY(4)} c={C.line} dash="3 3" />
+        <Ln x1={CX(0.003)} y1={cy0} x2={CX(0.003)} y2={CY(3.4)} c={C.load} dash="4 3" />
+        <T x={CX(0.002)} y={cy0 + 13} s={11}>
+          ε0 ≈ 0.002
+        </T>
+        <T x={CX(0.003)} y={cy0 + 13} s={11} c={C.load}>
+          εcu = 0.003
+        </T>
+        <Ln x1={cx0} y1={CY(0.45 * 4)} x2={CX(0.0006)} y2={CY(0.45 * 4)} c={C.comp} dash="3 2" />
+        <T x={CX(0.0006) + 4} y={CY(1.8)} a="start" s={11} c={C.comp}>
+          0.45f′c (elastic / allowable)
+        </T>
+        <g data-name="Ec tangent">
+          <Ln x1={cx0} y1={cy0} x2={CX(0.0011)} y2={CY(4.0)} c={C.accent} dash="2 2" />
         </g>
-      ))}
-      <Ln x1={CX(0.002)} y1={cy0} x2={CX(0.002)} y2={CY(4)} c={C.line} dash="3 3" />
-      <Ln x1={CX(0.003)} y1={cy0} x2={CX(0.003)} y2={CY(3.4)} c={C.load} dash="4 3" />
-      <T x={CX(0.002)} y={cy0 + 13} s={11}>
-        ε0 ≈ 0.002
-      </T>
-      <T x={CX(0.003)} y={cy0 + 13} s={11} c={C.load}>
-        εcu = 0.003
-      </T>
-      <Ln x1={cx0} y1={CY(0.45 * 4)} x2={CX(0.0006)} y2={CY(0.45 * 4)} c={C.comp} dash="3 2" />
-      <T x={CX(0.0006) + 4} y={CY(1.8)} a="start" s={11} c={C.comp}>
-        0.45f′c (elastic / allowable)
-      </T>
-      <Ln x1={cx0} y1={cy0} x2={CX(0.0011)} y2={CY(4.0)} c={C.accent} dash="2 2" />
-      <T x={CX(0.0006)} y={CY(3.2)} a="end" s={11} c={C.accent}>
-        Ec = 57000√f′c
-      </T>
+        <T x={CX(0.0006)} y={CY(3.2)} a="end" s={11} c={C.accent}>
+          Ec = 57000√f′c
+        </T>
+      </g>
       <T x={175} y={H - 8} s={11} c={C.mute}>
         strain — higher f′c: steeper, more brittle
       </T>
       {steel && (
-        <g>
+        <g {...tipAxes({ X: SX, Y: SY, x: 'εs', y: 'fs', yUnit: ' ksi' })}>
+          {/* transparent hit area so the pointer anywhere over this plot reads the steel axes, not the concrete ones */}
+          <rect x={sx0} y={SY(100)} width={SX(0.11) - sx0} height={cy0 - SY(100)} fill="transparent" />
           <T x={sx0 + 100} y={14} w={700}>
             Grade 60 steel in tension
           </T>
           <Ln x1={sx0} y1={cy0} x2={SX(0.11)} y2={cy0} />
           <Ln x1={sx0} y1={cy0} x2={sx0} y2={SY(100)} />
-          <path d={`M ${sx0} ${cy0} L ${SX(0.00207)} ${SY(60)} L ${SX(0.012)} ${SY(60)} C ${SX(0.04)} ${SY(84)}, ${SX(0.07)} ${SY(92)}, ${SX(0.08)} ${SY(90)} L ${SX(0.1)} ${SY(80)}`} fill="none" stroke={C.steel} strokeWidth={2.2} />
-          <path d={`M ${sx0} ${cy0} L ${SX(0.00207)} ${SY(60)} L ${SX(0.1)} ${SY(60)}`} fill="none" stroke={C.load} strokeDasharray="5 3" strokeWidth={1.4} />
+          <path d={`M ${sx0} ${cy0} L ${SX(0.00207)} ${SY(60)} L ${SX(0.012)} ${SY(60)} C ${SX(0.04)} ${SY(84)}, ${SX(0.07)} ${SY(92)}, ${SX(0.08)} ${SY(90)} L ${SX(0.1)} ${SY(80)}`} fill="none" stroke={C.steel} strokeWidth={2.2} data-name="Grade 60 (actual)" />
+          <path d={`M ${sx0} ${cy0} L ${SX(0.00207)} ${SY(60)} L ${SX(0.1)} ${SY(60)}`} fill="none" stroke={C.load} strokeDasharray="5 3" strokeWidth={1.4} data-name="design: elastic–plastic" />
           <T x={sx0 + 6} y={SY(60) - 10} a="start" s={11}>
             fy = 60 ksi, εy = 0.00207
           </T>

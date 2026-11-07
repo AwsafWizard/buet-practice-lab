@@ -1,6 +1,7 @@
 // Chart pane, shear strength (s-) items: AJK sir's Lecture 5 tables + the charts and formulas the papers print.
 import { useState } from 'react'
 import { fmt } from '../../components/DiagramView'
+import { tipAxes } from '../../components/PointTip'
 import { Md } from '../../components/ui'
 import { Lookup, NumIn, ok, RT } from '../../reference/common'
 import { circle, failurePlane, onPlaneFromPrincipal } from '../engine/mohr'
@@ -189,7 +190,7 @@ export function BetaChart({ ocr, curve }: { ocr?: number; curve?: 'average' | 'u
   const band = path(BETA_CHART.upper) + ' ' + [...BETA_CHART.ocr].reverse().map((o, i) => `L${x(o).toFixed(1)},${y([...BETA_CHART.lower].reverse()[i]).toFixed(1)}`).join(' ') + ' Z'
   const b = ocr !== undefined && ocr >= 1 && ocr <= 10.6 ? betaOCR(ocr, curve) : null
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[360px]" role="img" aria-label="beta versus OCR chart">
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[360px]" role="img" aria-label="beta versus OCR chart" {...tipAxes({ X: x, Y: y, x: 'OCR', y: 'β' })}>
       {[0, 2, 4, 6, 8, 10, 12].map((o) => (
         <g key={o}>
           <line x1={x(o)} x2={x(o)} y1={y(0)} y2={y(6)} stroke="var(--c-line)" strokeWidth={0.6} />
@@ -207,9 +208,9 @@ export function BetaChart({ ocr, curve }: { ocr?: number; curve?: 'average' | 'u
         </g>
       ))}
       <path d={band} fill="var(--c-accent)" opacity={0.12} />
-      <path d={path(BETA_CHART.upper)} fill="none" stroke="var(--c-ink)" strokeWidth={1.3} />
-      <path d={path(BETA_CHART.lower)} fill="none" stroke="var(--c-ink)" strokeWidth={1.3} />
-      <path d={path(BETA_CHART.average)} fill="none" stroke="var(--c-accent)" strokeWidth={1.6} strokeDasharray="5 3" />
+      <path d={path(BETA_CHART.upper)} fill="none" stroke="var(--c-ink)" strokeWidth={1.3} data-name="upper" />
+      <path d={path(BETA_CHART.lower)} fill="none" stroke="var(--c-ink)" strokeWidth={1.3} data-name="lower" />
+      <path d={path(BETA_CHART.average)} fill="none" stroke="var(--c-accent)" strokeWidth={1.6} strokeDasharray="5 3" data-name="average" />
       <text x={x(10.7)} y={y(5.72) - 4} fontSize={8} textAnchor="end" fill="var(--c-mute)">
         upper
       </text>

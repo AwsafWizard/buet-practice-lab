@@ -1,5 +1,6 @@
 // 2013-14 term final (held 30 Jul 2015), PDF pp. 58–62. No design aids attached.
 // Sec B (Q5–Q9, answer 4 of 5, 26¼ marks each) is entirely about the Fig. 4 cantilever test beam.
+import { tipAxes } from '../../../components/PointTip'
 import type { RcQ } from '../../types'
 import { SolSteps } from '../../topics/elastic/ui'
 import { f, allowableMoment, uncracked, type ElasticInput } from '../../engine/elastic'
@@ -778,7 +779,9 @@ Given: $f'_c = 3$ ksi and $f_y = 60$ ksi. (Fig. 1: 5′-0″ | 12″ beam | 14�
           <Tbl head={['x (ft)', 'V (k)', 'M (k-ft)']} rows={xs.map((x) => [f(x), f(V(x), 2), f(M(x), 2)])} />
           <Svg w={W} h={220}>
             <Ln x1={X(0)} y1={30} x2={X(8)} y2={30} />
-            <polygon points={`${X(0)},30 ${X(0)},${30 - V(0) * 4} ${X(8)},${30 - V(8) * 4} ${X(8)},30`} fill={C.accent} opacity={0.2} stroke={C.accent} />
+            <g {...tipAxes({ X, Y: (v) => 30 - v * 4, x: 'x', xUnit: ' ft', y: 'V', yUnit: ' k' })}>
+              <polygon points={`${X(0)},30 ${X(0)},${30 - V(0) * 4} ${X(8)},${30 - V(8) * 4} ${X(8)},30`} fill={C.accent} opacity={0.2} stroke={C.accent} />
+            </g>
             <T x={X(0) - 6} y={30 - V(0) * 4} a="end" s={11}>
               {f(V(0), 2)} k
             </T>
@@ -789,7 +792,11 @@ Given: $f'_c = 3$ ksi and $f_y = 60$ ksi. (Fig. 1: 5′-0″ | 12″ beam | 14�
               SFD
             </T>
             <Ln x1={X(0)} y1={120} x2={X(8)} y2={120} />
-            <polyline points={xs.map((x) => `${X(x)},${120 + M(x) * 0.9}`).join(' ') + ` ${X(8)},120 ${X(0)},120`} fill={C.load} opacity={0.2} stroke={C.load} />
+            <g {...tipAxes({ X, Y: (m) => 120 - m * 0.9, x: 'x', xUnit: ' ft', y: 'M', yUnit: ' k-ft' })}>
+              {/* transparent hit area: the pointer over the BMD reads the moment axes, not the SFD ones */}
+              <rect x={X(0)} y={110} width={X(8) - X(0)} height={100} fill="transparent" />
+              <polyline points={xs.map((x) => `${X(x)},${120 + M(x) * 0.9}`).join(' ') + ` ${X(8)},120 ${X(0)},120`} fill={C.load} opacity={0.2} stroke={C.load} />
+            </g>
             <T x={X(0) - 6} y={120 + M(0) * 0.9} a="end" s={11}>
               −{f(M(0), 1)} k-ft
             </T>

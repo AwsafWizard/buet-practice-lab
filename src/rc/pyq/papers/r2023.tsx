@@ -2,6 +2,7 @@
 // This file also holds the figure kit and the recurring theory model answers that
 // r2021 / r2020 / rjan21 reuse (same questions recur almost word for word).
 import type { ReactNode } from 'react'
+import { tipAxes } from '../../../components/PointTip'
 import { Md, Tex } from '../../../components/ui'
 import { allowableMoment, f, uncracked, type ElasticInput, type SolStep } from '../../engine/elastic'
 import { beamLoads, designAs, designSection, limits, phiSteps, pickBars as sgPickBars, review as sgReview, type LoadInput } from '../../engine/singly'
@@ -1434,12 +1435,14 @@ export function StirrupSketch({ sd }: { sd: ShearDesign }) {
   const L0 = sd.layouts.sL
   return (
     <Svg w={620} h={300} caption="Top: factored shear with φVc and φVc/2. Bottom: stirrup layout (symmetric)." max={620}>
-      <line x1={x0} y1={yc} x2={x0 + W} y2={yc} stroke={C.ink} />
-      <path d={`${path} L ${sx(L)} ${yc} L ${x0} ${yc} Z`} fill={C.ten} opacity={0.12} />
-      <path d={path} fill="none" stroke={C.ten} strokeWidth={1.6} />
-      {[lim.phiVc, lim.halfPhiVc, -lim.phiVc, -lim.halfPhiVc].map((v, i) => (
-        <line key={i} x1={x0} x2={x0 + W} y1={sy(v)} y2={sy(v)} stroke={C.load} strokeDasharray={i % 2 ? '2 3' : '6 3'} />
-      ))}
+      <g {...tipAxes({ X: sx, Y: sy, x: 'x', xUnit: ' ft', y: 'V', yUnit: ' k' })}>
+        <line x1={x0} y1={yc} x2={x0 + W} y2={yc} stroke={C.ink} />
+        <path d={`${path} L ${sx(L)} ${yc} L ${x0} ${yc} Z`} fill={C.ten} opacity={0.12} />
+        <path d={path} fill="none" stroke={C.ten} strokeWidth={1.6} data-name="Vu" />
+        {[lim.phiVc, lim.halfPhiVc, -lim.phiVc, -lim.halfPhiVc].map((v, i) => (
+          <line key={i} x1={x0} x2={x0 + W} y1={sy(v)} y2={sy(v)} stroke={C.load} strokeDasharray={i % 2 ? '2 3' : '6 3'} data-curve data-name={i % 2 ? '½φVc' : 'φVc'} />
+        ))}
+      </g>
       <text x={x0 + W + 4} y={sy(lim.phiVc) + 4} fontSize={11} fill={C.load}>
         φVc
       </text>
@@ -1861,8 +1864,10 @@ export function PhiChart() {
     <Svg w={600} h={260} caption="ACI/BNBC strength reduction factor for flexure vs εt (Grade 60)." max={600}>
       <line x1={x0} y1={y0 + H} x2={x0 + W} y2={y0 + H} stroke={C.ink} />
       <line x1={x0} y1={y0} x2={x0} y2={y0 + H} stroke={C.ink} />
-      <polyline points={`${sx(0)},${sy(0.65)} ${sx(ey)},${sy(0.65)} ${sx(0.005)},${sy(0.9)} ${sx(0.008)},${sy(0.9)}`} fill="none" stroke={C.ten} strokeWidth={2.2} />
-      <polyline points={`${sx(0)},${sy(0.75)} ${sx(ey)},${sy(0.75)} ${sx(0.005)},${sy(0.9)}`} fill="none" stroke={C.ten} strokeWidth={1.2} strokeDasharray="5 3" />
+      <g {...tipAxes({ X: sx, Y: sy, x: 'εt', y: 'φ' })}>
+        <polyline points={`${sx(0)},${sy(0.65)} ${sx(ey)},${sy(0.65)} ${sx(0.005)},${sy(0.9)} ${sx(0.008)},${sy(0.9)}`} fill="none" stroke={C.ten} strokeWidth={2.2} data-name="tied / other" />
+        <polyline points={`${sx(0)},${sy(0.75)} ${sx(ey)},${sy(0.75)} ${sx(0.005)},${sy(0.9)}`} fill="none" stroke={C.ten} strokeWidth={1.2} strokeDasharray="5 3" data-name="spiral" />
+      </g>
       {[ey, 0.004, 0.005].map((e) => (
         <line key={e} x1={sx(e)} x2={sx(e)} y1={y0} y2={y0 + H} stroke={C.mute} strokeDasharray="3 3" />
       ))}

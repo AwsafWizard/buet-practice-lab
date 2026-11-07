@@ -4,6 +4,7 @@
 import { useMark } from '../seep/useMark'
 import { useEffect, useRef, useState } from 'react'
 import { fmt } from '../../../components/DiagramView'
+import { tipAxes } from '../../../components/PointTip'
 import { Answer, Md, Reveal, Seg } from '../../../components/ui'
 import { hashKey } from '../../../labs/CheckTable'
 import { pick, randInt, rng, Slider, useSeed } from '../../../labs/common'
@@ -377,7 +378,7 @@ export function PumpFig({ s, k }: { s: PumpState; k: number }) {
   const rs = Array.from({ length: 50 }, (_, i) => rw + ((R - rw) * i) / 49)
   const curve = (side: 1 | -1) => rs.map((r, i) => `${i ? 'L' : 'M'}${(side > 0 ? X(r) : Xl(r)).toFixed(1)},${Y(hAt(r)).toFixed(1)}`).join('')
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[480px]" role="img" aria-label="pumping test">
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[480px]" role="img" aria-label="pumping test" {...tipAxes({ X, Y, x: 'r', y: 'h' })}>
       {s.kind === 'conf' ? (
         <>
           <rect x={10} y={Y(s.T)} width={W - 20} height={Y(0) - Y(s.T)} fill="var(--c-soil)" opacity={0.45} />
@@ -394,7 +395,7 @@ export function PumpFig({ s, k }: { s: PumpState; k: number }) {
       )}
       <line x1={10} y1={Y(0)} x2={W - 10} y2={Y(0)} stroke="var(--c-ink)" strokeWidth={1.5} />
       <path d={curve(1)} fill="none" stroke="var(--c-water)" strokeWidth={2} />
-      <path d={curve(-1)} fill="none" stroke="var(--c-water)" strokeWidth={2} />
+      <path d={curve(-1)} fill="none" stroke="var(--c-water)" strokeWidth={2} data-nocurve />
       <rect x={X(0) - 5} y={Y(top * 0.95)} width={10} height={Y(0) - Y(top * 0.95)} fill="var(--c-bg)" stroke="var(--c-ink)" />
       <text x={X(0)} y={Y(top * 0.95) - 3} fontSize={9.5} textAnchor="middle" fill="var(--c-ink)">
         well, q = {s.q}

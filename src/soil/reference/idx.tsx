@@ -4,6 +4,7 @@
 
 import { useRef, useState, type PointerEvent as RPE, type ReactNode } from 'react'
 import { fmt } from '../../components/DiagramView'
+import { tipAxes } from '../../components/PointTip'
 import { Md, Seg, Tex } from '../../components/ui'
 import { Lookup, NumIn, ok, RT } from '../../reference/common'
 import { AASHTO_GROUPS, aashto, fig52, groupIndex, SIEVES, USDA_POLY, usda, usdaXY, type UsdaClass } from '../engine/classify'
@@ -77,6 +78,7 @@ export function PlasticityChart({ pts = [], onPick, variant = 'uscs', w = 460 }:
       }}
       onPointerMove={(e) => drag && pick(e)}
       onPointerUp={() => setDrag(false)}
+      {...tipAxes({ X, Y, x: 'LL', y: 'PI' })}
     >
       <defs>
         <pattern id="clml-hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
@@ -105,11 +107,11 @@ export function PlasticityChart({ pts = [], onPick, variant = 'uscs', w = 460 }:
       <text x={9} y={mt + H / 2} textAnchor="middle" transform={`rotate(-90 9 ${mt + H / 2})`} {...TXT}>
         Plasticity index, PI
       </text>
-      {variant === 'uscs' && <polygon points={hatch.map(([a, b]) => `${X(a)},${Y(b)}`).join(' ')} fill="url(#clml-hatch)" stroke="var(--c-accent2)" strokeWidth={0.6} />}
-      <path d={line(uLine, variant === 'uscs' ? 16 : 8, uEnd)} stroke="var(--c-mute)" strokeWidth={1.3} strokeDasharray="5 3" fill="none" />
-      <path d={line(aLine, 20, 100)} stroke="var(--c-ink)" strokeWidth={1.6} fill="none" />
+      {variant === 'uscs' && <polygon points={hatch.map(([a, b]) => `${X(a)},${Y(b)}`).join(' ')} fill="url(#clml-hatch)" stroke="var(--c-accent2)" strokeWidth={0.6} data-name="CL-ML zone" />}
+      <path d={line(uLine, variant === 'uscs' ? 16 : 8, uEnd)} stroke="var(--c-mute)" strokeWidth={1.3} strokeDasharray="5 3" fill="none" data-name="U-line" />
+      <path d={line(aLine, 20, 100)} stroke="var(--c-ink)" strokeWidth={1.6} fill="none" data-name="A-line" />
       {(variant === 'uscs' ? [50] : [30, 50]).map((L) => (
-        <line key={L} x1={X(L)} x2={X(L)} y1={Y(0)} y2={Y(uLine(L))} stroke="var(--c-ink)" strokeWidth={1.1} />
+        <line key={L} x1={X(L)} x2={X(L)} y1={Y(0)} y2={Y(uLine(L))} stroke="var(--c-ink)" strokeWidth={1.1} data-curve />
       ))}
       <text x={X(58)} y={Y(uLine(58)) - 4} {...MUTE} transform={`rotate(-36 ${X(58)} ${Y(uLine(58)) - 4})`}>
         U-line PI = 0.9(LL − 8)
@@ -175,7 +177,7 @@ export function AashtoFig52({ pt, F200, w = 420 }: { pt?: { LL: number; PI: numb
     </text>
   )
   return (
-    <svg viewBox="0 0 430 270" style={{ width: '100%', maxWidth: w }}>
+    <svg viewBox="0 0 430 270" style={{ width: '100%', maxWidth: w }} {...tipAxes({ X, Y, x: 'LL', y: 'PI' })}>
       {Array.from({ length: 11 }, (_, i) => (
         <g key={'x' + i}>
           <line x1={X(i * 10)} x2={X(i * 10)} y1={mt} y2={mt + H} stroke="var(--c-line)" strokeWidth={0.5} />
@@ -192,8 +194,8 @@ export function AashtoFig52({ pt, F200, w = 420 }: { pt?: { LL: number; PI: numb
           </text>
         </g>
       ))}
-      <line x1={X(0)} x2={X(100)} y1={Y(10)} y2={Y(10)} stroke="var(--c-ink)" strokeWidth={1.4} />
-      <line x1={X(40)} x2={X(40)} y1={Y(0)} y2={Y(70)} stroke="var(--c-ink)" strokeWidth={1.4} />
+      <line x1={X(0)} x2={X(100)} y1={Y(10)} y2={Y(10)} stroke="var(--c-ink)" strokeWidth={1.4} data-curve />
+      <line x1={X(40)} x2={X(40)} y1={Y(0)} y2={Y(70)} stroke="var(--c-ink)" strokeWidth={1.4} data-curve />
       <line x1={X(40)} x2={X(100)} y1={Y(10)} y2={Y(70)} stroke="var(--c-ink)" strokeWidth={1.4} />
       <text x={X(88)} y={Y(60)} {...MUTE}>PI = LL − 30</text>
       {lab('A-2-4 / A-4', 20, 4)}

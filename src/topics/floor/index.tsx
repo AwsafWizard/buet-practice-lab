@@ -70,7 +70,7 @@ function LoadPath() {
           )}
         </StructureView>
         <ILDChart ild={panel} minX={t.minX} maxX={t.maxX} maxWidth={t.W} pad={70} marker={x} title="Girder moment at S (mid-panel B–C): solid = with floor beams, dashed = if the load sat directly on the girder" labelXs={[10, 15, 20]}>
-          {({ X, Y }) => <path d={direct.pts.map((p, i) => `${i ? 'L' : 'M'}${X(p.x)},${Y(p.y)}`).join(' ')} fill="none" stroke="var(--c-faint)" strokeDasharray="5 4" strokeWidth={1.6} />}
+          {({ X, Y }) => <path data-name="load directly on girder" d={direct.pts.map((p, i) => `${i ? 'L' : 'M'}${X(p.x)},${Y(p.y)}`).join(' ')} fill="none" stroke="var(--c-faint)" strokeDasharray="5 4" strokeWidth={1.6} />}
         </ILDChart>
       </div>
       <div className="text-sm text-mute">

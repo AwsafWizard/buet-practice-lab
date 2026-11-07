@@ -67,7 +67,7 @@ export function FadumChart({ pts, w = 380 }: { pts?: [number, number][]; w?: num
       {(s) => (
         <>
           {MS.map((m, i) => (
-            <path key={i} d={pathOf(NSX.map((n) => [n, Irect(m === Infinity ? 1e6 : m, n)]), s)} fill="none" stroke={i % 2 ? 'var(--c-accent)' : 'var(--c-ink)'} strokeWidth={0.9} opacity={0.85} />
+            <path key={i} d={pathOf(NSX.map((n) => [n, Irect(m === Infinity ? 1e6 : m, n)]), s)} fill="none" stroke={i % 2 ? 'var(--c-accent)' : 'var(--c-ink)'} strokeWidth={0.9} opacity={0.85} data-name={`m = ${m === Infinity ? '∞' : m}`} />
           ))}
           {MS.filter((m) => m > 0).map((m, i) => (
             <text key={i} x={s.R - 2} y={s.Y(Irect(m === Infinity ? 1e6 : m, 10)) - 1} fontSize={7} textAnchor="end" fill="var(--c-mute)">
@@ -141,7 +141,7 @@ Symmetric embankment, point under the centre: $2I_z$. Unsymmetric or off-centre:
         {(s) => (
           <>
             {BZ.map((bz, i) => (
-              <path key={i} d={pathOf(AZ.map((az) => [az, osterberg(az, bz === Infinity ? 1e6 : bz, 1)]), s)} fill="none" stroke={i % 2 ? 'var(--c-accent)' : 'var(--c-ink)'} strokeWidth={0.9} />
+              <path key={i} d={pathOf(AZ.map((az) => [az, osterberg(az, bz === Infinity ? 1e6 : bz, 1)]), s)} fill="none" stroke={i % 2 ? 'var(--c-accent)' : 'var(--c-ink)'} strokeWidth={0.9} data-name={`b/z = ${bz === Infinity ? '∞' : bz}`} />
             ))}
             {BZ.map((bz, i) => (
               <text key={'t' + i} x={s.L + 3} y={s.Y(osterberg(0.01, bz === Infinity ? 1e6 : bz, 1)) - 1} fontSize={7} fill="var(--c-mute)">
@@ -179,7 +179,7 @@ function SteinBody() {
         {(s) => (
           <>
             {LB.map((l, i) => (
-              <path key={i} d={pathOf(ZB.map((v) => [v === 0 ? 0.25 : Irect(1 / v, (l === Infinity ? 1e6 : l) / v), v]), s)} fill="none" stroke={SERIES[i]} strokeWidth={1.4} />
+              <path key={i} d={pathOf(ZB.map((v) => [v === 0 ? 0.25 : Irect(1 / v, (l === Infinity ? 1e6 : l) / v), v]), s)} fill="none" stroke={SERIES[i]} strokeWidth={1.4} data-name={`L/B = ${l === Infinity ? '∞' : l}`} />
             ))}
             {u && <circle cx={s.X(Irect(1 / u[0], u[1] / u[0]))} cy={s.Y(u[0])} r={4} fill="var(--c-load)" data-tip={`z/b = ${f3(u[0])} → I = ${f4(Irect(1 / u[0], u[1] / u[0]))}`} />}
           </>

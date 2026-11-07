@@ -6,6 +6,7 @@
 // This file also exports the small SVG kit and the model answers that the other old papers
 // (r2005, r2004, r2002) reuse.
 import type { ReactNode } from 'react'
+import { tipAxes } from '../../../components/PointTip'
 import { Md, Step, Steps, Tex } from '../../../components/ui'
 import type { Check, RcGiven, RcQ } from '../../types'
 import { allowableMoment, f, uncracked, wsdDoublyDesign } from '../../engine/elastic'
@@ -246,8 +247,10 @@ export function PhiChart() {
           </T>
         </g>
       ))}
-      <polyline points={`${X(0)},${Y(0.65)} ${X(0.002)},${Y(0.65)} ${X(0.005)},${Y(0.9)} ${X(0.007)},${Y(0.9)}`} fill="none" stroke={LOAD} strokeWidth={2.2} />
-      <polyline points={`${X(0)},${Y(0.7)} ${X(0.002)},${Y(0.7)} ${X(0.005)},${Y(0.9)}`} fill="none" stroke={STEEL} strokeWidth={1.6} strokeDasharray="6 3" />
+      <g {...tipAxes({ X, Y, x: 'εt', y: 'φ' })}>
+        <polyline points={`${X(0)},${Y(0.65)} ${X(0.002)},${Y(0.65)} ${X(0.005)},${Y(0.9)} ${X(0.007)},${Y(0.9)}`} fill="none" stroke={LOAD} strokeWidth={2.2} data-name="tied / other" />
+        <polyline points={`${X(0)},${Y(0.7)} ${X(0.002)},${Y(0.7)} ${X(0.005)},${Y(0.9)}`} fill="none" stroke={STEEL} strokeWidth={1.6} strokeDasharray="6 3" data-name="spiral" />
+      </g>
       <T x={X(0.001)} y={Y(0.65) + 15} c={LOAD}>
         tied / other
       </T>

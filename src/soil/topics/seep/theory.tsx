@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { tipAxes } from '../../../components/PointTip'
 import { netLines, sheetPile, solveNet } from '../../engine/flownet'
 import type { SmTheoryItem } from '../../types'
 import { QuickFigure, Q_DEFAULT } from './HeaveLab'
@@ -132,7 +133,7 @@ function FilterFig() {
     { d: dAt(a, sa, 0.85), l: 'D85(B)' },
   ]
   return (
-    <svg viewBox="0 0 420 200" className="w-full max-w-[460px]">
+    <svg viewBox="0 0 420 200" className="w-full max-w-[460px]" {...tipAxes({ X, Y, xLog: true, x: 'D', xUnit: ' mm', y: '% finer' })}>
       <line x1={30} y1={160} x2={400} y2={160} stroke="var(--c-line)" />
       <line x1={30} y1={20} x2={30} y2={160} stroke="var(--c-line)" />
       {[0.001, 0.01, 0.1, 1, 10].map((d) => (
@@ -146,9 +147,9 @@ function FilterFig() {
       <text x={6} y={18} fontSize={9.5} fill="var(--c-mute)">
         % finer
       </text>
-      <path d={curve(a, sa)} fill="none" stroke="var(--c-ink)" strokeWidth={1.8} />
-      <path d={curve(a * 4 * 1.2, sa)} fill="none" stroke="var(--c-accent)" strokeWidth={1.4} strokeDasharray="5 3" />
-      <path d={curve(a * 4 * 6, sa)} fill="none" stroke="var(--c-accent)" strokeWidth={1.4} strokeDasharray="5 3" />
+      <path d={curve(a, sa)} fill="none" stroke="var(--c-ink)" strokeWidth={1.8} data-name="a (base)" />
+      <path d={curve(a * 4 * 1.2, sa)} fill="none" stroke="var(--c-accent)" strokeWidth={1.4} strokeDasharray="5 3" data-name="b" />
+      <path d={curve(a * 4 * 6, sa)} fill="none" stroke="var(--c-accent)" strokeWidth={1.4} strokeDasharray="5 3" data-name="c" />
       {pts.map((p) => (
         <g key={p.l}>
           <circle cx={X(p.d)} cy={Y(p.l === 'D15(B)' ? 15 : 85)} r={3} fill="var(--c-ink)" data-tip={`${p.l} = ${p.d} mm`} />

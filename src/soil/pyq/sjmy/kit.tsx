@@ -371,7 +371,7 @@ export function BulbCompare() {
         {(s) => (
           <>
             {shapes.map((sh, i) => (
-              <path key={sh.s} d={pathOf([[1, 0], ...zs.map((z) => [bulbRatio(sh.s, 1, 0, z), z] as [number, number])], s)} fill="none" stroke={SERIES[i]} strokeWidth={1.8} />
+              <path key={sh.s} d={pathOf([[1, 0], ...zs.map((z) => [bulbRatio(sh.s, 1, 0, z), z] as [number, number])], s)} fill="none" stroke={SERIES[i]} strokeWidth={1.8} data-name={sh.s} />
             ))}
             <line x1={s.X(0.1)} x2={s.X(0.1)} y1={s.T} y2={s.B} stroke="var(--c-mute)" strokeDasharray="3 3" />
           </>

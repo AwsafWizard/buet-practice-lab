@@ -1,6 +1,7 @@
 // Bond & detailing sketches: standard cut-off figure, hook geometry, ACI cut-off rules, and the live lab sketches.
 
 import { fmt } from '../../../components/DiagramView'
+import { tipAxes } from '../../../components/PointTip'
 import { momentAt, type CutoffOut, type Diagram } from '../../engine/bond'
 
 const INK = 'var(--c-ink)'
@@ -518,10 +519,12 @@ export function CutoffSketch({ dg, r, nTotal, nCut, ldIn }: { dg: Diagram; r: Cu
           <path d={`M${x0 - 18} ${yCut + 14} V${yCut} H${X(r.xCut)}`} fill="none" stroke={BAD} strokeWidth={2.6} />
         ))}
       {/* moment diagram */}
-      <line x1={x0} x2={x0 + W} y1={base} y2={base} stroke={MUTE} />
-      <polyline points={pts} fill="none" stroke={ACC} strokeWidth={1.6} />
-      <line x1={x0} x2={x0 + W} y1={base + r.all.phiMn * sc} y2={base + r.all.phiMn * sc} stroke={MUTE} strokeDasharray="4 3" />
-      <line x1={x0} x2={x0 + W} y1={base + r.remain.phiMn * sc} y2={base + r.remain.phiMn * sc} stroke={BAD} strokeDasharray="5 3" />
+      <g {...tipAxes({ X, Y: (m) => base + m * sc, xAt: [0, L], yAt: [0, Mmax], x: 'x', xUnit: ' ft', y: 'M', yUnit: ' k-ft' })}>
+        <line x1={x0} x2={x0 + W} y1={base} y2={base} stroke={MUTE} />
+        <polyline points={pts} fill="none" stroke={ACC} strokeWidth={1.6} data-name="Mu" />
+        <line x1={x0} x2={x0 + W} y1={base + r.all.phiMn * sc} y2={base + r.all.phiMn * sc} stroke={MUTE} strokeDasharray="4 3" data-curve data-name={`φMn ${nTotal} bars`} />
+        <line x1={x0} x2={x0 + W} y1={base + r.remain.phiMn * sc} y2={base + r.remain.phiMn * sc} stroke={BAD} strokeDasharray="5 3" data-curve data-name={`φMn ${nTotal - nCut} bars`} />
+      </g>
       <text x={x0 + W + 4} y={base + r.all.phiMn * sc + 3} fontSize={9} fill={MUTE}>
         φMn {nTotal}
       </text>

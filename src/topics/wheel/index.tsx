@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fmt } from '../../components/DiagramView'
 import { Answer, Callout, Md, Section, Step, Steps, Tex } from '../../components/ui'
+import { tipAxes } from '../../components/PointTip'
 import { ildAt, type ILD } from '../../engine/ild'
 import { absoluteMaxMoment, offsets, place, ssMomentILD, ssShearILD, trainExtremes, trainLength, TRAVEL, type Train } from '../../engine/moving'
 import { AbsMaxSolution, PlacementView, TrainOnILD, TrainTable } from '../../kit/solutions'
@@ -17,7 +18,7 @@ function ildFor(q: Q, L: number, a: number): ILD {
 }
 
 /** response vs position of wheel 1 */
-function ResponseCurve({ ild, t, o, s, best }: { ild: ILD; t: Train; o: 1 | -1; s: number; best?: number }) {
+function ResponseCurve({ ild, t, o, s, best, unit = '' }: { ild: ILD; t: Train; o: 1 | -1; s: number; best?: number; unit?: string }) {
   const len = trainLength(t)
   const lo = ild.xmin - 2,
     hi = ild.xmax + len + 2
@@ -36,7 +37,7 @@ function ResponseCurve({ ild, t, o, s, best }: { ild: ILD; t: Train; o: 1 | -1; 
   const X = (x: number) => pad + ((x - s0) / (s1 - s0)) * (W - 2 * pad)
   const Y = (v: number) => H / 2 - (v / vmax) * (H / 2 - 16)
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" {...tipAxes({ X, Y, x: 'wheel 1 at x', y: 'response', xUnit: ' ft', yUnit: unit })}>
       <text x={8} y={14} fontSize={11.5} fill="var(--c-mute)" fontWeight={700}>
         Response vs position of wheel 1 — every peak is a wheel sitting on the critical point
       </text>
@@ -100,7 +101,7 @@ function Playground({ fixed }: { fixed?: { t: Train; L: number; a: number; q: Q 
       </div>
       <div className="rounded-xl bg-bg/60 border border-line p-2">
         <PlacementView pl={pl} ild={ild} span={[0, g.L]} section={g.q === 'moment' || g.q === 'shear' ? g.a : undefined} title={g.q === 'absmax' ? 'Move the train — the max moment under any wheel is shown below' : `Current ${qLabel}: ${fmt(cur)}`} />
-        {g.q !== 'absmax' && <ResponseCurve ild={ild} t={g.t} o={o} s={s} best={fixed ? truth : best} />}
+        {g.q !== 'absmax' && <ResponseCurve ild={ild} t={g.t} o={o} s={s} best={fixed ? truth : best} unit={g.q === 'moment' ? ' k-ft' : ' k'} />}
         {!fixed && g.q !== 'absmax' && <div className="text-xs text-mute px-2">Best you have found so far: <b className="num text-ink">{fmt(best)}</b> (green dashed line)</div>}
         {g.q === 'absmax' && <AbsMaxLive L={g.L} t={g.t} s={s} o={o} />}
       </div>

@@ -2,6 +2,7 @@
 // Section A: 4 questions, answer 3 ("Assume reasonable value of any data if necessary"); Section B: 4, answer 3.
 // Equations printed are the ACI 318-95/99 forms (ld/db = 3/40 · fy/√f'c · αβγλ/((c + Ktr)/db), lhb = 1200db/√f'c).
 // Attached aid: "T beams: WSD Method" formula box (p. 111).
+import { tipAxes } from '../../../components/PointTip'
 import { Md } from '../../../components/ui'
 import type { RcGiven, RcQ } from '../../types'
 import { allowableMoment, f, uncracked } from '../../engine/elastic'
@@ -137,14 +138,16 @@ function StressStrainCurves() {
     <Fig w={600} h={270} max={600}>
       <Ln x1={X(0)} y1={Y(0)} x2={X(0.004)} y2={Y(0)} />
       <Ln x1={X(0)} y1={Y(0)} x2={X(0)} y2={Y(12)} />
-      {curves.map((c) => (
-        <g key={c.fc}>
-          <polyline points={c.d} fill="none" stroke={c.fc <= 4 ? LOAD : STEEL} strokeWidth={1.8} />
-          <T x={X(c.e0) - 4} y={Y(c.fc) - 6} s={11}>
-            {`${c.fc} ksi`}
-          </T>
-        </g>
-      ))}
+      <g {...tipAxes({ X, Y, x: 'εc', y: 'fc', yUnit: ' ksi' })}>
+        {curves.map((c) => (
+          <g key={c.fc} data-name={`f′c = ${c.fc} ksi`}>
+            <polyline points={c.d} fill="none" stroke={c.fc <= 4 ? LOAD : STEEL} strokeWidth={1.8} />
+            <T x={X(c.e0) - 4} y={Y(c.fc) - 6} s={11}>
+              {`${c.fc} ksi`}
+            </T>
+          </g>
+        ))}
+      </g>
       {[0.001, 0.002, 0.003, 0.004].map((e) => (
         <T key={e} x={X(e)} y={Y(0) + 15} s={11}>
           {e}

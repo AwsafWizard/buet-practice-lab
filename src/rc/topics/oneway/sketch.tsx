@@ -1,5 +1,6 @@
 // One-way slab sketches: continuous slab section with the class bar layout, and the cantilever strip
 // (live-load pattern, moment diagram with envelope, bar layout).
+import { tipAxes } from '../../../components/PointTip'
 import type { CantSlabResult, LLPattern, OneWayCoefResult } from '../../engine/oneway'
 import { stripStatics } from '../../engine/oneway'
 import { barTxt, f } from './kit'
@@ -125,6 +126,7 @@ export function ContSketch({ r }: { r: OneWayCoefResult }) {
 }
 
 // ---------------------------------------------------------------- cantilever strip
+const PAT_NAME: Record<LLPattern, string> = { cant: 'LL on cantilevers', span: 'LL on span', all: 'LL everywhere' }
 export function CantSketch({ r, pattern }: { r: CantSlabResult; pattern: LLPattern }) {
   const g = r.geo
   const x0 = -g.acL
@@ -183,13 +185,15 @@ export function CantSketch({ r, pattern }: { r: CantSlabResult; pattern: LLPatte
         </g>
       ))}
       {/* BMD */}
-      <line x1={X(x0)} x2={X(x1)} y1={y0} y2={y0} stroke="var(--c-line)" />
-      {pats
-        .filter((p) => p !== pattern)
-        .map((p) => (
-          <path key={p} d={path(p)} fill="none" stroke="var(--c-faint)" strokeDasharray="4 3" strokeWidth={1} />
-        ))}
-      <path d={`${path(pattern)} L${X(x1)},${y0} L${X(x0)},${y0} Z`} fill="var(--c-accent)" fillOpacity={0.15} stroke="var(--c-accent)" strokeWidth={1.8} />
+      <g {...tipAxes({ X, Y: Yc, x: 'x', xUnit: ' ft', y: 'Mu', yUnit: ' k-ft/ft' })}>
+        <line x1={X(x0)} x2={X(x1)} y1={y0} y2={y0} stroke="var(--c-line)" />
+        {pats
+          .filter((p) => p !== pattern)
+          .map((p) => (
+            <path key={p} d={path(p)} fill="none" stroke="var(--c-faint)" strokeDasharray="4 3" strokeWidth={1} data-name={PAT_NAME[p]} />
+          ))}
+        <path d={`${path(pattern)} L${X(x1)},${y0} L${X(x0)},${y0} Z`} fill="var(--c-accent)" fillOpacity={0.15} stroke="var(--c-accent)" strokeWidth={1.8} data-name={PAT_NAME[pattern]} />
+      </g>
       <text x={X(cur.xm)} y={Yc(cur.Mmax) + (cur.Mmax >= 0 ? 14 : -6)} fontSize={10} textAnchor="middle" fill="var(--c-accent)" className="num" fontWeight={700}>
         span max {f(cur.Mmax, 2)}
       </text>

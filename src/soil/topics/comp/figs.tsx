@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react'
 import { fmt } from '../../../components/DiagramView'
+import { tipAxes } from '../../../components/PointTip'
 import { gdAtS, modelCurve, shiftForEnergy, type Pt } from '../../engine/compaction'
 
 export type GUnit = 'kN' | 't' | 'pcf'
@@ -70,7 +71,7 @@ export function CompactionChart({
   const dg = unit === 't' ? 3 : 2
   const zLabelW = ws.filter((w) => gdAtS(w, Gs, 1, gw) <= gHi * 0.995 && gdAtS(w, Gs, 1, gw) >= gLo)[0]
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="compaction curves">
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="compaction curves" {...tipAxes({ X: (v) => X(v / 100), Y, x: 'w', xUnit: ' %', y: 'γd', yUnit: ' ' + UNIT_LABEL[unit] })}>
       {ticksG.map((g) => (
         <g key={g}>
           <line x1={L} y1={Y(g)} x2={W - R} y2={Y(g)} stroke="var(--c-line)" strokeWidth={0.6} />
@@ -101,19 +102,19 @@ export function CompactionChart({
           spec window (γd ≥ {fmt(spec.gdMin, dg)})
         </text>
       )}
-      <path d={sPath(1)} fill="none" stroke="var(--c-water)" strokeWidth={1.6} />
+      <path d={sPath(1)} fill="none" stroke="var(--c-water)" strokeWidth={1.6} data-name="ZAV" />
       {zLabelW !== undefined && (
         <text x={X(zLabelW) + 6} y={Y(gdAtS(zLabelW, Gs, 1, gw)) + 4} fontSize={9.5} fill="var(--c-water)">
           ZAV (S = 100 %)
         </text>
       )}
       {sLines.map((S) => (
-        <g key={S}>
+        <g key={S} data-name={`S = ${Math.round(S * 100)} %`}>
           <path d={sPath(S)} fill="none" stroke="var(--c-water)" strokeWidth={0.9} strokeDasharray="3 3" opacity={0.7} />
         </g>
       ))}
       {series.map((s, k) => (
-        <g key={k} opacity={s.faint ? 0.45 : 1}>
+        <g key={k} opacity={s.faint ? 0.45 : 1} data-name={s.label || undefined}>
           <path d={s.curve.map((p, i) => `${i ? 'L' : 'M'}${X(p.w).toFixed(1)},${Y(p.gd).toFixed(1)}`).join('')} fill="none" stroke={s.color} strokeWidth={2} strokeDasharray={s.faint ? '6 4' : undefined} />
           {s.pts.map((p, i) => (
             <circle key={i} cx={X(p.w)} cy={Y(p.gd)} r={3.6} fill="var(--c-bg)" stroke={s.color} strokeWidth={1.8} data-tip={`${s.label ? s.label + ': ' : ''}w = ${fmt(p.w * 100, 2)} %, γd = ${fmt(p.gd, dg + 1)}`} />
@@ -132,7 +133,7 @@ export function CompactionChart({
       ))}
       {field.map((p, i) => (
         <g key={i}>
-          <path d={`M${X(p.w) - 5},${Y(p.gd) - 5}L${X(p.w) + 5},${Y(p.gd) + 5}M${X(p.w) - 5},${Y(p.gd) + 5}L${X(p.w) + 5},${Y(p.gd) - 5}`} stroke={p.pass === undefined ? 'var(--c-ink)' : p.pass ? 'var(--c-good)' : 'var(--c-bad)'} strokeWidth={2.2} />
+          <path d={`M${X(p.w) - 5},${Y(p.gd) - 5}L${X(p.w) + 5},${Y(p.gd) + 5}M${X(p.w) - 5},${Y(p.gd) + 5}L${X(p.w) + 5},${Y(p.gd) - 5}`} stroke={p.pass === undefined ? 'var(--c-ink)' : p.pass ? 'var(--c-good)' : 'var(--c-bad)'} strokeWidth={2.2} data-nocurve />
           <text x={X(p.w) + 7} y={Y(p.gd) + 4} fontSize={10} fill="var(--c-ink)">
             {p.label}
           </text>
@@ -148,9 +149,9 @@ export function CompactionChart({
 }
 
 // ---------------------------------------------------------------- theory sketches (qualitative, drawn from the model)
-function mini(W: number, H: number, children: ReactNode, label: string) {
+function mini(W: number, H: number, children: ReactNode, label: string, axes?: ReturnType<typeof tipAxes>) {
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[460px]" role="img" aria-label={label}>
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[460px]" role="img" aria-label={label} {...axes}>
       {children}
     </svg>
   )
@@ -234,8 +235,8 @@ export function EnergyCurves() {
       <text x={10} y={18} fontSize={10} fill="var(--c-mute)">
         γd
       </text>
-      <path d={path((w) => gdAtS(w, Gs, 1))} fill="none" stroke="var(--c-water)" strokeWidth={1.3} />
-      <path d={path((w) => gdAtS(w, Gs, S))} fill="none" stroke="var(--c-water)" strokeWidth={1} strokeDasharray="4 3" />
+      <path d={path((w) => gdAtS(w, Gs, 1))} fill="none" stroke="var(--c-water)" strokeWidth={1.3} data-name="ZAV" />
+      <path d={path((w) => gdAtS(w, Gs, S))} fill="none" stroke="var(--c-water)" strokeWidth={1} strokeDasharray="4 3" data-name="line of optimums" />
       <text x={X(0.235)} y={Y(gdAtS(0.235, Gs, 1)) - 4} fontSize={9.5} fill="var(--c-water)">
         ZAV
       </text>
@@ -247,7 +248,7 @@ export function EnergyCurves() {
         { p: std, c: 'var(--c-accent)', t: 'Standard' },
         { p: mod, c: 'var(--c-load)', t: 'Modified (4.55×)' },
       ].map(({ p, c, t }) => (
-        <g key={t}>
+        <g key={t} data-name={t}>
           <path d={path((w) => modelCurve(p, Gs, w))} fill="none" stroke={c} strokeWidth={2} />
           <circle cx={X(p.omc)} cy={Y(p.mdd)} r={3.5} fill={c} data-tip={`${t}: OMC = ${fmt(p.omc * 100, 1)} %, MDD = ${fmt(p.mdd, 3)}`} />
           <text x={X(p.omc) + 6} y={Y(p.mdd) - 5} fontSize={9.5} fill={c}>
@@ -257,6 +258,7 @@ export function EnergyCurves() {
       ))}
     </>,
     'compaction curves for three energies',
+    tipAxes({ X: (v) => X(v / 100), Y, x: 'w', xUnit: ' %', y: 'γd', yUnit: ' kN/m³' }),
   )
 }
 

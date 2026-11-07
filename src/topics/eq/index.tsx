@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { fmt } from '../../components/DiagramView'
 import { Answer, Callout, Choice, Md, Section, Seg, Step, Steps, Tex } from '../../components/ui'
+import { tipAxes } from '../../components/PointTip'
 import { baseShear, Cs, CT, harmonicN, importanceEQ, kExponent, period, rcFrameFor, sdc, siteFromN, SOIL, SYSTEMS, ZONE_Z, type SiteClass } from '../../engine/eq'
 import { buildingFloors, EQSolution, eqResult, SpectrumPlot } from '../../kit/loads'
 import { CheckTable, hashKey, type CheckCol } from '../../labs/CheckTable'
@@ -159,7 +160,7 @@ function SPTLog({ layers }: { layers: Layer[] }) {
   })
   const path = bands.map((b, i) => `${i === 0 ? 'M' : 'L'}${X(b.N)},${Y(b.z0)} L${X(b.N)},${Y(b.z1)}`).join(' ')
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" {...tipAxes({ X, Y, x: 'N', y: 'z', yUnit: ' m' })}>
       <text x={60} y={14} fontSize={11} fill="var(--c-mute)" fontWeight={700}>
         Bore log
       </text>

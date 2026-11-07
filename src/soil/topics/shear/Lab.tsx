@@ -2,6 +2,7 @@
 // the test lab (direct shear / CD / CU / UU / unconfined), and the water-table strength check (AJK Problem 3).
 import { useEffect, useMemo, useState } from 'react'
 import { fmt } from '../../../components/DiagramView'
+import { tipAxes } from '../../../components/PointTip'
 import { Answer, Callout, Choice, Md, Reveal, Section, Seg, Tex } from '../../../components/ui'
 import { CheckTable, hashKey, type CheckCol } from '../../../labs/CheckTable'
 import { pick, randInt, rng, Slider } from '../../../labs/common'
@@ -742,7 +743,7 @@ export function WaterTableLab() {
                 {p.z} {uL}
               </text>
             </svg>
-            <svg viewBox={`0 0 ${W} ${Hh}`} className="w-full" role="img" aria-label="strength at A against water table depth">
+            <svg viewBox={`0 0 ${W} ${Hh}`} className="w-full" role="img" aria-label="strength at A against water table depth" {...tipAxes({ X, Y, x: 'WT depth', xUnit: ' ' + uL, y: 'τf', yUnit: ' ' + uS })}>
               <line x1={50} x2={W - 10} y1={Y(0)} y2={Y(0)} stroke="var(--c-ink)" />
               <line x1={50} x2={50} y1={10} y2={Y(0)} stroke="var(--c-ink)" />
               <path d={curve.map((c, i) => `${i ? 'L' : 'M'}${X(c.zw).toFixed(1)},${Y(c.t).toFixed(1)}`).join(' ')} fill="none" stroke="var(--c-accent)" strokeWidth={2} />

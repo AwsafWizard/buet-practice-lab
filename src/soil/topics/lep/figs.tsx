@@ -1,6 +1,7 @@
 // Earth-pressure figures: the wall with its pressure diagrams to scale, Mohr circles for the three states,
 // pressure against wall tilt, and the theory sketches.
 import { fmt } from '../../../components/DiagramView'
+import { tipAxes } from '../../../components/PointTip'
 import { kVsTilt, stateCircles, type Wall, type WallResult } from '../../engine/earth'
 
 const f1 = (v: number) => fmt(v, 1)
@@ -188,8 +189,9 @@ export function WallFig({ w, r, zMark, showDiagrams = true, width = 780 }: { w: 
           labels.push({ z: p.z2, v: p.b, dy: i === d.pts.length - 1 ? -3 : -3 })
         })
         if (d.key === 'front') labels.splice(0, labels.length, { z: d.pts[0].z2, v: d.pts[0].b, dy: -3 }, ...(d.pts[0].a > 0 ? [{ z: d.pts[0].z1, v: d.pts[0].a, dy: 10 }] : []))
+        const pn = d.key === 'water' ? 'u' : d.key === 'sur' ? 'σh' : d.key === 'front' ? 'σ′p' : 'σ′h'
         return (
-          <g key={d.key}>
+          <g key={d.key} {...(s > 0 ? tipAxes({ X: (p) => x0 + p * s, Y, x: pn, xUnit: ' kPa', y: 'z', yUnit: ' m' }) : {})}>
             <text x={x0 - (d.pts.some((p) => p.a < 0) ? 20 : 0)} y={top - 22} fontSize={10} fontWeight={600} fill="var(--c-ink)">
               {d.title}
             </text>
@@ -241,7 +243,7 @@ export function StateMohrFig({ sv, phi, c, K0, show = ['rest', 'active', 'passiv
   const lab = { rest: 'at rest', active: 'active', passive: 'passive' } as const
   const cs = show.map((key) => ({ key, cc: st[key] }))
   return (
-    <svg viewBox={`0 0 ${W} ${Hh}`} className="w-full" role="img" aria-label="Mohr circles at rest, active and passive">
+    <svg viewBox={`0 0 ${W} ${Hh}`} className="w-full" role="img" aria-label="Mohr circles at rest, active and passive" {...tipAxes({ X, Y: Yv, x: 'σ′', xUnit: ' kPa', y: 'τ', yUnit: ' kPa' })}>
       <line x1={L} x2={W - 10} y1={Yv(0)} y2={Yv(0)} stroke="var(--c-ink)" />
       <line x1={L} x2={L} y1={Yv(0)} y2={12} stroke="var(--c-ink)" />
       <text x={W - 12} y={Yv(0) + 14} fontSize={10} textAnchor="end" fill="var(--c-ink)">
@@ -250,12 +252,12 @@ export function StateMohrFig({ sv, phi, c, K0, show = ['rest', 'active', 'passiv
       <text x={L + 4} y={18} fontSize={10} fill="var(--c-ink)">
         τ
       </text>
-      <line x1={X(0)} x2={X(eEnd)} y1={Yv(c)} y2={Yv(c + eEnd * tanp)} stroke="var(--c-bad)" strokeWidth={1.5} />
+      <line x1={X(0)} x2={X(eEnd)} y1={Yv(c)} y2={Yv(c + eEnd * tanp)} stroke="var(--c-bad)" strokeWidth={1.5} data-curve />
       <text x={X(eEnd) - 4} y={Yv(c + eEnd * tanp) + 14} fontSize={10} textAnchor="end" fill="var(--c-bad)">
         τ = {c ? `${f1(c)} + ` : ''}σ′ tan {f1(phi)}°
       </text>
       {cs.map(({ key, cc }) => (
-        <g key={key}>
+        <g key={key} data-name={lab[key]}>
           <path d={`M${X(cc.C - cc.R)},${Yv(0)} A${cc.R * k},${cc.R * k} 0 0 1 ${X(cc.C + cc.R)},${Yv(0)}`} fill="none" stroke={col[key]} strokeWidth={1.8} />
           <circle cx={X(cc.sh)} cy={Yv(0)} r={3} fill={col[key]} data-tip={`${lab[key]} σ′h = ${f2(cc.sh)}`} />
           <text x={X(cc.sh)} y={Yv(0) + (key === 'active' ? 36 : 25)} fontSize={9.5} textAnchor={key === 'passive' ? 'end' : 'middle'} fill={col[key]}>
@@ -343,7 +345,7 @@ export function TiltFig({ k0, ka, kp, xa, xp, x }: { k0: number; ka: number; kp:
   const d = pts.map((v, i) => `${i ? 'L' : 'M'}${X(v).toFixed(1)},${Y(kVsTilt(v, { k0, ka, kp, xa, xp })).toFixed(1)}`).join(' ')
   const cur = x !== undefined ? kVsTilt(x, { k0, ka, kp, xa, xp }) : null
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="earth pressure against wall tilt">
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="earth pressure against wall tilt" {...tipAxes({ X, Y, x: 'ΔL/H', y: 'K' })}>
       <line x1={L} x2={W - 8} y1={Y(0)} y2={Y(0)} stroke="var(--c-ink)" />
       <line x1={X(0)} x2={X(0)} y1={Y(0)} y2={10} stroke="var(--c-ink)" />
       {[

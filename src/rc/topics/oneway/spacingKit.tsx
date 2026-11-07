@@ -1,6 +1,7 @@
 // Pieces shared by the one-way and two-way bar-spacing simulators: check list, verdict badge,
 // the As-per-foot vs spacing chart and the bar-size switch.
 import { useId, type ReactNode } from 'react'
+import { tipAxes } from '../../../components/PointTip'
 import { Seg } from '../../../components/ui'
 import { BARS } from '../../engine/materials'
 import { asPerFt, type SpCheck, type Verdict } from '../../engine/spacing'
@@ -94,7 +95,7 @@ export function AsCurve({ need, smax, bar, s, onPick, label = 'As needed' }: { n
     onPick(bestD < 28 ? nb : bar, snapped)
   }
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto cursor-crosshair select-none" onClick={click}>
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto cursor-crosshair select-none" onClick={click} {...tipAxes({ X, Y, x: 's', xUnit: ' in', y: 'As', yUnit: ' in²/ft' })}>
       <defs>
         <clipPath id={clip}>
           <rect x={m.l} y={m.t} width={W - m.l - m.r} height={H - m.t - m.b} />
@@ -123,9 +124,9 @@ export function AsCurve({ need, smax, bar, s, onPick, label = 'As needed' }: { n
         {/* the spacings that work for the current bar */}
         {okHi > S_LO && <rect x={X(S_LO)} y={m.t} width={X(okHi) - X(S_LO)} height={H - m.t - m.b} fill="var(--c-good)" fillOpacity={0.08} />}
         {SIM_BARS.map((b) => (
-          <path key={b} d={path(b)} fill="none" stroke={BAR_COL[b]} strokeWidth={b === bar ? 2.6 : 1.1} strokeOpacity={b === bar ? 1 : 0.45} />
+          <path key={b} d={path(b)} fill="none" stroke={BAR_COL[b]} strokeWidth={b === bar ? 2.6 : 1.1} strokeOpacity={b === bar ? 1 : 0.45} data-name={`#${b} bars`} />
         ))}
-        <line x1={m.l} x2={W - m.r} y1={Y(need)} y2={Y(need)} stroke="var(--c-bad)" strokeDasharray="6 4" strokeWidth={1.4} />
+        <line x1={m.l} x2={W - m.r} y1={Y(need)} y2={Y(need)} stroke="var(--c-bad)" strokeDasharray="6 4" strokeWidth={1.4} data-curve data-name={label} />
         <line x1={X(smax)} x2={X(smax)} y1={m.t} y2={H - m.b} stroke="var(--c-mute)" strokeDasharray="4 3" strokeWidth={1.2} />
         <line x1={X(4.5)} x2={X(4.5)} y1={m.t} y2={H - m.b} stroke="var(--c-accent)" strokeDasharray="2 3" strokeWidth={1} strokeOpacity={0.6} />
       </g>

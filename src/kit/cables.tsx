@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import { hangerGirder, stiffenedSuspension, threeHingedArch, type PointLoad } from '../engine/cable'
 import { fmt } from '../components/DiagramView'
-import { GhostPts, tipName } from '../components/PointTip'
+import { tipAxes, tipName, yNameFor } from '../components/PointTip'
 import { Tex } from '../components/ui'
 
 /** generic 1-D function plot (SFD / BMD of a girder) */
@@ -25,14 +25,13 @@ export function FnPlot({ f, x0, x1, title, color = 'var(--c-moment)', marks = []
   /** value label y: below a negative point unless that would hit the axis numbers */
   const ly = (v: number, gap: number) => (v >= 0 ? Y(v) - gap : Y(v) + 15 > H - 16 ? Y(v) - gap : Y(v) + 15)
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" data-name={tipName(title) || undefined} {...tipAxes({ X, Y, y: yNameFor(title) })}>
       <text x={8} y={16} fontSize={12.5} fontWeight={700} fill="var(--c-mute)">
         {title}
       </text>
       <line x1={X(x0)} x2={X(x1)} y1={Y(0)} y2={Y(0)} stroke="var(--c-faint)" />
       <path d={`${d} L${X(x1)},${Y(0)} L${X(x0)},${Y(0)} Z`} fill={color} fillOpacity={0.15} />
       <path d={d} fill="none" stroke={color} strokeWidth={2} />
-      <GhostPts pts={pts.map((q) => ({ x: X(q.x), y: Y(q.y), tip: `${tipName(title) ? tipName(title) + ': ' : ''}${fmt(q.y, 3)} at x = ${fmt(q.x, 3)}` }))} />
       {marks.map((x, i) => {
         const v = f(x)
         return (

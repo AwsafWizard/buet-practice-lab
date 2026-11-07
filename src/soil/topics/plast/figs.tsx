@@ -2,6 +2,7 @@
 // plastic range, volume–water content (shrinkage) plot.
 import { useRef, useState } from 'react'
 import { nf } from '../../engine/phase'
+import { tipAxes } from '../../../components/PointTip'
 
 const MUTE = { fill: 'var(--c-mute)', fontSize: 10 } as const
 const TXT = { fill: 'var(--c-ink)', fontSize: 11 } as const
@@ -56,6 +57,7 @@ export function FlowPlot({ mode, pts, a, b, LL, logX, onDrag, w = 520 }: { mode:
       ref={ref}
       viewBox="0 0 500 262"
       style={{ width: '100%', maxWidth: w, touchAction: onDrag ? 'none' : undefined }}
+      {...tipAxes({ X, Y, xLog: lg, x: mode === 'cup' ? 'N' : 'd', xUnit: mode === 'cup' ? '' : ' mm', y: 'w', yUnit: ' %' })}
       onPointerMove={(e) => {
         if (drag === null || !onDrag) return
         const p = svgPt(ref.current, e)
@@ -89,7 +91,7 @@ export function FlowPlot({ mode, pts, a, b, LL, logX, onDrag, w = 520 }: { mode:
       <text x={12} y={mt + H / 2} textAnchor="middle" transform={`rotate(-90 12 ${mt + H / 2})`} {...TXT}>
         Water content w (%)
       </text>
-      {line && <line x1={X(xLo)} x2={X(xHi)} y1={Y(a + b * T(xLo))} y2={Y(a + b * T(xHi))} stroke="var(--c-accent)" strokeWidth={1.8} />}
+      {line && <line x1={X(xLo)} x2={X(xHi)} y1={Y(a + b * T(xLo))} y2={Y(a + b * T(xHi))} stroke="var(--c-accent)" strokeWidth={1.8} data-curve />}
       {Number.isFinite(LL) && LL >= yLo && LL <= yHi && (
         <g>
           <line x1={X(fx)} x2={X(fx)} y1={mt} y2={mt + H} stroke="var(--c-load)" strokeDasharray="4 3" />
@@ -210,7 +212,7 @@ export function StrengthCurve({ PL, LL, w1, w2 }: { PL: number; LL: number; w1: 
       </g>
     ) : null
   return (
-    <svg viewBox="0 0 490 196" style={{ width: '100%', maxWidth: 520 }}>
+    <svg viewBox="0 0 490 196" style={{ width: '100%', maxWidth: 520 }} {...tipAxes({ X, Y, yLog: true, x: 'w', xUnit: ' %', y: 'cu', yUnit: ' kPa' })}>
       {[1, 10, 100].map((c) => (
         <g key={c}>
           <line x1={ml} x2={ml + W} y1={Y(c)} y2={Y(c)} stroke="var(--c-line)" />
@@ -249,7 +251,7 @@ export function ShrinkPlot({ w1, SL, V1, V2 }: { w1: number; SL: number; V1: num
   const X = (w: number) => ml + (w / wHi) * W
   const Y = (v: number) => mt + H - (v / vHi) * H
   return (
-    <svg viewBox="0 0 470 196" style={{ width: '100%', maxWidth: 480 }}>
+    <svg viewBox="0 0 470 196" style={{ width: '100%', maxWidth: 480 }} {...tipAxes({ X, Y, x: 'w', xUnit: ' %', y: 'V' })}>
       <line x1={ml} x2={ml + W} y1={Y(0)} y2={Y(0)} stroke="var(--c-ink)" />
       <line x1={ml} x2={ml} y1={mt} y2={Y(0)} stroke="var(--c-ink)" />
       <polyline points={`${X(0)},${Y(V2)} ${X(SL)},${Y(V2)} ${X(w1)},${Y(V1)}`} fill="none" stroke="var(--c-accent)" strokeWidth={2} />

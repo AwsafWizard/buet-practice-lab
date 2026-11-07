@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import { Md } from '../../../components/ui'
 import { AASHTO_GROUPS, type AashtoOut, type GradPt, type UscsOut } from '../../engine/classify'
 import { nf } from '../../engine/phase'
+import { tipAxes } from '../../../components/PointTip'
 
 const MUTE = { fill: 'var(--c-mute)', fontSize: 10 } as const
 
@@ -32,7 +33,7 @@ export function GradingCurve({ curves, D, bounds = true, w = 560 }: { curves: { 
       </g>
     ) : null
   return (
-    <svg viewBox="0 0 560 284" style={{ width: '100%', maxWidth: w }}>
+    <svg viewBox="0 0 560 284" style={{ width: '100%', maxWidth: w }} {...tipAxes({ X, Y, xLog: true, x: 'D', xUnit: ' mm', y: '% finer' })}>
       {minor.map((d) => (
         <line key={d} x1={X(d)} x2={X(d)} y1={mt} y2={mt + H} stroke="var(--c-line)" strokeWidth={0.4} />
       ))}
@@ -80,7 +81,7 @@ export function GradingCurve({ curves, D, bounds = true, w = 560 }: { curves: { 
         const s = [...c.pts].filter((p) => p.d > 0 && Number.isFinite(p.pf)).sort((a, b) => b.d - a.d)
         const col = c.color ?? 'var(--c-accent)'
         return (
-          <g key={k}>
+          <g key={k} data-name={c.label}>
             <polyline points={s.map((p) => `${X(p.d).toFixed(1)},${Y(p.pf).toFixed(1)}`).join(' ')} fill="none" stroke={col} strokeWidth={2} />
             {s.map((p, i) => (
               <circle key={i} cx={X(p.d)} cy={Y(p.pf)} r={3.2} fill="var(--c-panel)" stroke={col} strokeWidth={1.5} data-tip={`${c.label ? c.label + ': ' : ''}D = ${nf(p.d, 3)} mm, ${nf(p.pf, 4)} % finer`} />

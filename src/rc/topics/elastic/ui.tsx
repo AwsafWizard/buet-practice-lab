@@ -2,6 +2,7 @@
 // Used by the elastic, singly and basics topics (and free for past-paper solutions).
 
 import type { ReactNode } from 'react'
+import { tipAxes } from '../../../components/PointTip'
 import { Md, Tex } from '../../../components/ui'
 import { f, type SolStep } from '../../engine/elastic'
 import { STAGE_LABEL, type StageAt } from '../../engine/singly'
@@ -147,7 +148,9 @@ export function StageDiagram({ b, h, d, As, st, fyKsi, fcKsi, bars, whitney }: {
       <text x={xe} y={Y(h) + 15} fontSize={10} textAnchor="middle" fill="var(--c-mute)">
         strain
       </text>
-      <path d={`M${xe},${Y(0)} L${xe + st.epsTop * ES},${Y(0)} L${xe - st.epsBot * ES},${Y(h)} L${xe},${Y(h)} Z`} fill="var(--c-accent)" fillOpacity={0.15} stroke="var(--c-accent)" />
+      <g {...tipAxes({ X: (e) => xe + e * ES, Y, xAt: [0, epsMax], x: 'ε', y: 'y', yUnit: ' in' })}>
+        <path d={`M${xe},${Y(0)} L${xe + st.epsTop * ES},${Y(0)} L${xe - st.epsBot * ES},${Y(h)} L${xe},${Y(h)} Z`} fill="var(--c-accent)" fillOpacity={0.15} stroke="var(--c-accent)" data-name="strain" />
+      </g>
       <text x={xe + st.epsTop * ES + 3} y={Y(0) + 9} fontSize={9.5} className="num" fill="var(--c-ink)">
         εc = {st.epsTop.toExponential(2)}
       </text>
@@ -160,7 +163,11 @@ export function StageDiagram({ b, h, d, As, st, fyKsi, fcKsi, bars, whitney }: {
       <text x={xf} y={Y(h) + 15} fontSize={10} textAnchor="middle" fill="var(--c-mute)">
         stress (scaled per stage)
       </text>
-      <path d={stressPath} fill={tone} fillOpacity={0.2} stroke={tone} />
+      <g {...tipAxes({ X: (v) => xf + v * FS, Y, xAt: [0, fMax], x: 'f', xUnit: ' ksi', y: 'y', yUnit: ' in' })}>
+        {/* transparent hit area so the pointer over the stress block reads the stress axes, not the strain ones */}
+        <rect x={xf - 87} y={Y(0) - 4} width={207} height={h * s + 8} fill="transparent" />
+        <path d={stressPath} fill={tone} fillOpacity={0.2} stroke={tone} data-name="stress" />
+      </g>
       {whitney && st.stage === 'ultimate' && (
         <g>
           <rect x={xf} y={Y(0)} width={0.85 * fcKsi * FS} height={whitney.a * s} fill="none" stroke="var(--c-ink)" strokeDasharray="4 3" />

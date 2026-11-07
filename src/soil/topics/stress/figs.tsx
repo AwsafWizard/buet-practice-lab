@@ -22,7 +22,7 @@ export function DepthChart({ curves, zMax, mark, w = 360, xLabel = 'σz (kPa)' }
         {(s) => (
           <>
             {curves.map((c, i) => (
-              <path key={i} d={pathOf(zs.map((z, j) => [vals[i][j], z]), s)} fill="none" stroke={c.c ?? SERIES[i % SERIES.length]} strokeWidth={i === 0 ? 2 : 1.3} strokeDasharray={c.dash ? '5 3' : undefined} />
+              <path key={i} d={pathOf(zs.map((z, j) => [vals[i][j], z]), s)} fill="none" stroke={c.c ?? SERIES[i % SERIES.length]} strokeWidth={i === 0 ? 2 : 1.3} strokeDasharray={c.dash ? '5 3' : undefined} data-name={curves.length > 1 ? c.label : undefined} />
             ))}
             {mark && Number.isFinite(mark.v) && (
               <g>
@@ -56,7 +56,7 @@ export function ShapeCompareFig({ w = 360, zMax = 6 }: { w?: number; zMax?: numb
               0.1q
             </text>
             {shapes.map((sh) => (
-              <path key={sh.k} d={pathOf(zs.map((z) => [bulbRatio(sh.k, 1, 0, z), z]), s)} fill="none" stroke={sh.c} strokeWidth={1.8} />
+              <path key={sh.k} d={pathOf(zs.map((z) => [bulbRatio(sh.k, 1, 0, z), z]), s)} fill="none" stroke={sh.c} strokeWidth={1.8} data-name={sh.k} />
             ))}
             {[1, 2, 3].map((z) => (
               <text key={z} x={s.X(bulbRatio('strip', 1, 0, z)) + 4} y={s.Y(z) + 3} fontSize={8} fill="var(--c-load)">

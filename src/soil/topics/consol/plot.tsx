@@ -2,6 +2,7 @@
 // linear or log axes, grid, tick labels, and a render prop with the scales. Theme tokens only.
 import type { ReactNode } from 'react'
 import { fmt } from '../../../components/DiagramView'
+import { axisName, tipAxes } from '../../../components/PointTip'
 
 export interface Axis {
   min: number
@@ -105,8 +106,10 @@ export function Chart({
   const fx = x.fmt ?? ((v: number) => fmt(v, 3))
   const fy = y.fmt ?? ((v: number) => fmt(v, 3))
   const xLabY = xTop ? T - 6 : B + 13
+  const xn = axisName(x.label, 'x')
+  const yn = axisName(y.label, 'y')
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className={className ?? 'w-full'} role="img" aria-label={label ?? 'chart'} style={{ maxWidth: w * 1.6 }}>
+    <svg viewBox={`0 0 ${w} ${h}`} className={className ?? 'w-full'} role="img" aria-label={label ?? 'chart'} style={{ maxWidth: w * 1.6 }} {...tipAxes({ X, Y: Yraw, xLog: x.log, yLog: y.log, x: xn.name, y: yn.name, xUnit: xn.unit, yUnit: yn.unit })}>
       <rect x={L} y={T} width={R - L} height={B - T} fill="none" stroke="var(--c-line)" />
       {minor(x).map((v) => (
         <line key={'mx' + v} x1={X(v)} x2={X(v)} y1={T} y2={B} stroke="var(--c-line)" strokeWidth={0.4} opacity={0.6} />

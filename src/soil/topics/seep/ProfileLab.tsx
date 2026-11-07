@@ -4,6 +4,7 @@
 import { useMark } from './useMark'
 import { useState } from 'react'
 import { fmt } from '../../../components/DiagramView'
+import { tipAxes } from '../../../components/PointTip'
 import { Md, Reveal, Seg } from '../../../components/ui'
 import { CheckTable, hashKey } from '../../../labs/CheckTable'
 import { pick, randInt, rng, Slider, useSeed } from '../../../labs/common'
@@ -70,13 +71,13 @@ export function ProfileFigure({ s, pts }: { s: ProfState; pts: StressPt[] }) {
   const umin = Math.min(0, ...pts.map((p) => p.u))
   const span = smax - umin
   const kx = (pw - 34) / span
-  const diag = (k: number, get: (p: StressPt) => number, color: string, title: string) => {
+  const diag = (k: number, get: (p: StressPt) => number, color: string, title: string, sym: string) => {
     const x0 = colW + 30 + k * pw
     const zero = x0 + 4 + (0 - umin) * kx
     const X = (v: number) => zero + v * kx
     const d = `M${zero},${Y(pts[0].z)}` + pts.map((p) => `L${X(get(p)).toFixed(1)},${Y(p.z).toFixed(1)}`).join('') + `L${zero},${Y(pts[pts.length - 1].z)}Z`
     return (
-      <g key={title}>
+      <g key={title} {...tipAxes({ X, Y, x: sym, xUnit: ' kPa', y: 'z', yUnit: ' m' })}>
         <text x={zero} y={14} fontSize={12} fontWeight={700} fill={color}>
           {title}
         </text>
@@ -129,9 +130,9 @@ export function ProfileFigure({ s, pts }: { s: ProfState; pts: StressPt[] }) {
       <text x={14} y={Y(0) - 4} fontSize={9} fill="var(--c-mute)">
         GL
       </text>
-      {diag(0, (p) => p.sigma, 'var(--c-load)', 'σ (kPa)')}
-      {diag(1, (p) => p.u, 'var(--c-water)', 'u (kPa)')}
-      {diag(2, (p) => p.eff, 'var(--c-accent)', 'σ′ (kPa)')}
+      {diag(0, (p) => p.sigma, 'var(--c-load)', 'σ (kPa)', 'σ')}
+      {diag(1, (p) => p.u, 'var(--c-water)', 'u (kPa)', 'u')}
+      {diag(2, (p) => p.eff, 'var(--c-accent)', 'σ′ (kPa)', 'σ′')}
     </svg>
   )
 }

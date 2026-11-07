@@ -3,7 +3,7 @@
 
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
 import { fmt } from '../../components/DiagramView'
-import { GhostPts, tipName } from '../../components/PointTip'
+import { tipAxes, tipName, yNameFor } from '../../components/PointTip'
 import { makeTransform, StructureView, type Transform } from '../../components/StructureView'
 import { Seg } from '../../components/ui'
 import { ildAt, type ILD, type Pt } from '../../engine/ild'
@@ -716,7 +716,7 @@ function Plot(p: PlotProps) {
   const dotVisible = p.dot && (p.clipTo === undefined || p.dot.x <= p.clipTo + 1e-9)
 
   return (
-    <svg viewBox={`0 0 ${p.W} ${H}`} className="w-full h-auto">
+    <svg viewBox={`0 0 ${p.W} ${H}`} className="w-full h-auto" data-name={tipName(p.title) || undefined} {...tipAxes({ X, Y, y: yNameFor(p.title) })}>
       {p.clipTo !== undefined && (
         <defs>
           <clipPath id={`c${cid}`}>
@@ -749,13 +749,6 @@ function Plot(p: PlotProps) {
         )}
         <path d={line} fill="none" stroke={p.color} strokeWidth={2.2} strokeLinejoin="round" />
       </g>
-      {!allZero && (
-        <GhostPts
-          pts={p.pts
-            .filter((q) => p.clipTo === undefined || q.x <= p.clipTo + 1e-9)
-            .map((q) => ({ x: X(q.x), y: Y(q.y), tip: `${tipName(p.title) ? tipName(p.title) + ': ' : ''}${fmt(q.y, digits + 1)} at x = ${fmt(q.x, 3)}` }))}
-        />
-      )}
       {allZero && (
         <text x={X(p.L / 2)} y={Y(0) - 8} textAnchor="middle" fontSize={12} fill="var(--c-mute)">
           zero everywhere

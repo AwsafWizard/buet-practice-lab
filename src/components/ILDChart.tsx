@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { ildAt, type ILD, type Pt } from '../engine/ild'
 import { fmt } from './DiagramView'
-import { GhostPts, tipName } from './PointTip'
+import { tipAxes, tipName } from './PointTip'
 
 export interface ILDChartProps {
   ild?: ILD | null
@@ -77,7 +77,7 @@ export function ILDChart(p: ILDChartProps) {
   const path = (pts: Pt[]) => pts.map((q, i) => `${i ? 'L' : 'M'}${X(q.x)},${Y(q.y)}`).join(' ')
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" data-name={tipName(p.title) || undefined} {...tipAxes({ X, Y, y: 'ordinate', yUnit: p.unit ? ' ' + p.unit : '' })}>
       <line x1={X(p.minX)} y1={Y(0)} x2={X(p.maxX)} y2={Y(0)} stroke="var(--c-faint)" strokeWidth={1.2} />
       {p.title && (
         <text x={8} y={16} fontSize={12.5} fontWeight={700} fill="var(--c-mute)">
@@ -92,7 +92,6 @@ export function ILDChart(p: ILDChartProps) {
       )}
       {p.ild && <path d={path(p.ild.pts)} fill="none" stroke={col} strokeWidth={2.4} strokeLinejoin="round" />}
       {p.guess && <path d={path(p.guess)} fill="none" stroke="var(--c-load)" strokeWidth={2} strokeDasharray="6 5" />}
-      {p.ild && <GhostPts pts={p.ild.pts.map((q) => ({ x: X(q.x), y: Y(q.y), tip: `${tipName(p.title) ? tipName(p.title) + ': ' : ''}x = ${fmt(q.x, 3)}, ordinate = ${fmt(q.y, 4)}${p.unit ? ' ' + p.unit : ''}` }))} />}
       {p.ild &&
         [...new Set((p.labelXs ?? []).map((x) => Math.round(x * 1000) / 1000))].map((x, i) => {
           const l = ildAt(p.ild!, x, -1)
@@ -183,6 +182,7 @@ export function ILDEditor(p: ILDEditorProps) {
       ref={svgRef}
       viewBox={`0 0 ${W} ${H}`}
       className="w-full h-auto touch-none select-none"
+      {...tipAxes({ X, Y, y: 'ordinate' })}
       onPointerMove={onMove}
       onPointerUp={() => setDrag(null)}
       onPointerLeave={() => setDrag(null)}

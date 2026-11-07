@@ -2,6 +2,7 @@
 // Section A is one chained problem on the Fig. 1 cantilever: Q1 Mcr → Q2(b) service capacity and loads →
 // Q3(b) φMn → Q4(a) factored loads → Q5(b) stirrups → Q6(b) anchorage in the column → Q7(b) cut-off.
 // Marks are the hand-corrected values on the scan (printed values in the notes).
+import { tipAxes } from '../../../components/PointTip'
 import { Md } from '../../../components/ui'
 import type { RcQ } from '../../types'
 import { allowableMoment, uncracked, type ElasticInput } from '../../engine/elastic'
@@ -301,7 +302,9 @@ function SfdBmd({ wu, L, Vu, Mu }: { wu: number; L: number; Vu: number; Mu: numb
         Shear force (k)
       </T>
       <line x1={X(0)} y1={110} x2={X(L)} y2={110} stroke={C.ink} />
-      <polygon points={`${X(0)},110 ${X(0)},40 ${X(L)},110`} fill={C.load} opacity={0.3} stroke={C.load} />
+      <g {...tipAxes({ X, Y: (v) => 110 - (v / Vu) * 70, yAt: [0, Vu], x: 'x', xUnit: ' ft', y: 'V', yUnit: ' k' })}>
+        <polygon points={`${X(0)},110 ${X(0)},40 ${X(L)},110`} fill={C.load} opacity={0.3} stroke={C.load} />
+      </g>
       <T x={X(0) - 6} y={44} a="end">
         {f(Vu, 1)}
       </T>
@@ -309,7 +312,11 @@ function SfdBmd({ wu, L, Vu, Mu }: { wu: number; L: number; Vu: number; Mu: numb
         Bending moment (k-ft, hogging)
       </T>
       <line x1={X(0)} y1={190} x2={X(L)} y2={190} stroke={C.ink} />
-      <polyline points={`${X(0)},190 ${pts}`} fill={C.steel} fillOpacity={0.2} stroke={C.steel} />
+      <g {...tipAxes({ X, Y: (m) => 190 + (110 * m) / Mu, yAt: [0, Mu], x: 'x', xUnit: ' ft', y: 'M', yUnit: ' k-ft' })}>
+        {/* transparent hit area: the pointer over the BMD reads the moment axes, not the SFD ones */}
+        <rect x={X(0)} y={180} width={X(L) - X(0)} height={125} fill="transparent" />
+        <polyline points={`${X(0)},190 ${pts}`} fill={C.steel} fillOpacity={0.2} stroke={C.steel} />
+      </g>
       <T x={X(0) - 6} y={300} a="end">
         {f(Mu, 1)}
       </T>

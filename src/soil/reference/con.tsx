@@ -37,8 +37,8 @@ export function TvUChart({ U, w = 360 }: { U?: number; w?: number }) {
     <Chart w={w} h={240} x={{ min: 0.001, max: 2.5, log: true, label: 'Time factor Tv (log scale)' }} y={{ min: 0, max: 100, flip: true, label: 'U (%)', ticks: [0, 20, 40, 60, 80, 100] }} label="Tv versus U curve">
       {(s) => (
         <>
-          <path d={pathOf(TVS.map((t) => [t, 100 * uFromTv(t)]), s)} fill="none" stroke="var(--c-accent)" strokeWidth={1.8} />
-          <path d={pathOf(TVS.filter((t) => t < 0.3).map((t) => [t, uApprox(t)]), s)} fill="none" stroke="var(--c-load)" strokeWidth={1} strokeDasharray="4 3" />
+          <path d={pathOf(TVS.map((t) => [t, 100 * uFromTv(t)]), s)} fill="none" stroke="var(--c-accent)" strokeWidth={1.8} data-name="exact" />
+          <path d={pathOf(TVS.filter((t) => t < 0.3).map((t) => [t, uApprox(t)]), s)} fill="none" stroke="var(--c-load)" strokeWidth={1} strokeDasharray="4 3" data-name="Tv = πU²/4" />
           {TV_TABLE.slice(1).map(([u, t]) => (
             <circle key={u} cx={s.X(t)} cy={s.Y(u)} r={2.4} fill="var(--c-ink)" data-tip={`U = ${u} %, Tv = ${f4(t)}`} />
           ))}
@@ -160,9 +160,9 @@ export function BarronChart({ n, Tr, w = 360 }: { n?: number; Tr?: number; w?: n
       {(s) => (
         <>
           {NS.map((k, i) => (
-            <path key={k} d={pathOf(TRS.map((t) => [t, 100 * urBarron(t, k)]), s)} fill="none" stroke={SERIES[i % SERIES.length]} strokeWidth={1.2} />
+            <path key={k} d={pathOf(TRS.map((t) => [t, 100 * urBarron(t, k)]), s)} fill="none" stroke={SERIES[i % SERIES.length]} strokeWidth={1.2} data-name={`n = ${k}`} />
           ))}
-          {n !== undefined && n > 1 && <path d={pathOf(TRS.map((t) => [t, 100 * urBarron(t, n)]), s)} fill="none" stroke="var(--c-ink)" strokeWidth={2} strokeDasharray="5 3" />}
+          {n !== undefined && n > 1 && <path d={pathOf(TRS.map((t) => [t, 100 * urBarron(t, n)]), s)} fill="none" stroke="var(--c-ink)" strokeWidth={2} strokeDasharray="5 3" data-name={`n = ${fmt(n, 3)}`} />}
           {n !== undefined && Tr !== undefined && n > 1 && Tr > 0 && <circle cx={s.X(Tr)} cy={s.Y(100 * urBarron(Tr, n))} r={4} fill="var(--c-load)" data-tip={`n = ${f3(n)}, Tr = ${f4(Tr)} → Ur = ${f3(100 * urBarron(Tr, n))} %`} />}
         </>
       )}

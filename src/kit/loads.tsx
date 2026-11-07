@@ -9,6 +9,7 @@ import { CP_WINDWARD, cpLeeward, GCPI, gustRigid, importanceWind, KD_BUILDING, K
 import { fmt } from '../components/DiagramView'
 import { StructureView } from '../components/StructureView'
 import { Tex } from '../components/ui'
+import { tipAxes } from '../components/PointTip'
 
 const Row = ({ k, v, f }: { k: ReactNode; v: ReactNode; f?: string }) => (
   <tr>
@@ -301,7 +302,7 @@ export function SpectrumPlot({ site, T, eta = 1 }: { site: SiteClass; T?: number
   }
   const s = SOIL[site]
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" {...tipAxes({ X, Y, x: 'T', y: 'Cs', xUnit: ' s' })}>
       <line x1={pad} y1={H - pad} x2={W - pad} y2={H - pad} stroke="var(--c-faint)" />
       <line x1={pad} y1={pad / 2} x2={pad} y2={H - pad} stroke="var(--c-faint)" />
       {[s.TB, s.TC, s.TD].map((t, i) => (

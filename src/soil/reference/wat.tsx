@@ -2,6 +2,7 @@
 // effective stress and quick condition, filters, flow nets. Plus two step checklists (st-).
 import { useState } from 'react'
 import { fmt } from '../../components/DiagramView'
+import { tipAxes } from '../../components/PointTip'
 import { Md } from '../../components/ui'
 import { Lookup, NumIn, ok, RT } from '../../reference/common'
 import { energy, gdAtS, leeSinghRC, MODIFIED, modelCurve, rcFromDr, shiftForEnergy, STANDARD, zav } from '../engine/compaction'
@@ -33,17 +34,17 @@ function ProctorChart({ mod }: { mod: boolean }) {
   const path = (f: (w: number) => number) => ws.map((w, k) => `${k ? 'L' : 'M'}${X(w).toFixed(1)},${Y(Math.max(g0, Math.min(g1, f(w)))).toFixed(1)}`).join('')
   const S = shiftForEnergy(std, Gs, 1).S
   return (
-    <svg viewBox={`0 0 ${W} ${Hh}`} className="w-full max-w-[340px]" role="img" aria-label="Standard and Modified Proctor curves with the zero-air-void line">
+    <svg viewBox={`0 0 ${W} ${Hh}`} className="w-full max-w-[340px]" role="img" aria-label="Standard and Modified Proctor curves with the zero-air-void line" {...tipAxes({ X: (v) => X(v / 100), Y, x: 'w', xUnit: ' %', y: 'γd', yUnit: ' kN/m³' })}>
       <line x1={30} y1={Hh - 22} x2={W - 8} y2={Hh - 22} stroke="var(--c-line)" />
       <line x1={30} y1={8} x2={30} y2={Hh - 22} stroke="var(--c-line)" />
       <text x={W - 10} y={Hh - 8} fontSize={9} textAnchor="end" fill="var(--c-mute)">w</text>
       <text x={6} y={14} fontSize={9} fill="var(--c-mute)">γd</text>
-      <path d={path((w) => zav(w, Gs))} fill="none" stroke="var(--c-water)" strokeWidth={1.5} />
+      <path d={path((w) => zav(w, Gs))} fill="none" stroke="var(--c-water)" strokeWidth={1.5} data-name="ZAV" />
       <text x={X(0.215)} y={Y(zav(0.215, Gs)) - 4} fontSize={8.5} fill="var(--c-water)">ZAV (S = 100 %)</text>
-      <path d={path((w) => gdAtS(w, Gs, S))} fill="none" stroke="var(--c-water)" strokeDasharray="3 3" strokeWidth={1} opacity={0.7} />
+      <path d={path((w) => gdAtS(w, Gs, S))} fill="none" stroke="var(--c-water)" strokeDasharray="3 3" strokeWidth={1} opacity={0.7} data-name="line of optimums" />
       <text x={X(0.235)} y={Y(gdAtS(0.235, Gs, S)) + 10} fontSize={8} fill="var(--c-water)">line of optimums (S ≈ {Math.round(S * 100)} %)</text>
-      <path d={path((w) => modelCurve(std, Gs, w))} fill="none" stroke={mod ? 'var(--c-mute)' : 'var(--c-accent)'} strokeWidth={mod ? 1.2 : 2} />
-      <path d={path((w) => modelCurve(m, Gs, w))} fill="none" stroke={mod ? 'var(--c-accent)' : 'var(--c-mute)'} strokeWidth={mod ? 2 : 1.2} />
+      <path d={path((w) => modelCurve(std, Gs, w))} fill="none" stroke={mod ? 'var(--c-mute)' : 'var(--c-accent)'} strokeWidth={mod ? 1.2 : 2} data-name="Standard" />
+      <path d={path((w) => modelCurve(m, Gs, w))} fill="none" stroke={mod ? 'var(--c-accent)' : 'var(--c-mute)'} strokeWidth={mod ? 2 : 1.2} data-name="Modified" />
       <circle cx={X(std.omc)} cy={Y(std.mdd)} r={2.5} fill="var(--c-ink)" data-tip={`Standard: OMC = ${f2(std.omc * 100)} %, MDD = ${f3(std.mdd)}`} />
       <circle cx={X(m.omc)} cy={Y(m.mdd)} r={2.5} fill="var(--c-ink)" data-tip={`${mod ? 'Modified' : 'shifted'}: OMC = ${f2(m.omc * 100)} %, MDD = ${f3(m.mdd)}`} />
       <text x={X(std.omc) + 4} y={Y(std.mdd) - 4} fontSize={8.5} fill="var(--c-ink)">Standard</text>

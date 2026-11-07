@@ -1,5 +1,6 @@
 // φ vs net tensile strain εt (ACI 21.2.2, Grade 60) with an optional beam point; strain profiles at the limits.
 
+import { tipAxes } from '../../../components/PointTip'
 import { phiFlex } from '../../engine/materials'
 
 export function PhiChart({ epsT, fy = 60000, label }: { epsT?: number; fy?: number; label?: string }) {
@@ -18,7 +19,7 @@ export function PhiChart({ epsT, fy = 60000, label }: { epsT?: number; fy?: numb
   const spiral = pts.map((e, i) => `${i ? 'L' : 'M'}${X(e)},${Y(e >= 0.005 ? 0.9 : e <= ey ? 0.75 : 0.75 + (0.15 * (e - ey)) / (0.005 - ey))}`).join(' ')
   const p = epsT !== undefined ? phiFlex(epsT, fy) : undefined
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto max-w-md">
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto max-w-md" {...tipAxes({ X, Y, xAt: [0, xMax], x: 'εt', y: 'φ' })}>
       <rect x={X(0)} y={T} width={X(ey) - X(0)} height={H - T - B} fill="var(--c-bad)" fillOpacity={0.08} />
       <rect x={X(ey)} y={T} width={X(0.005) - X(ey)} height={H - T - B} fill="var(--c-load)" fillOpacity={0.08} />
       <rect x={X(0.005)} y={T} width={X(xMax) - X(0.005)} height={H - T - B} fill="var(--c-good)" fillOpacity={0.08} />
@@ -45,8 +46,8 @@ export function PhiChart({ epsT, fy = 60000, label }: { epsT?: number; fy?: numb
       <text x={12} y={(T + H - B) / 2} fontSize={10.5} textAnchor="middle" fill="var(--c-mute)" transform={`rotate(-90 12 ${(T + H - B) / 2})`}>
         φ
       </text>
-      <path d={spiral} fill="none" stroke="var(--c-mute)" strokeDasharray="5 3" strokeWidth={1.4} />
-      <path d={path} fill="none" stroke="var(--c-accent)" strokeWidth={2.4} />
+      <path d={spiral} fill="none" stroke="var(--c-mute)" strokeDasharray="5 3" strokeWidth={1.4} data-name="spiral" />
+      <path d={path} fill="none" stroke="var(--c-accent)" strokeWidth={2.4} data-name="tied / other" />
       <text x={X(0.0004)} y={Y(0.65) - 5} fontSize={9.5} fill="var(--c-bad)">
         compression-controlled
       </text>

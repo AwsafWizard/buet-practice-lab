@@ -3,7 +3,7 @@
 
 import { useState } from 'react'
 import { fmt } from '../../../components/DiagramView'
-import { GhostPts } from '../../../components/PointTip'
+import { tipAxes } from '../../../components/PointTip'
 import { Answer, Callout, Choice, Md, Reveal, Section, Seg, Step, Steps } from '../../../components/ui'
 import { hashKey } from '../../../labs/CheckTable'
 import { pick, randInt, rng, Slider } from '../../../labs/common'
@@ -283,7 +283,7 @@ function ConcreteCurves() {
   const Y = (f: number) => H - B - (f / 8.5) * (H - B - 10)
   const fcs = [3000, 4000, 6000, 8000]
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto max-w-md">
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto max-w-md" {...tipAxes({ X, Y, x: 'εc', y: 'fc', yUnit: ' ksi' })}>
       <line x1={L} x2={W - 10} y1={Y(0)} y2={Y(0)} stroke="var(--c-mute)" />
       <line x1={L} x2={L} y1={Y(0)} y2={10} stroke="var(--c-mute)" />
       {[0.001, 0.002, 0.003].map((e) => (
@@ -311,10 +311,9 @@ function ConcreteCurves() {
         const d = pts.map((e, k) => `${k ? 'L' : 'M'}${X(e)},${Y(concreteStress(e, fc))}`).join(' ')
         const e0 = (2 * fc) / Ec(fc)
         return (
-          <g key={fc}>
+          <g key={fc} data-name={`f′c = ${fc / 1000} ksi`}>
             <path d={d} fill="none" stroke={['var(--c-good)', 'var(--c-accent)', 'var(--c-load)', 'var(--c-bad)'][i]} strokeWidth={2} />
             <circle cx={X(e0)} cy={Y(fc / 1000)} r={2.5} fill="var(--c-ink)" data-tip={`f′c = ${fc / 1000} ksi reached at ε0 = ${e0.toFixed(5)}`} />
-            <GhostPts pts={pts.map((e) => ({ x: X(e), y: Y(concreteStress(e, fc)), tip: `f′c ${fc / 1000} ksi: ε = ${e.toFixed(5)}, fc = ${fmt(concreteStress(e, fc), 3)} ksi` }))} />
             <text x={X(e0) + 4} y={Y(fc / 1000) - 4} fontSize={9.5} fill="var(--c-ink)">
               f′c = {fc / 1000} ksi
             </text>

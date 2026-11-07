@@ -1,6 +1,7 @@
 // CE 315 code pane — flexure (B): Graph A.1, WSD T-beam formulas, effective flange width, A′s yield check, step checklists.
 import { useState } from 'react'
 import { fmt } from '../../components/DiagramView'
+import { tipAxes } from '../../components/PointTip'
 import { Md, Seg } from '../../components/ui'
 import { Lookup, NumIn, ok, RT } from '../../reference/common'
 import { minDepthForYield, reviewDoubly } from '../engine/doubly'
@@ -35,7 +36,7 @@ function GraphA1Chart({ hl, point }: { hl?: { fc: number; fy: number }; point?: 
   const curves: { fc: number; fy: number }[] = FYS.flatMap((fy) => FCS.map((fc) => ({ fc, fy })))
   if (hl && !curves.some((c) => c.fc === hl.fc && c.fy === hl.fy)) curves.push(hl)
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" {...tipAxes({ X, Y, x: 'ρ', y: 'R', yUnit: ' psi' })}>
       {[0, 300, 600, 900, 1200, 1500].map((R) => (
         <g key={R}>
           <line x1={L} x2={W - Rr} y1={Y(R)} y2={Y(R)} stroke="var(--c-line)" strokeOpacity={0.6} />
@@ -68,7 +69,7 @@ function GraphA1Chart({ hl, point }: { hl?: { fc: number; fy: number }; point?: 
         const isHl = hl && hl.fc === fc && hl.fy === fy
         const col = FY_COL[fy] ?? 'var(--c-accent)'
         return (
-          <g key={`${fy}/${fc}`} opacity={hl && !isHl ? 0.35 : 1}>
+          <g key={`${fy}/${fc}`} opacity={hl && !isHl ? 0.35 : 1} data-name={`fy/f′c ${fy}/${fc}`}>
             <path d={pts} fill="none" stroke={isHl ? 'var(--c-accent)' : col} strokeWidth={isHl ? 2.6 : 1.3} strokeOpacity={isHl ? 1 : 0.55 + fc * 0.07} />
             <circle cx={X(lim.rho005)} cy={Y(Rof(lim.rho005, fc, fy))} r={isHl ? 3 : 2} fill={isHl ? 'var(--c-accent)' : col} data-tip={`fy/f′c ${fy}/${fc}: εt = 0.005 at ρ = ${fmt(lim.rho005, 5)}, R = ${fmt(Rof(lim.rho005, fc, fy), 4)}`} />
             <line x1={X(lim.rhoMax)} x2={X(lim.rhoMax)} y1={Y(Rof(lim.rhoMax, fc, fy)) - 4} y2={Y(Rof(lim.rhoMax, fc, fy)) + 4} stroke={isHl ? 'var(--c-accent)' : col} strokeWidth={1.5} />

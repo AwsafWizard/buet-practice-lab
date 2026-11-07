@@ -1,5 +1,6 @@
 // Shear figures: Vu diagram with φVc lines, required-spacing chart, stirrup layout sketch, case chart.
 import { fmt } from '../../../components/DiagramView'
+import { tipAxes } from '../../../components/PointTip'
 import { checkLayout, type RunLayout, type ShearBeam, type ShearDesign, type ShearRun } from '../../engine/shear'
 
 const W = 680,
@@ -124,20 +125,20 @@ export function VuDiagram({ dsg, d, showMarks = true }: { dsg: ShearDesign; d: n
     [lim.halfPhiVc, 'φVc/2', '5 4'],
   ]
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" {...tipAxes({ X, Y, x: 'x', xUnit: ' ft', y: 'Vu', yUnit: ' k' })}>
       <line x1={X(0)} x2={X(dg.Ltot)} y1={Y(0)} y2={Y(0)} stroke="var(--c-mute)" />
       <path d={fill} fill="var(--c-accent)" fillOpacity={0.1} />
       {multi && (
         <>
-          <path d={path((e) => e.Vmax)} fill="none" stroke="var(--c-accent)" strokeOpacity={0.5} strokeDasharray="3 3" />
-          <path d={path((e) => e.Vmin)} fill="none" stroke="var(--c-accent)" strokeOpacity={0.5} strokeDasharray="3 3" />
+          <path d={path((e) => e.Vmax)} fill="none" stroke="var(--c-accent)" strokeOpacity={0.5} strokeDasharray="3 3" data-name="envelope max" />
+          <path d={path((e) => e.Vmin)} fill="none" stroke="var(--c-accent)" strokeOpacity={0.5} strokeDasharray="3 3" data-name="envelope min" />
         </>
       )}
-      <path d={main} fill="none" stroke="var(--c-accent)" strokeWidth={2} />
+      <path d={main} fill="none" stroke="var(--c-accent)" strokeWidth={2} data-name="Vu" />
       {lines.map(([v, lab, dash]) =>
         [1, -1].filter((sg) => (sg === 1 ? hasPos : hasNeg)).map((sg) => (
           <g key={lab + sg}>
-            <line x1={X(0)} x2={X(dg.Ltot)} y1={Y(sg * v)} y2={Y(sg * v)} stroke={v === lim.phiVc ? 'var(--c-good)' : 'var(--c-load, #f59e0b)'} strokeDasharray={dash} strokeWidth={1.2} />
+            <line x1={X(0)} x2={X(dg.Ltot)} y1={Y(sg * v)} y2={Y(sg * v)} stroke={v === lim.phiVc ? 'var(--c-good)' : 'var(--c-load, #f59e0b)'} strokeDasharray={dash} strokeWidth={1.2} data-curve data-name={lab} />
             {sg === labSg && (
               <text x={X(dg.Ltot) + 3} y={Y(sg * v) + 3} fontSize={9.5} fill="var(--c-mute)" className="num">
                 {lab} {fmt(v, 1)}
@@ -201,7 +202,7 @@ export function SpacingChart({ dsg, layouts }: { dsg: ShearDesign; layouts: Reco
   const smax = Math.max(lim.smaxC, ...runs.flatMap((r) => (layouts[r.id]?.zones ?? []).map((z) => z.s))) * 1.25
   const Y = (s: number) => top + (1 - Math.min(s, smax) / smax) * (H - top - bot)
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" {...tipAxes({ X, Y, x: 'x', xUnit: ' ft', y: 's', yUnit: ' in' })}>
       <line x1={X(0)} x2={X(dg.Ltot)} y1={Y(0)} y2={Y(0)} stroke="var(--c-mute)" />
       {[0, 0.25, 0.5, 0.75, 1].map((f) => {
         const s = Math.round(f * smax)
@@ -226,9 +227,9 @@ export function SpacingChart({ dsg, layouts }: { dsg: ShearDesign; layouts: Reco
         const chk = lay ? checkLayout(r, lay) : null
         return (
           <g key={r.id}>
-            <path d={pts.join(' ')} fill="none" stroke="var(--c-accent)" strokeWidth={1.6} />
+            <path d={pts.join(' ')} fill="none" stroke="var(--c-accent)" strokeWidth={1.6} data-name="required s" />
             {chk?.spaces.map((sp, i) => (
-              <line key={i} x1={X(runX(r, sp.from))} x2={X(runX(r, sp.to))} y1={Y(sp.s)} y2={Y(sp.s)} stroke={sp.ok ? 'var(--c-good)' : 'var(--c-bad)'} strokeWidth={3} strokeLinecap="butt" />
+              <line key={i} x1={X(runX(r, sp.from))} x2={X(runX(r, sp.to))} y1={Y(sp.s)} y2={Y(sp.s)} stroke={sp.ok ? 'var(--c-good)' : 'var(--c-bad)'} strokeWidth={3} strokeLinecap="butt" data-curve data-name={sp.ok ? 'your s (OK)' : 'your s (too wide)'} />
             ))}
           </g>
         )

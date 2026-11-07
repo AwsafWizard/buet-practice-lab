@@ -2,6 +2,7 @@
 // plane and failure planes, the direct-shear τ–σ plot, and the theory sketches.
 import type { ReactNode } from 'react'
 import { fmt } from '../../../components/DiagramView'
+import { tipAxes } from '../../../components/PointTip'
 import type { Circle, Envelope } from '../../engine/mohr'
 
 const f1 = (v: number) => fmt(v, 1)
@@ -78,7 +79,7 @@ export function MohrFig({
     onDrag(smin + (p.x - L) / k, (y0 - p.y) / k)
   }
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className={'w-full ' + (onDrag ? 'touch-none cursor-crosshair' : '')} role="img" aria-label="Mohr diagram" onPointerDown={handle} onPointerMove={handle}>
+    <svg viewBox={`0 0 ${width} ${height}`} className={'w-full ' + (onDrag ? 'touch-none cursor-crosshair' : '')} role="img" aria-label="Mohr diagram" onPointerDown={handle} onPointerMove={handle} {...tipAxes({ X, Y, x: 'σ', xUnit: ' kPa', y: 'τ', yUnit: ' kPa' })}>
       {ticks.map((v) => (
         <g key={v}>
           <line x1={X(v)} x2={X(v)} y1={Y(0) - 3} y2={Y(0) + 3} stroke="var(--c-mute)" />
@@ -101,7 +102,7 @@ export function MohrFig({
         const sEnd = tp > 1e-9 ? Math.min(sRight, (tTop - e.env.c) / tp) : sRight
         return (
           <g key={i}>
-            <line x1={X(s0)} y1={Y(e.env.c + s0 * tp)} x2={X(sEnd)} y2={Y(e.env.c + sEnd * tp)} stroke={e.color} strokeWidth={1.6} strokeDasharray={e.dash ? '6 3' : undefined} />
+            <line x1={X(s0)} y1={Y(e.env.c + s0 * tp)} x2={X(sEnd)} y2={Y(e.env.c + sEnd * tp)} stroke={e.color} strokeWidth={1.6} strokeDasharray={e.dash ? '6 3' : undefined} data-curve />
             {e.label && (
               <g>
                 <line x1={L + 22} x2={L + 40} y1={Tm + 10 + i * 14} y2={Tm + 10 + i * 14} stroke={e.color} strokeWidth={1.6} strokeDasharray={e.dash ? '6 3' : undefined} />
@@ -114,7 +115,7 @@ export function MohrFig({
         )
       })}
       {circles.map((c, i) => (
-        <g key={i}>
+        <g key={i} data-name={c.label}>
           <path
             d={`M${X(c.c.C - c.c.R)},${Y(0)} A${c.c.R * k},${c.c.R * k} 0 0 1 ${X(c.c.C + c.c.R)},${Y(0)}${c.full || full ? ` A${c.c.R * k},${c.c.R * k} 0 0 1 ${X(c.c.C - c.c.R)},${Y(0)}` : ''}`}
             fill="none"
@@ -220,7 +221,7 @@ export function TauSigmaFig({ pts, env, env2, width = 520, height = 260 }: { pts
     return { x1: X(0), y1: Y(e.c), x2: X(smax), y2: Y(e.c + smax * t2) }
   }
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="w-full" role="img" aria-label="shear stress against normal stress">
+    <svg viewBox={`0 0 ${width} ${height}`} className="w-full" role="img" aria-label="shear stress against normal stress" {...tipAxes({ X, Y, x: 'σ', xUnit: ' kPa', y: 'τf', yUnit: ' kPa' })}>
       <line x1={L} x2={width - Rm} y1={Y(0)} y2={Y(0)} stroke="var(--c-ink)" />
       <line x1={L} x2={L} y1={Tm} y2={Y(0)} stroke="var(--c-ink)" />
       <text x={width - Rm} y={Y(0) + 14} fontSize={10} textAnchor="end" fill="var(--c-ink)">
@@ -229,11 +230,11 @@ export function TauSigmaFig({ pts, env, env2, width = 520, height = 260 }: { pts
       <text x={L + 4} y={Tm + 8} fontSize={10} fill="var(--c-ink)">
         τf (kPa)
       </text>
-      <line {...line(env)} stroke="var(--c-accent)" strokeWidth={1.6} />
+      <line {...line(env)} stroke="var(--c-accent)" strokeWidth={1.6} data-curve />
       <text x={X(smax) - 2} y={Y(env.c + smax * tp) + 14} fontSize={9.5} textAnchor="end" fill="var(--c-accent)">
         τ = {fmt(env.c, 2)} + σ tan {fmt(env.phi, 2)}°
       </text>
-      {env2 && <line {...line(env2.env)} stroke={env2.color} strokeWidth={1.4} strokeDasharray="5 3" />}
+      {env2 && <line {...line(env2.env)} stroke={env2.color} strokeWidth={1.4} strokeDasharray="5 3" data-curve data-name={env2.label.split(':')[0]} />}
       {env2 && (
         <text x={X(smax) - 2} y={Y(env2.env.c + smax * Math.tan((env2.env.phi * Math.PI) / 180)) - 6} fontSize={9.5} textAnchor="end" fill={env2.color}>
           {env2.label}

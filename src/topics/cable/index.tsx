@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { fmt } from '../../components/DiagramView'
 import { Answer, Callout, Md, Section, Step, Steps, Tex } from '../../components/ui'
+import { tipAxes } from '../../components/PointTip'
 import { cablePointLoads, parabolicCable, stiffenedSuspension, threeHingedArch, type PointLoad } from '../../engine/cable'
 import { ArchSolution, FnPlot, SuspensionSolution } from '../../kit/cables'
 import { Slider, TopicFrequency } from '../../labs/common'
@@ -31,9 +32,9 @@ function CableExplorer() {
   return (
     <div className="grid cq-lg:grid-cols-[1.4fr_1fr] gap-4">
       <div className="rounded-xl bg-bg/60 border border-line p-2">
-        <svg viewBox={`0 0 ${W} ${Hh}`} className="w-full h-auto">
-          <line x1={X(0)} y1={Y(0)} x2={X(L)} y2={Y(dh)} stroke="var(--c-faint)" strokeDasharray="5 4" />
-          <polyline points={c.pts.map((p) => `${X(p.x)},${Y(p.y)}`).join(' ')} fill="none" stroke="var(--c-accent)" strokeWidth={2.5} />
+        <svg viewBox={`0 0 ${W} ${Hh}`} className="w-full h-auto" {...tipAxes({ X, Y, x: 'x', y: 'y', xUnit: ' ft', yUnit: ' ft' })}>
+          <line x1={X(0)} y1={Y(0)} x2={X(L)} y2={Y(dh)} stroke="var(--c-faint)" strokeDasharray="5 4" data-name="chord" />
+          <polyline data-name="cable" points={c.pts.map((p) => `${X(p.x)},${Y(p.y)}`).join(' ')} fill="none" stroke="var(--c-accent)" strokeWidth={2.5} />
           {loads.map((l, i) => (
             <g key={i}>
               <line x1={X(l.x)} y1={Y(c.pts[i + 1].y) + 4} x2={X(l.x)} y2={Y(c.pts[i + 1].y) + 40} stroke="var(--c-load)" strokeWidth={2} markerEnd="url(#cl)" />
