@@ -55,6 +55,11 @@ export function SmQuestionCard({ q, topic, showPaper = true, defaultOpen = false
         )}
         {q.theory && <span className="chip" style={{ color: 'var(--c-accent2)' }}>theory</span>}
         <span className="font-semibold flex-1 min-w-[12rem]">{q.title}</span>
+        {smTopicById(q.topics[0])?.note && (
+          <span className="chip" style={{ color: 'var(--c-load)' }} title={smTopicById(q.topics[0])?.note}>
+            ⚑ not in this year’s syllabus
+          </span>
+        )}
         {q.flag && (
           <span className="chip" style={{ color: 'var(--c-load)' }} title={q.flag}>
             ⚑ {q.flag.length > 28 ? q.flag.slice(0, 26) + '…' : q.flag}
@@ -73,6 +78,7 @@ export function SmQuestionCard({ q, topic, showPaper = true, defaultOpen = false
         <div className="px-5 pb-5 space-y-4 border-t border-line/60 pt-4">
           <Md>{q.text}</Md>
           {q.given && <GivenStrip q={q} />}
+          {smTopicById(q.topics[0])?.note && <div className="text-xs rounded-lg p-2 bg-load/10 text-mute">⚑ {smTopicById(q.topics[0])?.note}</div>}
           {q.flag && <div className="text-xs rounded-lg p-2 bg-load/10 text-mute">⚑ {q.flag}</div>}
           {q.figure && (
             <Boundary label="figure">

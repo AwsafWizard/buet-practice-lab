@@ -51,6 +51,7 @@ export default function SmTopicPage() {
           <Ring value={st.tried ? st.acc : 0} size={46} stroke={5} color={meta.color} label={st.tried ? `${Math.round(st.acc * 100)}` : '–'} />
         </div>
       </div>
+      {meta.note && <div className="mb-4 rounded-xl border border-load/40 bg-load/10 px-4 py-2.5 text-sm">⚑ {meta.note}</div>}
       <div className="mb-5 sticky top-14 z-10 py-2 -mx-1 px-1 bg-bg/85 backdrop-blur">
         <Tabs<Tab>
           value={tab as Tab}

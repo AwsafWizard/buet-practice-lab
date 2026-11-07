@@ -22,8 +22,7 @@ export function smBlocks(): PlanBlock[] {
     b('setup', 'Tour: course picker, chart pane (T), labs', 0.25),
     b('sm-wv', 'Weight–volume: phase diagram the AJK way, Se = wGs, Dr', 1.75),
     b('sm-plast', 'Plasticity: flow curve → LL, PL, PI, LI, shrinkage limit', 2),
-    b('sm-class', 'Classification: grading curve, USCS name, AASHTO group + GI', 3),
-    b('sm-struct', 'Structure, clay minerals, soil deposits (theory)', 1, 'revise'),
+    b('sm-class', 'Classification: grading curve, USCS name, AASHTO group + GI', 4),
     // 7 Nov
     b('sm-shear', 'Shear strength: Mohr + pole, direct shear, CD / CU / UU, unconfined', 5),
     b('sm-lep', 'Earth pressure: at-rest, Rankine, crack, WT + surcharge, passive', 3),

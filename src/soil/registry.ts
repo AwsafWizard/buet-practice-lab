@@ -9,6 +9,8 @@ export interface SmTopicMeta {
   blurb: string
   hours: number
   color: string
+  /** shown as a banner on the topic page and on its past questions (e.g. dropped from this year's syllabus) */
+  note?: string
   /** chart-pane group shown first on this topic */
   ref: SmRefGroup
 }
@@ -19,7 +21,7 @@ export const SM_TOPICS: SmTopicMeta[] = [
   { id: 'sm-wv', title: 'Weight–Volume & Relative Density', short: 'Weight–volume', section: 'A', blurb: 'The three-phase diagram, e, n, S, w and the unit weights, Se = wGs, relative density, sand cone.', hours: 2, color: '#84cc16', ref: 'idx' },
   { id: 'sm-plast', title: 'Plasticity & Consistency', short: 'Plasticity', section: 'A', blurb: 'Atterberg limits by cup and fall cone, flow curve, PI, LI, consistency and toughness, shrinkage limit.', hours: 2, color: '#eab308', ref: 'idx' },
   { id: 'sm-class', title: 'Soil Classification', short: 'Classification', section: 'A', blurb: 'Grading curve, Cu and Cc, USCS symbol and group name, AASHTO group and group index, USDA triangle.', hours: 3, color: '#f97316', ref: 'idx' },
-  { id: 'sm-struct', title: 'Soil Structure, Mineralogy & Origin', short: 'Structure & minerals', section: 'A', blurb: 'Single-grained, honeycomb, flocculated and dispersed structures; kaolinite, illite, montmorillonite; soil deposits.', hours: 1, color: '#a8a29e', ref: 'idx' },
+  { id: 'sm-struct', title: 'Soil Structure, Mineralogy & Origin', short: 'Structure (not this year)', note: "Not in this year's syllabus (AJK sir dropped structure and mineralogy this term). Kept for reference only — skip it unless you have spare time.", section: 'A', blurb: 'Single-grained, honeycomb, flocculated and dispersed structures; kaolinite, illite, montmorillonite; soil deposits.', hours: 0, color: '#a8a29e', ref: 'idx' },
   { id: 'sm-shear', title: 'Shear Strength', short: 'Shear strength', section: 'A', blurb: 'Mohr circle and pole, Mohr–Coulomb, direct shear, triaxial CD / CU / UU, unconfined, vane, pore-pressure parameters.', hours: 5, color: '#ef4444', ref: 'str' },
   { id: 'sm-lep', title: 'Lateral Earth Pressure', short: 'Earth pressure', section: 'A', blurb: 'At-rest, Rankine active and passive, tension crack, layers, water table and surcharge, force and overturning moment.', hours: 4, color: '#d946ef', ref: 'lep' },
   { id: 'sm-comp', title: 'Compaction & Earthwork', short: 'Compaction', section: 'B', blurb: 'Proctor curves, zero-air-void line, relative compaction, field control, rollers, borrow-pit and truck problems.', hours: 2.5, color: '#22c55e', ref: 'wat' },
