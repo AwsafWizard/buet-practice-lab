@@ -257,13 +257,13 @@ export function StateMohrFig({ sv, phi, c, K0, show = ['rest', 'active', 'passiv
       {cs.map(({ key, cc }) => (
         <g key={key}>
           <path d={`M${X(cc.C - cc.R)},${Yv(0)} A${cc.R * k},${cc.R * k} 0 0 1 ${X(cc.C + cc.R)},${Yv(0)}`} fill="none" stroke={col[key]} strokeWidth={1.8} />
-          <circle cx={X(cc.sh)} cy={Yv(0)} r={3} fill={col[key]} />
+          <circle cx={X(cc.sh)} cy={Yv(0)} r={3} fill={col[key]} data-tip={`${lab[key]} σ′h = ${f2(cc.sh)}`} />
           <text x={X(cc.sh)} y={Yv(0) + (key === 'active' ? 36 : 25)} fontSize={9.5} textAnchor={key === 'passive' ? 'end' : 'middle'} fill={col[key]}>
             {lab[key]} σ′h = {f1(cc.sh)}
           </text>
           {key !== 'rest' && (
             <g>
-              <circle cx={X(cc.tp.sigma)} cy={Yv(cc.tp.tau)} r={3} fill="var(--c-bad)" />
+              <circle cx={X(cc.tp.sigma)} cy={Yv(cc.tp.tau)} r={3} fill="var(--c-bad)" data-tip={`tangent point: σ′ = ${f2(cc.tp.sigma)}, τ = ${f2(cc.tp.tau)}`} />
               {/* pole and the failure planes through it */}
               <line x1={X(cc.sh)} y1={Yv(0)} x2={X(cc.tp.sigma)} y2={Yv(cc.tp.tau)} stroke={col[key]} strokeDasharray="4 3" />
               <text x={X(cc.sh) + 4} y={Yv(0) - 4} fontSize={9} fill={col[key]}>
@@ -378,7 +378,7 @@ export function TiltFig({ k0, ka, kp, xa, xp, x }: { k0: number; ka: number; kp:
       </text>
       {cur !== null && (
         <g>
-          <circle cx={X(x!)} cy={Y(cur)} r={4.5} fill="var(--c-load)" />
+          <circle cx={X(x!)} cy={Y(cur)} r={4.5} fill="var(--c-load)" data-tip={`ΔL/H = ${fmt(x!, 3)}, K = ${fmt(cur, 3)}`} />
           <text x={X(x!) + 7} y={Y(cur) - 6} fontSize={10} fill="var(--c-load)">
             K = {fmt(cur, 3)}
           </text>

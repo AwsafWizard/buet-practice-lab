@@ -461,13 +461,13 @@ export function PQPlot({ pts, a, alpha, width = 520, height = 260 }: { pts: { p:
       <text x={X(pmax) - 4} y={Y(a + pmax * ta) + 14} fontSize={9.5} textAnchor="end" fill="var(--c-accent2)">
         Kf line: q = {f2(a)} + p′ tan {f2(alpha)}°
       </text>
-      <circle cx={X(0)} cy={Y(a)} r={3} fill="var(--c-accent2)" />
+      <circle cx={X(0)} cy={Y(a)} r={3} fill="var(--c-accent2)" data-tip={`intercept a = ${f2(a)} kPa`} />
       <text x={X(0) + 5} y={Y(a) - 5} fontSize={9.5} fill="var(--c-accent2)">
         a = {f2(a)}
       </text>
       {pts.map((x, i) => (
         <g key={i}>
-          <circle cx={X(x.p)} cy={Y(x.q)} r={4} fill="var(--c-load)" />
+          <circle cx={X(x.p)} cy={Y(x.q)} r={4} fill="var(--c-load)" data-tip={`p′ = ${f2(x.p)} kPa, q = ${f2(x.q)} kPa`} />
           <text x={X(x.p) + 5} y={Y(x.q) + 13} fontSize={9} fill="var(--c-mute)">
             ({f1(x.p)}, {f1(x.q)})
           </text>

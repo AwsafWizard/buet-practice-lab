@@ -223,7 +223,7 @@ export function BetaChart({ ocr, curve }: { ocr?: number; curve?: 'average' | 'u
         <g>
           <line x1={x(ocr!)} x2={x(ocr!)} y1={y(0)} y2={y(b)} stroke="var(--c-load)" strokeDasharray="3 2" />
           <line x1={x(0)} x2={x(ocr!)} y1={y(b)} y2={y(b)} stroke="var(--c-load)" strokeDasharray="3 2" />
-          <circle cx={x(ocr!)} cy={y(b)} r={3} fill="var(--c-load)" />
+          <circle cx={x(ocr!)} cy={y(b)} r={3} fill="var(--c-load)" data-tip={`OCR = ${f2(ocr!)}, β = ${f2(b)}`} />
         </g>
       )}
       <text x={(L + W - Rt) / 2} y={H - 2} fontSize={9} textAnchor="middle" fill="var(--c-ink)">

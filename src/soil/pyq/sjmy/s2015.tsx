@@ -148,7 +148,7 @@ export const B2015: SmQ[] = [
                 <>
                   <path d={pathOf(Array.from({ length: 33 }, (_, i) => 8 + i * 0.5).map((w) => [w, zav(w / 100, GS9, 1)] as [number, number]), s)} fill="none" stroke="var(--c-water)" strokeWidth={2} />
                   {W9.map((w) => (
-                    <circle key={w} cx={s.X(w * 100)} cy={s.Y(zav(w, GS9, 1))} r={3} fill="var(--c-water)" />
+                    <circle key={w} cx={s.X(w * 100)} cy={s.Y(zav(w, GS9, 1))} r={3} fill="var(--c-water)" data-tip={`w = ${f2(w * 100)} %, ρ (ZAV) = ${f3(zav(w, GS9, 1))} g/cm³`} />
                   ))}
                   <text x={s.X(9)} y={s.Y(2.2)} fontSize={10} fill="var(--c-water)">
                     ZAV (S = 100 %), Gs = 2.74
@@ -313,7 +313,7 @@ export const B2015: SmQ[] = [
                     <path d={pathOf(ts.map((t) => [t, r.at(t) * 1000] as [number, number]), s)} fill="none" stroke="var(--c-accent)" strokeWidth={2} />
                     <line x1={s.L} x2={s.X(r.t200)} y1={s.Y(200)} y2={s.Y(200)} stroke="var(--c-load)" strokeDasharray="4 3" />
                     <line x1={s.X(r.t200)} x2={s.X(r.t200)} y1={s.Y(200)} y2={s.Y(0)} stroke="var(--c-load)" strokeDasharray="4 3" />
-                    <circle cx={s.X(r.t200)} cy={s.Y(200)} r={3.5} fill="var(--c-load)" />
+                    <circle cx={s.X(r.t200)} cy={s.Y(200)} r={3.5} fill="var(--c-load)" data-tip={`200 mm settlement at t = ${f3(r.t200)} months`} />
                   </>
                 )}
               </Chart>

@@ -99,7 +99,7 @@ export function ProfileFig({ inp, out, width = 620 }: { inp: SettleIn; out: Retu
         L.subs.map((s, j) => (
           <g key={`${L.layer}-${j}`}>
             <line x1={colX} x2={colX + colW} y1={Y(s.zMid)} y2={Y(s.zMid)} stroke="var(--c-accent)" strokeDasharray="2 2" />
-            <circle cx={colX + colW} cy={Y(s.zMid)} r={2.5} fill="var(--c-accent)" />
+            <circle cx={colX + colW} cy={Y(s.zMid)} r={2.5} fill="var(--c-accent)" data-tip={`sublayer mid-depth z = ${fmt(s.zMid, 3)}`} />
           </g>
         )),
       )}
@@ -131,8 +131,8 @@ export function ProfileFig({ inp, out, width = 620 }: { inp: SettleIn; out: Retu
       {out?.layers.flatMap((L) =>
         L.subs.map((s, j) => (
           <g key={`v${L.layer}-${j}`}>
-            <circle cx={SX(s.p0)} cy={Y(s.zMid)} r={2.5} fill="var(--c-ink)" />
-            <circle cx={SX(s.p0 + s.dp)} cy={Y(s.zMid)} r={2.5} fill="var(--c-load)" />
+            <circle cx={SX(s.p0)} cy={Y(s.zMid)} r={2.5} fill="var(--c-ink)" data-tip={`z = ${fmt(s.zMid, 3)}: p0′ = ${fmt(s.p0, 4)}`} />
+            <circle cx={SX(s.p0 + s.dp)} cy={Y(s.zMid)} r={2.5} fill="var(--c-load)" data-tip={`z = ${fmt(s.zMid, 3)}: p0′ + Δp = ${fmt(s.p0 + s.dp, 4)} (Δp = ${fmt(s.dp, 4)})`} />
             {L.subs.length <= 3 && (
               <text x={SX(s.p0 + s.dp) + 4} y={Y(s.zMid) - 3} fontSize={8.5} fill="var(--c-mute)">
                 p0′ {f1(s.p0)} + Δp {f1(s.dp)}
@@ -177,8 +177,8 @@ export function StressPathFig({ e0, p0, p1, pc, Cc, Cs, w = 340 }: { e0: number;
             </text>
           )}
           <path d={pathOf(ps.filter((p) => p >= p0 && p <= p1).concat([p1]).map((p) => [p, e(p)]), s)} fill="none" stroke={col} strokeWidth={3.2} opacity={0.85} />
-          <circle cx={s.X(p0)} cy={s.Y(e0)} r={3.5} fill="var(--c-ink)" />
-          <circle cx={s.X(p1)} cy={s.Y(e(p1))} r={3.5} fill={col} />
+          <circle cx={s.X(p0)} cy={s.Y(e0)} r={3.5} fill="var(--c-ink)" data-tip={`p0′ = ${fmt(p0, 4)}, e0 = ${fmt(e0, 4)}`} />
+          <circle cx={s.X(p1)} cy={s.Y(e(p1))} r={3.5} fill={col} data-tip={`p1′ = ${fmt(p1, 4)}, e1 = ${fmt(e(p1), 4)}`} />
           <text x={s.X(p0) - 4} y={s.Y(e0) - 6} fontSize={9} textAnchor="end" fill="var(--c-ink)">
             (p0′, e0)
           </text>
@@ -279,20 +279,20 @@ export function FieldCurveSketch({ oc = false }: { oc?: boolean }) {
           <text x={s.L + 4} y={s.Y(eL) - 3} fontSize={9} fill="var(--c-load)">
             0.42e0
           </text>
-          <circle cx={s.X(p0)} cy={s.Y(e0)} r={3} fill="var(--c-ink)" />
+          <circle cx={s.X(p0)} cy={s.Y(e0)} r={3} fill="var(--c-ink)" data-tip={`a: p0′ = ${fmt(p0, 4)}, e0 = ${fmt(e0, 4)}`} />
           <text x={s.X(p0) + 4} y={s.Y(e0) - 4} fontSize={9} fill="var(--c-ink)">
             a (p0′, e0)
           </text>
           {oc && (
             <>
               <line x1={s.X(pc)} x2={s.X(pc)} y1={s.T} y2={s.B} stroke="var(--c-accent)" strokeDasharray="3 3" />
-              <circle cx={s.X(pc)} cy={s.Y(eb)} r={3} fill="var(--c-ink)" />
+              <circle cx={s.X(pc)} cy={s.Y(eb)} r={3} fill="var(--c-ink)" data-tip={`b: pc′ = ${fmt(pc, 4)}, e = ${fmt(eb, 4)}`} />
               <text x={s.X(pc) + 4} y={s.Y(eb) - 4} fontSize={9} fill="var(--c-ink)">
                 b (pc′), slope Cs from a
               </text>
             </>
           )}
-          <circle cx={s.X(pL)} cy={s.Y(eL)} r={3} fill="var(--c-ink)" />
+          <circle cx={s.X(pL)} cy={s.Y(eL)} r={3} fill="var(--c-ink)" data-tip={`p′ = ${fmt(pL, 4)}, e = 0.42e0 = ${fmt(eL, 4)}`} />
           <text x={s.X(pL) - 4} y={s.Y(eL) + 12} fontSize={9} textAnchor="end" fill="var(--c-ink)">
             {oc ? 'c' : 'b'} on the lab curve
           </text>

@@ -27,7 +27,7 @@ export function DepthChart({ curves, zMax, mark, w = 360, xLabel = 'σz (kPa)' }
             {mark && Number.isFinite(mark.v) && (
               <g>
                 <line x1={s.L} x2={s.X(mark.v)} y1={s.Y(mark.z)} y2={s.Y(mark.z)} stroke="var(--c-load)" strokeDasharray="3 2" />
-                <circle cx={s.X(mark.v)} cy={s.Y(mark.z)} r={4} fill="var(--c-load)" />
+                <circle cx={s.X(mark.v)} cy={s.Y(mark.z)} r={4} fill="var(--c-load)" data-tip={`z = ${fmt(mark.z, 3)} m, ${xLabel.split(' (')[0]} = ${fmt(mark.v, 4)}${xLabel.includes('(kPa)') ? ' kPa' : ''}`} />
               </g>
             )}
           </>
@@ -177,7 +177,7 @@ export function PlanFig({
           strokeDasharray="5 3"
         />
       ))}
-      <circle cx={X(P[0])} cy={Y(P[1])} r={4} fill="var(--c-accent)" stroke="var(--c-bg)" />
+      <circle cx={X(P[0])} cy={Y(P[1])} r={4} fill="var(--c-accent)" stroke="var(--c-bg)" data-tip={`P at (${f2(P[0])}, ${f2(P[1])}) m`} />
       <text x={X(P[0]) + 6} y={Y(P[1]) - 5} fontSize={11} fontWeight={700} fill="var(--c-accent)">
         P
       </text>
@@ -215,7 +215,7 @@ export function EmbFig({ e, pts, w = 520 }: { e: Embankment; pts: { x: number; z
       {pts.map((p, i) => (
         <g key={i}>
           <line x1={X(p.x)} x2={X(p.x)} y1={Yg - e.h * k} y2={Yg + p.z * k} stroke="var(--c-accent)" strokeDasharray="3 3" />
-          <circle cx={X(p.x)} cy={Yg + p.z * k} r={4} fill="var(--c-accent)" />
+          <circle cx={X(p.x)} cy={Yg + p.z * k} r={4} fill="var(--c-accent)" data-tip={`${p.label}: x = ${f2(p.x)} m, z = ${f2(p.z)} m`} />
           <text x={X(p.x) + 6} y={Yg + p.z * k + 4} fontSize={10} fontWeight={700} fill="var(--c-accent)">
             {p.label} ({f1(p.z)} m)
           </text>

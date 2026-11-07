@@ -134,7 +134,7 @@ export function MohrFig({
       ))}
       {points.map((p, i) => (
         <g key={i}>
-          <circle cx={X(p.s)} cy={Y(p.t)} r={p.r ?? 3.5} fill={p.color} />
+          <circle cx={X(p.s)} cy={Y(p.t)} r={p.r ?? 3.5} fill={p.color} data-tip={`${typeof p.label === 'string' ? p.label + ': ' : ''}σ = ${fmt(p.s, 2)}, τ = ${fmt(p.t, 2)}`} />
           {p.label && (
             <text x={X(p.s) + (p.dx ?? 5)} y={Y(p.t) + (p.dy ?? -5)} fontSize={9.5} fill={p.color}>
               {p.label}
@@ -241,13 +241,13 @@ export function TauSigmaFig({ pts, env, env2, width = 520, height = 260 }: { pts
       )}
       {pts.map((p, i) => (
         <g key={i}>
-          <circle cx={X(p.sigma)} cy={Y(p.tau)} r={4} fill="var(--c-load)" />
+          <circle cx={X(p.sigma)} cy={Y(p.tau)} r={4} fill="var(--c-load)" data-tip={`σ = ${fmt(p.sigma, 2)} kPa, τf = ${fmt(p.tau, 2)} kPa`} />
           <text x={X(p.sigma) + 5} y={Y(p.tau) + 12} fontSize={9} fill="var(--c-mute)">
             ({fmt(p.sigma, 1)}, {fmt(p.tau, 1)})
           </text>
         </g>
       ))}
-      {env2?.pts?.map((p, i) => <circle key={`b${i}`} cx={X(p.sigma)} cy={Y(p.tau)} r={3.5} fill={env2.color} />)}
+      {env2?.pts?.map((p, i) => <circle key={`b${i}`} cx={X(p.sigma)} cy={Y(p.tau)} r={3.5} fill={env2.color} data-tip={`σ = ${fmt(p.sigma, 2)} kPa, τf = ${fmt(p.tau, 2)} kPa`} />)}
     </svg>
   )
 }

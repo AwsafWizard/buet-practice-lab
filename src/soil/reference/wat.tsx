@@ -44,8 +44,8 @@ function ProctorChart({ mod }: { mod: boolean }) {
       <text x={X(0.235)} y={Y(gdAtS(0.235, Gs, S)) + 10} fontSize={8} fill="var(--c-water)">line of optimums (S ≈ {Math.round(S * 100)} %)</text>
       <path d={path((w) => modelCurve(std, Gs, w))} fill="none" stroke={mod ? 'var(--c-mute)' : 'var(--c-accent)'} strokeWidth={mod ? 1.2 : 2} />
       <path d={path((w) => modelCurve(m, Gs, w))} fill="none" stroke={mod ? 'var(--c-accent)' : 'var(--c-mute)'} strokeWidth={mod ? 2 : 1.2} />
-      <circle cx={X(std.omc)} cy={Y(std.mdd)} r={2.5} fill="var(--c-ink)" />
-      <circle cx={X(m.omc)} cy={Y(m.mdd)} r={2.5} fill="var(--c-ink)" />
+      <circle cx={X(std.omc)} cy={Y(std.mdd)} r={2.5} fill="var(--c-ink)" data-tip={`Standard: OMC = ${f2(std.omc * 100)} %, MDD = ${f3(std.mdd)}`} />
+      <circle cx={X(m.omc)} cy={Y(m.mdd)} r={2.5} fill="var(--c-ink)" data-tip={`${mod ? 'Modified' : 'shifted'}: OMC = ${f2(m.omc * 100)} %, MDD = ${f3(m.mdd)}`} />
       <text x={X(std.omc) + 4} y={Y(std.mdd) - 4} fontSize={8.5} fill="var(--c-ink)">Standard</text>
       <text x={X(m.omc) - 4} y={Y(m.mdd) - 5} fontSize={8.5} fill="var(--c-ink)" textAnchor="end">Modified</text>
       <line x1={X(std.omc)} y1={Y(std.mdd)} x2={X(std.omc)} y2={Hh - 22} stroke="var(--c-line)" strokeDasharray="2 2" />

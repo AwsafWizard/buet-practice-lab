@@ -40,13 +40,13 @@ export function TvUChart({ U, w = 360 }: { U?: number; w?: number }) {
           <path d={pathOf(TVS.map((t) => [t, 100 * uFromTv(t)]), s)} fill="none" stroke="var(--c-accent)" strokeWidth={1.8} />
           <path d={pathOf(TVS.filter((t) => t < 0.3).map((t) => [t, uApprox(t)]), s)} fill="none" stroke="var(--c-load)" strokeWidth={1} strokeDasharray="4 3" />
           {TV_TABLE.slice(1).map(([u, t]) => (
-            <circle key={u} cx={s.X(t)} cy={s.Y(u)} r={2.4} fill="var(--c-ink)" />
+            <circle key={u} cx={s.X(t)} cy={s.Y(u)} r={2.4} fill="var(--c-ink)" data-tip={`U = ${u} %, Tv = ${f4(t)}`} />
           ))}
           {U !== undefined && U > 0 && U < 100 && (
             <g>
               <line x1={s.L} x2={s.X(tvFromU(U / 100))} y1={s.Y(U)} y2={s.Y(U)} stroke="var(--c-load)" strokeDasharray="3 2" />
               <line x1={s.X(tvFromU(U / 100))} x2={s.X(tvFromU(U / 100))} y1={s.Y(U)} y2={s.B} stroke="var(--c-load)" strokeDasharray="3 2" />
-              <circle cx={s.X(tvFromU(U / 100))} cy={s.Y(U)} r={3.5} fill="var(--c-load)" />
+              <circle cx={s.X(tvFromU(U / 100))} cy={s.Y(U)} r={3.5} fill="var(--c-load)" data-tip={`U = ${f3(U)} %, Tv = ${f4(tvFromU(U / 100))}`} />
             </g>
           )}
         </>
@@ -163,7 +163,7 @@ export function BarronChart({ n, Tr, w = 360 }: { n?: number; Tr?: number; w?: n
             <path key={k} d={pathOf(TRS.map((t) => [t, 100 * urBarron(t, k)]), s)} fill="none" stroke={SERIES[i % SERIES.length]} strokeWidth={1.2} />
           ))}
           {n !== undefined && n > 1 && <path d={pathOf(TRS.map((t) => [t, 100 * urBarron(t, n)]), s)} fill="none" stroke="var(--c-ink)" strokeWidth={2} strokeDasharray="5 3" />}
-          {n !== undefined && Tr !== undefined && n > 1 && Tr > 0 && <circle cx={s.X(Tr)} cy={s.Y(100 * urBarron(Tr, n))} r={4} fill="var(--c-load)" />}
+          {n !== undefined && Tr !== undefined && n > 1 && Tr > 0 && <circle cx={s.X(Tr)} cy={s.Y(100 * urBarron(Tr, n))} r={4} fill="var(--c-load)" data-tip={`n = ${f3(n)}, Tr = ${f4(Tr)} → Ur = ${f3(100 * urBarron(Tr, n))} %`} />}
         </>
       )}
     </Chart>

@@ -405,7 +405,7 @@ export function PumpFig({ s, k }: { s: PumpState; k: number }) {
       ].map((o) => (
         <g key={o.n}>
           <line x1={X(o.r)} y1={Y(0)} x2={X(o.r)} y2={Y(top * 0.9)} stroke="var(--c-ink)" strokeWidth={0.8} />
-          <circle cx={X(o.r)} cy={Y(o.h)} r={3} fill="var(--c-water)" />
+          <circle cx={X(o.r)} cy={Y(o.h)} r={3} fill="var(--c-water)" data-tip={`r${o.n} = ${o.r}, h${o.n} = ${o.h}`} />
           <text x={X(o.r) + 3} y={Y(o.h) - 5} fontSize={9.5} fill="var(--c-ink)">
             h{o.n} = {o.h} at r{o.n} = {o.r}
           </text>

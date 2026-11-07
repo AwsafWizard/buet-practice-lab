@@ -147,7 +147,7 @@ export function PlasticityChart({ pts = [], onPick, variant = 'uscs', w = 460 }:
           <g key={i}>
             <line x1={X(p.LL)} x2={X(p.LL)} y1={Y(0)} y2={Y(p.PI)} stroke={p.color ?? 'var(--c-load)'} strokeDasharray="2 2" strokeWidth={0.8} />
             <line x1={X(0)} x2={X(p.LL)} y1={Y(p.PI)} y2={Y(p.PI)} stroke={p.color ?? 'var(--c-load)'} strokeDasharray="2 2" strokeWidth={0.8} />
-            <circle cx={X(p.LL)} cy={Y(Math.min(70, p.PI))} r={4.5} fill={p.color ?? 'var(--c-load)'} stroke="var(--c-panel)" strokeWidth={1.2} />
+            <circle cx={X(p.LL)} cy={Y(Math.min(70, p.PI))} r={4.5} fill={p.color ?? 'var(--c-load)'} stroke="var(--c-panel)" strokeWidth={1.2} data-tip={`${p.label ? p.label + ': ' : ''}LL = ${f(p.LL)}, PI = ${f(p.PI)}`} />
             {p.label && (
               <text x={X(p.LL) + 6} y={Y(Math.min(70, p.PI)) - 5} {...TXT} fontWeight={700} fill={p.color ?? 'var(--c-load)'}>
                 {p.label}
@@ -207,7 +207,7 @@ export function AashtoFig52({ pt, F200, w = 420 }: { pt?: { LL: number; PI: numb
       <text x={9} y={mt + H / 2} textAnchor="middle" transform={`rotate(-90 9 ${mt + H / 2})`} {...TXT}>
         Plasticity index
       </text>
-      {pt && ok(pt.LL) && ok(pt.PI) && <circle cx={X(pt.LL)} cy={Y(Math.min(70, pt.PI))} r={4.5} fill="var(--c-load)" stroke="var(--c-panel)" strokeWidth={1.2} />}
+      {pt && ok(pt.LL) && ok(pt.PI) && <circle cx={X(pt.LL)} cy={Y(Math.min(70, pt.PI))} r={4.5} fill="var(--c-load)" stroke="var(--c-panel)" strokeWidth={1.2} data-tip={`LL = ${f(pt.LL)}, PI = ${f(pt.PI)}`} />}
     </svg>
   )
 }
@@ -309,7 +309,7 @@ export function UsdaTriangle({ pt, onPick, w = 420 }: { pt?: { sand: number; sil
       </text>
       {p && (
         <>
-          <circle cx={p.x} cy={p.y} r={4.5} fill="var(--c-load)" stroke="var(--c-panel)" strokeWidth={1.2} />
+          <circle cx={p.x} cy={p.y} r={4.5} fill="var(--c-load)" stroke="var(--c-panel)" strokeWidth={1.2} data-tip={pt ? `${pt.label ? pt.label + ': ' : ''}sand ${f(pt.sand, 1)} %, silt ${f(pt.silt, 1)} %, clay ${f(pt.clay, 1)} %` : undefined} />
           {pt?.label && (
             <text x={p.x + 6} y={p.y - 6} {...TXT} fontWeight={700} fill="var(--c-load)">
               {pt.label}

@@ -151,8 +151,8 @@ function FilterFig() {
       <path d={curve(a * 4 * 6, sa)} fill="none" stroke="var(--c-accent)" strokeWidth={1.4} strokeDasharray="5 3" />
       {pts.map((p) => (
         <g key={p.l}>
-          <circle cx={X(p.d)} cy={Y(p.l === 'D15(B)' ? 15 : 85)} r={3} fill="var(--c-ink)" />
-          <circle cx={X(4 * p.d)} cy={Y(15)} r={3} fill="var(--c-load)" />
+          <circle cx={X(p.d)} cy={Y(p.l === 'D15(B)' ? 15 : 85)} r={3} fill="var(--c-ink)" data-tip={`${p.l} = ${p.d} mm`} />
+          <circle cx={X(4 * p.d)} cy={Y(15)} r={3} fill="var(--c-load)" data-tip={`4${p.l} = ${+(4 * p.d).toPrecision(3)} mm`} />
           <text x={X(4 * p.d) + 4} y={Y(15) + 12} fontSize={9} fill="var(--c-load)">
             4{p.l}
           </text>

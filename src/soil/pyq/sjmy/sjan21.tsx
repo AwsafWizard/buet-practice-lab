@@ -87,7 +87,7 @@ function OedFig() {
             <path d={pathOf(OED.filter((q) => q.stage === 'load').map((q) => [q.p, q.e]), sc)} fill="none" stroke="var(--c-accent)" strokeWidth={1.4} />
             <path d={pathOf([[200, 0.67], ...OED.filter((q) => q.stage !== 'load').map((q) => [q.p, q.e] as [number, number])], sc)} fill="none" stroke="var(--c-accent)" strokeWidth={1} strokeDasharray="4 3" />
             {OED.map((q, i) => (
-              <circle key={i} cx={sc.X(q.p)} cy={sc.Y(q.e)} r={2.6} fill={q.stage === 'load' ? 'var(--c-accent)' : 'var(--c-load)'} />
+              <circle key={i} cx={sc.X(q.p)} cy={sc.Y(q.e)} r={2.6} fill={q.stage === 'load' ? 'var(--c-accent)' : 'var(--c-load)'} data-tip={`${q.stage}: p′ = ${q.p} kPa, e = ${f3(q.e)}`} />
             ))}
             <path d={pathOf(xs.map((p) => [p, vir(p)] as [number, number]).filter(([, e]) => e > 0.52 && e < 0.77), sc)} fill="none" stroke="var(--c-mute)" strokeDasharray="2 3" />
             <path d={pathOf(xs.map((p) => [p, rec(p)]), sc)} fill="none" stroke="var(--c-mute)" strokeDasharray="2 3" />

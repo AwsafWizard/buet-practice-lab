@@ -2,6 +2,7 @@ import { StrictMode, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { HashRouter, MemoryRouter, useLocation } from 'react-router-dom'
 import App from './App'
+import { PointTip } from './components/PointTip'
 import './styles.css'
 import { ARTIFACT, startSync } from './sync'
 import { startCloud } from './cloud'
@@ -40,6 +41,7 @@ createRoot(document.getElementById('root')!).render(
         <App />
       </HashRouter>
     )}
+    <PointTip />
   </StrictMode>,
 )
 

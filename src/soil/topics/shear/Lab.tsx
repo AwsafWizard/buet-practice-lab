@@ -746,7 +746,7 @@ export function WaterTableLab() {
               <line x1={50} x2={W - 10} y1={Y(0)} y2={Y(0)} stroke="var(--c-ink)" />
               <line x1={50} x2={50} y1={10} y2={Y(0)} stroke="var(--c-ink)" />
               <path d={curve.map((c, i) => `${i ? 'L' : 'M'}${X(c.zw).toFixed(1)},${Y(c.t).toFixed(1)}`).join(' ')} fill="none" stroke="var(--c-accent)" strokeWidth={2} />
-              <circle cx={X(p.zw)} cy={Y(strengthAt({ z: p.z, zw: p.zw, gamma: p.gamma, gammaSat: p.gammaSat, gw }, env).tauf)} r={5} fill="var(--c-load)" />
+              <circle cx={X(p.zw)} cy={Y(strengthAt({ z: p.z, zw: p.zw, gamma: p.gamma, gammaSat: p.gammaSat, gw }, env).tauf)} r={5} fill="var(--c-load)" data-tip={`WT depth = ${fmt(p.zw, 2)} ${uL}, τf = ${fmt(strengthAt({ z: p.z, zw: p.zw, gamma: p.gamma, gammaSat: p.gammaSat, gw }, env).tauf, 3)} ${uS}`} />
               <text x={W - 10} y={Y(0) + 16} fontSize={10} textAnchor="end" fill="var(--c-ink)">
                 WT depth ({uL}) → deeper
               </text>

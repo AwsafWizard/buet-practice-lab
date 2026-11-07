@@ -83,7 +83,7 @@ export function GradingCurve({ curves, D, bounds = true, w = 560 }: { curves: { 
           <g key={k}>
             <polyline points={s.map((p) => `${X(p.d).toFixed(1)},${Y(p.pf).toFixed(1)}`).join(' ')} fill="none" stroke={col} strokeWidth={2} />
             {s.map((p, i) => (
-              <circle key={i} cx={X(p.d)} cy={Y(p.pf)} r={3.2} fill="var(--c-panel)" stroke={col} strokeWidth={1.5} />
+              <circle key={i} cx={X(p.d)} cy={Y(p.pf)} r={3.2} fill="var(--c-panel)" stroke={col} strokeWidth={1.5} data-tip={`${c.label ? c.label + ': ' : ''}D = ${nf(p.d, 3)} mm, ${nf(p.pf, 4)} % finer`} />
             ))}
             {c.label && s.length > 0 && (
               <text x={X(s[Math.floor(s.length / 2)].d) + 5} y={Y(s[Math.floor(s.length / 2)].pf) - 6} fontSize={11} fontWeight={700} fill={col}>

@@ -234,7 +234,7 @@ export function NetView({
           <line x1={X(probe.x) - 3.5} y1={Y(Math.max(probe.h, probe.z) + 0.4)} x2={X(probe.x) - 3.5} y2={Y(probe.z)} stroke="var(--c-ink)" strokeWidth={0.8} />
           <line x1={X(probe.x) + 3.5} y1={Y(Math.max(probe.h, probe.z) + 0.4)} x2={X(probe.x) + 3.5} y2={Y(probe.z)} stroke="var(--c-ink)" strokeWidth={0.8} />
           <path d={`M${X(probe.x) - 4},${Y(probe.h) - 7}L${X(probe.x) + 4},${Y(probe.h) - 7}L${X(probe.x)},${Y(probe.h) - 1}Z`} fill="var(--c-water)" />
-          <circle cx={X(probe.x)} cy={Y(probe.z)} r={4.5} fill="var(--c-load)" stroke="var(--c-bg, #fff)" strokeWidth={1.5} />
+          <circle cx={X(probe.x)} cy={Y(probe.z)} r={4.5} fill="var(--c-load)" stroke="var(--c-bg, #fff)" strokeWidth={1.5} data-tip={`P: x = ${fmt(probe.x, 3)}, z = ${fmt(probe.z, 3)}, total head h = ${fmt(probe.h, 4)}`} />
           <text x={X(probe.x) + 8} y={Y(probe.z) + 4} fontSize={11} fontWeight={700} fill="var(--c-load)">
             P
           </text>

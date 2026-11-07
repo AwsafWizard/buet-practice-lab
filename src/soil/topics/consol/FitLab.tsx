@@ -77,14 +77,14 @@ export function FitLab() {
               <>
                 <path d={pathOf(test.pts.map((q) => [Math.sqrt(q.t), q.d]), s)} fill="none" stroke="var(--c-ink)" strokeWidth={1.2} />
                 {test.pts.map((q) => (
-                  <circle key={q.t} cx={s.X(Math.sqrt(q.t))} cy={s.Y(q.d)} r={2.2} fill="var(--c-ink)" />
+                  <circle key={q.t} cx={s.X(Math.sqrt(q.t))} cy={s.Y(q.d)} r={2.2} fill="var(--c-ink)" data-tip={`t = ${fmt(q.t, 3)} min (√t = ${fmt(Math.sqrt(q.t), 3)}), ΔH = ${fmt(q.d, 3)} mm`} />
                 ))}
                 {step >= 1 && <path d={pathOf([[0, tay.d0], [tay.x90 * 1.1, tay.d0 + tay.slope * tay.x90 * 1.1]], s)} stroke="var(--c-load)" strokeWidth={1.2} />}
-                {step >= 1 && <circle cx={s.X(0)} cy={s.Y(tay.d0)} r={3.5} fill="var(--c-load)" />}
+                {step >= 1 && <circle cx={s.X(0)} cy={s.Y(tay.d0)} r={3.5} fill="var(--c-load)" data-tip={`corrected zero d0 = ${fmt(tay.d0, 3)} mm`} />}
                 {step >= 2 && <path d={pathOf([[0, tay.d0], [tay.x90 * 1.3, tay.d0 + (tay.slope / 1.15) * tay.x90 * 1.3]], s)} stroke="var(--c-accent)" strokeWidth={1.2} strokeDasharray="5 3" />}
                 {step >= 3 && (
                   <>
-                    <circle cx={s.X(tay.x90)} cy={s.Y(tay.d90)} r={4} fill="var(--c-accent)" />
+                    <circle cx={s.X(tay.x90)} cy={s.Y(tay.d90)} r={4} fill="var(--c-accent)" data-tip={`√t90 = ${fmt(tay.x90, 3)} (t90 = ${fmt(tay.x90 ** 2, 3)} min), d90 = ${fmt(tay.d90, 3)} mm`} />
                     <line x1={s.X(tay.x90)} x2={s.X(tay.x90)} y1={s.Y(tay.d90)} y2={s.B} stroke="var(--c-accent)" strokeDasharray="2 2" />
                     <text x={s.X(tay.x90) + 4} y={s.B - 5} fontSize={9} fill="var(--c-accent)">
                       √t90 = {f2(tay.x90)}
@@ -102,7 +102,7 @@ export function FitLab() {
               <>
                 <path d={pathOf(test.pts.map((q) => [q.t, q.d]), s)} fill="none" stroke="var(--c-ink)" strokeWidth={1.2} />
                 {test.pts.map((q) => (
-                  <circle key={q.t} cx={s.X(q.t)} cy={s.Y(q.d)} r={2.2} fill="var(--c-ink)" />
+                  <circle key={q.t} cx={s.X(q.t)} cy={s.Y(q.d)} r={2.2} fill="var(--c-ink)" data-tip={`t = ${fmt(q.t, 3)} min, ΔH = ${fmt(q.d, 3)} mm`} />
                 ))}
                 {step >= 1 && (
                   <>

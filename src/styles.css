@@ -473,3 +473,26 @@ svg text {
     display: none !important;
   }
 }
+
+/* chart point hover readout (src/components/PointTip.tsx) */
+.point-tip {
+  position: fixed;
+  z-index: 80;
+  pointer-events: none;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--c-line);
+  background: var(--c-panel);
+  color: var(--c-ink);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+svg [data-tip-hot] {
+  transform: scale(1.45);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.08s ease-out;
+}

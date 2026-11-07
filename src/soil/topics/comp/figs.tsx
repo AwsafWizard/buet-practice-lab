@@ -116,13 +116,13 @@ export function CompactionChart({
         <g key={k} opacity={s.faint ? 0.45 : 1}>
           <path d={s.curve.map((p, i) => `${i ? 'L' : 'M'}${X(p.w).toFixed(1)},${Y(p.gd).toFixed(1)}`).join('')} fill="none" stroke={s.color} strokeWidth={2} strokeDasharray={s.faint ? '6 4' : undefined} />
           {s.pts.map((p, i) => (
-            <circle key={i} cx={X(p.w)} cy={Y(p.gd)} r={3.6} fill="var(--c-bg)" stroke={s.color} strokeWidth={1.8} />
+            <circle key={i} cx={X(p.w)} cy={Y(p.gd)} r={3.6} fill="var(--c-bg)" stroke={s.color} strokeWidth={1.8} data-tip={`${s.label ? s.label + ': ' : ''}w = ${fmt(p.w * 100, 2)} %, γd = ${fmt(p.gd, dg + 1)}`} />
           ))}
           {s.peak && (
             <g>
               <line x1={X(s.peak.omc)} y1={Y(s.peak.mdd)} x2={X(s.peak.omc)} y2={H - B} stroke={s.color} strokeDasharray="2 3" />
               <line x1={L} y1={Y(s.peak.mdd)} x2={X(s.peak.omc)} y2={Y(s.peak.mdd)} stroke={s.color} strokeDasharray="2 3" />
-              <circle cx={X(s.peak.omc)} cy={Y(s.peak.mdd)} r={4} fill={s.color} />
+              <circle cx={X(s.peak.omc)} cy={Y(s.peak.mdd)} r={4} fill={s.color} data-tip={`${s.label ? s.label + ' peak: ' : 'peak: '}OMC = ${fmt(s.peak.omc * 100, 2)} %, MDD = ${fmt(s.peak.mdd, dg + 1)}`} />
               <text x={X(s.peak.omc) + 6} y={Y(s.peak.mdd) - 6} fontSize={10.5} fontWeight={700} fill={s.color}>
                 {s.label}: {fmt(s.peak.mdd, dg + 1)} at {fmt(s.peak.omc * 100, 1)} %
               </text>
@@ -249,7 +249,7 @@ export function EnergyCurves() {
       ].map(({ p, c, t }) => (
         <g key={t}>
           <path d={path((w) => modelCurve(p, Gs, w))} fill="none" stroke={c} strokeWidth={2} />
-          <circle cx={X(p.omc)} cy={Y(p.mdd)} r={3.5} fill={c} />
+          <circle cx={X(p.omc)} cy={Y(p.mdd)} r={3.5} fill={c} data-tip={`${t}: OMC = ${fmt(p.omc * 100, 1)} %, MDD = ${fmt(p.mdd, 3)}`} />
           <text x={X(p.omc) + 6} y={Y(p.mdd) - 5} fontSize={9.5} fill={c}>
             {t}
           </text>

@@ -75,7 +75,7 @@ export function FadumChart({ pts, w = 380 }: { pts?: [number, number][]; w?: num
             </text>
           ))}
           {pts?.map(([m, n], i) => (
-            <circle key={i} cx={s.X(Math.min(10, Math.max(0.01, n)))} cy={s.Y(Irect(m, n))} r={3.5} fill={SERIES[(i + 1) % SERIES.length]} stroke="var(--c-bg)" />
+            <circle key={i} cx={s.X(Math.min(10, Math.max(0.01, n)))} cy={s.Y(Irect(m, n))} r={3.5} fill={SERIES[(i + 1) % SERIES.length]} stroke="var(--c-bg)" data-tip={`m = ${f3(m)}, n = ${f3(n)} → I = ${f4(Irect(m, n))}`} />
           ))}
         </>
       )}
@@ -149,7 +149,7 @@ Symmetric embankment, point under the centre: $2I_z$. Unsymmetric or off-centre:
               </text>
             ))}
             {pts.map(([az, bz], i) => (
-              <circle key={i} cx={s.X(Math.min(10, Math.max(0.01, az)))} cy={s.Y(osterberg(az, bz, 1))} r={3.5} fill={SERIES[(i + 1) % SERIES.length]} />
+              <circle key={i} cx={s.X(Math.min(10, Math.max(0.01, az)))} cy={s.Y(osterberg(az, bz, 1))} r={3.5} fill={SERIES[(i + 1) % SERIES.length]} data-tip={`a/z = ${f3(az)}, b/z = ${f3(bz)} → I = ${f4(osterberg(az, bz, 1))}`} />
             ))}
           </>
         )}
@@ -181,7 +181,7 @@ function SteinBody() {
             {LB.map((l, i) => (
               <path key={i} d={pathOf(ZB.map((v) => [v === 0 ? 0.25 : Irect(1 / v, (l === Infinity ? 1e6 : l) / v), v]), s)} fill="none" stroke={SERIES[i]} strokeWidth={1.4} />
             ))}
-            {u && <circle cx={s.X(Irect(1 / u[0], u[1] / u[0]))} cy={s.Y(u[0])} r={4} fill="var(--c-load)" />}
+            {u && <circle cx={s.X(Irect(1 / u[0], u[1] / u[0]))} cy={s.Y(u[0])} r={4} fill="var(--c-load)" data-tip={`z/b = ${f3(u[0])} → I = ${f4(Irect(1 / u[0], u[1] / u[0]))}`} />}
           </>
         )}
       </Chart>

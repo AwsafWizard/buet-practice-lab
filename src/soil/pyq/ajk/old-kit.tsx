@@ -240,7 +240,7 @@ export function CulmannCurve({ H, gamma, phi, delta = 0, state }: { H: number; g
       </text>
       <polyline points={show.map((p) => `${X(p.rho).toFixed(1)},${Y(Math.min(p.P, pMax)).toFixed(1)}`).join(' ')} fill="none" stroke="var(--c-accent)" strokeWidth={1.8} />
       <line x1={X(tw.rho)} x2={X(tw.rho)} y1={Y(0)} y2={Y(tw.P)} stroke="var(--c-load)" strokeDasharray="4 3" />
-      <circle cx={X(tw.rho)} cy={Y(tw.P)} r={4} fill="var(--c-load)" />
+      <circle cx={X(tw.rho)} cy={Y(tw.P)} r={4} fill="var(--c-load)" data-tip={`ρ = ${f1(tw.rho)}°, P = ${f2(tw.P)} kN/m`} />
       <text x={X(tw.rho) + 6} y={Y(tw.P) - 6} fontSize={10} fill="var(--c-load)">
         {state === 'active' ? 'max' : 'min'}: P = {f1(tw.P)} at ρ = {f1(tw.rho)}°
       </text>

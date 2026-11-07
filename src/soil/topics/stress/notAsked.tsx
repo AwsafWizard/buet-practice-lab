@@ -72,7 +72,7 @@ function TriFig({ w = 420 }: { w?: number }) {
       {TP.map((p) => (
         <g key={p.n}>
           <line x1={X(p.x)} y1={gy} x2={X(p.x)} y2={Y(p.z)} stroke="var(--c-line)" strokeDasharray="3 3" />
-          <circle cx={X(p.x)} cy={Y(p.z)} r={3.5} fill="var(--c-accent)" />
+          <circle cx={X(p.x)} cy={Y(p.z)} r={3.5} fill="var(--c-accent)" data-tip={`${p.n}: x = ${p.x} m, z = ${p.z} m`} />
           <text x={X(p.x) + 6} y={Y(p.z) + 4} fontSize={10} fill="var(--c-ink)">
             {p.n} ({p.x}, {p.z})
           </text>

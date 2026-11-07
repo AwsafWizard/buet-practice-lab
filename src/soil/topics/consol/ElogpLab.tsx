@@ -119,9 +119,9 @@ export function ElogpLab() {
                     <path d={pathOf(env.map((q) => [q.p, q.e]), s)} fill="none" stroke="var(--c-ink)" strokeWidth={1.2} />
                     <path d={pathOf(pts.filter((q, i) => q.stage !== 'load' || pts.slice(i + 1).some((r) => r.stage !== 'load')).map((q) => [q.p, q.e]), s)} fill="none" stroke="var(--c-mute)" strokeWidth={0.9} strokeDasharray="3 2" />
                     {pts.map((q, i) => (
-                      <circle key={i} cx={ax(q.p)} cy={ay(q.e)} r={3} fill={q.stage === 'load' ? 'var(--c-ink)' : q.stage === 'unload' ? 'var(--c-water)' : 'var(--c-shear)'} />
+                      <circle key={i} cx={ax(q.p)} cy={ay(q.e)} r={3} fill={q.stage === 'load' ? 'var(--c-ink)' : q.stage === 'unload' ? 'var(--c-water)' : 'var(--c-shear)'} data-tip={`${q.stage}: p′ = ${fmt(q.p, 4)} kPa, e = ${f3(q.e)}`} />
                     ))}
-                    {step >= 1 && <circle cx={ax(m.p)} cy={ay(m.e)} r={6} fill="none" stroke="var(--c-load)" strokeWidth={2} />}
+                    {step >= 1 && <circle cx={ax(m.p)} cy={ay(m.e)} r={6} fill="none" stroke="var(--c-load)" strokeWidth={2} data-tip={`max curvature: p′ = ${fmt(m.p, 4)} kPa, e = ${f3(m.e)}`} />}
                     {step >= 2 && <path d={line(0, xm, m.e, xm, Math.min(lgmax, xm + 1.2))} stroke="var(--c-load)" strokeWidth={1} />}
                     {step >= 3 && <path d={line(cg.tangentSlope, xm, m.e, Math.max(lgmin, xm - 0.5), Math.min(lgmax, xm + 0.9))} stroke="var(--c-load)" strokeWidth={1} strokeDasharray="5 3" />}
                     {step >= 4 && <path d={line(cg.bisectorSlope, xm, m.e, xm, Math.min(lgmax, xm + 1.1))} stroke="var(--c-accent)" strokeWidth={1.3} />}
@@ -129,7 +129,7 @@ export function ElogpLab() {
                       <>
                         <path d={line(vb, lg(cc.b.p), cc.b.e, Math.max(lgmin, lg(cg.pc) - 0.3), lg(cc.b.p))} stroke="var(--c-accent)" strokeWidth={1.3} strokeDasharray="6 3" />
                         <line x1={ax(cg.pc)} x2={ax(cg.pc)} y1={s.T} y2={s.B} stroke="var(--c-accent)" strokeDasharray="2 3" />
-                        <circle cx={ax(cg.pc)} cy={ay(cg.ePc)} r={4} fill="var(--c-accent)" />
+                        <circle cx={ax(cg.pc)} cy={ay(cg.ePc)} r={4} fill="var(--c-accent)" data-tip={`Casagrande pc′ = ${fmt(cg.pc, 4)} kPa, e = ${f3(cg.ePc)}`} />
                         <text x={ax(cg.pc) + 4} y={s.T + 11} fontSize={10} fill="var(--c-accent)">
                           pc′ ≈ {fmt(cg.pc, 0)} kPa
                         </text>
@@ -139,7 +139,7 @@ export function ElogpLab() {
                       <>
                         <path d={line(two.recomp.b, 0, two.recomp.a, lgmin, lg(two.pc) + 0.15)} stroke="var(--c-good)" strokeWidth={1} strokeDasharray="2 2" />
                         <path d={line(vb, 0, va, lg(two.pc) - 0.15, lgmax)} stroke="var(--c-good)" strokeWidth={1} strokeDasharray="2 2" />
-                        <circle cx={ax(two.pc)} cy={ay(two.e)} r={3.5} fill="var(--c-good)" />
+                        <circle cx={ax(two.pc)} cy={ay(two.e)} r={3.5} fill="var(--c-good)" data-tip={`two-line pc′ = ${fmt(two.pc, 4)} kPa, e = ${f3(two.e)}`} />
                       </>
                     )}
                     {showField && fc && (
@@ -149,7 +149,7 @@ export function ElogpLab() {
                         <text x={s.L + 3} y={ay(fc.eL) - 3} fontSize={9} fill="var(--c-moment)">
                           0.42e0 = {f3(fc.eL)}
                         </text>
-                        <circle cx={ax(p0)} cy={ay(e0)} r={3.5} fill="var(--c-moment)" />
+                        <circle cx={ax(p0)} cy={ay(e0)} r={3.5} fill="var(--c-moment)" data-tip={`field: p0′ = ${fmt(p0, 4)} kPa, e0 = ${f3(e0)}`} />
                       </>
                     )}
                   </>

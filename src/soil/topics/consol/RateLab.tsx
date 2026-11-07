@@ -115,7 +115,7 @@ export function RateLab() {
                       const dd = drainPath(p.H, w)
                       return <path key={w} d={pathOf(ts.map((tt) => [tt, (uBy((p.cv * tt) / (dd * dd), 'exact') / 100) * p.S]), s)} fill="none" stroke={w === 'one' ? 'var(--c-accent)' : 'var(--c-water)'} strokeWidth={w === p.way ? 2.2 : 1} opacity={w === p.way ? 1 : 0.6} />
                     })}
-                    {t <= tEnd && <circle cx={s.X(t)} cy={s.Y(St)} r={4} fill="var(--c-load)" />}
+                    {t <= tEnd && <circle cx={s.X(t)} cy={s.Y(St)} r={4} fill="var(--c-load)" data-tip={`t = ${f3(t)} years, settlement = ${f3(St)} mm`} />}
                   </>
                 )}
               </Chart>

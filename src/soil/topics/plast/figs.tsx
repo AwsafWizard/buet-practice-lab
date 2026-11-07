@@ -109,6 +109,7 @@ export function FlowPlot({ mode, pts, a, b, LL, logX, onDrag, w = 520 }: { mode:
             cx={X(p.x)}
             cy={Y(p.w)}
             r={drag === i ? 7 : 5.5}
+            data-tip={`${mode === 'cup' ? 'N' : 'd'} = ${nf(p.x, 4)}${mode === 'cup' ? '' : ' mm'}, w = ${nf(p.w, 4)} %`}
             fill="var(--c-panel)"
             stroke="var(--c-ink)"
             strokeWidth={1.8}
@@ -202,7 +203,7 @@ export function StrengthCurve({ PL, LL, w1, w2 }: { PL: number; LL: number; w1: 
   const dot = (w: number, col: string) =>
     Number.isFinite(w) && w >= PL && w <= LL ? (
       <g>
-        <circle cx={X(w)} cy={Y(cu(w))} r={5} fill={col} />
+        <circle cx={X(w)} cy={Y(cu(w))} r={5} fill={col} data-tip={`w = ${nf(w, 4)} %, LI = ${nf((w - PL) / (LL - PL), 3)}, cu ≈ ${nf(cu(w), 3)} kPa`} />
         <text x={X(w) + 7} y={Y(cu(w)) - 6} fontSize={10.5} fontWeight={700} fill={col}>
           ≈ {nf(cu(w), 2)} kPa
         </text>
@@ -259,11 +260,11 @@ export function ShrinkPlot({ w1, SL, V1, V2 }: { w1: number; SL: number; V1: num
       <text x={X(w1)} y={Y(0) + 13} textAnchor="middle" {...MUTE}>
         w₁ = {nf(w1, 3)}
       </text>
-      <circle cx={X(w1)} cy={Y(V1)} r={4.5} fill="var(--c-ink)" />
+      <circle cx={X(w1)} cy={Y(V1)} r={4.5} fill="var(--c-ink)" data-tip={`wet pat: w = ${nf(w1, 4)} %, V = ${nf(V1, 4)}`} />
       <text x={X(w1) - 6} y={Y(V1) - 7} textAnchor="end" fontSize={10} fill="var(--c-ink)">
         wet pat V₁ = {nf(V1, 4)}
       </text>
-      <circle cx={X(0)} cy={Y(V2)} r={4.5} fill="var(--c-ink)" />
+      <circle cx={X(0)} cy={Y(V2)} r={4.5} fill="var(--c-ink)" data-tip={`dry pat: w = 0, V = ${nf(V2, 4)}`} />
       <text x={X(0) + 6} y={Y(V2) - 7} fontSize={10} fill="var(--c-ink)">
         dry V₂ = {nf(V2, 4)}
       </text>
