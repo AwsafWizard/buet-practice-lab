@@ -147,7 +147,7 @@ export function AsCurve({ need, smax, bar, s, onPick, label = 'As needed' }: { n
       {s >= S_LO && s <= S_HI && (
         <g>
           <line x1={X(s)} x2={X(s)} y1={Y(asPerFt(bar, s))} y2={H - m.b} stroke={BAR_COL[bar]} strokeWidth={1} strokeDasharray="2 2" />
-          <circle cx={X(s)} cy={Y(asPerFt(bar, s))} r={5.5} fill={BAR_COL[bar]} stroke="var(--c-bg)" strokeWidth={1.5} />
+          <circle cx={X(s)} cy={Y(asPerFt(bar, s))} r={5.5} fill={BAR_COL[bar]} stroke="var(--c-bg)" strokeWidth={1.5} data-tip={`#${bar} @ ${+s.toFixed(2)} in → As = ${asPerFt(bar, s).toFixed(3)} in²/ft`} />
         </g>
       )}
     </svg>

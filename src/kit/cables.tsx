@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import { hangerGirder, stiffenedSuspension, threeHingedArch, type PointLoad } from '../engine/cable'
 import { fmt } from '../components/DiagramView'
+import { GhostPts, tipName } from '../components/PointTip'
 import { Tex } from '../components/ui'
 
 /** generic 1-D function plot (SFD / BMD of a girder) */
@@ -31,11 +32,12 @@ export function FnPlot({ f, x0, x1, title, color = 'var(--c-moment)', marks = []
       <line x1={X(x0)} x2={X(x1)} y1={Y(0)} y2={Y(0)} stroke="var(--c-faint)" />
       <path d={`${d} L${X(x1)},${Y(0)} L${X(x0)},${Y(0)} Z`} fill={color} fillOpacity={0.15} />
       <path d={d} fill="none" stroke={color} strokeWidth={2} />
+      <GhostPts pts={pts.map((q) => ({ x: X(q.x), y: Y(q.y), tip: `${tipName(title) ? tipName(title) + ': ' : ''}${fmt(q.y, 3)} at x = ${fmt(q.x, 3)}` }))} />
       {marks.map((x, i) => {
         const v = f(x)
         return (
           <g key={i}>
-            <circle cx={X(x)} cy={Y(v)} r={3} fill={color} />
+            <circle cx={X(x)} cy={Y(v)} r={3} fill={color} data-tip={`x = ${fmt(x, 3)}: ${fmt(v, 3)}`} />
             <text x={X(x)} y={ly(v, 8)} fontSize={11} textAnchor="middle" className="num" fill="var(--c-ink)" style={{ paintOrder: 'stroke', stroke: 'var(--c-panel)', strokeWidth: 3 }}>
               {fmt(v)}
             </text>

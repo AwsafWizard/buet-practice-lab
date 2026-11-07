@@ -70,7 +70,7 @@ function GraphA1Chart({ hl, point }: { hl?: { fc: number; fy: number }; point?: 
         return (
           <g key={`${fy}/${fc}`} opacity={hl && !isHl ? 0.35 : 1}>
             <path d={pts} fill="none" stroke={isHl ? 'var(--c-accent)' : col} strokeWidth={isHl ? 2.6 : 1.3} strokeOpacity={isHl ? 1 : 0.55 + fc * 0.07} />
-            <circle cx={X(lim.rho005)} cy={Y(Rof(lim.rho005, fc, fy))} r={isHl ? 3 : 2} fill={isHl ? 'var(--c-accent)' : col} />
+            <circle cx={X(lim.rho005)} cy={Y(Rof(lim.rho005, fc, fy))} r={isHl ? 3 : 2} fill={isHl ? 'var(--c-accent)' : col} data-tip={`fy/f′c ${fy}/${fc}: εt = 0.005 at ρ = ${fmt(lim.rho005, 5)}, R = ${fmt(Rof(lim.rho005, fc, fy), 4)}`} />
             <line x1={X(lim.rhoMax)} x2={X(lim.rhoMax)} y1={Y(Rof(lim.rhoMax, fc, fy)) - 4} y2={Y(Rof(lim.rhoMax, fc, fy)) + 4} stroke={isHl ? 'var(--c-accent)' : col} strokeWidth={1.5} />
             <text x={X(lim.rhoMax) + 3} y={Y(Rof(lim.rhoMax, fc, fy)) + 3} fontSize={8} fill={isHl ? 'var(--c-accent)' : 'var(--c-faint)'} className="num">
               {fy}/{fc}
@@ -82,7 +82,7 @@ function GraphA1Chart({ hl, point }: { hl?: { fc: number; fy: number }; point?: 
         <g>
           <line x1={X(point.rho)} x2={X(point.rho)} y1={Y(point.R)} y2={H - B} stroke="var(--c-bad)" strokeDasharray="3 3" />
           <line x1={L} x2={X(point.rho)} y1={Y(point.R)} y2={Y(point.R)} stroke="var(--c-bad)" strokeDasharray="3 3" />
-          <circle cx={X(point.rho)} cy={Y(point.R)} r={3.5} fill="var(--c-bad)" />
+          <circle cx={X(point.rho)} cy={Y(point.R)} r={3.5} fill="var(--c-bad)" data-tip={`ρ = ${fmt(point.rho, 5)}, R = ${fmt(point.R, 4)}`} />
         </g>
       )}
     </svg>

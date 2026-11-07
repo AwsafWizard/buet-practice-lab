@@ -18,7 +18,6 @@ export function PointTip() {
   const hot = useRef<Element | null>(null)
 
   useEffect(() => {
-    let raf = 0
     let last: { x: number; y: number; t: EventTarget | null } | null = null
     const clear = () => {
       hot.current?.removeAttribute('data-tip-hot')
@@ -26,7 +25,6 @@ export function PointTip() {
       setTip(null)
     }
     const run = () => {
-      raf = 0
       if (!last) return
       const t = last.t instanceof Element ? last.t : null
       const svg = t?.closest('svg')
@@ -59,7 +57,7 @@ export function PointTip() {
     }
     const move = (e: PointerEvent) => {
       last = { x: e.clientX, y: e.clientY, t: e.target }
-      if (!raf) raf = requestAnimationFrame(run)
+      run()
     }
     const away = () => {
       last = null
@@ -74,7 +72,6 @@ export function PointTip() {
       document.removeEventListener('pointerdown', move)
       window.removeEventListener('scroll', away, { capture: true })
       document.removeEventListener('pointerleave', away)
-      if (raf) cancelAnimationFrame(raf)
     }
   }, [])
 
@@ -94,3 +91,20 @@ export function PointTip() {
     </div>
   )
 }
+
+/** Invisible hover points along a line graph (ILDs, SFD/BMD): each shows a dot and its readout only when the pointer is near. */
+export function GhostPts({ pts, max = 160 }: { pts: { x: number; y: number; tip: string }[]; max?: number }) {
+  let keep = pts
+  if (pts.length > max) {
+    const step = Math.ceil(pts.length / max)
+    keep = pts.filter((_, i) => i % step === 0 || i === pts.length - 1 || (i > 0 && i < pts.length - 1 && (pts[i].y - pts[i - 1].y) * (pts[i + 1].y - pts[i].y) < 0))
+  }
+  return (
+    <g className="tip-ghost">
+      {keep.map((q, i) => (Number.isFinite(q.x) && Number.isFinite(q.y) ? <circle key={i} cx={q.x} cy={q.y} r={4} data-tip={q.tip} /> : null))}
+    </g>
+  )
+}
+
+/** a short series name for readouts from a chart title: "BMD — P at x = 10′" → "BMD" */
+export const tipName = (t: unknown) => (typeof t === 'string' ? t.split(/ [—(·:]| at /)[0].trim() : '')

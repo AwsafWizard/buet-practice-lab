@@ -324,7 +324,7 @@ export function SpectrumPlot({ site, T, eta = 1 }: { site: SiteClass; T?: number
       {T !== undefined && (
         <g>
           <line x1={X(T)} x2={X(T)} y1={Y(CsFn(T, site, eta).Cs)} y2={H - pad} stroke="var(--c-load)" strokeDasharray="4 3" />
-          <circle cx={X(T)} cy={Y(CsFn(T, site, eta).Cs)} r={5} fill="var(--c-load)" />
+          <circle cx={X(T)} cy={Y(CsFn(T, site, eta).Cs)} r={5} fill="var(--c-load)" data-tip={`T = ${fmt(T, 3)} s, Cs = ${fmt(CsFn(T, site, eta).Cs, 4)} (site ${site})`} />
           <text x={X(T) + 7} y={Y(CsFn(T, site, eta).Cs) - 7} fontSize={11} fill="var(--c-load)" fontWeight={700}>
             T={fmt(T, 3)}s, Cs={fmt(CsFn(T, site, eta).Cs, 3)}
           </text>

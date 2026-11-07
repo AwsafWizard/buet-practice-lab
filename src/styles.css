@@ -496,3 +496,13 @@ svg [data-tip-hot] {
   transform-origin: center;
   transition: transform 0.08s ease-out;
 }
+.tip-ghost circle {
+  fill: var(--c-panel);
+  stroke: var(--c-ink);
+  stroke-width: 1.6;
+  opacity: 0;
+  pointer-events: none;
+}
+.tip-ghost circle[data-tip-hot] {
+  opacity: 1;
+}

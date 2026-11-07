@@ -598,7 +598,7 @@ export function PhiChart() {
       <T x={X(0.0041)} y={Y(0.817) - 12} s={11} c={C.ink}>
         εt = 0.004 → φ = 0.817
       </T>
-      <circle cx={X(0.004)} cy={Y(0.817)} r={3.5} fill={C.accent} />
+      <circle cx={X(0.004)} cy={Y(0.817)} r={3.5} fill={C.accent} data-tip="εt = 0.004, φ = 0.817" />
       <T x={X(0.004)} y={H - 12} s={12}>
         net tensile strain εt (εy = 0.002 for Grade 60)
       </T>

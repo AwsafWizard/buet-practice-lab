@@ -165,7 +165,7 @@ export function VuDiagram({ dsg, d, showMarks = true }: { dsg: ShearDesign; d: n
             <g key={r.id}>
               {!r.critAtFace && (
                 <g>
-                  <circle cx={X(xd)} cy={Y(sg * r.Vd)} r={3} fill="var(--c-bad)" />
+                  <circle cx={X(xd)} cy={Y(sg * r.Vd)} r={3} fill="var(--c-bad)" data-tip={`critical section at d: Vu,d = ${fmt(r.Vd, 2)}`} />
                   <text x={X(xd) + r.dir * 5} y={Y(sg * r.Vd) + (sg > 0 ? -5 : 13)} fontSize={9.5} textAnchor={r.dir === 1 ? 'start' : 'end'} fill="var(--c-bad)" className="num">
                     Vu,d {fmt(r.Vd, 1)}
                   </text>

@@ -62,7 +62,7 @@ export function PhiChart({ epsT, fy = 60000, label }: { epsT?: number; fy?: numb
       {p !== undefined && epsT !== undefined && (
         <g>
           <line x1={X(epsT)} x2={X(epsT)} y1={Y(p)} y2={H - B} stroke="var(--c-ink)" strokeDasharray="3 3" />
-          <circle cx={X(epsT)} cy={Y(p)} r={5} fill="var(--c-ink)" stroke="var(--c-bg)" strokeWidth={1.5} />
+          <circle cx={X(epsT)} cy={Y(p)} r={5} fill="var(--c-ink)" stroke="var(--c-bg)" strokeWidth={1.5} data-tip={`${label && !label.startsWith('ε') ? label + ': ' : ''}εt = ${epsT.toFixed(5)}, φ = ${p.toFixed(3)}`} />
           <text x={X(epsT) + (epsT > 0.0038 ? -8 : 8)} y={Y(p) + (p > 0.85 ? 18 : -8)} fontSize={10.5} textAnchor={epsT > 0.0038 ? 'end' : 'start'} className="num" fill="var(--c-ink)" fontWeight={700}>
             {label ?? 'beam'}: εt = {epsT.toFixed(4)}, φ = {p.toFixed(3)}
             {epsT > xMax ? ' →' : ''}
@@ -96,7 +96,7 @@ export function StrainLimits() {
       {lines.map((l, i) => (
         <g key={i}>
           <line x1={X0 + 0.003 * S} y1={top} x2={X0 - l.e * S * 0.36} y2={top + dt} stroke={l.col} strokeWidth={1.8} />
-          <circle cx={X0} cy={top + l.c * dt} r={2.5} fill={l.col} />
+          <circle cx={X0} cy={top + l.c * dt} r={2.5} fill={l.col} data-tip={l.lab} />
           <text x={8} y={top + 60 + i * 16} fontSize={10} fill={l.col}>
             {l.lab}
           </text>

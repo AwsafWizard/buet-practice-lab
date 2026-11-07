@@ -184,7 +184,7 @@ function MullerBreslau() {
             <g>
               <path d={path} fill="none" stroke="var(--c-accent2)" strokeWidth={3} strokeLinejoin="round" />
               {ild.pts.map((p, i) => (
-                <circle key={i} cx={t.x(p.x)} cy={t.y(0) - p.y * scale * amp} r={2.5} fill="var(--c-accent2)" />
+                <circle key={i} cx={t.x(p.x)} cy={t.y(0) - p.y * scale * amp} r={2.5} fill="var(--c-accent2)" data-tip={`x = ${fmt(p.x, 3)}, ordinate = ${fmt(p.y, 4)}`} />
               ))}
             </g>
           )}

@@ -151,7 +151,7 @@ export function StageDiagram({ b, h, d, As, st, fyKsi, fcKsi, bars, whitney }: {
       <text x={xe + st.epsTop * ES + 3} y={Y(0) + 9} fontSize={9.5} className="num" fill="var(--c-ink)">
         εc = {st.epsTop.toExponential(2)}
       </text>
-      <circle cx={xe - st.epsS * ES} cy={Y(d)} r={2.5} fill="var(--c-bad)" />
+      <circle cx={xe - st.epsS * ES} cy={Y(d)} r={2.5} fill="var(--c-bad)" data-tip={`steel at d: εs = ${st.epsS.toExponential(3)}`} />
       <text x={xe + 4} y={Y(d) + 12} fontSize={9.5} className="num" fill="var(--c-bad)">
         εs = {st.epsS.toExponential(2)}
       </text>

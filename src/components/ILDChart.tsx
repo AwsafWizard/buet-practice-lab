@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { ildAt, type ILD, type Pt } from '../engine/ild'
 import { fmt } from './DiagramView'
+import { GhostPts, tipName } from './PointTip'
 
 export interface ILDChartProps {
   ild?: ILD | null
@@ -91,6 +92,7 @@ export function ILDChart(p: ILDChartProps) {
       )}
       {p.ild && <path d={path(p.ild.pts)} fill="none" stroke={col} strokeWidth={2.4} strokeLinejoin="round" />}
       {p.guess && <path d={path(p.guess)} fill="none" stroke="var(--c-load)" strokeWidth={2} strokeDasharray="6 5" />}
+      {p.ild && <GhostPts pts={p.ild.pts.map((q) => ({ x: X(q.x), y: Y(q.y), tip: `${tipName(p.title) ? tipName(p.title) + ': ' : ''}x = ${fmt(q.x, 3)}, ordinate = ${fmt(q.y, 4)}${p.unit ? ' ' + p.unit : ''}` }))} />}
       {p.ild &&
         [...new Set((p.labelXs ?? []).map((x) => Math.round(x * 1000) / 1000))].map((x, i) => {
           const l = ildAt(p.ild!, x, -1)
@@ -117,7 +119,7 @@ export function ILDChart(p: ILDChartProps) {
       {p.marker !== undefined && p.marker !== null && p.ild && (
         <g>
           <line x1={X(p.marker)} y1={8} x2={X(p.marker)} y2={H - 8} stroke="var(--c-load)" strokeDasharray="3 3" />
-          <circle cx={X(p.marker)} cy={Y(ildAt(p.ild, p.marker))} r={5} fill="var(--c-load)" />
+          <circle cx={X(p.marker)} cy={Y(ildAt(p.ild, p.marker))} r={5} fill="var(--c-load)" data-tip={`load at x = ${fmt(p.marker, 3)}, ordinate = ${fmt(ildAt(p.ild, p.marker), 4)}${p.unit ? ' ' + p.unit : ''}`} />
         </g>
       )}
       {p.children?.({ X, Y, H })}
@@ -207,6 +209,7 @@ export function ILDEditor(p: ILDEditorProps) {
               cx={cx}
               cy={Y(p.values[i] ?? 0)}
               r={drag === i ? 9 : 7}
+              data-tip={`your ordinate at x = ${fmt(h.x, 3)}: ${fmt(p.values[i] ?? 0, 3)}`}
               fill={fill}
               stroke="var(--c-panel)"
               strokeWidth={2}

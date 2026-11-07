@@ -3,6 +3,7 @@
 
 import { useState } from 'react'
 import { fmt } from '../../../components/DiagramView'
+import { GhostPts } from '../../../components/PointTip'
 import { Answer, Callout, Choice, Md, Reveal, Section, Seg, Step, Steps } from '../../../components/ui'
 import { hashKey } from '../../../labs/CheckTable'
 import { pick, randInt, rng, Slider } from '../../../labs/common'
@@ -312,7 +313,8 @@ function ConcreteCurves() {
         return (
           <g key={fc}>
             <path d={d} fill="none" stroke={['var(--c-good)', 'var(--c-accent)', 'var(--c-load)', 'var(--c-bad)'][i]} strokeWidth={2} />
-            <circle cx={X(e0)} cy={Y(fc / 1000)} r={2.5} fill="var(--c-ink)" />
+            <circle cx={X(e0)} cy={Y(fc / 1000)} r={2.5} fill="var(--c-ink)" data-tip={`f′c = ${fc / 1000} ksi reached at ε0 = ${e0.toFixed(5)}`} />
+            <GhostPts pts={pts.map((e) => ({ x: X(e), y: Y(concreteStress(e, fc)), tip: `f′c ${fc / 1000} ksi: ε = ${e.toFixed(5)}, fc = ${fmt(concreteStress(e, fc), 3)} ksi` }))} />
             <text x={X(e0) + 4} y={Y(fc / 1000) - 4} fontSize={9.5} fill="var(--c-ink)">
               f′c = {fc / 1000} ksi
             </text>
