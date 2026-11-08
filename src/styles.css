@@ -227,9 +227,33 @@ body {
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='120'%3E%3Cg fill='none' stroke='%2384a05a' stroke-opacity='0.13' stroke-width='1'%3E%3Cpath d='M0 22 Q60 14 120 22 T240 22'/%3E%3Cpath d='M0 61 Q60 69 120 59 T240 61'/%3E%3Cpath d='M0 97 Q60 90 120 99 T240 97'/%3E%3C/g%3E%3C/svg%3E");
   background-size: 240px 120px;
 }
-/* course picker: neutral page */
+/* course picker: warm neutral page with BUET maroon, shared by every course */
+[data-course='home'][data-theme='light'],
+[data-course='home']:not([data-theme]) {
+  --c-bg: #f5f2ec;
+  --c-panel: #fffdf9;
+  --c-panel2: #f0ebe2;
+  --c-line: #e0d8cb;
+  --c-ink: #221d1b;
+  --c-mute: #66605a;
+  --c-faint: #a39b92;
+  --c-accent: #9f1d22;
+  --grid: rgba(159, 29, 34, 0.06);
+}
+[data-course='home'][data-theme='dark'] {
+  --c-bg: #0f0d0e;
+  --c-panel: #191516;
+  --c-panel2: #221c1d;
+  --c-line: #352b2c;
+  --c-ink: #efe9e6;
+  --c-mute: #aaa09c;
+  --c-faint: #6f6562;
+  --c-accent: #f2777b;
+  --grid: rgba(242, 119, 123, 0.05);
+}
 [data-course='home'] body {
-  background-image: none;
+  background-image: radial-gradient(var(--grid) 1px, transparent 1.4px);
+  background-size: 22px 22px;
 }
 
 .num {
