@@ -111,7 +111,6 @@ export function CoursePicker() {
     if (ua !== ub) return ua ? -1 : 1
     return ua ? examTime(a) - examTime(b) : examTime(b) - examTime(a)
   })
-  const accents = COURSES.map((c) => (dark ? c.dark.acc : c.light.acc))
   return (
     <div className="relative min-h-screen overflow-hidden">
       {/* one warm BUET-maroon glow behind the header; the course colours live on the cards */}
@@ -142,10 +141,7 @@ export function CoursePicker() {
             <div className="min-w-0">
               <div className="text-[11px] uppercase tracking-[0.2em] text-mute font-bold">BUET · Civil Engineering · L-3/T-1</div>
               <h1 className="text-3xl md:text-4xl font-extrabold leading-tight">
-                Practice{' '}
-                <span className="bg-clip-text text-transparent" style={{ backgroundImage: `linear-gradient(90deg, ${accents.join(', ')})` }}>
-                  Lab
-                </span>
+                Practice Lab
               </h1>
               <p className="text-mute text-sm mt-0.5">Pick a course. Progress, streak and XP are shared; each course keeps its own plan.</p>
             </div>
