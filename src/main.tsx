@@ -1,6 +1,7 @@
 import { StrictMode, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { HashRouter, MemoryRouter, useLocation } from 'react-router-dom'
+import { Analytics } from '@vercel/analytics/react'
 import App from './App'
 import { PointTip } from './components/PointTip'
 import './styles.css'
@@ -29,6 +30,27 @@ function RememberRoute() {
   return null
 }
 
+// Public site only: Vercel Web Analytics (no cookies). The site routes by hash
+// (/#/ce341/...), which Vercel ignores, so report the hash route as the page.
+const PUBLIC = import.meta.env.MODE === 'public'
+function Visits() {
+  const { pathname } = useLocation()
+  return (
+    <Analytics
+      route={pathname}
+      path={pathname}
+      beforeSend={(e) => {
+        const u = new URL(e.url)
+        if (u.hash.startsWith('#/')) {
+          u.pathname = u.hash.slice(1).split('?')[0]
+          u.hash = ''
+        }
+        return { ...e, url: u.toString() }
+      }}
+    />
+  )
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     {ARTIFACT ? (
@@ -38,6 +60,7 @@ createRoot(document.getElementById('root')!).render(
       </MemoryRouter>
     ) : (
       <HashRouter>
+        {PUBLIC && <Visits />}
         <App />
       </HashRouter>
     )}
