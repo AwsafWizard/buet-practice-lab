@@ -139,11 +139,10 @@ export function CoursePicker() {
           <div className="flex flex-wrap items-center gap-4 mb-10">
             <img src={buetLogo} alt="BUET" width={52} height={52} className="shrink-0 drop-shadow-sm" />
             <div className="min-w-0">
-              <div className="text-[11px] uppercase tracking-[0.2em] text-mute font-bold">BUET · Civil Engineering · L-3/T-1</div>
-              <h1 className="text-3xl md:text-4xl font-extrabold leading-tight">
-                Practice Lab
-              </h1>
-              <p className="text-mute text-sm mt-0.5">Pick a course. Progress, streak and XP are shared; each course keeps its own plan.</p>
+              <div className="text-accent text-3xl md:text-4xl leading-none -rotate-2 origin-left" style={{ fontFamily: "'Dancing Script', cursive", fontWeight: 700 }}>
+                Mojadar TF
+              </div>
+              <h1 className="text-3xl md:text-4xl font-extrabold leading-tight">Practice Lab</h1>
             </div>
             <div className="ml-auto flex items-center gap-2">
               <a className="btn !py-1 !px-2.5 !text-xs inline-flex items-center gap-1.5" href={REPO_URL} target="_blank" rel="noopener noreferrer" title="Source code on GitHub">
