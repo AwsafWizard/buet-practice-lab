@@ -59,13 +59,17 @@ export const CLASS_THEORY: SmTheoryItem[] = [
     topic: T,
     q: 'Compare the AASHTO and the Unified classification systems.',
     seen: ['2008-09', '2009-10'],
-    a: `- **Use:** AASHTO for highway subgrades (rating, group index); USCS for all engineering works (foundations, dams, airfields).
-- **Gravel/sand boundary:** AASHTO 2.0 mm (No. 10); USCS 4.75 mm (No. 4).
-- **Coarse/fine boundary:** AASHTO 35 % passing No. 200 (soils with 36 % fines are already "silt-clay"); USCS 50 %. AASHTO calls many soils fine that USCS calls coarse (e.g. SC with 40 % fines is A-6).
-- **Grading:** USCS uses $C_u$ and $C_c$ (W/P); AASHTO ignores the shape of the grading curve beyond three sieves.
-- **Plasticity:** AASHTO splits at LL 40 and PI 10 (Fig. 5.2) with A-7-5/A-7-6 by LL − 30; USCS uses the A-line and LL = 50.
-- **Organic soils:** USCS has OL, OH, Pt (oven-dried LL test); AASHTO puts peat in A-8 by inspection only.
-- **Output:** AASHTO gives a group plus a numerical quality index (GI); USCS gives a symbol and a descriptive group name.
+    a: `| Feature | AASHTO | USCS |
+| --- | --- | --- |
+| Use | Highway subgrades (rating, group index) | All engineering works (foundations, dams, airfields) |
+| Gravel/sand boundary | 2.0 mm (No. 10) | 4.75 mm (No. 4) |
+| Coarse/fine boundary | 35 % passing No. 200 (36 % fines is already "silt-clay") | 50 % passing No. 200 |
+| Grading | Ignores the shape of the grading curve beyond three sieves | $C_u$ and $C_c$ decide W or P |
+| Plasticity | Splits at LL 40 and PI 10 (Fig. 5.2); A-7-5/A-7-6 by LL − 30 | A-line and LL = 50 (Fig. 5.3) |
+| Organic soils | Peat in A-8, by inspection only | OL, OH, Pt (oven-dried LL test) |
+| Output | Group plus a numerical quality index (GI), e.g. A-7-6(42) | Symbol plus a descriptive group name, e.g. SC "clayey sand" |
+
+- AASHTO calls many soils fine that USCS calls coarse: an SC with 40 % fines is A-6.
 - Both need only sieve analysis and Atterberg limits.`,
   },
   {

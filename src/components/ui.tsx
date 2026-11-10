@@ -51,6 +51,35 @@ function parseBlocks(src: string): ReactNode[] {
       i++
       continue
     }
+    if (isRow(line) && i + 1 < lines.length && isSep(lines[i + 1])) {
+      const head = cells(line)
+      i += 2
+      const rows: string[][] = []
+      while (i < lines.length && isRow(lines[i])) rows.push(cells(lines[i++]))
+      out.push(
+        <div key={key++} className="md-tbl-wrap">
+          <table className="tbl md-tbl">
+            <thead>
+              <tr>
+                {head.map((c, k) => (
+                  <th key={k}>{inline(c)}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r, k) => (
+                <tr key={k}>
+                  {head.map((_, j) => (
+                    <td key={j}>{inline(r[j] ?? '')}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>,
+      )
+      continue
+    }
     if (/^\s*[-*]\s+/.test(line)) {
       const items: string[] = []
       while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) items.push(lines[i++].replace(/^\s*[-*]\s+/, ''))
@@ -76,12 +105,22 @@ function parseBlocks(src: string): ReactNode[] {
       continue
     }
     const para: string[] = []
-    while (i < lines.length && lines[i].trim() && !/^\s*([-*]|\d+[.)])\s+/.test(lines[i]) && !lines[i].trim().startsWith('$$') && !/^#{2,4}\s/.test(lines[i]))
+    while (i < lines.length && lines[i].trim() && !/^\s*([-*]|\d+[.)])\s+/.test(lines[i]) && !lines[i].trim().startsWith('$$') && !/^#{2,4}\s/.test(lines[i]) && !isRow(lines[i]))
       para.push(lines[i++])
     out.push(<p key={key++}>{inline(para.join(' '))}</p>)
   }
   return out
 }
+
+// GFM-style pipe tables: | a | b | header, then | --- | --- |
+const isRow = (l: string) => /^\s*\|.*\|\s*$/.test(l)
+const isSep = (l: string) => /^\s*\|(\s*:?-{3,}:?\s*\|)+\s*$/.test(l)
+const cells = (l: string) =>
+  l
+    .trim()
+    .slice(1, -1)
+    .split('|')
+    .map((c) => c.trim())
 
 export function inline(s: string): ReactNode[] {
   const parts: ReactNode[] = []
