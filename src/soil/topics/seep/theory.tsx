@@ -8,6 +8,132 @@ import { NetView } from './NetView'
 const T = 'sm-seep' as const
 
 // ---------------------------------------------------------------- sketches
+// Effective stress: soil element cut by a wavy plane a–a through grain contacts
+const EF = { x0: 34, x1: 334, y0: 46, y1: 206 }
+const EF_C = [
+  { x: 62, y: 128, ru: 18, rl: 17 },
+  { x: 112, y: 118, ru: 17, rl: 19 },
+  { x: 162, y: 130, ru: 19, rl: 16 },
+  { x: 212, y: 119, ru: 16, rl: 18 },
+  { x: 262, y: 129, ru: 18, rl: 17 },
+  { x: 308, y: 120, ru: 17, rl: 18 },
+]
+function efPlaneY(x: number) {
+  const pts = [{ x: EF.x0 - 14, y: 124 }, ...EF_C, { x: EF.x1 + 14, y: 125 }]
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i], b = pts[i + 1]
+    if (x <= b.x || i === pts.length - 2) {
+      const t = Math.min(1, Math.max(0, (x - a.x) / (b.x - a.x)))
+      return a.y + ((b.y - a.y) * (1 - Math.cos(Math.PI * t))) / 2
+    }
+  }
+  return 124
+}
+function efGrains() {
+  const g: { x: number; y: number; r: number }[] = []
+  for (const c of EF_C) g.push({ x: c.x, y: c.y - c.ru, r: c.ru }, { x: c.x, y: c.y + c.rl, r: c.rl })
+  let s = 7
+  const rnd = () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646
+  for (let k = 0; k < 2500 && g.length < 70; k++) {
+    const r = 9 + rnd() * 9
+    const x = EF.x0 - 8 + rnd() * (EF.x1 - EF.x0 + 16)
+    const y = EF.y0 - 8 + rnd() * (EF.y1 - EF.y0 + 16)
+    if (g.some((o) => Math.hypot(o.x - x, o.y - y) < o.r + r + 2.5)) continue
+    let near = false
+    for (let px = x - r - 3; px <= x + r + 3; px += 2) if (Math.hypot(px - x, efPlaneY(px) - y) < r + 3) near = true
+    if (!near) g.push({ x, y, r })
+  }
+  return g
+}
+
+function EffStressFig() {
+  const grains = useMemo(efGrains, [])
+  const plane = useMemo(() => {
+    let d = ''
+    for (let x = EF.x0 - 14; x <= EF.x1 + 14; x += 2) d += (d ? 'L' : 'M') + x + ',' + efPlaneY(x).toFixed(1)
+    return d
+  }, [])
+  const arrow = (x1: number, y1: number, x2: number, y2: number, col: string, w = 1.6) => {
+    const a = Math.atan2(y2 - y1, x2 - x1)
+    const h = 5.5
+    return (
+      <g stroke={col} strokeWidth={w} fill="none" strokeLinecap="round">
+        <path d={`M${x1},${y1}L${x2},${y2}`} />
+        <path d={`M${x2 - h * Math.cos(a - 0.45)},${y2 - h * Math.sin(a - 0.45)}L${x2},${y2}L${x2 - h * Math.cos(a + 0.45)},${y2 - h * Math.sin(a + 0.45)}`} />
+      </g>
+    )
+  }
+  const tilt = [-0.35, 0.25, -0.15, 0.4, -0.3, 0.2]
+  const sub = ['₁', '₂', '₃', '₄', '₅', 'ₙ']
+  return (
+    <div>
+      <svg viewBox="0 0 400 250" className="w-full max-w-[500px]">
+        <defs>
+          <clipPath id="ef-clip">
+            <rect x={EF.x0} y={EF.y0} width={EF.x1 - EF.x0} height={EF.y1 - EF.y0} />
+          </clipPath>
+        </defs>
+        {/* total load on the element */}
+        {[54, 94, 134, 174, 214, 254, 294].map((x) => (
+          <g key={x}>{arrow(x, 14, x, EF.y0 - 3, 'var(--c-ink)', 1.3)}</g>
+        ))}
+        <path d={`M${EF.x0},14L${EF.x1},14`} stroke="var(--c-ink)" strokeWidth={1.3} />
+        <text x={EF.x1 + 8} y={22} fontSize={11} fill="var(--c-ink)">
+          σ (total)
+        </text>
+        {/* element: pore water + grains */}
+        <g clipPath="url(#ef-clip)">
+          <rect x={EF.x0} y={EF.y0} width={EF.x1 - EF.x0} height={EF.y1 - EF.y0} fill="var(--c-water)" opacity={0.22} />
+          {grains.map((o, i) => (
+            <circle key={i} cx={o.x} cy={o.y} r={o.r} fill="var(--c-soil)" stroke="var(--c-ink)" strokeOpacity={0.45} strokeWidth={0.8} />
+          ))}
+        </g>
+        <rect x={EF.x0} y={EF.y0} width={EF.x1 - EF.x0} height={EF.y1 - EF.y0} fill="none" stroke="var(--c-ink)" />
+        {/* wavy plane a–a */}
+        <path d={plane} fill="none" stroke="var(--c-accent)" strokeWidth={2} strokeDasharray="6 3" />
+        <text x={EF.x0 - 24} y={128} fontSize={12} fontWeight={700} fill="var(--c-accent)">
+          a
+        </text>
+        <text x={EF.x1 + 18} y={129} fontSize={12} fontWeight={700} fill="var(--c-accent)">
+          a
+        </text>
+        {/* pore water pressure on the plane between contacts */}
+        {EF_C.slice(0, -1).map((c, i) => {
+          const x = (c.x + EF_C[i + 1].x) / 2
+          const y = efPlaneY(x)
+          return <g key={x}>{arrow(x, y + 15, x, y + 1.5, 'var(--c-water)', 1.8)}</g>
+        })}
+        <text x={137} y={efPlaneY(137) + 27} fontSize={11} fontWeight={700} textAnchor="middle" fill="var(--c-water)">
+          u
+        </text>
+        {/* contact forces from the grains below */}
+        {EF_C.map((c, i) => {
+          const L = 30
+          const tx = c.x - L * Math.sin(tilt[i])
+          const ty = c.y + L * Math.cos(tilt[i])
+          return (
+            <g key={c.x}>
+              {arrow(tx, ty, c.x, c.y + 1, 'var(--c-load)', 2)}
+              <circle cx={c.x} cy={c.y} r={2.6} fill="var(--c-load)" />
+              <text x={tx + (tilt[i] > 0 ? -4 : 4)} y={ty + 11} fontSize={10.5} fontWeight={700} textAnchor="middle" fill="var(--c-load)">
+                {'P' + sub[i]}
+              </text>
+            </g>
+          )
+        })}
+        {/* area */}
+        <path d={`M${EF.x0},${EF.y1 + 14}L${EF.x1},${EF.y1 + 14}M${EF.x0},${EF.y1 + 9}l0,10M${EF.x1},${EF.y1 + 9}l0,10`} stroke="var(--c-mute)" />
+        <text x={(EF.x0 + EF.x1) / 2} y={EF.y1 + 32} fontSize={10.5} textAnchor="middle" fill="var(--c-mute)">
+          gross area A; grain-to-grain contact area aₛ (dots) is tiny
+        </text>
+      </svg>
+      <p className="text-xs text-mute">
+        Plane a–a winds through the grain contacts (dots) and the pore water, never through a grain. The contact forces P₁ … Pₙ act on a tiny area aₛ; their vertical parts add up to σ′A. The water presses on the rest of the plane, A − aₛ. Vertical equilibrium: σA = ΣPᵥ + u(A − aₛ), so σ = σ′ + u(1 − aₛ/A) ≈ σ′ + u.
+      </p>
+    </div>
+  )
+}
+
 function NetFig() {
   const sol = useMemo(() => solveNet(sheetPile({ T: 10, s: 5, hU: 5, hD: 1.5 }), 'live'), [])
   const net = useMemo(() => netLines(sol, 4), [sol])
@@ -191,6 +317,7 @@ and **only σ′ controls compression, deformation and shear strength**. A chang
 - Consolidation: settlement happens as u dissipates and σ′ grows; lowering the WT raises σ′ and causes settlement (Dhaka, Mexico City).
 - Quick sand, piping and heave: upward seepage drives σ′ → 0.
 - Excavation base heave over artesian layers; liquefaction (u rises in an earthquake); slope failures after rain (u up, σ′ down).`,
+    Fig: EffStressFig,
   },
   {
     id: 't-seep-pressure',
