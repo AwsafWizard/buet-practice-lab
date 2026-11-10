@@ -9,6 +9,7 @@ import { Seg } from '../../../components/ui'
 import { Slider } from '../../../labs/common'
 import type { Circle, Envelope } from '../../engine/mohr'
 import { fitCircles, fitLine } from '../../engine/shear'
+import { MicroView, type MicroProps } from './MicroView'
 import { DISP_MAX, DS_H0, dsPeak, dsState, dsUltimate, effTest, EPS_MAX, failAt, rise, SIGMA0, SIM_SOILS, txCircles, txFailure, txState, type SimSoil, type SimTest, type TxState } from '../../engine/testsim'
 
 type Rig = 'tx' | 'ds'
@@ -606,6 +607,32 @@ function caption(rig: Rig, test: SimTest, soil: SimSoil, stage: number, u01: num
   )
 }
 
+/** one line on what the grains and the pore water are doing right now */
+function microLine(rig: Rig, test: SimTest, soil: SimSoil, stage: number, u01: number): string {
+  const m = SIM_SOILS[soil]
+  const box = rig === 'ds' ? ' The shear box cannot measure this pore pressure.' : ''
+  if (stage === 0)
+    return test === 'uu'
+      ? 'The grains already press on each other from the field. The extra pressure goes into the pore water only, so the contact forces (the lines) do not change.'
+      : 'The load has just gone on. Water fills the pores and will not compress, so it carries the load: the grains barely press on each other (thin lines).'
+  if (stage === 1) return 'Water drains out of the pores, the grains move closer together and take over the load: the contact lines thicken as u falls.'
+  if (test !== 'cd')
+    return m.dilative
+      ? u01 < 0.12
+        ? 'The grains are pressed slightly closer at first: a small rise in u.' + box
+        : 'The interlocked grains must climb over each other, which needs more pore space, but no water can come in. The pore water is stretched (suction) and pulls the grains together: the contacts get stronger, σ′ rises.' + box
+      : 'The grains want to drop into the voids, but that needs water to leave and it cannot. The trapped water takes the push instead: u rises and holds the grains apart sideways, so σ′3 falls.' + box
+  if (m.dilative)
+    return u01 < failAt(soil, test)
+      ? 'Dense packing: each grain sits in the hollow between the grains below, so to move sideways it has to climb over them. The packing opens up and water is drawn in. That climbing is where the extra (peak) strength comes from.'
+      : u01 < 0.6
+        ? 'Past the peak. The packing is still opening, but more slowly: along the shear plane the grains begin to slide past each other instead of climbing, so the strength starts to fall.'
+        : 'The packing has opened to the critical void ratio. Along the shear plane the grains now slide past without climbing: no more volume change, and the strength has dropped to the ultimate value.'
+  return u01 < 0.55
+    ? 'Loose packing: the grains roll down into the voids between their neighbours. The packing gets denser and the water it displaces flows out.'
+    : 'The packing has closed to the critical void ratio, the same one dense soil opens up to. Grains keep sliding past each other with no further volume change.'
+}
+
 const GIVES: Record<Rig, Record<SimTest, string>> = {
   tx: {
     uu: 'Gives cu with φu = 0 (total stress only). Field case: end of construction on saturated clay, loaded faster than it can drain (embankment or footing built quickly).',
@@ -737,6 +764,32 @@ export function TestBench() {
   const uNow = st.stage === 2 ? tx.u : pre.u
   const failTx = txFailure(soil, test, sig)
   const failed = st.stage === 2 && u01 >= fu - 1e-9
+
+  // inside the soil
+  const shearing = st.stage === 2
+  const drainedShear = shearing && test === 'cd'
+  const volNow = rig === 'tx' ? tx.ev : ds.dH
+  const volEnd = rig === 'tx' ? m.evEnd : dsState(soil, test, sig, 1).dH
+  const volRate = drainedShear ? (rig === 'tx' ? txState(soil, test, sig, u01 + 0.01).ev - txState(soil, test, sig, Math.max(0, u01 - 0.01)).ev : (dsState(soil, test, sig, u01 + 0.01).dH - dsState(soil, test, sig, Math.max(0, u01 - 0.01)).dH) * 5) : 0
+  const flow: -1 | 0 | 1 = st.stage === 1 && st.f < 0.97 ? -1 : drainedShear && Math.abs(volRate) > 0.02 ? (volRate > 0 ? 1 : -1) : 0
+  const micro: MicroProps = (() => {
+    const common = { dilative: m.dilative, clay: m.clay, stage: st.stage, u01, cons: test === 'uu' ? 1 : pre.cons, undrained: shearing && test !== 'cd', w: drainedShear && volEnd ? volNow / volEnd : 0, flow, open: st.stage === 1 || drainedShear, t }
+    if (rig === 'tx') {
+      const s1 = shearing ? tx.s1 : s3Now
+      return { ...common, sigV: s1 - uNow, sigH: s3Now - uNow, ref: Math.max(failTx.s1p, sig), u: uNow, total: s3Now, totalName: 'σ3', barMax: Math.max(sig, failTx.s3p, Math.abs(failTx.u), Math.abs(sig - SIGMA0)) }
+    }
+    const sn = pre.applied * sig
+    const known = test === 'cd' || (test === 'cu' && !shearing)
+    if (known) {
+      const u = shearing ? 0 : pre.u
+      return { ...common, sigV: sn - u, sigH: 0.6 * (sn - u), ref: sig * 1.3, u, total: sn, totalName: 'σn', barMax: sig }
+    }
+    // quick tests in the box: the pore pressure is real but unmeasured, so only its direction is shown
+    const q = shearing ? rise(u01, 3) : 0
+    const held = test === 'uu' ? SIGMA0 : sig
+    const sv = held * (1 + (m.dilative ? 0.35 : -0.5) * q)
+    return { ...common, sigV: sv, sigH: 0.6 * sv, ref: Math.max(sig, SIGMA0) * 1.3, u: null, uTrend: shearing ? (m.dilative ? -q : q) : test === 'uu' ? 0.5 * pre.applied : 0, total: sn, totalName: 'σn', barMax: sig }
+  })()
   const xFail = fu * xmax
 
   const marksA: Mark[] = failed ? [{ x: xFail, y: rig === 'tx' ? failTx.dev : dsPeak(soil, test, sig), color: 'var(--c-bad)', label: m.dilative && test === 'cd' ? 'peak = failure' : 'failure', tip: rig === 'tx' ? `failure: Δσf = ${f1(failTx.dev)} kPa at ε = ${f1(xFail)} %` : `failure: τf = ${f1(dsPeak(soil, test, sig))} kPa` }] : []
@@ -814,6 +867,15 @@ export function TestBench() {
         {/* apparatus and its readings */}
         <div className="rounded-xl border border-line bg-bg/50 p-2">
           {rig === 'tx' ? <TriaxialRig soil={soil} test={test} stage={st.stage} f={st.f} t={t} sig={sig} cur={tx} /> : <ShearBoxRig soil={soil} test={test} stage={st.stage} f={st.f} t={t} sig={sig} tau={st.stage === 2 ? ds.tau : 0} dH={st.stage === 2 ? ds.dH : 0} />}
+          <div className="mt-1 rounded-lg border border-line bg-panel2/40 p-2">
+            <div className="flex flex-wrap items-baseline gap-x-2 text-xs mb-1">
+              <b>🔍 Inside the soil</b>
+              <span className="text-mute">a few grains, magnified · thick struts = strong contact forces (σ′)</span>
+            </div>
+            <MicroView {...micro} />
+            <div className="text-xs leading-relaxed mt-1 cq-lg:min-h-[4.6rem]">{microLine(rig, test, soil, st.stage, u01)}</div>
+            {m.clay && <div className="text-[10px] text-faint mt-0.5">Clay particles are really tiny plates; they are drawn as grains to show the packing.</div>}
+          </div>
           {rig === 'tx' ? (
             <div className="grid grid-cols-2 gap-1 text-xs mt-1">
               <KV k="σ3" v={f0(s3Now)} c={C_WATER} />
