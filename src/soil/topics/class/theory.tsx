@@ -77,20 +77,38 @@ export const CLASS_THEORY: SmTheoryItem[] = [
     topic: T,
     q: 'Classify different types of soil based on particle size according to ASTM D422 (and the other organizations).',
     seen: ['2021-22'],
-    a: `**ASTM (D422 / D2487 sizes):**
-- Gravel: 76.2 – 4.75 mm (No. 4)
-- Sand: 4.75 – 0.075 mm (No. 200) — coarse 4.75–2.0, medium 2.0–0.425, fine 0.425–0.075 mm
-- Silt: 0.075 – 0.005 mm
-- Clay: below 0.005 mm (colloids below 0.001 mm)
+    a: `### Size limits (mm)
 
-**Other organizations** (Topic 2 slide 3):
-- MIT: gravel > 2, sand 2–0.06, silt 0.06–0.002, clay < 0.002 mm.
-- USDA: gravel > 2, sand 2–0.05, silt 0.05–0.002, clay < 0.002 mm.
-- AASHTO: gravel 76.2–2, sand 2–0.075, silt 0.075–0.002, clay < 0.002 mm.
-- BNBC 2020: gravel 76.2–4.75, sand 4.75–0.075, silt 0.075–0.002, clay < 0.002 mm.
-- USCS: gravel 76.2–4.75, sand 4.75–0.075, fines < 0.075 mm.
+| Organization | Gravel | Sand | Silt | Clay |
+| --- | --- | --- | --- | --- |
+| ASTM (D422 / D2487) | 76.2 – 4.75 | 4.75 – 0.075 | 0.075 – 0.005 | < 0.005 |
+| USCS | 76.2 – 4.75 | 4.75 – 0.075 | fines < 0.075 | (in fines) |
+| AASHTO | 76.2 – 2 | 2 – 0.075 | 0.075 – 0.002 | < 0.002 |
+| BNBC 2020 | 76.2 – 4.75 | 4.75 – 0.075 | 0.075 – 0.002 | < 0.002 |
+| MIT | > 2 | 2 – 0.06 | 0.06 – 0.002 | < 0.002 |
+| USDA | > 2 | 2 – 0.05 | 0.05 – 0.002 | < 0.002 |
 
-Gravel and sand are coarse-grained, cohesionless (flow freely when dry, not sticky). Silt and clay are fine-grained, cohesive (powdery when dry, sticky when wet). Sizes are found by sieving (down to 0.075 mm) and by hydrometer (finer).`,
+Sieves: 4.75 mm = No. 4, 2.0 mm = No. 10, 0.075 mm = No. 200. Other organizations from Topic 2 slide 3.
+
+### ASTM sand fractions
+
+| Fraction | Size (mm) | Between sieves |
+| --- | --- | --- |
+| Coarse | 4.75 – 2.0 | No. 4 – No. 10 |
+| Medium | 2.0 – 0.425 | No. 10 – No. 40 |
+| Fine | 0.425 – 0.075 | No. 40 – No. 200 |
+
+Colloids are the clay particles below 0.001 mm.
+
+### Coarse vs fine
+
+| | Coarse-grained | Fine-grained |
+| --- | --- | --- |
+| Soils | Gravel, sand | Silt, clay |
+| Behaviour | Cohesionless | Cohesive |
+| Dry | Flows freely | Powdery |
+| Wet | Not sticky | Sticky |
+| Size found by | Sieving (down to 0.075 mm) | Hydrometer |`,
   },
   {
     id: 't-f30',
