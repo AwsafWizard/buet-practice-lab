@@ -896,185 +896,188 @@ export function TestBench() {
           <div className="text-[10px] text-faint mt-1 text-right">stresses in kPa</div>
         </div>
 
-        {/* charts */}
-        <div className="grid grid-cols-1 cq-sm:grid-cols-2 gap-2">
-          <div className="rounded-xl border border-line bg-bg/50 p-1.5">
-            {rig === 'tx' ? (
-              <XYChart title="Deviator stress vs axial strain" xl="axial strain ε (%)" yl="σ1 − σ3 (kPa)" xn="ε" yn="Δσd" xUnit=" %" yUnit=" kPa" xmax={xmax} ymin={0} ymax={data.aMax} series={seriesFor(sA)} marks={marksA} />
-            ) : (
-              <XYChart title="Shear stress vs shear displacement" xl="shear displacement δ (mm)" yl="τ (kPa)" xn="δ" yn="τ" xUnit=" mm" yUnit=" kPa" xmax={xmax} ymin={0} ymax={data.aMax} series={seriesFor(sA)} marks={marksA} />
-            )}
+        {/* right column: charts, then the run controls, caption and specimens under them */}
+        <div className="space-y-3 min-w-0">
+          {/* charts */}
+          <div className="grid grid-cols-1 cq-sm:grid-cols-2 gap-2">
+            <div className="rounded-xl border border-line bg-bg/50 p-1.5">
+              {rig === 'tx' ? (
+                <XYChart title="Deviator stress vs axial strain" xl="axial strain ε (%)" yl="σ1 − σ3 (kPa)" xn="ε" yn="Δσd" xUnit=" %" yUnit=" kPa" xmax={xmax} ymin={0} ymax={data.aMax} series={seriesFor(sA)} marks={marksA} />
+              ) : (
+                <XYChart title="Shear stress vs shear displacement" xl="shear displacement δ (mm)" yl="τ (kPa)" xn="δ" yn="τ" xUnit=" mm" yUnit=" kPa" xmax={xmax} ymin={0} ymax={data.aMax} series={seriesFor(sA)} marks={marksA} />
+              )}
+            </div>
+            <div className="rounded-xl border border-line bg-bg/50 p-1.5">
+              {rig === 'tx' && test !== 'cd' && <XYChart title="Pore pressure change vs axial strain" xl="axial strain ε (%)" yl="Δu (kPa)" xn="ε" yn="Δu" xUnit=" %" yUnit=" kPa" xmax={xmax} ymin={data.bMin} ymax={data.bMax} series={seriesFor(sB)} marks={marksB} />}
+              {rig === 'tx' && test === 'cd' && <XYChart title="Volume change vs axial strain (+ = expansion)" xl="axial strain ε (%)" yl="εv (%)" xn="ε" yn="εv" xUnit=" %" yUnit=" %" xmax={xmax} ymin={data.bMin} ymax={data.bMax} series={seriesFor(sB)} />}
+              {rig === 'ds' && <XYChart title="Height change vs displacement (+ = expansion)" xl="shear displacement δ (mm)" yl="ΔH (mm)" xn="δ" yn="ΔH" xUnit=" mm" yUnit=" mm" xmax={xmax} ymin={test === 'cd' ? data.bMin : -0.5} ymax={test === 'cd' ? data.bMax : 0.5} series={seriesFor(sB)} note={test === 'cd' ? undefined : 'quick test: no drainage, so no height change (and u is not measured)'} />}
+            </div>
+            <div className="rounded-xl border border-line bg-bg/50 p-1.5 cq-sm:col-span-2">
+              {rig === 'tx' ? (
+                <>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 px-1 text-[11px]">
+                    <b className="text-xs">Mohr circles at failure</b>
+                    <span style={{ color: C_TOTAL }}>━ total{test === 'cd' ? ' = effective (u = 0)' : ''}</span>
+                    {showEff && <span style={{ color: C_EFF }}>╌ effective (shifted by u)</span>}
+                    {fitU && <span className="text-mute">┄ ultimate</span>}
+                  </div>
+                  <MohrChart circles={circles} envs={envs} smax={smax} tmax={tmax} hint={kept.length < 2 ? `run a specimen at another σ3 to draw the envelope (${kept.length}/2)` : undefined} />
+                  <div className="px-1 text-xs space-y-0.5">
+                    {fitT && test === 'uu' && (
+                      <div>
+                        <b style={{ color: C_TOTAL }}>φu = {f1(Math.abs(fitT.phi))}°, cu = {f1(fitT.c)} kPa</b>: every total circle has the same diameter. The effective circles all fall on one circle, so UU cannot give c′ and φ′.
+                      </div>
+                    )}
+                    {fitT && test !== 'uu' && (
+                      <div>
+                        <b style={{ color: C_TOTAL }}>
+                          c{prime} = {f1(fitT.c)} kPa, φ{prime} = {f1(fitT.phi)}°
+                        </b>{' '}
+                        {test === 'cd' ? '(effective: u = 0 throughout)' : '(total stress)'}
+                      </div>
+                    )}
+                    {fitE && (
+                      <div>
+                        <b style={{ color: C_EFF }}>
+                          c′ = {f1(fitE.c)} kPa, φ′ = {f1(fitE.phi)}°
+                        </b>{' '}
+                        (effective: each circle moved {m.dilative ? 'right, because uf is negative' : 'left by its uf'})
+                      </div>
+                    )}
+                    {fitU && (
+                      <div className="text-mute">
+                        At large strain (ultimate): c′ = {f1(Math.abs(fitU.c))} kPa, φ′ = {f1(fitU.phi)}°
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex flex-wrap items-center gap-x-3 px-1 text-[11px]">
+                    <b className="text-xs">Shear strength vs normal stress</b>
+                    <span style={{ color: col }}>● peak τf</span>
+                    {test === 'cd' && m.dilative && <span className="text-mute">○ ultimate</span>}
+                  </div>
+                  <XYChart
+                    wide
+                    title=""
+                    xl="normal stress σn (kPa)"
+                    yl="τ (kPa)"
+                    xn="σn"
+                    yn="τ"
+                    xUnit=" kPa"
+                    yUnit=" kPa"
+                    xmax={330}
+                    ymin={0}
+                    ymax={dsYmax}
+                    series={[
+                      ...(dsFitP ? [{ name: 'peak line', pts: line(dsFitP), color: col, w: 1.6 }] : []),
+                      ...(dsFitU ? [{ name: 'ultimate line', pts: line(dsFitU), color: 'var(--c-mute)', w: 1.3, dash: true }] : []),
+                      ...(st.stage === 2 && t < 1 ? [{ name: 'this specimen', pts: [[sig, 0], [sig, ds.tau]] as [number, number][], color: col, w: 1.2, opacity: 0.6 }] : []),
+                    ]}
+                    marks={[
+                      ...(st.stage === 2 && t < 1 ? [{ x: sig, y: ds.tau, color: col, hollow: true, label: 'now', tip: `now: σn = ${sig}, τ = ${f1(ds.tau)} kPa` }] : []),
+                      ...dsPts.map((d) => ({ x: d.v, y: d.p, color: col, tip: `σn = ${d.v}, peak τf = ${f1(d.p)} kPa` })),
+                      ...(test === 'cd' && m.dilative ? dsPts.map((d) => ({ x: d.v, y: d.u, color: 'var(--c-mute)', hollow: true, tip: `σn = ${d.v}, ultimate τ = ${f1(d.u)} kPa` })) : []),
+                    ]}
+                    note={kept.length < 2 ? `run a specimen at another σn to draw the line (${kept.length}/2)` : undefined}
+                  />
+                  <div className="px-1 text-xs space-y-0.5">
+                    {dsFitP && (
+                      <div>
+                        <b style={{ color: col }}>
+                          {test === 'uu' ? `cu = ${f1(dsFitP.a)} kPa, φu = ${f1(Math.abs(deg(Math.atan(dsFitP.b))))}°` : `c${prime} = ${f1(Math.abs(dsFitP.a))} kPa, φ${prime} = ${f1(deg(Math.atan(dsFitP.b)))}°`}
+                        </b>{' '}
+                        {test === 'cd' ? '(effective, peak)' : '(total stress)'}
+                      </div>
+                    )}
+                    {dsFitU && (
+                      <div className="text-mute">
+                        Ultimate: c′ = {f1(Math.abs(dsFitU.a))} kPa, φ′ = {f1(deg(Math.atan(dsFitU.b)))}°
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-          <div className="rounded-xl border border-line bg-bg/50 p-1.5">
-            {rig === 'tx' && test !== 'cd' && <XYChart title="Pore pressure change vs axial strain" xl="axial strain ε (%)" yl="Δu (kPa)" xn="ε" yn="Δu" xUnit=" %" yUnit=" kPa" xmax={xmax} ymin={data.bMin} ymax={data.bMax} series={seriesFor(sB)} marks={marksB} />}
-            {rig === 'tx' && test === 'cd' && <XYChart title="Volume change vs axial strain (+ = expansion)" xl="axial strain ε (%)" yl="εv (%)" xn="ε" yn="εv" xUnit=" %" yUnit=" %" xmax={xmax} ymin={data.bMin} ymax={data.bMax} series={seriesFor(sB)} />}
-            {rig === 'ds' && <XYChart title="Height change vs displacement (+ = expansion)" xl="shear displacement δ (mm)" yl="ΔH (mm)" xn="δ" yn="ΔH" xUnit=" mm" yUnit=" mm" xmax={xmax} ymin={test === 'cd' ? data.bMin : -0.5} ymax={test === 'cd' ? data.bMax : 0.5} series={seriesFor(sB)} note={test === 'cd' ? undefined : 'quick test: no drainage, so no height change (and u is not measured)'} />}
-          </div>
-          <div className="rounded-xl border border-line bg-bg/50 p-1.5 cq-sm:col-span-2">
-            {rig === 'tx' ? (
-              <>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 px-1 text-[11px]">
-                  <b className="text-xs">Mohr circles at failure</b>
-                  <span style={{ color: C_TOTAL }}>━ total{test === 'cd' ? ' = effective (u = 0)' : ''}</span>
-                  {showEff && <span style={{ color: C_EFF }}>╌ effective (shifted by u)</span>}
-                  {fitU && <span className="text-mute">┄ ultimate</span>}
-                </div>
-                <MohrChart circles={circles} envs={envs} smax={smax} tmax={tmax} hint={kept.length < 2 ? `run a specimen at another σ3 to draw the envelope (${kept.length}/2)` : undefined} />
-                <div className="px-1 text-xs space-y-0.5">
-                  {fitT && test === 'uu' && (
-                    <div>
-                      <b style={{ color: C_TOTAL }}>φu = {f1(Math.abs(fitT.phi))}°, cu = {f1(fitT.c)} kPa</b>: every total circle has the same diameter. The effective circles all fall on one circle, so UU cannot give c′ and φ′.
-                    </div>
-                  )}
-                  {fitT && test !== 'uu' && (
-                    <div>
-                      <b style={{ color: C_TOTAL }}>
-                        c{prime} = {f1(fitT.c)} kPa, φ{prime} = {f1(fitT.phi)}°
-                      </b>{' '}
-                      {test === 'cd' ? '(effective: u = 0 throughout)' : '(total stress)'}
-                    </div>
-                  )}
-                  {fitE && (
-                    <div>
-                      <b style={{ color: C_EFF }}>
-                        c′ = {f1(fitE.c)} kPa, φ′ = {f1(fitE.phi)}°
-                      </b>{' '}
-                      (effective: each circle moved {m.dilative ? 'right, because uf is negative' : 'left by its uf'})
-                    </div>
-                  )}
-                  {fitU && (
-                    <div className="text-mute">
-                      At large strain (ultimate): c′ = {f1(Math.abs(fitU.c))} kPa, φ′ = {f1(fitU.phi)}°
-                    </div>
-                  )}
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="flex flex-wrap items-center gap-x-3 px-1 text-[11px]">
-                  <b className="text-xs">Shear strength vs normal stress</b>
-                  <span style={{ color: col }}>● peak τf</span>
-                  {test === 'cd' && m.dilative && <span className="text-mute">○ ultimate</span>}
-                </div>
-                <XYChart
-                  wide
-                  title=""
-                  xl="normal stress σn (kPa)"
-                  yl="τ (kPa)"
-                  xn="σn"
-                  yn="τ"
-                  xUnit=" kPa"
-                  yUnit=" kPa"
-                  xmax={330}
-                  ymin={0}
-                  ymax={dsYmax}
-                  series={[
-                    ...(dsFitP ? [{ name: 'peak line', pts: line(dsFitP), color: col, w: 1.6 }] : []),
-                    ...(dsFitU ? [{ name: 'ultimate line', pts: line(dsFitU), color: 'var(--c-mute)', w: 1.3, dash: true }] : []),
-                    ...(st.stage === 2 && t < 1 ? [{ name: 'this specimen', pts: [[sig, 0], [sig, ds.tau]] as [number, number][], color: col, w: 1.2, opacity: 0.6 }] : []),
-                  ]}
-                  marks={[
-                    ...(st.stage === 2 && t < 1 ? [{ x: sig, y: ds.tau, color: col, hollow: true, label: 'now', tip: `now: σn = ${sig}, τ = ${f1(ds.tau)} kPa` }] : []),
-                    ...dsPts.map((d) => ({ x: d.v, y: d.p, color: col, tip: `σn = ${d.v}, peak τf = ${f1(d.p)} kPa` })),
-                    ...(test === 'cd' && m.dilative ? dsPts.map((d) => ({ x: d.v, y: d.u, color: 'var(--c-mute)', hollow: true, tip: `σn = ${d.v}, ultimate τ = ${f1(d.u)} kPa` })) : []),
-                  ]}
-                  note={kept.length < 2 ? `run a specimen at another σn to draw the line (${kept.length}/2)` : undefined}
-                />
-                <div className="px-1 text-xs space-y-0.5">
-                  {dsFitP && (
-                    <div>
-                      <b style={{ color: col }}>
-                        {test === 'uu' ? `cu = ${f1(dsFitP.a)} kPa, φu = ${f1(Math.abs(deg(Math.atan(dsFitP.b))))}°` : `c${prime} = ${f1(Math.abs(dsFitP.a))} kPa, φ${prime} = ${f1(deg(Math.atan(dsFitP.b)))}°`}
-                      </b>{' '}
-                      {test === 'cd' ? '(effective, peak)' : '(total stress)'}
-                    </div>
-                  )}
-                  {dsFitU && (
-                    <div className="text-mute">
-                      Ultimate: c′ = {f1(Math.abs(dsFitU.a))} kPa, φ′ = {f1(deg(Math.atan(dsFitU.b)))}°
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
 
-      {/* transport */}
-      <div className="flex flex-wrap items-center gap-2 text-xs">
-        <button className="btn !py-1 !px-3 !text-xs" onClick={() => (t >= 1 ? (go(0), setPlay(true)) : setPlay(!play))}>
-          {t >= 1 ? '↺ Run again' : play ? '❚❚ Pause' : '▶ Run the test'}
-        </button>
-        <input type="range" min={0} max={1} step={0.002} value={t} onChange={(e) => (setPlay(false), go(+e.target.value))} className="flex-1 min-w-[140px] accent-[var(--c-accent)]" aria-label="Test progress" />
-        <span className="num text-mute whitespace-nowrap">{stageName}</span>
-      </div>
-      <div className="rounded-lg border border-line bg-panel2/60 px-3 py-2 text-sm leading-relaxed cq-md:min-h-[5.2rem]">{caption(rig, test, soil, st.stage, u01)}</div>
-
-      {/* specimens */}
-      <div className="rounded-xl border border-line p-3 space-y-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <b className="text-sm">Specimens tested ({kept.length})</b>
-          <span className="text-xs text-mute">each finished run is kept; change {tagS} and run again to build the envelope</span>
-          <button className="btn !py-0.5 !px-2 !text-xs ml-auto" onClick={() => setKept([100, 200, 300])}>
-            ⚡ Three at once (100, 200, 300)
+        {/* transport */}
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <button className="btn !py-1 !px-3 !text-xs" onClick={() => (t >= 1 ? (go(0), setPlay(true)) : setPlay(!play))}>
+            {t >= 1 ? '↺ Run again' : play ? '❚❚ Pause' : '▶ Run the test'}
           </button>
-          <button className="btn !py-0.5 !px-2 !text-xs" onClick={() => setKept([])} disabled={!kept.length}>
-            Clear
-          </button>
+          <input type="range" min={0} max={1} step={0.002} value={t} onChange={(e) => (setPlay(false), go(+e.target.value))} className="flex-1 min-w-[140px] accent-[var(--c-accent)]" aria-label="Test progress" />
+          <span className="num text-mute whitespace-nowrap">{stageName}</span>
         </div>
-        {kept.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="text-xs num w-full max-w-xl">
-              <thead>
-                <tr className="text-mute text-left">
-                  {(rig === 'tx' ? ['σ3', 'Δσf', 'σ1f', ...(test === 'cd' ? [] : ['uf', 'σ′3f', 'σ′1f', 'Af'])] : ['σn', 'τf (peak)', ...(test === 'cd' ? ['τ ultimate', 'ΔH at end (mm)'] : [])]).map((h) => (
-                    <th key={h} className="font-semibold pr-3 py-0.5">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {rig === 'tx'
-                  ? fails.map(({ v, f }) => (
-                      <tr key={v} className="border-t border-line/60">
-                        <td className="pr-3 py-0.5">{v}</td>
-                        <td className="pr-3">{f1(f.dev)}</td>
-                        <td className="pr-3">{f1(f.s1)}</td>
-                        {test !== 'cd' && (
-                          <>
-                            <td className="pr-3">{f1(f.u)}</td>
-                            <td className="pr-3">{f1(f.s3p)}</td>
-                            <td className="pr-3">{f1(f.s1p)}</td>
-                            <td className="pr-3">{fmt(f.du / f.dev, 2)}</td>
-                          </>
-                        )}
-                      </tr>
-                    ))
-                  : dsPts.map((d) => (
-                      <tr key={d.v} className="border-t border-line/60">
-                        <td className="pr-3 py-0.5">{d.v}</td>
-                        <td className="pr-3">{f1(d.p)}</td>
-                        {test === 'cd' && (
-                          <>
-                            <td className="pr-3">{f1(d.u)}</td>
-                            <td className="pr-3">{fmt(dsState(soil, test, d.v, 1).dH, 2)}</td>
-                          </>
-                        )}
-                      </tr>
+        <div className="rounded-lg border border-line bg-panel2/60 px-3 py-2 text-sm leading-relaxed cq-md:min-h-[5.2rem]">{caption(rig, test, soil, st.stage, u01)}</div>
+
+        {/* specimens */}
+        <div className="rounded-xl border border-line p-3 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <b className="text-sm">Specimens tested ({kept.length})</b>
+            <span className="text-xs text-mute">each finished run is kept; change {tagS} and run again to build the envelope</span>
+            <button className="btn !py-0.5 !px-2 !text-xs ml-auto" onClick={() => setKept([100, 200, 300])}>
+              ⚡ Three at once (100, 200, 300)
+            </button>
+            <button className="btn !py-0.5 !px-2 !text-xs" onClick={() => setKept([])} disabled={!kept.length}>
+              Clear
+            </button>
+          </div>
+          {kept.length > 0 && (
+            <div className="overflow-x-auto">
+              <table className="text-xs num w-full max-w-xl">
+                <thead>
+                  <tr className="text-mute text-left">
+                    {(rig === 'tx' ? ['σ3', 'Δσf', 'σ1f', ...(test === 'cd' ? [] : ['uf', 'σ′3f', 'σ′1f', 'Af'])] : ['σn', 'τf (peak)', ...(test === 'cd' ? ['τ ultimate', 'ΔH at end (mm)'] : [])]).map((h) => (
+                      <th key={h} className="font-semibold pr-3 py-0.5">
+                        {h}
+                      </th>
                     ))}
-              </tbody>
-            </table>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rig === 'tx'
+                    ? fails.map(({ v, f }) => (
+                        <tr key={v} className="border-t border-line/60">
+                          <td className="pr-3 py-0.5">{v}</td>
+                          <td className="pr-3">{f1(f.dev)}</td>
+                          <td className="pr-3">{f1(f.s1)}</td>
+                          {test !== 'cd' && (
+                            <>
+                              <td className="pr-3">{f1(f.u)}</td>
+                              <td className="pr-3">{f1(f.s3p)}</td>
+                              <td className="pr-3">{f1(f.s1p)}</td>
+                              <td className="pr-3">{fmt(f.du / f.dev, 2)}</td>
+                            </>
+                          )}
+                        </tr>
+                      ))
+                    : dsPts.map((d) => (
+                        <tr key={d.v} className="border-t border-line/60">
+                          <td className="pr-3 py-0.5">{d.v}</td>
+                          <td className="pr-3">{f1(d.p)}</td>
+                          {test === 'cd' && (
+                            <>
+                              <td className="pr-3">{f1(d.u)}</td>
+                              <td className="pr-3">{fmt(dsState(soil, test, d.v, 1).dH, 2)}</td>
+                            </>
+                          )}
+                        </tr>
+                      ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <div className="text-xs text-mute">
+            <b className="text-ink">{rig === 'tx' ? 'Triaxial' : 'Shear box'} {test.toUpperCase()}:</b> {GIVES[rig][test]}
           </div>
-        )}
-        <div className="text-xs text-mute">
-          <b className="text-ink">{rig === 'tx' ? 'Triaxial' : 'Shear box'} {test.toUpperCase()}:</b> {GIVES[rig][test]}
         </div>
-      </div>
-      <div className="text-[11px] text-faint">
-        A teaching model: curve shapes are the standard qualitative sketches, failure values follow Mohr–Coulomb with c′ = {m.peak.c} kPa, φ′ = {m.peak.phi}°{m.clay ? `, Af = ${m.Af}` : ''}
-        {test === 'uu' ? `, field σ′ = ${SIGMA0} kPa` : ''}. Not test data.
+        <div className="text-[11px] text-faint">
+          A teaching model: curve shapes are the standard qualitative sketches, failure values follow Mohr–Coulomb with c′ = {m.peak.c} kPa, φ′ = {m.peak.phi}°{m.clay ? `, Af = ${m.Af}` : ''}
+          {test === 'uu' ? `, field σ′ = ${SIGMA0} kPa` : ''}. Not test data.
+        </div>
+        </div>
       </div>
     </div>
   )
