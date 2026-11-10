@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import { fmt } from '../../../components/DiagramView'
 import { tipAxes } from '../../../components/PointTip'
 import type { Circle, Envelope } from '../../engine/mohr'
+import { CuPorePressureAnim, DrainedVolumeAnim } from './CurvesAnim'
 
 const f1 = (v: number) => fmt(v, 1)
 
@@ -300,36 +301,33 @@ export function DSCurvesSketch() {
   )
 }
 
-/** qualitative curves asked in 2017-18, 2020-21, 2021-22, Jan 2021 */
+/** qualitative curves asked in 2017-18, 2020-21, 2021-22, Jan 2021: (i) and (ii) animated, (iii) and (iv) static */
 export function QualCurvesSketch() {
   return (
-    <div className="grid grid-cols-2 gap-2">
-      <Panel title="(i) CU: pore pressure vs axial strain" xl="axial strain ε" yl="Δu" zeroMid>
-        <path d="M30,79 C60,40 90,30 230,30" fill="none" stroke="var(--c-accent)" strokeWidth={1.8} />
-        <path d="M30,79 C60,62 100,58 230,62" fill="none" stroke="var(--c-load)" strokeWidth={1.8} />
-        <path d="M30,79 C45,70 60,72 80,85 C120,110 170,120 230,122" fill="none" stroke="var(--c-bad)" strokeWidth={1.8} />
-        <Lbl x={150} y={26} c="var(--c-accent)" t="NC (+)" />
-        <Lbl x={150} y={56} c="var(--c-load)" t="lightly OC" />
-        <Lbl x={130} y={112} c="var(--c-bad)" t="heavily OC (−)" />
-      </Panel>
-      <Panel title="(ii) CD: volume change vs strain" xl="axial strain / displacement" yl="expansion ↑ ΔV" zeroMid>
-        <path d="M30,79 C70,100 130,112 230,116" fill="none" stroke="var(--c-load)" strokeWidth={1.8} />
-        <path d="M30,79 C45,86 60,88 75,82 C110,62 170,44 230,40" fill="none" stroke="var(--c-accent)" strokeWidth={1.8} />
-        <Lbl x={110} y={128} c="var(--c-load)" t="loose / NC: contracts" />
-        <Lbl x={110} y={40} c="var(--c-accent)" t="dense sand / OC: dilates" />
-      </Panel>
-      <Panel title="(iii) B vs degree of saturation" xl="S (%) → 100" yl="B">
-        <path d="M30,136 C120,134 170,128 200,100 C215,80 222,40 228,26" fill="none" stroke="var(--c-accent)" strokeWidth={1.8} />
-        <line x1={30} x2={230} y1={26} y2={26} stroke="var(--c-line)" strokeDasharray="3 3" />
-        <Lbl x={34} y={24} c="var(--c-mute)" t="B = 1" />
-        <Lbl x={60} y={128} c="var(--c-mute)" t="dry: B ≈ 0" />
-      </Panel>
-      <Panel title="(iv) Af vs OCR" xl="OCR (log)" yl="Af" zeroMid>
-        <path d="M34,32 C80,50 120,70 160,90 C190,104 210,112 230,116" fill="none" stroke="var(--c-accent)" strokeWidth={1.8} />
-        <Lbl x={38} y={28} c="var(--c-mute)" t="NC ≈ 0.7–1" />
-        <Lbl x={140} y={76} c="var(--c-mute)" t="0 near OCR ≈ 4" />
-        <Lbl x={170} y={128} c="var(--c-mute)" t="negative" />
-      </Panel>
+    <div className="space-y-4">
+      <div className="text-[11px] text-mute">
+        Colour key for (i) and (ii): <b style={{ color: 'var(--c-load)' }}>warm = soil that wants to contract</b> (NC clay, loose sand),{' '}
+        <b style={{ color: 'var(--c-moment)' }}>purple = in between</b> (lightly OC), <b style={{ color: 'var(--c-shear)' }}>teal = soil that wants to dilate</b> (heavily OC clay, dense
+        sand), <b style={{ color: 'var(--c-water)' }}>blue = pore water</b>.
+      </div>
+      <CuPorePressureAnim />
+      <div className="border-t border-line/60" />
+      <DrainedVolumeAnim />
+      <div className="border-t border-line/60" />
+      <div className="grid grid-cols-2 gap-2">
+        <Panel title="(iii) B vs degree of saturation" xl="S (%) → 100" yl="B">
+          <path d="M30,136 C120,134 170,128 200,100 C215,80 222,40 228,26" fill="none" stroke="var(--c-accent)" strokeWidth={1.8} />
+          <line x1={30} x2={230} y1={26} y2={26} stroke="var(--c-line)" strokeDasharray="3 3" />
+          <Lbl x={34} y={24} c="var(--c-mute)" t="B = 1" />
+          <Lbl x={60} y={128} c="var(--c-mute)" t="dry: B ≈ 0" />
+        </Panel>
+        <Panel title="(iv) Af vs OCR" xl="OCR (log)" yl="Af" zeroMid>
+          <path d="M34,32 C80,50 120,70 160,90 C190,104 210,112 230,116" fill="none" stroke="var(--c-accent)" strokeWidth={1.8} />
+          <Lbl x={38} y={28} c="var(--c-mute)" t="NC ≈ 0.7–1" />
+          <Lbl x={140} y={76} c="var(--c-mute)" t="0 near OCR ≈ 4" />
+          <Lbl x={170} y={128} c="var(--c-mute)" t="negative" />
+        </Panel>
+      </div>
     </div>
   )
 }
