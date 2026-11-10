@@ -12,6 +12,7 @@ import { circleArea, consistencyFromQu, directShear, fitCircles, QU_CLASSES, squ
 import { GW, GW_PCF } from '../../engine/units'
 import { markUsed, openSmRef } from '../../reference/pane'
 import { MohrFig, StressElement, TauSigmaFig } from './figs'
+import { TestBench } from './TestBench'
 
 const f2 = (v: number) => fmt(v, 2)
 const f3 = (v: number) => fmt(v, 3)
@@ -790,6 +791,9 @@ export function WaterTableLab() {
 export function ShearLabSections() {
   return (
     <>
+      <Section title="Test bench: watch UU, CU and CD run" sub="Pick the apparatus, the test and the soil, set the confining stress and run it. The apparatus, the stress–strain curve, the pore-pressure or volume-change curve and the Mohr circles build together; run a few specimens to get the envelope.">
+        <TestBench />
+      </Section>
       <Section title="Mohr circle studio" sub="Enter σ1, σ3 (or a stress element), pick a plane: the pole, σ and τ on the plane, the envelope, whether the circle touches, and the failure planes on the element.">
         <MohrStudio />
       </Section>
