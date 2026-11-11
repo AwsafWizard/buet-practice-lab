@@ -317,3 +317,38 @@ export function bulbDepth(shape: BulbShape, B: number, ratio = 0.1) {
   }
   return (lo + hi) / 2
 }
+
+// ---------------------------------------------------------------- plan-coordinate helpers (calculators)
+
+export type XY = [number, number]
+/** point load Q at (x, y) in plan, stress below P = (X, Y) at depth z */
+export function pointInPlan(Q: number, at: XY, P: XY, z: number) {
+  const r = Math.hypot(at[0] - P[0], at[1] - P[1])
+  return { r, rz: r / z, KB: KB(r / z), KW: KW(r / z), sB: boussinesq(Q, r, z), sW: westergaard(Q, r, z) }
+}
+/**
+ * line load q′ along the segment a → b in plan (infinite: the whole line through a and b), stress below P at depth z.
+ * d = perpendicular offset of P from the line; t1, t2 = positions of a and b along the line measured from the foot of
+ * the perpendicular (so lineFinite(q′, d, t1, t2, z)).
+ */
+export function lineInPlan(q: number, a: XY, b: XY, P: XY, z: number, infinite = false) {
+  const L = Math.hypot(b[0] - a[0], b[1] - a[1])
+  if (L < 1e-12) return { L: 0, d: 0, t1: 0, t2: 0, sigma: 0 }
+  const ux = (b[0] - a[0]) / L
+  const uy = (b[1] - a[1]) / L
+  const px = P[0] - a[0]
+  const py = P[1] - a[1]
+  const t0 = px * ux + py * uy
+  const d = Math.abs(px * uy - py * ux)
+  const t1 = -t0
+  const t2 = L - t0
+  return { L, d, t1, t2, sigma: infinite ? lineInfinite(q, d, z) : lineFinite(q, d, Math.min(t1, t2), Math.max(t1, t2), z) }
+}
+
+/** Newmark chart radii for a chart with `rings` equal σz/q steps (default 10 → 0.1 … 0.9): R/z and R at depth z */
+export const newmarkRadii = (z: number, rings = 10) =>
+  Array.from({ length: rings - 1 }, (_, i) => {
+    const s = (i + 1) / rings
+    const rz = rzForRatio(s)
+    return { s, rz, R: rz * z }
+  })

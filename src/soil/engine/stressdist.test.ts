@@ -18,6 +18,9 @@ import {
   lineEnd,
   lineFinite,
   lineInfinite,
+  lineInPlan,
+  newmarkRadii,
+  pointInPlan,
   linearStrip,
   maxOnVertical,
   NEWMARK_RZ,
@@ -255,5 +258,30 @@ describe('triangular strip by the Das angles', () => {
     near(r.alpha, Math.PI / 4, 1e-12)
     near(r.delta, 0, 1e-12)
     near(r.sigma, 20, 1e-9)
+  })
+})
+
+describe('plan-coordinate calculators', () => {
+  it('point loads in plan', () => {
+    const p = pointInPlan(300, [3, 4], [0, 0], 8.5)
+    expect(p.r).toBeCloseTo(5, 9)
+    expect(p.sB).toBeCloseTo(boussinesq(300, 5, 8.5), 9)
+  })
+  it('line segments: 2012-13 Q12(c) T of walls gives 28.8 kPa below A', () => {
+    const s = lineInPlan(75, [0, 9], [0, 0], [0, 0], 3).sigma + lineInPlan(100, [-6, 0], [6, 0], [0, 0], 3).sigma
+    expect(Math.abs(s - 28.8)).toBeLessThan(0.05)
+    // any orientation and any point: a long segment approaches the infinite line
+    const g = lineInPlan(10, [-1e4, 1e4 + 2], [1e4, -1e4 + 2], [0, 0], 3)
+    expect(g.d).toBeCloseTo(Math.SQRT2, 6)
+    expect(g.sigma).toBeCloseTo(lineInfinite(10, Math.SQRT2, 3), 6)
+    expect(lineInPlan(10, [1, 0], [1, 5], [0, 0], 3, true).sigma).toBeCloseTo(lineInfinite(10, 1, 3), 9)
+    // reversed direction gives the same stress
+    expect(lineInPlan(50, [4, 1], [-2, 3], [1, 1], 2).sigma).toBeCloseTo(lineInPlan(50, [-2, 3], [4, 1], [1, 1], 2).sigma, 9)
+  })
+  it('Newmark radii: σ/q = 0.5 at R/z = 0.766', () => {
+    const r = newmarkRadii(5)
+    expect(r).toHaveLength(9)
+    expect(r[4].rz).toBeCloseTo(0.7664, 3)
+    expect(circleCentre(1, r[4].R, 5)).toBeCloseTo(0.5, 9)
   })
 })
