@@ -1,41 +1,17 @@
-// Fadum superposition builder: draw L, T or notched plans from rectangles on a grid, pick the point, see the ± corner
-// rectangles and ΣI. And the Newmark chart lab: the same plan overlaid at AB = z with the meshes counted.
-import { useEffect, useMemo, useState } from 'react'
+// The Newmark chart lab: a paper plan overlaid at AB = z with the meshes counted. (The Fadum superposition builder
+// that lived here is now the Fadum / Steinbrenner tab of the calculators.)
+import { useMemo, useState } from 'react'
 import { fmt } from '../../../components/DiagramView'
-import { Answer, Callout, Md, Reveal, Seg } from '../../../components/ui'
-import { CheckTable, hashKey, type CheckCol } from '../../../labs/CheckTable'
+import { Answer, Md, Seg } from '../../../components/ui'
+import { hashKey } from '../../../labs/CheckTable'
 import { NumIn } from '../../../reference/common'
-import { cornerTerms, NEWMARK_IF, newmarkCount, rectsInside, shapeI, simplifyTerms, type CornerTerm, type Rect } from '../../engine/stressdist'
-import { markUsed, openSmRef } from '../../reference/pane'
+import { NEWMARK_IF, newmarkCount, rectsInside, shapeI } from '../../engine/stressdist'
+import { openSmRef } from '../../reference/pane'
 import { NewmarkChart } from './newmark'
-import { PlanFig, viewFor } from './figs'
 import { randomShape, SHAPES, TANK, type ShapeCase } from './shapes'
 
 const f2 = (v: number) => fmt(v, 2)
-const f3 = (v: number) => fmt(v, 3)
 const f4 = (v: number) => fmt(v, 4)
-const snap = (v: number, g = 0.5) => Math.round(v / g) * g
-
-function overlaps(rs: Rect[]) {
-  for (let i = 0; i < rs.length; i++)
-    for (let j = i + 1; j < rs.length; j++) {
-      const a = rs[i]
-      const b = rs[j]
-      const w = Math.min(Math.max(a.x1, a.x2), Math.max(b.x1, b.x2)) - Math.max(Math.min(a.x1, a.x2), Math.min(b.x1, b.x2))
-      const h = Math.min(Math.max(a.y1, a.y2), Math.max(b.y1, b.y2)) - Math.max(Math.min(a.y1, a.y2), Math.min(b.y1, b.y2))
-      if (w > 1e-9 && h > 1e-9) return true
-    }
-  return false
-}
-const norm = (r: Rect): Rect => ({ x1: Math.min(r.x1, r.x2), y1: Math.min(r.y1, r.y2), x2: Math.max(r.x1, r.x2), y2: Math.max(r.y1, r.y2) })
-
-type TermRow = CornerTerm & { k: string }
-const COLS: CheckCol<TermRow>[] = [{ key: 'I', label: 'I(m, n)', get: (t) => t.I, abs: 0.002, digits: 4 }]
-
-function useShape(initial: ShapeCase) {
-  const [c, setC] = useState<ShapeCase>(initial)
-  return [c, setC] as const
-}
 
 function ShapePicker({ value, onPick, withTank }: { value: ShapeCase; onPick: (s: ShapeCase) => void; withTank?: boolean }) {
   return (
@@ -58,78 +34,6 @@ function ShapePicker({ value, onPick, withTank }: { value: ShapeCase; onPick: (s
           </option>
         ))}
       </select>
-    </div>
-  )
-}
-
-export function FadumBuilder() {
-  const [c, setC] = useShape(SHAPES[0])
-  const [mode, setMode] = useState<'draw' | 'point' | 'erase'>('draw')
-  const [draft, setDraft] = useState<Rect | null>(null)
-  const set = (o: Partial<ShapeCase>) => setC({ ...c, ...o, key: c.key.endsWith('*') ? c.key : c.key + '*', note: undefined })
-  const view = useMemo(() => {
-    const v = viewFor(c.rects, c.P, 2)
-    return { x0: Math.min(v.x0, -4), y0: Math.min(v.y0, -4), x1: Math.max(v.x1, 8), y1: Math.max(v.y1, 6) }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [c.key])
-  const terms = useMemo(() => simplifyTerms(c.rects.flatMap((r) => cornerTerms(r, c.P[0], c.P[1], c.z))), [c])
-  const I = shapeI(c.rects, c.P[0], c.P[1], c.z)
-  const ok = c.rects.length > 0 && c.z > 0 && Number.isFinite(c.q)
-  useEffect(() => {
-    if (ok) markUsed('d-fadum', { mn: terms.map((t) => `${t.m.toFixed(3)},${t.n.toFixed(3)}`).join(';') })
-  })
-  const key = hashKey(JSON.stringify([c.rects, c.P, c.z, c.q]))
-  const id = (k: string) => `sm-stress:lab:fadum:${key}:${k}`
-  const down = (x: number, y: number) => {
-    if (mode === 'point') set({ P: [snap(x), snap(y)] })
-    else if (mode === 'erase') {
-      const i = c.rects.findIndex((r) => x >= Math.min(r.x1, r.x2) && x <= Math.max(r.x1, r.x2) && y >= Math.min(r.y1, r.y2) && y <= Math.max(r.y1, r.y2))
-      if (i >= 0) set({ rects: c.rects.filter((_, j) => j !== i) })
-    } else setDraft({ x1: snap(x), y1: snap(y), x2: snap(x), y2: snap(y) })
-  }
-  const move = (x: number, y: number) => draft && setDraft({ ...draft, x2: snap(x), y2: snap(y) })
-  const up = () => {
-    if (draft && Math.abs(draft.x2 - draft.x1) > 0 && Math.abs(draft.y2 - draft.y1) > 0) set({ rects: [...c.rects, norm(draft)] })
-    setDraft(null)
-  }
-  return (
-    <div className="space-y-3">
-      <ShapePicker value={c} onPick={(s) => setC(s)} />
-      {c.note && <div className="rounded-xl border border-line bg-panel2/50 p-3 text-sm">{c.note}</div>}
-      <div className="flex flex-wrap items-center gap-2 text-sm">
-        <Seg value={mode} onChange={setMode} items={[{ v: 'draw', label: '▭ draw rectangle' }, { v: 'point', label: '• move P' }, { v: 'erase', label: '✕ erase' }]} />
-        <NumIn label="P x" value={c.P[0]} onChange={(v) => set({ P: [v, c.P[1]] })} step={0.5} unit="m" w="w-14" />
-        <NumIn label="P y" value={c.P[1]} onChange={(v) => set({ P: [c.P[0], v] })} step={0.5} unit="m" w="w-14" />
-        <NumIn label="z" value={c.z} onChange={(v) => set({ z: v })} step={0.5} unit="m" w="w-14" />
-        <NumIn label="q" value={c.q} onChange={(v) => set({ q: v })} step={10} unit="kPa" w="w-16" />
-        <button className="btn !py-0.5 !px-2 !text-xs" onClick={() => set({ rects: [] })}>
-          clear
-        </button>
-      </div>
-      <div className="grid cq-lg:grid-cols-[1fr_20rem] gap-4">
-        <div className="rounded-xl bg-bg/60 border border-line p-2">
-          <PlanFig rects={c.rects} P={c.P} terms={terms} view={view} draft={draft} onDown={down} onMove={move} onUp={up} grid={1} />
-          <div className="text-xs text-faint">Drag on the grid to add a loaded rectangle (snaps to 0.5 m). Green dashed = + corner rectangle, red = − (fictitious). Rectangles must not overlap.</div>
-        </div>
-        <div key={key} className="space-y-2 text-sm">
-          {overlaps(c.rects) && <Callout kind="trap">Two rectangles overlap — that area would be counted twice.</Callout>}
-          {ok ? (
-            <>
-              <CheckTable rows={terms.map((t, i) => ({ ...t, k: `t${i}` }))} rowKey={(t) => t.k} given={[{ label: '±', get: (t) => (t.sign > 0 ? '+' : '−') }, { label: 'B × L', get: (t) => `${f2(t.B)} × ${f2(t.L)}` }, { label: 'm', get: (t) => f3(t.m) }, { label: 'n', get: (t) => f3(t.n) }]} cols={COLS} idp={id('terms')} />
-              <Answer id={id('I')} label="ΣI" value={I} digits={4} abs={0.002} compact />
-              <Answer id={id('s')} label="σz = qΣI" value={c.q * I} unit="kPa" compact />
-              <button className="text-xs text-accent underline" onClick={() => openSmRef('d-fadum')}>
-                Fadum chart ↗
-              </button>
-              <Reveal id={id('sol')} title="Solution">
-                <Md>{`Rectangles with a corner at P (z = ${f2(c.z)} m): ${terms.map((t) => `${t.sign > 0 ? '+' : '−'}I(${f3(t.m)}, ${f3(t.n)}) = ${t.sign > 0 ? '' : '−'}${f4(t.I)}`).join('; ')}. ΣI = **${f4(I)}**, σz = ${f2(c.q)} × ${f4(I)} = **${f2(c.q * I)} kPa**. (Newmark: N = ΣI/0.005 ≈ ${fmt(I / NEWMARK_IF, 1)} meshes.)`}</Md>
-              </Reveal>
-            </>
-          ) : (
-            <div className="text-bad">Draw at least one rectangle; z must be positive.</div>
-          )}
-        </div>
-      </div>
     </div>
   )
 }

@@ -9,7 +9,7 @@ import { openSmRef } from '../../reference/pane'
 import type { SmQ, SmTopicModule } from '../../types'
 import { BulbLab } from './BulbLab'
 import { StressCalculators } from './Calculators'
-import { FadumBuilder, NewmarkLab } from './FadumLab'
+import { NewmarkLab } from './FadumLab'
 import { EmbFig, PlanFig, ShapeCompareFig } from './figs'
 import { LoadLab } from './LoadLab'
 import { STRESS_NEW } from './notAsked'
@@ -222,10 +222,7 @@ const mod: SmTopicModule = {
       <Section title="One load at a time" sub="Point, line, strip, embankment, circle, rectangle: the formula with your numbers, the influence value and σz against depth (with 2:1 or Westergaard to compare).">
         <LoadLab />
       </Section>
-      <Section title="Fadum superposition builder" sub="Draw L, T or notched plans from rectangles, put P anywhere (inside, on an edge, outside): the ± corner rectangles and ΣI appear; fill in each I.">
-        <FadumBuilder />
-      </Section>
-      <Section title="Calculators" sub="Plug in an exam question's numbers and read σz with the working: any number of point loads or walls in plan, Fadum / Steinbrenner rectangles, Newmark counts and chart radii, strips, Osterberg, circle, 2:1.">
+      <Section title="Calculators" sub="Draw the question's geometry — point loads, walls, a rectangle, a Newmark plan, a strip, an embankment, a circle, a 2:1 footing — move P, and read σz with the working laid out for the script.">
         <StressCalculators />
       </Section>
       <Section title="Newmark's chart" sub="The plan drawn at AB = z with P at the centre, meshes counted ring by ring — or hide them and count yourself.">

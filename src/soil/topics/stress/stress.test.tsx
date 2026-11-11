@@ -3,6 +3,8 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import { newmarkCount, rectsInside, shapeI } from '../../engine/stressdist'
 import { SD_ITEMS } from '../../reference/sd'
+import { CircleCalc, EmbCalc, StripCalc, TwoOneCalc } from './CalcSections'
+import { LineCalc, NewmarkCalc, PointCalc, RectCalc } from './Calculators'
 import { PlanFig } from './figs'
 import mod from './index'
 import { makeStressProblem, STRESS_FAMILIES } from './Problems'
@@ -13,6 +15,9 @@ const wrap = (el: React.ReactNode) => renderToString(<MemoryRouter>{el}</MemoryR
 describe('stress-distribution module renders', () => {
   it('Overview, Approach, Lab without NaN', () => {
     for (const C of [mod.Overview, mod.Approach, mod.Lab]) expect(wrap(<C />)).not.toMatch(/NaN|Infinity/)
+  })
+  it('drawable calculators render every tab without NaN', () => {
+    for (const C of [PointCalc, LineCalc, RectCalc, NewmarkCalc, StripCalc, EmbCalc, CircleCalc, TwoOneCalc]) expect(wrap(<C />), C.name).not.toMatch(/NaN|Infinity/)
   })
   it('practice problems: finite checks, solutions render', () => {
     for (const q of mod.problems) {
