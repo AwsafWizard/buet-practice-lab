@@ -196,6 +196,66 @@
   --grid: rgba(163, 230, 53, 0.05);
 }
 
+/* CE 301 (professional practice): Dracula at night, its official light twin Alucard by day.
+   Body text and muted text keep WCAG AA (4.5:1) on every surface; checked in src/ppc/theme.test.ts */
+[data-course='ce301'][data-theme='light'],
+[data-course='ce301']:not([data-theme]) {
+  --c-bg: #f6f1dd;
+  --c-panel: #fffbeb;
+  --c-panel2: #f0e9d2;
+  --c-line: #d9d2bb;
+  --c-ink: #1f1f1f;
+  --c-mute: #5e583f;
+  --c-faint: #87805f;
+  --c-accent: #644ac9;
+  --c-accent2: #a3144d;
+  --c-load: #a34d14;
+  --c-good: #14710a;
+  --c-bad: #b8321f;
+  --c-tension: #036a96;
+  --c-comp: #b8321f;
+  --c-member: #1f1f1f;
+  --c-moment: #644ac9;
+  --c-shear: #036a96;
+  --c-axial: #846e15;
+  --c-steel: #1f1f1f;
+  --c-conc: #f0e9d2;
+  --c-water: #036a96;
+  --c-soil: #c8b48a;
+  --c-ia: #036a96;
+  --c-oia: #a3144d;
+  --c-aan: #14710a;
+  --grid: rgba(100, 74, 201, 0.07);
+}
+[data-course='ce301'][data-theme='dark'] {
+  --c-bg: #21222c;
+  --c-panel: #282a36;
+  --c-panel2: #313342;
+  --c-line: #44475a;
+  --c-ink: #f8f8f2;
+  --c-mute: #bfc3dc;
+  --c-faint: #8590bd;
+  --c-accent: #bd93f9;
+  --c-accent2: #ff79c6;
+  --c-load: #ffb86c;
+  --c-good: #50fa7b;
+  --c-bad: #ff6e6e;
+  --c-tension: #8be9fd;
+  --c-comp: #ff6e6e;
+  --c-member: #f8f8f2;
+  --c-moment: #bd93f9;
+  --c-shear: #8be9fd;
+  --c-axial: #f1fa8c;
+  --c-steel: #f8f8f2;
+  --c-conc: #343746;
+  --c-water: #8be9fd;
+  --c-soil: #6272a4;
+  --c-ia: #8be9fd;
+  --c-oia: #ff79c6;
+  --c-aan: #50fa7b;
+  --grid: rgba(189, 147, 249, 0.07);
+}
+
 html,
 body,
 #root {
@@ -227,6 +287,55 @@ body {
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='120'%3E%3Cg fill='none' stroke='%2384a05a' stroke-opacity='0.13' stroke-width='1'%3E%3Cpath d='M0 22 Q60 14 120 22 T240 22'/%3E%3Cpath d='M0 61 Q60 69 120 59 T240 61'/%3E%3Cpath d='M0 97 Q60 90 120 99 T240 97'/%3E%3C/g%3E%3C/svg%3E");
   background-size: 240px 120px;
 }
+/* CE 301: a scatter of faint stars (Dracula's night sky) instead of the blueprint grid */
+[data-course='ce301'] body {
+  background-image:
+    radial-gradient(var(--grid) 1.2px, transparent 1.7px),
+    radial-gradient(var(--grid) 0.8px, transparent 1.2px);
+  background-size: 37px 37px, 53px 53px;
+  background-position: 0 0, 19px 27px;
+}
+/* flashcard flip */
+.pc-flip {
+  perspective: 1400px;
+}
+.pc-flip-inner {
+  display: grid;
+  transform-style: preserve-3d;
+  transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.pc-flip-inner.flipped {
+  transform: rotateY(180deg);
+}
+.pc-face {
+  grid-area: 1 / 1;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.pc-back {
+  transform: rotateY(180deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .pc-flip-inner {
+    transition: none;
+  }
+}
+@keyframes pc-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+.pc-shake {
+  animation: pc-shake 0.25s ease-in-out 2;
+}
+@keyframes pc-pop {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.pc-pop {
+  animation: pc-pop 0.22s ease-out;
+}
+
 /* course picker: warm neutral page with BUET maroon, shared by every course */
 [data-course='home'][data-theme='light'],
 [data-course='home']:not([data-theme]) {

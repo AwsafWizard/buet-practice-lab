@@ -6,13 +6,15 @@ import { RC_ALL } from '../rc/pyq'
 import { RC_EXAM_DATE } from '../rc/plan'
 import { SM_ALL } from '../soil/pyq'
 import { SM_EXAM_DATE } from '../soil/plan'
+import { PC_ALL } from '../ppc/pyq'
+import { PC_EXAM_DATE } from '../ppc/plan'
 import { EXAM_DATE } from '../pages/planner/template'
 import { today, useStore } from '../store'
 import { Ring } from './ui'
 import buetLogo from '../assets/buet-logo.svg'
 
 interface Course {
-  key: 'ce311' | 'ce315' | 'ce341'
+  key: 'ce311' | 'ce315' | 'ce341' | 'ce301'
   code: string
   name: string
   exam: string
@@ -29,6 +31,19 @@ interface Course {
 }
 
 export const COURSES: Course[] = [
+  {
+    key: 'ce301',
+    code: 'CE 301',
+    name: 'Professional Practice and Communication',
+    sub: 'Procurement · contracts & risk · communication & ethics',
+    mark: 'M5 4 H15 L19 8 V20 H5 Z M8 10 H16 M8 13 H16 M8 16 H12 M15 4 V8 H19',
+    exam: PC_EXAM_DATE,
+    home: '/ce301',
+    qids: PC_ALL.map((q) => q.id),
+    checkPrefix: (k) => k.startsWith('pc-'),
+    light: { bg: '#fffbeb', ink: '#1f1f1f', mute: '#5e583f', acc: '#644ac9', line: '#d9d2bb' },
+    dark: { bg: '#282a36', ink: '#f8f8f2', mute: '#bfc3dc', acc: '#bd93f9', line: '#44475a' },
+  },
   {
     key: 'ce341',
     code: 'CE 341',
@@ -64,7 +79,7 @@ export const COURSES: Course[] = [
     exam: EXAM_DATE,
     home: '/ce311',
     qids: ALL_PYQ.map((q) => q.id),
-    checkPrefix: (k) => !k.startsWith('rc-') && !k.startsWith('sm-'),
+    checkPrefix: (k) => !k.startsWith('rc-') && !k.startsWith('sm-') && !k.startsWith('pc-'),
     light: { bg: '#fffdf8', ink: '#1d2433', mute: '#5e6575', acc: '#0e7490', line: '#ddd5c4' },
     dark: { bg: '#111a2b', ink: '#e6edf7', mute: '#96a3ba', acc: '#38bdf8', line: '#23314c' },
   },

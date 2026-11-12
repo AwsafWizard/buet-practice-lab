@@ -1,6 +1,22 @@
-import type { RcTopicId, SmTopicId, TopicId } from '../store'
+import type { PcTopicId, RcTopicId, SmTopicId, TopicId } from '../store'
 
-const P: Record<TopicId | RcTopicId | SmTopicId, string> = {
+const P: Record<TopicId | RcTopicId | SmTopicId | PcTopicId, string> = {
+  'pc-law': 'M12 3 V21 M7 21 H17 M4 7 H20 M4 7 L2 13 a2.5 2.5 0 0 0 5 0 Z M20 7 L18 13 a2.5 2.5 0 0 0 5 0 Z',
+  'pc-methods': 'M4 5 H20 M4 12 H20 M4 19 H20 M7 3 V7 M15 10 V14 M10 17 V21',
+  'pc-process': 'M5 3 H11 V8 H5 Z M13 16 H19 V21 H13 Z M8 8 V12 H16 V16',
+  'pc-docs': 'M7 3 H14 L18 7 V21 H7 Z M10 11 H15 M10 14 H15 M10 17 H13',
+  'pc-gcc': 'M3 6 H10 V18 H3 Z M14 6 H21 V18 H14 Z M10 10 H14 M10 14 H14',
+  'pc-spec': 'M4 4 H20 V20 H4 Z M4 9 H20 M4 14 H20 M10 4 V20',
+  'pc-services': 'M12 4 a3 3 0 1 0 0.01 0 M6 20 a6 5 0 0 1 12 0 M17 9 L20 6 M20 9 V6 H17',
+  'pc-ce': 'M3 20 H21 M5 20 V10 L12 5 L19 10 V20 M9 20 V14 H15 V20',
+  'pc-project': 'M12 3 L21 19 H3 Z M12 9 V14 M12 17 h0.01',
+  'pc-contract': 'M6 3 H18 V21 H6 Z M9 8 H15 M9 12 H15 M9 17 q2 -3 3 0 t3 0',
+  'pc-risk': 'M12 3 L20 6 V12 C20 17 16 20 12 21 C8 20 4 17 4 12 V6 Z M9 12 L11 14 L15 10',
+  'pc-comm': 'M4 5 H15 V13 H9 L5 16 V13 H4 Z M17 9 H20 V17 H19 V20 L16 17 H11 V15',
+  'pc-7cs': 'M5 12 a7 7 0 1 0 14 0 a7 7 0 1 0 -14 0 M12 12 h0.01 M12 5 V7 M12 17 V19 M5 12 H7 M17 12 H19',
+  'pc-writing': 'M5 20 L6 15 L16 5 L19 8 L9 18 Z M14 7 L17 10',
+  'pc-oral': 'M9 3 H15 V13 H9 Z M6 11 a6 6 0 0 0 12 0 M12 17 V21 M8 21 H16',
+  'pc-ethics': 'M12 3 V21 M5 8 H19 M5 8 L3 14 H7 Z M19 8 L17 14 H21 Z M9 21 H15',
   frames: 'M4 19 V7 H20 V19 M2 19 h4 M18 19 h4',
   truss: 'M3 18 L8 8 L13 18 L18 8 L21 18 Z M8 8 H18 M3 18 H21',
   ild: 'M3 14 L10 6 L21 14 M3 14 H21',
@@ -39,7 +55,7 @@ const P: Record<TopicId | RcTopicId | SmTopicId, string> = {
   'sm-stress': 'M12 3 V7 M10 5 L12 7 L14 5 M4 9 Q12 26 20 9 M7 9 Q12 18 17 9',
 }
 
-export function TopicIcon({ id, color, size = 18 }: { id: TopicId | RcTopicId | SmTopicId; color?: string; size?: number }) {
+export function TopicIcon({ id, color, size = 18 }: { id: TopicId | RcTopicId | SmTopicId | PcTopicId; color?: string; size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color ?? 'currentColor'} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
       <path d={P[id]} />

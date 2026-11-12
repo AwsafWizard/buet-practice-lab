@@ -23,10 +23,11 @@ const ScreenTime = lazy(() => import('./pages/ScreenTime'))
 
 const RcApp = lazy(() => import('./rc/RcApp'))
 const SmApp = lazy(() => import('./soil/SmApp'))
+const PcApp = lazy(() => import('./ppc/PcApp'))
 
-export type CourseKey = 'home' | 'ce311' | 'ce315' | 'ce341'
+export type CourseKey = 'home' | 'ce311' | 'ce315' | 'ce341' | 'ce301'
 export const courseOf = (pathname: string): CourseKey =>
-  pathname === '/' ? 'home' : pathname.startsWith('/ce315') ? 'ce315' : pathname.startsWith('/ce341') ? 'ce341' : 'ce311'
+  pathname === '/' ? 'home' : pathname.startsWith('/ce315') ? 'ce315' : pathname.startsWith('/ce341') ? 'ce341' : pathname.startsWith('/ce301') ? 'ce301' : 'ce311'
 
 export default function App() {
   const theme = useStore((s) => s.theme)
@@ -45,7 +46,7 @@ export default function App() {
   }, [loc.pathname, course])
   return (
     <Suspense fallback={<div className="text-mute p-10">Loading…</div>}>
-      {course === 'home' ? <CoursePicker /> : course === 'ce315' ? <RcApp /> : course === 'ce341' ? <SmApp /> : <Ce311App />}
+      {course === 'home' ? <CoursePicker /> : course === 'ce315' ? <RcApp /> : course === 'ce341' ? <SmApp /> : course === 'ce301' ? <PcApp /> : <Ce311App />}
     </Suspense>
   )
 }
@@ -150,7 +151,7 @@ type ArtifactWindow = {
   claude?: { use(name: 'downloads'): Promise<{ save(r: { filename: string; data: string }): Promise<unknown> } | null> }
 }
 
-export function SidebarFooter({ course }: { course: 'ce311' | 'ce315' | 'ce341' }) {
+export function SidebarFooter({ course }: { course: 'ce311' | 'ce315' | 'ce341' | 'ce301' }) {
   const theme = useStore((s) => s.theme)
   const setTheme = useStore((s) => s.setTheme)
   const side = useStore((s) => s.bmdSide)
