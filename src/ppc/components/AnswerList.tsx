@@ -6,6 +6,7 @@ import { useStore } from '../../store'
 import { pcTopicById } from '../registry'
 import type { PcAnswer } from '../types'
 import { AnswerBody } from './Blurt'
+import { AnswerDoc, exportPdf, KebabMenu, pdfName } from './ExportPdf'
 
 const key = (a: PcAnswer) => `${a.topic}:th:${a.id}`
 
@@ -65,6 +66,13 @@ function AnswerCard({ a, showTopic }: { a: PcAnswer; showTopic: boolean }) {
         <button className="btn !text-sm" onClick={() => setOpen(!open)}>
           {open ? 'Hide' : 'Show answer'}
         </button>
+        <KebabMenu
+          label="More for this answer"
+          items={[
+            { icon: '⤓', label: 'Extract as PDF', onClick: () => exportPdf(<AnswerDoc a={a} />, pdfName('CE301', a.q.slice(0, 50))) },
+            { icon: '⧉', label: 'Copy the question', onClick: () => navigator.clipboard?.writeText(a.q) },
+          ]}
+        />
       </div>
       {open && (
         <div className="mt-3 border-t border-line pt-3">

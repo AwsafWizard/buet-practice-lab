@@ -83,7 +83,7 @@ function TdsSheet({ calc }: { calc: Extract<PcCalc, { kind: 'tds' }> }) {
         Estimate {cr(calc.costCrore)}, {calc.months} months{calc.storeys ? `, ${calc.storeys} storeys` : ''} → about {cr(r.annual)} of work a year, {cr(r.monthly)} a month.
       </div>
       <div className="overflow-x-auto">
-        <table className="tbl [&_td]:font-sans [&_td]:text-[13px]">
+        <table className="tbl [&_td]:!font-sans [&_td]:!text-[13px]">
           <thead>
             <tr>
               <th>ITT clause / item</th>

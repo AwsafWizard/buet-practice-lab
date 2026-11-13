@@ -1,7 +1,7 @@
 // One past-paper part: the question as printed, a blurt box with its examiner keywords, the model answer.
 
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Md } from '../../components/ui'
 import { useStore } from '../../store'
 import { answerById } from '../content'
@@ -9,6 +9,7 @@ import { pcTopicById } from '../registry'
 import { pcPaperLabel, type PcQ } from '../types'
 import { AnswersById, Blurt } from './Blurt'
 import { CalcSolution } from './Calc'
+import { exportPdf, KebabMenu, pdfName, QuestionDoc } from './ExportPdf'
 
 export const scan301 = (pg: number) => `scans301/p-${String(pg).padStart(3, '0')}.jpg`
 
@@ -61,6 +62,7 @@ export function PcQuestionCard({ q, showPaper = true, open: open0 = false }: { q
             </button>
           ))}
         </div>
+        <QuestionMenu q={q} />
       </div>
       <div className="text-[15px]">
         <Md>{q.text}</Md>
@@ -81,6 +83,20 @@ export function PcQuestionCard({ q, showPaper = true, open: open0 = false }: { q
       )}
       {mode === 'answer' && <div className="mt-3 rounded-xl border border-accent/40 p-4">{model}</div>}
     </article>
+  )
+}
+
+function QuestionMenu({ q }: { q: PcQ }) {
+  const nav = useNavigate()
+  return (
+    <KebabMenu
+      label={`More for Q${q.no}`}
+      items={[
+        { icon: '⤓', label: 'Extract as PDF', onClick: () => exportPdf(<QuestionDoc q={q} />, pdfName('CE301', pcPaperLabel(q.paper), 'Q' + q.no)) },
+        { icon: '↗', label: 'Open on its own page', onClick: () => nav(`/ce301/q/${encodeURIComponent(q.id)}`) },
+        { icon: '⧉', label: 'Copy the question text', onClick: () => navigator.clipboard?.writeText(`CE 301 ${pcPaperLabel(q.paper)} Q${q.no} (${q.marks} marks)\n${q.text}`) },
+      ]}
+    />
   )
 }
 

@@ -295,6 +295,62 @@ body {
   background-size: 37px 37px, 53px 53px;
   background-position: 0 0, 19px 27px;
 }
+/* PDF export: always a white page with dark ink, whichever theme is on screen.
+   Tailwind's --color-* are resolved at :root, so they are re-pointed here too. */
+.pc-print {
+  --c-bg: #ffffff;
+  --c-panel: #ffffff;
+  --c-panel2: #f3f2f7;
+  --c-line: #d4d2dd;
+  --c-ink: #16161d;
+  --c-mute: #45434f;
+  --c-faint: #76737f;
+  --c-accent: #5b3fc4;
+  --c-accent2: #9b1349;
+  --c-load: #a34d14;
+  --c-good: #14710a;
+  --c-bad: #b8321f;
+  --c-tension: #036a96;
+  --c-comp: #b8321f;
+  --c-member: #16161d;
+  --c-moment: #5b3fc4;
+  --c-shear: #036a96;
+  --c-axial: #846e15;
+  --c-steel: #16161d;
+  --c-conc: #f3f2f7;
+  --c-water: #036a96;
+  --c-ia: #036a96;
+  --c-oia: #9b1349;
+  --c-aan: #14710a;
+  --color-bg: var(--c-bg);
+  --color-panel: var(--c-panel);
+  --color-panel2: var(--c-panel2);
+  --color-line: var(--c-line);
+  --color-ink: var(--c-ink);
+  --color-mute: var(--c-mute);
+  --color-faint: var(--c-faint);
+  --color-accent: var(--c-accent);
+  --color-accent2: var(--c-accent2);
+  --color-load: var(--c-load);
+  --color-good: var(--c-good);
+  --color-bad: var(--c-bad);
+  --color-tension: var(--c-tension);
+  background: #ffffff;
+  color: var(--c-ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.pc-print button,
+.pc-print details > summary {
+  display: none !important;
+}
+.pc-print .chip {
+  background: var(--c-panel2);
+  border-color: var(--c-line);
+  color: var(--c-ink);
+}
+
 /* flashcard flip */
 .pc-flip {
   perspective: 1400px;
