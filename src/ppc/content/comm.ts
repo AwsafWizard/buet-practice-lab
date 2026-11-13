@@ -14,17 +14,17 @@ export default {
       ask: 'List the elements of the human communication process — in order.',
       ordered: true,
       points: [
-        { k: 'Decision', alt: ['decide to send', 'sender', 'idea'], d: 'Sender takes the decision to send a message.' },
-        { k: 'Encoding', alt: ['encode', 'idea encoded'], d: 'The idea is encoded into words, symbols or gestures.' },
-        { k: 'Media selection', alt: ['channel', 'medium', 'channel selection', 'media'], d: 'Sender chooses a medium / channel to send the text.' },
-        { k: 'Receiving', alt: ['receiver', 'receive'], d: 'Receiver receives the message.' },
-        { k: 'Decoding', alt: ['decode', 'interpret'], d: 'Receiver decodes (interprets) the message — AAN sir: the decoder.' },
-        { k: 'Feedback', alt: ['response'], d: 'Receiver gives proper feedback; this closes the two-way loop.' },
+        { k: 'Context', alt: ['situation', 'setting'], d: 'The situation in which communication takes place.' },
+        { k: 'Sender (idea encoder)', alt: ['sender', 'encoder', 'idea encoder'], d: 'Decides to send a message and encodes the idea.' },
+        { k: 'Message (encoded)', alt: ['message', 'encoded message'], d: 'The encoded idea.' },
+        { k: 'Medium, Channel (transmission format)', alt: ['channel', 'medium', 'media', 'transmission format'], d: 'The message is communicated via a particular medium or channel.' },
+        { k: 'Receiver (decoder)', alt: ['receiver', 'decoder', 'decode'], d: 'Receives the message and tries to figure it out (decode).' },
+        { k: 'Feedback (reaction of receiver)', alt: ['feedback', 'reaction', 'response'], d: 'Receiver provides feedback.' },
       ],
-      hook: '**D**o **E**agles **M**ake **R**eally **D**elicious **F**ood? — three on the sender side, three on the receiver side.',
+      hook: '**C**an **S**ome **M**essages **C**ross **R**ivers **F**ast? — Context, Sender, Message, Channel, Receiver, Feedback.',
       seen: ['2023-24', '2021-22', '2017-18'],
-      src: `${KN}; AAN sir L1`,
-      note: 'Some books (question bank) give 9 elements: sender, encoding, message, channel, receiver, decoding, feedback, noise, context. Class note = the 6 above.',
+      src: 'Noor sir L01 (slide)',
+      note: 'Kabirul sir’s lecture (Nafee bhai’s note) gave it as Decision → Encoding → Media selection → Receiving → Decoding → Feedback. This term’s slide = the 6 above.',
     },
     {
       id: 'l-comm-skills',
@@ -237,15 +237,15 @@ export default {
       topic: T,
       title: 'Sub-categories of values, attitudes and opinions',
       points: [
-        { k: 'Favourable or unfavourable information', alt: ['favorable', 'unfavourable information'] },
-        { k: 'Adequate or inadequate information', alt: ['inadequate information'] },
-        { k: 'Closed mind', alt: ['closed minds'] },
-        { k: 'Sender’s credibility', alt: ['sender attitude', "sender's credibility", 'credibility'] },
-        { k: 'Circumstances' },
+        { k: 'Favorable or unfavorable information', alt: ['favourable', 'favorable', 'unfavourable information', 'favourable or unfavourable information'] },
+        { k: 'Inadequate or incorrect information', alt: ['inadequate information', 'incorrect information', 'adequate or inadequate information'] },
+        { k: 'Closed minds', alt: ['closed mind'] },
+        { k: 'Sender’s attitude', alt: ["sender's attitude", 'sender attitude', "sender's credibility", 'credibility'] },
+        { k: 'Circumstances affecting attitudes, opinions', alt: ['circumstances'] },
       ],
-      hook: 'Is the news **good**, is it **enough**, is the reader’s mind **open**, do they **trust** me, and is it the **right moment**?',
-      seen: ['2022-23', '2017-18'],
-      src: KN,
+      hook: 'Is the news **good**, is it **correct**, is the reader’s mind **open**, how does the **sender feel**, and is it the **right moment**?',
+      seen: ['2022-23', '2017-18', '2011-12'],
+      src: 'Kabirul sir slide (via the 18-batch solve); Noor sir’s slide shows the heading only',
     },
   ],
 
@@ -258,7 +258,7 @@ export default {
     { id: 'c-comm-upward', topic: T, front: 'What flows **upward** in an organisation, and what is it for?', back: 'Information, **opinions, problems, complaints, suggestions** from lower level to managers — helps **monitoring and decision making**.', seen: ['2020-21', '2011-12'], src: KN },
     { id: 'c-comm-downward', topic: T, front: 'What flows **downward** in an organisation?', back: 'Information, **decisions and orders** from top to bottom — the organisation’s **rules, objectives and methods**.', seen: ['2020-21', '2011-12'], src: KN },
     { id: 'c-comm-external-aim', topic: T, front: 'What should external operational communication convey?', back: '**Warmth, understanding and positiveness** — to suppliers, service providers, public and customers.', src: KN },
-    { id: 'c-comm-bypassing', topic: T, front: 'What is **bypassing** (miscommunicated instructions)?', back: 'Sender and receiver give **different meanings to the same word** (or use different words for the same meaning), so they miss each other. E.g. “send it as soon as you can” — manager means today, clerk sends next week. Cure: be specific, ask for feedback.', seen: ['2011-12'], src: KN },
+    { id: 'c-comm-bypassing', topic: T, front: 'What are **miscommunicated instructions**?', back: 'Sender and receiver **attribute different meaning to the same word** or use different words to convey the same meaning. E.g. “**Biweekly**” — manager means twice a week, employee means every two weeks. Cure: **ask questions and clarify**.', seen: ['2011-12'], src: KN },
     { id: 'c-comm-abstracting', topic: T, front: 'What is **abstracting**?', back: 'Focusing on **some details** of reality and **omitting the rest**. Necessary — no one can report every detail — but trouble comes when important details are left out.', seen: ['2022-23', '2017-18', '2016-17', '2014-15', '2012-13', '2011-12'], src: KN },
     { id: 'c-comm-inferring', topic: T, front: 'What is **inferring**?', back: 'Drawing a **conclusion about the unknown from the known**, filling gaps with **assumptions** (time and space force us to assume). Risky when taken as fact — **verify**. E.g. empty site → “contractor has abandoned the job” (may be a holiday).', seen: ['2016-17', '2014-15', '2012-13', '2011-12'], src: KN },
     { id: 'c-comm-slanting', topic: T, front: 'What is a **slanted attitude** (slanting)?', back: 'Presenting **factual** details selectively, or with loaded words, to **mislead or deceive** — it shows the sender’s bias. “Finished 90 % of the work” vs “failed to finish 10 %”.', seen: ['2011-12'], src: KN },
@@ -290,24 +290,29 @@ export default {
       topic: T,
       q: 'Describe the process (elements) of human communication.',
       seen: ['2023-24', '2021-22', '2017-18'],
-      a: `Human communication is a two-way process: three steps at the **sender** and three at the **receiver**.
+      a: `Human communication is a two-way process between a **sender** and a **receiver**.
 
-### Sender
-1. **Decision** — the sender has an idea and takes the decision to send a message.
-2. **Encoding** — the idea is encoded into words, symbols or gestures.
-3. **Media selection** — the sender chooses a suitable medium/channel (letter, e-mail, phone, meeting) to send it.
+### Elements of the human communication process
+1. **Context** — the situation in which communication takes place.
+2. **Sender (idea encoder)** — decides to send a message and encodes the idea.
+3. **Message (encoded)** — the encoded idea.
+4. **Medium, Channel (transmission format)** — the message is communicated via a particular medium or channel.
+5. **Receiver (decoder)** — receives the message and tries to figure it out (decode).
+6. **Feedback (reaction of receiver)** — the receiver provides feedback.
 
-### Receiver
-4. **Receiving** — the receiver receives the message.
-5. **Decoding** — the receiver interprets the symbols into meaning; if delivery and receiving speeds don’t sync, **miscommunication** results.
-6. **Feedback** — the receiver gives proper feedback, telling the sender whether the message was understood.
+### The process
+1. In a given context, someone decides to send a message.
+2. The message is communicated via a particular medium or channel.
+3. A receiver receives the message.
+4. Receiver tries to figure it out (decode the message).
+5. Receiver provides feedback.
 
-Communication succeeds when the meaning decoded matches the meaning encoded.
+Communication succeeds when the meaning decoded matches the meaning encoded; otherwise **miscommunication** results.
 
-*Some books list 9 elements: sender, encoding, message, channel, receiver, decoding, feedback, noise and context.*`,
-      keys: ['Decision', 'Encoding', 'Media selection', 'Receiving', 'Decoding', 'Feedback', 'sender', 'receiver', 'miscommunication'],
+*Kabirul sir’s lecture (Nafee bhai’s note) gave the steps as Decision → Encoding → Media selection → Receiving → Decoding → Feedback.*`,
+      keys: ['Context', 'Sender (idea encoder)', 'Message (encoded)', 'Medium, Channel', 'Receiver (decoder)', 'Feedback', 'miscommunication'],
       lists: ['l-comm-process'],
-      src: `${KN}; AAN sir L1`,
+      src: 'Noor sir L01 (slide); process steps as the 18-batch solve writes them',
     },
     {
       id: 'a-comm-skills-traits',
@@ -486,16 +491,20 @@ Long silence or delay (keeping someone waiting), the use of time and the distanc
     {
       id: 'a-comm-bypassing-slanting',
       topic: T,
-      q: 'Briefly explain (i) miscommunication — bypassing (miscommunicated instructions), (ii) slanted attitude.',
+      q: 'Briefly explain (i) miscommunicated instructions, (ii) sender’s attitude.',
       seen: ['2011-12'],
-      a: `### (i) Bypassing (miscommunicated instructions)
-Sender and receiver attach **different meanings to the same word** (or use different words for the same meaning), so the instruction is misunderstood. E.g. “Send it as soon as you can” — the manager means today, the clerk sends it next week. Avoid by being specific and asking for **feedback**.
+      a: `### (i) Miscommunicated instructions
+A barrier under **differences in convention of meaning**: sender and receiver **attribute different meaning to the same word** or use different words to convey the same meaning. E.g. “**Biweekly**” — the manager means twice a week, the employee means every two weeks. Cure: **ask questions and clarify**.
 
-### (ii) Slanted attitude (slanting)
-Presenting **factual** details selectively, or with loaded words, to **mislead or deceive** the receiver; it reveals the sender’s **bias**. E.g. “finished 90 % of the work” vs “failed to finish 10 % of the work”.`,
-      keys: ['Bypassing', 'different meanings to the same word', 'feedback', 'Slanted attitude', 'factual', 'mislead or deceive', 'bias'],
-      lists: ['l-comm-meaning-problems', 'l-comm-perception-problems'],
-      src: KN,
+### (ii) Sender’s attitude
+A barrier under **differences in values, attitudes and opinions**. The sender’s attitude affects how the message is **encoded** (and the receiver’s attitude how it is decoded):
+- a negative, angry or superior attitude shows in words and tone and makes the receiver **defensive**;
+- a biased attitude makes the sender select only facts that suit him (**slanted abstract**);
+- emotions block clear thinking and listening;
+- a positive, respectful **“you attitude”** makes the receiver open and co-operative.`,
+      keys: ['Miscommunicated instructions', 'attribute different meaning to the same word', 'Biweekly', 'ask questions and clarify', 'Sender’s attitude', 'values, attitudes and opinions', 'encoded', 'slanted abstract'],
+      lists: ['l-comm-meaning-problems', 'l-comm-value-problems'],
+      src: 'Kabirul sir slide list (via the 18-batch solve) + Rahat’s note',
     },
   ],
 } satisfies PcTopicContent

@@ -349,7 +349,7 @@ const lists: PcList[] = [
       { k: 'Lending institutions' },
       { k: 'Inspectors' },
     ],
-    seen: ['2022-23', 'Jan 2021'],
+    seen: ['2022-23'],
     src: 'Tanvir sir L3 p9',
   },
   {

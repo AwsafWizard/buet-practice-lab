@@ -19,7 +19,7 @@ export const AAN_MAP: Record<string, PcPartMap> = {
     extra: '(i) conflict of interest → **Section 8**; (ii) confidential information → **Section 7**; (iii) undertaking engineering assignments → **Section 6**. Four marks each: “According to Section N …” + the section as on the slide, then one line in your own words with an example. For (i) the slide also defines a conflict of interest (private, personal, or financial interests clashing with official or professional responsibilities).',
   },
   'pc-2023-24-2b': { topics: ['pc-ethics'], ans: ['a-ethics-peers'], extra: '23 marks: Sections **11, 12, 13, 14, 15** word for word, each with a line in your own words; add **Section 9** (fair compensation of those engaged in engineering work) as a sixth point and close with one example.' },
-  'pc-2023-24-3a': { topics: ['pc-oral'], ans: ['a-meeting-leadership'], notes: [QB_ONLY] },
+  'pc-2023-24-3a': { topics: ['pc-oral'], ans: ['a-meeting-leadership'] },
 
   // ---------- May 2024 (printed 2021-22, second sitting) ----------
   'pc-may-2024-5a': {
@@ -30,7 +30,7 @@ export const AAN_MAP: Record<string, PcPartMap> = {
   'pc-may-2024-6a': { topics: ['pc-ethics'], ans: ['a-ethics-principles'], extra: '12 marks: the opening line (“The Engineer, to uphold and advance the honor and dignity of the engineering profession …”), the **three** principles word for word, and a line of explanation for each.' },
   'pc-may-2024-6b': { topics: ['pc-ethics'], ans: ['a-ethics-client'], extra: '20 marks: Sections **1, 6, 7, 8, 10, 5** and the “overruled” clause of **Section 2**, each word for word, and one combined example.' },
   'pc-may-2024-6c': { topics: ['pc-ethics'], ans: ['a-ethics-s4'], extra: '3 marks: quote Section 4 in one line and give one example — a public talk or newspaper article on why buildings must follow the BNBC (e.g. after Rana Plaza), or a site visit for school students.' },
-  'pc-may-2024-7a': { topics: ['pc-oral'], ans: ['a-meeting-leadership'], notes: [QB_ONLY] },
+  'pc-may-2024-7a': { topics: ['pc-oral'], ans: ['a-meeting-leadership'] },
   'pc-may-2024-7b': { topics: ['pc-7cs'], ans: ['a-7cs-concepts'], extra: 'A **list** question (9 marks): the seven names, each with a one-line meaning, is enough.' },
   'pc-may-2024-7c': { topics: ['pc-writing'], ans: ['a-writing-short-structure'], extra: '6 marks: the three parts as on the slide — prefatory part or introduction; discussion, text or body; terminal section (summary, conclusions and recommendations) — with one line on each.' },
 
@@ -127,7 +127,7 @@ export const AAN_MAP: Record<string, PcPartMap> = {
   'pc-2011-12-14a': {
     topics: ['pc-comm'],
     ans: ['a-comm-bypassing-slanting'],
-    notes: ['Scan reads “Miscommunication instruction” and “Slender attitude” — i.e. miscommunicated instructions (bypassing) and slanted attitude, both from Kabirul sir’s barrier list.'],
+    notes: ['Scan reads “Miscommunication instruction” and “Slender attitude” — i.e. miscommunicated instructions and sender’s attitude (2009-10 and 2010-11 ask the same pair), both from Kabirul sir’s barrier list.'],
   },
   'pc-2011-12-14b': { topics: ['pc-7cs'], ans: ['a-7cs-consideration', 'a-7cs-concreteness', 'a-7cs-correctness'] },
 }

@@ -110,10 +110,23 @@ export const OIA_MAP: Record<string, PcPartMap> = {
   'pc-jan-2021-8b': {
     topics: [PR],
     ans: ['a-pr-participants'],
-    extra: `### Components of a project management plan (question bank only)
-Not in Tanvir sir’s slides. A generic list if you attempt it: objectives, scope and WBS; organisation and responsibilities; schedule and milestones; budget and cash flow; quality plan; risk plan; communication and reporting; procurement plan; change control; health, safety and environment; document control; monitoring, close-out and handover.`,
-    flag: 'The second half (project management plan) is not in this term’s OIA material.',
-    notes: ['"Major parties" — answer with the three main groups and the fourth group (the slides have no slide titled "major parties").'],
+    extra: `### Major parties — roles (18-batch solve)
+1. **Owner** — sets operational criteria for details of the work to be done or scope of work.
+2. **Designer** — does the detailed designs, drawings and specifications for the project.
+3. **Builder/Contractor** — does all work in accordance with contract documents; furnishes labour, equipment and material; prepares budget and status reports for the owner; develops the project quality report for the engineer and owner; develops budget and schedule control.
+
+### Components of a project management plan (18-batch solve)
+1. General project information
+2. Major client, stakeholder and general information
+3. Organizational structure (key disciplines, team members)
+4. Scope of work and work plan
+5. Project schedule
+6. Project budget
+7. Communication plan
+8. Health and safety plan
+9. Project quality plan`,
+    flag: 'The project management plan is not in this term’s OIA slides; the 18-batch solver himself marked it out of syllabus (“lecture slides of batch ’17 and ’18 are not exactly the same”).',
+    notes: ['"Major parties" — the 18-batch solve writes Owner, Designer and Builder/Contractor with their roles; the four groups below back it up.'],
   },
 
   // ---------- 2015-16 ----------
