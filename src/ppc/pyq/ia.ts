@@ -3,6 +3,7 @@
 // Part ids and wording: ./skeleton.ts; owners: CE301/Claude digests/part_owners.md.
 // Source digest: CE301/Claude digests/lec_procurement.md. Teacher material and PPA/PPR win over the question bank.
 import type { PcPartMap } from '../types'
+import { BOQ_NOTE, BRICK_PLINTH, RCC_BRIDGE, RCC_MAT_OLD, RCC_OLD, RCC_SUBS, boqBrick, boqRcc, boqTable } from '../content/spec'
 
 const LAW = 'pc-law' as const
 const MET = 'pc-methods' as const
@@ -29,25 +30,35 @@ const gccClauses: PcPartMap = { topics: [GCC], ans: ['a-gcc-pcc-relation', 'a-gc
 const qbFlowNote = 'Question bank adds a first box “prepare and approve tender document”; IA sir’s chart starts at Tender Notice.'
 const priorityNote = 'Cite PPR 2008 r.4(7) — the question bank writes “Rule 15(7)”.'
 
-const WORDS: Record<number, string> = {
-  9500: 'Nine thousand five hundred',
-  14000: 'Fourteen thousand',
-  15500: 'Fifteen thousand five hundred',
-  18000: 'Eighteen thousand',
-}
+// ---------- BoQ (pc-spec parts) ----------
+// Ishtiaque sir: “Quantity and unit are to be included but not rate and amount.” Every BoQ is drawn in the class
+// columns with the unit and the quantity filled in and the last three columns blank; the item descriptions are the
+// ones the solves say to memorise word for word (they live in content/spec.ts so the answers and the papers agree).
+const boq = (table: string) => `${table}\n\n${BOQ_NOTE}`
+/** the RCC item 6 / 6.1 with the sub-items that carry the quantity */
+const boqConc = (subs: [no: string, name: string, qty: string][]) => boq(boqRcc(subs))
+const FOOTING = 'Individual & combined footing'
 
-const boq = (qty: string, desc: string, unit = 'm³', rate = 14000) => {
-  const n = parseFloat(qty.replace(/,/g, ''))
-  const amt = (n * rate).toLocaleString('en-IN', { minimumFractionDigits: 2 })
-  const r = rate.toLocaleString('en-IN', { minimumFractionDigits: 2 })
-  return `| Item No. | Description of item | Unit | Quantity | Unit rate in figures (Tk) | Unit rate in words | Amount (Tk) |
-|---|---|---|---|---|---|---|
-| 1.01 | ${desc} | ${unit} | ${qty} | ${r} | ${WORDS[rate] ?? '(in words)'} only | ${amt} |
-| | **Carried to Summary** | | | | | ${amt} |`
-}
+// ---------- TDS (pc-docs parts) ----------
+// The class formulas (18-batch solve pp.35–36): turnover = cost ÷ years × 3; gap between one bill = months ÷ bills + 3
+// (kept unrounded); liquid asset = cost ÷ months × gap, rounded up to a whole crore; tender security 2 %.
+// The sheet under each part draws the table; this is the working the student writes under it.
+const n3 = (x: number) => String(+x.toFixed(3))
+const tdsWork = (cost: number, months: number, close: string, lead = 'Assuming the billing amount is 10% (10 bills).') => {
+  const years = months / 12
+  const gap = months / 10 + 3
+  const liquid = (cost / months) * gap
+  const up = Math.ceil(liquid - 1e-9)
+  return `${lead}
 
-const CONC_DESC =
-  'Cast-in-situ reinforced cement concrete in foundation (footings, pile caps, grade beams), f′c = 25 MPa at 28 days, Portland cement, coarse sand FM ≥ 2.5, 20 mm down crushed stone chips; batching by weight, machine mixing, placing, vibrating, shuttering, curing ≥ 14 days, cylinder testing; complete as per drawings, specification and Engineer’s instructions; reinforcement paid separately'
+Draw the table “Tender Data Sheet” with the bands **Qualification Criteria** (general experience, specific experience, liquid asset, turnover) and **Tender Preparation** (tender security), then write the working under it:
+
+- Gap between one bill = (${n3(months)} ÷ 10) + 3 = **${n3(gap)} months** (3 months is the assumed delay)
+- Liquid asset = (${n3(cost)} ÷ ${n3(months)}) × ${n3(gap)} = ${n3(liquid)}${up === +n3(liquid) ? '' : `, rounded up to **Tk ${up} crore**`}${up === +n3(liquid) ? ` = **Tk ${up} crore**` : ''}
+- Annual turnover = (${n3(cost)} ÷ ${n3(years)}) × 3 = **Tk ${n3((cost / years) * 3)} crore**
+- Tender security = 2% × ${n3(cost)} = **Tk ${n3(0.02 * cost)} crore**, written as a fixed amount (2 to 3% of the total cost)
+- Specific experience, a job close to this one: ${close}, 80% × ${n3(cost)} = **Tk ${n3(0.8 * cost)} crore**, 1 contract in the last 5 years`
+}
 
 export const IA_MAP: Record<string, PcPartMap> = {
   // ===== May 2024 (printed 2021-2022) =====
@@ -68,7 +79,10 @@ export const IA_MAP: Record<string, PcPartMap> = {
   'pc-may-2024-5b': {
     topics: [SPE],
     ans: ['a-boq-format'],
-    extra: `### BoQ — 50 m³ concrete in foundation (Bill No. 3: Concrete Works)\n${boq('50.00', CONC_DESC)}`,
+    extra: `### BoQ for 50 m³ of concrete in the foundation
+${boqConc([['6.1.1', FOOTING, '50']])}
+
+The whole 50 m³ is put against the footing. If the foundation also has grade beams, add 6.1.3 Foundation beam up to plinth level and split the volume so the total stays 50 Cum.`,
   },
   'pc-may-2024-5c': { ...priority, notes: [priorityNote] },
   'pc-may-2024-8a': servicesMethods,
@@ -99,7 +113,7 @@ export const IA_MAP: Record<string, PcPartMap> = {
     topics: [DOC],
     ans: ['a-tds-method'],
     calc: { kind: 'tds', costCrore: 80, months: 36, storeys: 20, items: ['Specific Experience', 'General Experience', 'Turnover', 'Tender Security', 'Credit facility / Liquid Asset'] },
-    extra: 'Write it as a table “ITT clause | TDS entry”. Duration three years = 36 months as given.',
+    extra: tdsWork(80, 36, '15 storeys for 20'),
   },
   'pc-2021-22-8b': forfeit,
 
@@ -129,7 +143,13 @@ export const IA_MAP: Record<string, PcPartMap> = {
   'pc-2020-21-8b': {
     topics: [SPE],
     ans: ['a-boq-format'],
-    extra: `### BoQ — 100 m³ concrete in foundation\n${boq('100.00', CONC_DESC)}`,
+    extra: `### BoQ for 100 m³ of concrete in foundation (latest edition of the item)
+${boqConc([['6.1.1', FOOTING, '100']])}
+
+### The earlier edition (what the 18-batch solve wrote for this question)
+${boqTable([['1', RCC_OLD, 'cum', '100']])}
+
+Write one of the two. The older solve heads its columns SL. No, Description of Work, Unit, Quantity, Rate in Tk., Amount, and also leaves the rate and the amount blank.`,
   },
 
   // ===== Jan 2021 =====
@@ -152,12 +172,18 @@ export const IA_MAP: Record<string, PcPartMap> = {
   'pc-2015-16-3a': {
     topics: [SPE],
     ans: ['a-boq-format'],
-    extra: `### BoQ — concrete in the foundation mat (raft) of a high-rise building (quantity assumed: 1,200 m³)\n${boq(
-      '1,200.00',
-      'Cast-in-situ reinforced concrete in mat (raft) foundation, f′c = 30 MPa at 28 days, Portland cement, coarse sand FM ≥ 2.5, 20 mm down crushed stone; ready-mixed or batched by weight, placed by pump in a continuous pour with planned construction joints, compacted by vibrators; edge formwork, temperature control for mass concrete, curing ≥ 14 days, cylinder testing; complete as per drawings, specification and Engineer’s instructions; reinforcement measured separately',
-      'm³',
-      15500,
-    )}`,
+    extra: `### BoQ for concrete in the foundation mat of a high-rise building (quantity assumed: 424 m³)
+${boqConc([['6.1.1', 'Foundation mat (raft)', '424']])}
+
+The item is the class RCC item; the schedule’s first sub-item reads “Individual & combined footing”, so for a mat the sub-item is named after the mat.
+
+### What the 18-batch solve wrote (an older 1:2:4 item)
+${boqTable([
+      ['**07**', '**Concrete Work for Foundation Mat**'],
+      ['07.1', RCC_MAT_OLD, 'cum', '424'],
+    ])}
+
+Either is accepted in class; the 6.1 item is the latest one and agrees with the concrete specification (f′c = 25 MPa, 1:1.5:3, stone chips).`,
     notes: ['The paper gives no quantity; state your assumed quantity.'],
   },
   'pc-2015-16-3b': { topics: [SPE], ans: ['a-missing-item'] },
@@ -191,7 +217,7 @@ export const IA_MAP: Record<string, PcPartMap> = {
 
   // ===== 2013-14 =====
   'pc-2013-14-1a': { topics: [SPE], ans: ['a-r29'] },
-  'pc-2013-14-1b': { topics: [SPE], ans: ['a-spec-goods', 'a-spec-brick'], extra: 'Goods item: the projector table. Civil work item: brick work (or concrete in foundation — see a-spec-concrete).' },
+  'pc-2013-14-1b': { topics: [SPE], ans: ['a-spec-goods', 'a-spec-brick'], extra: 'Goods item: the multimedia projector. Civil work item: brick work with its BoQ item (or the specification of concrete with its BoQ item).' },
   'pc-2013-14-2a': { ...priority, notes: [priorityNote] },
   'pc-2013-14-2b': {
     topics: [DOC],
@@ -210,10 +236,12 @@ export const IA_MAP: Record<string, PcPartMap> = {
   'pc-2013-14-3a': {
     topics: [DOC],
     ans: ['a-tds-method'],
-    calc: { kind: 'tds', costCrore: 1000, months: 36, items: ['General Experience', 'Specific Experience', 'Tender Security', 'Construction Turnover', 'Liquid Asset / Working Capital'] },
-    extra: `Specific experience for this job (physical): at least one river bridge of ≥ 1,000 m length with PC-girder/box-girder or steel superstructure on bored-pile foundations.
+    calc: { kind: 'tds', costCrore: 1000, months: 36, lengthM: 1500, items: ['General Experience', 'Specific Experience', 'Tender Security', 'Construction Turnover', 'Liquid Asset / Working Capital'] },
+    extra: `${tdsWork(1000, 36, 'a river bridge at least 1,200 m long for 1,500 m (80%)')}
+- General experience: a very large job, so 10 (Ten) years is a reasonable number here.
 
-**(v) Pre-tender meeting** — to be held at 11:00 am on [date] in the conference room of the procuring entity; site visit on the previous day; written queries to reach the PE at least 7 days before; all who bought or intend to buy the document may attend; minutes and any addendum sent to every purchaser within 1 week (PPA s.44(4)–(5); PPR Sch II).`,
+**(v) Pre-tender meeting** — “A pre-tender meeting shall be held on [date] at [time] at the office of the Procuring Entity [address]. Tenderers may submit their queries in writing before the meeting. Minutes of the meeting will be sent to all purchasers of the tender document. Non-attendance shall not be a cause for disqualification.”`,
+    notes: ['No senior solve of this part exists; the figures follow the class formulas. The pre-tender meeting entry is from the typed note (PYQ-19), written by a current-batch student.'],
   },
   'pc-2013-14-3b': {
     topics: [PRO],
@@ -224,13 +252,16 @@ export const IA_MAP: Record<string, PcPartMap> = {
   'pc-2013-14-4b': {
     topics: [SPE],
     ans: ['a-boq-format'],
-    extra: `### BoQ — concrete in bridge superstructure (Bill No. 5: Superstructure; quantity assumed 850 m³)\n${boq(
-      '850.00',
-      'Cast-in-situ reinforced concrete in bridge superstructure (deck slab, cross-girders, diaphragms, kerbs), f′c = 35 MPa at 28 days, Portland cement, washed coarse sand FM ≥ 2.5, 20 mm down crushed stone, approved admixture; batching plant, pumping, vibrating; staging and formwork, construction joints, finishing, curing ≥ 14 days, testing; complete as per drawings, specification and Engineer’s instructions; excluding reinforcement and prestressing steel',
-      'm³',
-      18000,
-    )}`,
-    notes: ['No quantity given; state the assumption.'],
+    extra: `### BoQ for concrete in the superstructure of a bridge (quantity assumed: 450 m³)
+${boq(
+      boqTable([
+        ['**10**', '**RCC works in super-structure of bridge**'],
+        ['10.1', RCC_BRIDGE, 'cum', '450'],
+      ]),
+    )}
+
+This is the class RCC item (1:1.5:3, f′c = 25 MPa, f′cr = 33.5 MPa, water cement ratio 0.40) reworded for the deck slab, main girders and cross girders, with steel shutter and staging.`,
+    notes: ['No quantity given; state the assumption.', 'No senior solve of this part exists. The description is the class RCC item adapted to a bridge (typed note, PYQ-40).'],
   },
 
   // ===== 2012-13 =====
@@ -243,17 +274,15 @@ export const IA_MAP: Record<string, PcPartMap> = {
   'pc-2012-13-2a': {
     topics: [DOC],
     ans: ['a-tds-method'],
-    calc: { kind: 'tds', costCrore: 200, months: 30, items: ['General Experience', 'Specific Experience', 'Construction Turnover', 'Liquid Asset', 'Tender Security'] },
-    extra: `Duration is not given — **assumed 30 months** (say so in the script).
-
-Specific experience (physical): at least one bridge of ≥ 150 m length with PC-girder spans of ≥ 40 m on bored-pile foundations.
+    calc: { kind: 'tds', costCrore: 200, months: 30, lengthM: 240, items: ['General Experience', 'Specific Experience', 'Construction Turnover', 'Liquid Asset', 'Tender Security'] },
+    extra: `${tdsWork(200, 30, 'a bridge at least 192 m long for 240 m (80%), with spans of about 50 m', 'Duration is not given: **assumed 30 months**. Assuming the billing amount is 10% (10 bills). Say both in the script.')}
 
 Further TDS items:
 
 | ITT clause | TDS entry |
 |---|---|
 | Employer / contract | Executive Engineer, [ ] Road Division, RHD; Construction of 240 m PC girder bridge (4 × 60 m) over [ ] river |
-| Tender validity | 120 days from the tender closing date (PPR: normally 60–120 days) |
+| Tender validity | 120 days from the tender closing date (class: generally 90–120 days; PPR: 60–120 days) |
 | Key personnel | Project Manager: B.Sc. Civil, 15 years incl. 5 as PM of bridges; Bridge Engineer 10 years; QC/Materials Engineer; Surveyor |
 | Key equipment | Bored-piling rigs, 50 t cranes, batching plant, transit mixers, concrete pumps, prestressing jacks, launching gantry |
 | Pre-tender meeting | Date, time, venue; site visit; minutes to all purchasers |
@@ -267,7 +296,11 @@ Further TDS items:
   'pc-2012-13-3b': {
     topics: [SPE],
     ans: ['a-boq-format'],
-    extra: 'Any major item with a full description is accepted — concrete in foundation (as in the answer) is the safest choice; add a second item such as brick work if time allows.',
+    extra: `Any major item with its full description is accepted. The RCC item is the safest choice; a sample BoQ shows all eight sub-items (quantities are a sample, state that they are assumed).
+
+${boqConc(RCC_SUBS)}
+
+If time allows add a second item, brick work: “${BRICK_PLINTH}” (item 19.1, unit cum).`,
   },
 
   // ===== 2011-12 =====
@@ -281,13 +314,19 @@ Further TDS items:
   'pc-2011-12-2d': { topics: [GCC], ans: ['a-comp-events'] },
   'pc-2011-12-3a': { topics: [SPE], ans: ['a-spec-why'] },
   'pc-2011-12-3b': { topics: [SPE], ans: ['a-spec-attrs'] },
-  'pc-2011-12-3c': specConcrete,
+  'pc-2011-12-3c': {
+    ...specConcrete,
+    extra: 'Only 6 marks: write every heading with its key figures on one line each (Materials, Mix ratio 1:1.5:3, Strength and curing 25 MPa and 28 days, Transportation, Compaction, Workmanship, Testing ASTM C31 / C33 / C39, Payment, Measurements), then the BoQ row with unit and quantity.',
+  },
   'pc-2011-12-3d': { topics: [SPE], ans: ['a-generator'] },
   'pc-2011-12-4a': { topics: [SPE], ans: ['a-boq-purpose'] },
   'pc-2011-12-4b': {
     topics: [SPE],
     ans: ['a-boq-format'],
-    extra: `### BoQ — 50 m³ concrete in foundation of a multi-storied building\n${boq('50.00', CONC_DESC)}`,
+    extra: `### BoQ for 50 m³ of concrete in the foundation of a multi-storied building
+${boqConc([['6.1.1', FOOTING, '50']])}
+
+8 marks: the table with the full description is the answer. The whole 50 m³ is put against the footing (add 6.1.3 Foundation beam up to plinth level only if you split the volume).`,
   },
   'pc-2011-12-4c': { topics: [SPE], ans: ['a-qty-variation'] },
   'pc-2011-12-4d': { topics: [SPE], ans: ['a-missing-item'] },
@@ -324,7 +363,7 @@ Further TDS items:
     topics: [DOC],
     ans: ['a-tds-method'],
     calc: { kind: 'tds', costCrore: 100, months: 36, storeys: 20, items: ['Specific Experience', 'General Experience', 'Turnover', 'Tender Security', 'Credit facility / Liquid Asset'] },
-    extra: 'Duration is not given — **assumed 36 months** (state it).',
+    extra: tdsWork(100, 36, '15 storeys for 20', 'Duration is not given: **assumed 36 months**. Assuming the billing amount is 10% (10 bills). Say both in the script.'),
   },
   'pc-2011-12-6b': forfeit,
   'pc-2011-12-7': {
@@ -338,7 +377,7 @@ Further TDS items:
     topics: [DOC],
     ans: ['a-tds-method'],
     calc: { kind: 'tds', costCrore: 50, months: 48, storeys: 20, items: ['General Experience', 'Specific Experience', 'Tender Security', 'Turnover', 'Liquid Asset'] },
-    extra: 'Tk 50 crore over four years (48 months): annual value Tk 12.5 crore.',
+    extra: tdsWork(50, 48, '15 storeys for 20', 'This is the part the 18-batch solve works out. Assuming the billing amount is 10% (10 bills).'),
   },
   'pc-2016-17-1b': {
     topics: [DOC],
@@ -350,7 +389,14 @@ Further TDS items:
     ans: ['a-gcc-pcc-relation', 'a-gcc-clauses', 'a-comp-events'],
     extra: 'Rows needed: (i) completion time, (ii) liquidated damage, (iii) compensation events — list the events in the GCC column, (iv) retention, (v) arbitration (amicable → adjudication → arbitration; PCC: venue, rules, appointing authority).',
   },
-  'pc-2016-17-2b': specConcrete,
+  'pc-2016-17-2b': {
+    ...specConcrete,
+    extra: `“In building”: the specification is the same (it already names footing, column, slab and beam). The BoQ after it carries all the sub-items of the building (sample quantities; say they are assumed):
+
+${boqConc(RCC_SUBS)}
+
+The 18-batch typed solve of this part used weaker concrete for a building: f′c 19 MPa, f′cr 26 MPa, water cement ratio 0.45, mix 1:2:4, brick chips and half local sand (F.M. 1.2). Those values belong to the older 1:2:4 BoQ item; do not mix them with the 6.1 item.`,
+  },
   'pc-2016-17-3a': {
     topics: [LAW],
     ans: ['a-pplan-purpose', 'a-pplan-format'],
@@ -385,17 +431,17 @@ Further TDS items:
   'pc-2017-18-3b': {
     topics: [SPE],
     ans: ['a-spec-concrete', 'a-spec-brick'],
-    extra: 'Write either one (concrete or brick); make sure every heading asked appears: material quality, transportation, workmanship, testing, measurement, payment. For a high-rise building, concrete strength f′c 30–40 MPa and pumping/placing in lifts.',
+    extra: `Write one of the two. The concrete specification has every heading the question names (material quality, transportation, workmanship, testing, measurement, payment); the brick-work one has no transportation heading. For a high-rise building the BoQ after the concrete specification carries the sub-items of the whole frame (sample quantities; say they are assumed):
+
+${boqConc(RCC_SUBS)}`,
   },
   'pc-2017-18-4a': {
     topics: [SPE],
-    ans: ['a-boq-format'],
-    extra: `### BoQ — 50 m³ brick work in a multi-storied building\n${boq(
-      '50.00',
-      'First-class brick work in cement mortar (1:4) in superstructure walls (250 mm), bricks soaked ≥ 12 h, English bond, joints 10 mm, raking joints, scaffolding, curing ≥ 7 days; complete as per drawings, specification and Engineer’s instructions',
-      'm³',
-      9500,
-    )}`,
+    ans: ['a-boq-brick'],
+    extra: `### BoQ for 50 m³ of brick work in a multi-storied building
+${boq(boqBrick('50'))}
+
+The paper gives no wall thickness; the item is for a 250 mm wall (“width one brick length”) in the superstructure.`,
   },
   'pc-2017-18-4b': {
     ...gccClauses,
@@ -412,6 +458,7 @@ Further TDS items:
     topics: [DOC],
     ans: ['a-tds-method'],
     calc: { kind: 'tds', costCrore: 120, months: 60, storeys: 30, items: ['General Experience', 'Specific Experience', 'Construction Turnover', 'Liquid Asset', 'Tender Security'] },
+    extra: tdsWork(120, 60, '22 storeys for 30 (0.75 × 30 = 22.5)'),
   },
   'pc-2023-24-7b': forfeit,
 }

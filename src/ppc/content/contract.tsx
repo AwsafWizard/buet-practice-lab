@@ -171,9 +171,9 @@ const DbbDbFig: FC = () => (
 )
 
 // ---------- seen labels ----------
-const TT_SEEN = ['2023-24', 'May 2024', '2020-21', '2016-17', '2015-16', '2014-15', '2013-14', '2012-13']
-const TRIPLE_SEEN = ['2023-24', 'May 2024', '2021-22', '2015-16', '2012-13']
-const PDS_SEEN = ['2023-24', 'May 2024', '2021-22', '2017-18', '2015-16', '2013-14', '2012-13']
+const TT_SEEN = ['2023-24', '2022-23', '2020-21', '2016-17', '2015-16', '2014-15', '2013-14', '2012-13']
+const TRIPLE_SEEN = ['2023-24', '2022-23', '2021-22', '2015-16', '2012-13']
+const PDS_SEEN = ['2023-24', '2022-23', '2021-22', '2017-18', '2015-16', '2013-14', '2012-13']
 const ELEM_SEEN = ['2020-21', 'Jan 2021', '2016-17']
 const FMT_SEEN = ['2021-22', '2020-21', '2014-15', '2012-13', '2011-12']
 
@@ -418,7 +418,7 @@ const lists: PcList[] = [
       { k: 'Unit price', d: 'prices variable quantities' },
     ],
     hook: '"One price, cost + fee, a cap, a target, per unit."',
-    seen: ['2023-24', 'May 2024', '2021-22', '2016-17', '2015-16', '2012-13'],
+    seen: ['2023-24', '2022-23', '2021-22', '2016-17', '2015-16', '2012-13'],
     src: 'Tanvir sir L4 p39, p55–61',
     note: 'Cost plus, GMP and target are the three "cost reimbursable" types (L4 p55). The question bank adds time-and-materials and incentive contracts — not on the slides.',
   },
@@ -431,7 +431,7 @@ const lists: PcList[] = [
       { k: 'Several contractors give prices', d: 'select the lowest bid' },
       { k: 'Allowed in public procurement' },
     ],
-    seen: ['May 2024', '2015-16', '2013-14', '2012-13'],
+    seen: ['2022-23', '2015-16', '2013-14', '2012-13'],
     src: 'Tanvir sir L4 p42',
   },
   {
@@ -439,7 +439,7 @@ const lists: PcList[] = [
     topic: T,
     title: 'Downsides of DBB',
     points: [{ k: 'Contractor has no input in design' }, { k: 'Process tends not to be collaborative' }],
-    seen: ['May 2024', '2015-16', '2013-14', '2012-13'],
+    seen: ['2022-23', '2015-16', '2013-14', '2012-13'],
     src: 'Tanvir sir L4 p42',
   },
   {
@@ -453,7 +453,7 @@ const lists: PcList[] = [
       { k: 'Fewer changes, claims and litigation', d: 'owner no longer between designer and contractor' },
       { k: 'Risks allocated to those who best manage them', d: 'also accommodates complex phasing' },
     ],
-    seen: ['May 2024', '2013-14'],
+    seen: ['2022-23', '2013-14'],
     src: 'Tanvir sir L4 p43–44',
   },
   {
@@ -833,7 +833,7 @@ The question bank draws Turnkey/DBO instead of Design-Assist — not in the slid
     id: 'a-ct-dbb-db',
     topic: T,
     q: 'Compare DBB and DB.',
-    seen: ['May 2024'],
+    seen: ['2022-23'],
     a: `| Point | Design-Bid-Build (DBB) | Design-Build (DB) |
 |---|---|---|
 | **Contracts** | client contracts the **prime designer** and, after bidding, the **winning builder** separately | client contracts **one entity for both design and construction** |

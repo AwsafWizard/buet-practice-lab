@@ -130,7 +130,7 @@ const lists: PcList[] = [
     ],
     ordered: true,
     hook: 'No Bidder Plays Safe Over Exams Or Lunch; Post-lunch, HOPE Nods; Contract Concludes — Notice, Buy, Pre-tender, Submit, Open, Evaluate, Outcome, Lowest, Post-qual, HOPE, NOA, Contract sign, Contractor.',
-    seen: ['2023-24', 'May 2024', 'Jan 2021', '2017-18', '2015-16', '2013-14', '2011-12'],
+    seen: ['2023-24', '2022-23', 'Jan 2021', '2017-18', '2015-16', '2013-14', '2011-12'],
     src: 'IA sir Tender Flow Chart (12 May 2015); GCC+TEC slide 6 (adds Tender Opening)',
     note: 'The 2014 version has no pre-tender meeting, opening or post-qualification; the 2015 GCC+TEC version adds opening; the May 2015 chart adds post-qualification and HOPE approval.',
   },
@@ -144,7 +144,7 @@ const lists: PcList[] = [
       { k: 'Non-responsive tenderer', alt: ['non-response', 'non responsive'], d: 'Material deviation or reservation.' },
       { k: 'Rejected tenderer', alt: ['rejected'], d: 'Fails eligibility/mandatory documents, or refuses correction.' },
     ],
-    seen: ['2023-24', 'May 2024', 'Jan 2021', '2017-18', '2015-16', '2013-14', '2011-12'],
+    seen: ['2023-24', '2022-23', 'Jan 2021', '2017-18', '2015-16', '2013-14', '2011-12'],
     src: 'IA sir Tender Flow Chart; PPR r.98(5)–(7)',
   },
   {
@@ -399,7 +399,7 @@ const answers: PcAnswer[] = [
     id: 'a-tender-flow',
     topic: T,
     q: 'Describe the tender process using a flow-chart.',
-    seen: ['2023-24', 'May 2024', 'Jan 2021', '2017-18', '2015-16', '2013-14', '2011-12'],
+    seen: ['2023-24', '2022-23', 'Jan 2021', '2017-18', '2015-16', '2013-14', '2011-12'],
     a: `### Flow chart (draw it) — then one line per box
 1. **Tender notice** — Invitation for Tender advertised in one Bangla and one English daily and websites (PPA s.40); min. 21 days NCT, 42 days ICT.
 2. **Interested bidders buy tender documents** — sold to all up to the day before the deadline.

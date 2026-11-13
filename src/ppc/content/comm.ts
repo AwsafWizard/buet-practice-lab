@@ -175,7 +175,7 @@ export default {
         { k: 'Body language', alt: ['kinesics'], d: 'Facial expression, gesture/posture, smell/touch, voice/sound.' },
         { k: 'Silence, time and space', alt: ['silence', 'time', 'space', 'proxemics'], d: 'Silence or delay, use of time and of distance also send messages.' },
       ],
-      seen: ['May 2024', '2021-22', '2017-18', '2016-17'],
+      seen: ['2022-23', '2021-22', '2017-18', '2016-17'],
       src: KN,
       note: 'Question bank’s third element is “sounds / paralanguage” — class note has silence, time and space, with voice inside body language.',
     },
@@ -204,7 +204,7 @@ export default {
         { k: 'Perception of reality', alt: ['perception'], d: 'Each person sees reality differently: abstracting, slanting, inferring.' },
         { k: 'Values, attitudes and opinions', alt: ['values', 'attitudes', 'opinions'], d: 'Favourable/unfavourable info, closed mind, sender’s credibility, circumstances.' },
       ],
-      seen: ['May 2024', '2017-18', '2016-17'],
+      seen: ['2022-23', '2017-18', '2016-17'],
       src: KN,
       note: 'Question bank uses six other categories (physical, semantic, perceptual, personal, cultural, organisational). Write the class three.',
     },
@@ -217,7 +217,7 @@ export default {
         { k: 'Euphemism', d: 'A soft word put in place of a harsh one.' },
         { k: 'Miscommunicated instructions', alt: ['bypassing', 'miscommunication'], d: 'Same word, different meanings (or different words, same meaning).' },
       ],
-      seen: ['May 2024', '2017-18', '2011-12'],
+      seen: ['2022-23', '2017-18', '2011-12'],
       src: KN,
     },
     {
@@ -229,7 +229,7 @@ export default {
         { k: 'Slanting', alt: ['slanted abstract', 'slanted attitude'], d: 'Details chosen to mislead or deceive.' },
         { k: 'Inferring', alt: ['inference', 'assumption'], d: 'Concluding about the unknown from the known.' },
       ],
-      seen: ['May 2024', '2017-18', '2016-17'],
+      seen: ['2022-23', '2017-18', '2016-17'],
       src: KN,
     },
     {
@@ -244,7 +244,7 @@ export default {
         { k: 'Circumstances' },
       ],
       hook: 'Is the news **good**, is it **enough**, is the reader’s mind **open**, do they **trust** me, and is it the **right moment**?',
-      seen: ['May 2024', '2017-18'],
+      seen: ['2022-23', '2017-18'],
       src: KN,
     },
   ],
@@ -259,10 +259,10 @@ export default {
     { id: 'c-comm-downward', topic: T, front: 'What flows **downward** in an organisation?', back: 'Information, **decisions and orders** from top to bottom — the organisation’s **rules, objectives and methods**.', seen: ['2020-21', '2011-12'], src: KN },
     { id: 'c-comm-external-aim', topic: T, front: 'What should external operational communication convey?', back: '**Warmth, understanding and positiveness** — to suppliers, service providers, public and customers.', src: KN },
     { id: 'c-comm-bypassing', topic: T, front: 'What is **bypassing** (miscommunicated instructions)?', back: 'Sender and receiver give **different meanings to the same word** (or use different words for the same meaning), so they miss each other. E.g. “send it as soon as you can” — manager means today, clerk sends next week. Cure: be specific, ask for feedback.', seen: ['2011-12'], src: KN },
-    { id: 'c-comm-abstracting', topic: T, front: 'What is **abstracting**?', back: 'Focusing on **some details** of reality and **omitting the rest**. Necessary — no one can report every detail — but trouble comes when important details are left out.', seen: ['May 2024', '2017-18', '2016-17', '2014-15', '2012-13', '2011-12'], src: KN },
+    { id: 'c-comm-abstracting', topic: T, front: 'What is **abstracting**?', back: 'Focusing on **some details** of reality and **omitting the rest**. Necessary — no one can report every detail — but trouble comes when important details are left out.', seen: ['2022-23', '2017-18', '2016-17', '2014-15', '2012-13', '2011-12'], src: KN },
     { id: 'c-comm-inferring', topic: T, front: 'What is **inferring**?', back: 'Drawing a **conclusion about the unknown from the known**, filling gaps with **assumptions** (time and space force us to assume). Risky when taken as fact — **verify**. E.g. empty site → “contractor has abandoned the job” (may be a holiday).', seen: ['2016-17', '2014-15', '2012-13', '2011-12'], src: KN },
     { id: 'c-comm-slanting', topic: T, front: 'What is a **slanted attitude** (slanting)?', back: 'Presenting **factual** details selectively, or with loaded words, to **mislead or deceive** — it shows the sender’s bias. “Finished 90 % of the work” vs “failed to finish 10 %”.', seen: ['2011-12'], src: KN },
-    { id: 'c-comm-denotation', topic: T, front: '**Denotation** vs **connotation**?', back: '**Denotation**: literal, dictionary meaning shared by most people. **Connotation**: emotional/associated meaning, positive or negative, varying by person and culture. “Cheap” and “economical” both denote low price; “cheap” connotes poor quality.', seen: ['May 2024', '2014-15', '2012-13'], src: KN },
+    { id: 'c-comm-denotation', topic: T, front: '**Denotation** vs **connotation**?', back: '**Denotation**: literal, dictionary meaning shared by most people. **Connotation**: emotional/associated meaning, positive or negative, varying by person and culture. “Cheap” and “economical” both denote low price; “cheap” connotes poor quality.', seen: ['2022-23', '2014-15', '2012-13'], src: KN },
     { id: 'c-comm-euphemism', topic: T, front: 'What is a **euphemism**?', back: 'A **soft, pleasant word put in place of a harsh one** (“passed away” for “died”, “let go” for “sacked”) — a convention-of-meaning problem because the softened word can hide the real meaning.', src: KN },
     { id: 'c-comm-culture', topic: T, front: 'Define **culture**.', back: 'A **shared system of symbols, beliefs, attitudes, values, behaviour and expectations**. Within one culture people share meanings, so communication flows easily.', src: KN },
     { id: 'c-comm-context', topic: T, front: '**Low-context** vs **high-context** culture?', back: '**Low-context**: values the **written word and written agreements**, follows law strictly. **High-context**: **less emphasis on the written word**, more flexible with law, relies on relationships and context.', src: KN },
@@ -392,7 +392,7 @@ Work-related communication with **suppliers, service providers, the public and c
       id: 'a-comm-nonverbal',
       topic: T,
       q: 'Describe the three main elements (types) of non-verbal communication and the elements of body language.',
-      seen: ['May 2024', '2021-22', '2017-18', '2016-17'],
+      seen: ['2022-23', '2021-22', '2017-18', '2016-17'],
       a: `### 1. Appearance
 Before reading or hearing the message, the receiver forms a conception from it.
 - **Personal appearance** — dress, grooming of the sender.
@@ -418,7 +418,7 @@ Long silence or delay (keeping someone waiting), the use of time and the distanc
       id: 'a-comm-barriers',
       topic: T,
       q: 'What is a problem and barrier to communication? Why do problems occur? List the major problems with sub-categories.',
-      seen: ['May 2024', '2017-18', '2016-17'],
+      seen: ['2022-23', '2017-18', '2016-17'],
       a: `A **problem or barrier** to communication is anything that stops the receiver getting the meaning the sender intended — the message is blocked, distorted or misunderstood. Problems occur because words, perceptions and attitudes differ from person to person.
 
 ### 1. Convention of meaning
@@ -447,7 +447,7 @@ Long silence or delay (keeping someone waiting), the use of time and the distanc
       id: 'a-comm-abstracting-inferring',
       topic: T,
       q: 'Briefly explain abstracting (abstraction) and inferring.',
-      seen: ['May 2024', '2017-18', '2016-17', '2014-15', '2012-13', '2011-12'],
+      seen: ['2022-23', '2017-18', '2016-17', '2014-15', '2012-13', '2011-12'],
       a: `### Abstracting
 - **Abstracting** is focusing on **some details** of an object or event and **omitting the rest**; every description is an abstraction.
 - It is necessary — reality has endless details — and lets us summarise and generalise.
@@ -467,7 +467,7 @@ Long silence or delay (keeping someone waiting), the use of time and the distanc
       id: 'a-comm-denotation-connotation',
       topic: T,
       q: 'Explain denotation and connotation.',
-      seen: ['May 2024', '2014-15', '2012-13'],
+      seen: ['2022-23', '2014-15', '2012-13'],
       a: `Both belong to the **convention of meaning** problem.
 
 ### Denotation

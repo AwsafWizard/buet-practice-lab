@@ -25,7 +25,7 @@ export default {
         { k: 'Correctness', alt: ['correct', 'accuracy'], d: 'Right facts, figures, grammar and format.' },
       ],
       hook: 'Story of writing a letter: first make it **whole**, then **trim** it, then think of the **reader**, then add **numbers**; finally make it **plain**, **polite** and **proof-read**. Four “Con/Com” words, then Cla–Cou–Cor.',
-      seen: ['May 2024', 'Jan 2021', '2015-16', '2014-15', '2013-14'],
+      seen: ['2022-23', 'Jan 2021', '2015-16', '2014-15', '2013-14'],
       src: `${KN}; ${SA}`,
     },
     {
@@ -177,7 +177,7 @@ export default {
       id: 'a-7cs-concepts',
       topic: T,
       q: 'List the seven C’s of effective communication and describe their main concepts in brief.',
-      seen: ['May 2024', 'Jan 2021', '2015-16', '2014-15', '2013-14'],
+      seen: ['2022-23', 'Jan 2021', '2015-16', '2014-15', '2013-14'],
       a: `1. **Completeness** — give all relevant facts and necessary information; answer the five W’s and every question asked; give something extra when desirable.
 2. **Conciseness** — fewest words without losing meaning; omit long introductions, unnecessary explanation, pompous words and gushy politeness; avoid needless repetition.
 3. **Consideration** — the **“you” attitude**: write from the receiver’s point of view, show their benefit, emphasise positive facts.

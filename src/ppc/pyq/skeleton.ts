@@ -1585,7 +1585,7 @@ export const PC_PARTS: PcPart[] = [
   "sec": "B",
   "no": "14(a)",
   "marks": 4,
-  "text": "Briefly explain: (i) Miscommunication — bypassing, (ii) Slanted attitude."
+  "text": "Briefly explain: (i) Miscommunication — bypassing, (ii) Sender's attitude."
  },
  {
   "id": "pc-2011-12-14b",

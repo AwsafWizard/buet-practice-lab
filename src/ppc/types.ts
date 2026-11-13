@@ -38,11 +38,11 @@ const ANY3 = '4 questions, answer any 3'
 const ANY5 = '7 questions, answer any 5'
 
 export const PC_PAPERS: PcPaper[] = [
-  { id: '2023-24', label: '2023-24', held: '4 Sep 2025', marks: 210, time: '3 hours', format: { A: ANY3, B: ANY3 }, pages: [133, 134], note: 'Latest paper, set by this term’s teachers’ group: Section A = communication, ethics, contracts and risk; Section B = procurement, ASCE definition and pre-design.' },
-  { id: 'may-2024', label: 'May 2024', held: 'May 2024', marks: 210, time: '3 hours', format: { A: ANY3, B: ANY3 }, pages: [131, 132], note: 'Printed “2021-2022” but held in May 2024 with the other 2022-23 L-3/T-1 finals (a second 2021-22 sitting or the 2022-23 paper).' },
+  { id: '2023-24', label: '2023-24', held: '4 Sep 2025', marks: 210, time: '3 hours', format: { A: ANY3, B: ANY3 }, pages: [133, 134], note: 'Latest paper (Batch 21): Section A = communication, ethics, contracts and risk; Section B = procurement, ASCE definition and pre-design.' },
+  { id: 'may-2024', label: '2022-23', held: 'May 2024', marks: 210, time: '3 hours', format: { A: ANY3, B: ANY3 }, pages: [131, 132], note: 'The 2022-23 paper (Batch 20), held in May 2024. The sheet itself prints “Examinations 2021-2022”. Section B says: assume any reasonable value of missing data.' },
   { id: '2021-22', label: '2021-22', held: '30 Mar 2023', marks: 210, time: '3 hours', format: { A: ANY3, B: ANY3 }, pages: [129, 130] },
   { id: '2020-21', label: '2020-21', held: '29 Sep 2022', marks: 210, time: '3 hours', format: { A: ANY3, B: ANY3 }, pages: [127, 128] },
-  { id: 'jan-2021', label: 'Jan 2021', held: '2021', marks: 210, time: '3 hours', format: { A: ANY3, B: ANY3 }, pages: [125, 126] },
+  { id: 'jan-2021', label: 'Jan 2021', held: 'January 2021', marks: 210, time: '2 hours 30 minutes', format: { A: ANY3, B: 'Q5 is compulsory, then any 2 of Q6–Q8' }, pages: [125, 126], note: 'Batch 17’s paper (2018-19 session), held late in January 2021: 2 hours 30 minutes, and in Section B Q5 was compulsory.' },
   { id: '2017-18', label: '2017-18', held: '29 Sep 2018', marks: 210, time: '3 hours', format: { A: ANY3, B: ANY3 }, pages: [123, 124] },
   { id: '2016-17', label: '2016-17', held: '2 Aug 2017', marks: 210, time: '3 hours', format: { A: ANY3, B: ANY3 }, pages: [121, 122] },
   { id: '2015-16', label: '2015-16', held: '18 Jan 2017', marks: 210, time: '3 hours', format: { A: ANY3, B: ANY3 }, pages: range(116, 120) },
@@ -82,7 +82,7 @@ export interface PcList {
   ordered?: boolean
   /** memory hook: first-letter mnemonic or a short picture story; hidden until asked for */
   hook?: string
-  /** paper labels it was asked in, e.g. ['2023-24', 'May 2024'] (see PC_PAPERS labels) */
+  /** paper labels it was asked in, e.g. ['2023-24', '2022-23'] (see PC_PAPERS labels) */
   seen: string[]
   /** where it comes from: 'Tanvir sir L5 p3', 'PPR 2008 r.98', 'Kabirul sir note', 'question bank only' */
   src: string
@@ -145,7 +145,7 @@ export interface PcPart {
 /** numbers-type parts get a calculator-backed solution */
 export type PcCalc =
   | { kind: 'qcbs'; techWeight: number; qualify: number; firms: { name: string; tech: number; price?: number }[]; unit?: string }
-  | { kind: 'tds'; storeys?: number; costCrore: number; months: number; items: string[] }
+  | { kind: 'tds'; storeys?: number; lengthM?: number; billingPct?: number; costCrore: number; months: number; items: string[] }
 
 /** how a past-paper part is answered (keyed by PcPart id in the block maps) */
 export interface PcPartMap {

@@ -9,6 +9,16 @@ const RK = 'pc-risk' as const
 
 const define: PcPartMap = { topics: [CE], ans: ['a-ce-define'] }
 const attributes: PcPartMap = { topics: [CE], ans: ['a-ce-attributes'] }
+const attributes15: PcPartMap = {
+  topics: [CE],
+  ans: ['a-ce-attributes'],
+  extra: `### Background (15 marks — open with it)
+- Until modern times there was no clear distinction between civil engineering & architecture.
+- The origin of civil engineering is found immediately preceding the Industrial Revolution, the late 18th & early 19th centuries; during that period certain military engineers began to work on nonmilitary, or civil, projects, and the term **civil engineer** was adopted to emphasize this difference.
+- In response to the growth of new civil projects the professional bodies were formed: **ICE** (Britain) chartered in 1818, **ASCE** founded in 1852, ICEI (India) 1860, AICCP (Spain) and SAICE (South Africa) 1903, JSCE (Japan) 1914, CICE (China) 1936. These organizations helped to formalize civil engineering as a profession.
+
+Then the five attributes with the slide’s points under each.`,
+}
 const defineAttr: PcPartMap = { topics: [CE], ans: ['a-ce-define', 'a-ce-attributes'] }
 const thinkTwice: PcPartMap = { topics: [CT], ans: ['a-ct-think-twice'] }
 const thinkTwiceNames: PcPartMap = {
@@ -50,7 +60,7 @@ export const OIA_MAP: Record<string, PcPartMap> = {
   'pc-may-2024-3e': {
     topics: [RK],
     ans: ['a-rk-bonds'],
-    extra: 'Only bid bond and performance bond are asked (5 marks): open with the bond definition (surety, principal, obligee), then the two bonds; skip the payment bond.',
+    extra: 'Only bid bond and performance bond are asked (5 marks): open with the bond definition (surety, principal, obligee — a three-party relationship), then the two bonds; skip the payment bond.',
   },
 
   // ---------- 2021-22 ----------
@@ -74,7 +84,7 @@ export const OIA_MAP: Record<string, PcPartMap> = {
     ans: ['a-ce-ancient'],
     extra: 'Three marks — names are enough: **corbel; post & lintel; arch & vault; truss**.',
   },
-  'pc-2021-22-2a': attributes,
+  'pc-2021-22-2a': attributes15,
   'pc-2021-22-2b': surety,
   'pc-2021-22-2c': contractRisk,
   'pc-2021-22-2d': define,
@@ -111,7 +121,7 @@ Not in Tanvir sir’s slides. A generic list if you attempt it: objectives, scop
   'pc-2015-16-4b': {
     topics: [CE],
     ans: ['a-ce-outcomes'],
-    extra: 'Five marks, professional category only: any five of communication, public policy, business & public administration, globalization, leadership, teamwork, attitudes, lifelong learning, professional & ethical responsibilities.',
+    extra: 'Five marks, professional category only: any five of communication, public policy, business & public administration, globalization, leadership, teamwork, attitudes, lifelong learning, professional & ethical responsibilities (the 18-batch solve simply lists all nine).',
   },
   'pc-2015-16-4c': attributes,
   'pc-2015-16-4d': contractRisk,
@@ -241,13 +251,16 @@ Not in Tanvir sir’s slides. A generic list if you attempt it: objectives, scop
   'pc-2023-24-4a': {
     topics: [RK],
     ans: ['a-rk-contract-risk', 'a-rk-general'],
-    notes: ['"General guidelines in dealing with contract risk" — lead with the slide’s eight ways (Dealing with Contract Risk); the "dealing with risk in general" points can follow if time allows.'],
+    notes: [
+      '"General guidelines in dealing with contract risk" — lead with the slide’s eight ways (Dealing with Contract Risk); the "dealing with risk in general" points can follow if time allows.',
+      'This term’s new deck adds "Key Principles of Contract Risk Management" (seven principles, from equitable risk allocation to tiered dispute resolution). If the question says "principles", write those — see the model answer "What are the key principles of contract risk management?" in the Risk topic.',
+    ],
   },
   'pc-2023-24-4b': pliConcernNames,
   'pc-2023-24-4c': surety,
   'pc-2023-24-4d': thinkTwiceNames,
   'pc-2023-24-8a': define,
-  'pc-2023-24-8b': attributes,
+  'pc-2023-24-8b': attributes15,
   'pc-2023-24-8c': concerns,
   'pc-2023-24-8d': brief,
 }

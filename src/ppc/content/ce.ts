@@ -1,10 +1,65 @@
-// pc-ce — The civil engineer (OIA Ma'am, Dr. Tanvir Manzur's Lecture 01).
-// Source digest: CE301/Claude digests/lec_project_legal.md (pr-ce).
+// pc-ce — The civil engineer (OIA Ma'am, Dr. Tanvir Manzur's Lecture 01 — unchanged this term).
+// Digests: CE301/Claude digests/v2_oia.md (§3, §4 C–D, §5 Class Test 1) and lec_project_legal.md (pr-ce).
+import { createElement as h, type FC, type ReactNode } from 'react'
 import type { PcAnswer, PcCard, PcList, PcTopicContent } from '../types'
 
 const T = 'pc-ce' as const
 
-const DEF_SEEN = ['2023-24', 'May 2024', '2021-22', '2020-21', '2017-18', '2016-17', '2015-16', '2014-15', '2013-14', '2012-13', '2011-12']
+// ---------- figure: "Preparation for Career in Civil Engineering by ASCE" (L1 p4), theme tokens only ----------
+const ink = 'var(--c-ink)'
+const mute = 'var(--c-mute)'
+const panel2 = 'var(--c-panel2)'
+const oia = 'var(--c-oia)'
+
+const words = (x: number, y: number, lines: string[], key: string, opts: { bold?: boolean; fill?: string; size?: number } = {}): ReactNode =>
+  lines.map((l, i) =>
+    h('text', { key: `${key}-${i}`, x, y: y + i * 14, textAnchor: 'middle', fontSize: opts.size ?? 11, fontWeight: opts.bold ? 700 : 400, fill: opts.fill ?? ink }, l),
+  )
+const box = (x: number, y: number, w: number, ht: number, lines: string[], key: string): ReactNode =>
+  h('g', { key }, [
+    h('rect', { key: 'r', x, y, width: w, height: ht, rx: 5, fill: panel2, stroke: mute, strokeWidth: 1.4 }),
+    words(x + w / 2, y + ht / 2 - (lines.length - 1) * 7 + 4, lines, key),
+  ])
+const arrow = (x1: number, x2: number, y: number, key: string): ReactNode =>
+  h('line', { key, x1, y1: y, x2, y2: y, stroke: mute, strokeWidth: 1.6, markerEnd: 'url(#pc-ce-arr)' })
+const exam = (cy: number, key: string): ReactNode =>
+  h('g', { key }, [
+    h('circle', { key: 'c', cx: 384, cy, r: 34, fill: panel2, stroke: oia, strokeWidth: 2 }),
+    words(384, cy - 3, ['Exam /', 'License'], key, { bold: true }),
+  ])
+const bok = (y: number, ht: number, label: string, key: string): ReactNode =>
+  h('g', { key }, [
+    h('rect', { key: 'r', x: 14, y, width: 300, height: ht, rx: 6, fill: 'none', stroke: oia, strokeWidth: 1.4, strokeDasharray: '6 5' }),
+    words(164, y + 17, [label], key, { bold: true }),
+  ])
+
+const CareerFig: FC = () =>
+  h('svg', { viewBox: '0 0 640 306', width: '100%', role: 'img', 'aria-label': 'Preparation for a career in civil engineering by ASCE: today and tomorrow' }, [
+    h('defs', { key: 'defs' }, h('marker', { id: 'pc-ce-arr', viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto' }, h('path', { d: 'M0,0 L10,5 L0,10 z', fill: mute }))),
+    // today
+    h('text', { key: 't1', x: 14, y: 20, fontSize: 12, fontWeight: 700, fill: ink }, 'TODAY’S CE PROFESSIONAL'),
+    bok(30, 92, 'Body of Knowledge (implicit)', 'bok1'),
+    box(24, 66, 136, 44, ['Baccalaureate', 'education'], 'a1'),
+    arrow(160, 182, 88, 'ar1'),
+    box(184, 66, 120, 44, ['Experience'], 'a2'),
+    arrow(304, 348, 88, 'ar2'),
+    exam(88, 'ex1'),
+    arrow(418, 450, 88, 'ar3'),
+    box(452, 62, 176, 52, ['Professional practice', 'and lifelong learning'], 'a3'),
+    // tomorrow
+    h('text', { key: 't2', x: 14, y: 152, fontSize: 12, fontWeight: 700, fill: ink }, 'TOMORROW’S CE PROFESSIONAL TRACK'),
+    bok(162, 126, 'Body of Knowledge (explicit)', 'bok2'),
+    box(24, 202, 120, 62, ['Modified', 'baccalaureate', 'education'], 'b1'),
+    arrow(144, 162, 233, 'br1'),
+    box(164, 194, 140, 78, ['More focused', 'experience and', 'Master’s degree', 'or ≈ 30 credits'], 'b2'),
+    arrow(304, 348, 233, 'br2'),
+    exam(233, 'ex2'),
+    words(384, 284, ['(possibly more', 'comprehensive)'], 'pmc', { fill: mute }),
+    arrow(418, 450, 233, 'br3'),
+    box(452, 194, 176, 78, ['Professional practice', 'and lifelong learning', 'with specialty', 'certification option'], 'b3'),
+  ])
+
+const DEF_SEEN = ['2023-24', '2022-23', '2021-22', '2020-21', '2017-18', '2016-17', '2015-16', '2014-15', '2013-14', '2012-13', '2011-12']
 const ATTR_SEEN = ['2023-24', '2021-22', '2016-17', '2015-16', '2014-15', '2013-14', '2012-13', '2011-12']
 
 const lists: PcList[] = [
@@ -25,6 +80,44 @@ const lists: PcList[] = [
     seen: DEF_SEEN,
     src: 'Tanvir sir L1 p3',
     note: 'The question bank uses the longer ASCE Vision-2025 wording ("…constructors and operators of society’s economic and social engine…"). The slide is shorter and opens with "Entrusted by society to create a sustainable world and enhance the global quality of life".',
+  },
+  {
+    id: 'l-ce-career-today',
+    topic: T,
+    title: 'ASCE career preparation — today’s CE professional (in order)',
+    ask: 'Put the steps of today’s CE professional track in order.',
+    points: [
+      { k: 'Baccalaureate education', alt: ['baccalaureate', 'bachelor degree'], d: 'inside the box "Body of Knowledge (implicit)"' },
+      { k: 'Experience', d: 'inside the box "Body of Knowledge (implicit)"' },
+      { k: 'Exam / License', alt: ['exam', 'license', 'licence'] },
+      { k: 'Professional practice and lifelong learning', alt: ['professional practice', 'lifelong learning'] },
+    ],
+    ordered: true,
+    seen: [],
+    src: 'Tanvir sir L1 p4 (image)',
+  },
+  {
+    id: 'l-ce-career-tomorrow',
+    topic: T,
+    title: 'ASCE career preparation — tomorrow’s CE professional track (in order)',
+    ask: 'Put the steps of tomorrow’s CE professional track in order.',
+    points: [
+      { k: 'Modified baccalaureate education', alt: ['modified baccalaureate'], d: 'inside the box "Body of Knowledge (explicit)"' },
+      {
+        k: 'More focused experience and Master’s degree',
+        alt: ['more focused experience', 'masters degree', '30 credits'],
+        d: '…or ≈ 30 credits — inside the box "Body of Knowledge (explicit)"',
+      },
+      { k: 'Exam / License', alt: ['exam', 'license', 'licence'], d: 'possibly more comprehensive' },
+      {
+        k: 'Practice and lifelong learning with specialty certification',
+        alt: ['specialty certification option', 'professional practice and lifelong learning'],
+        d: 'professional practice and lifelong learning with specialty certification option',
+      },
+    ],
+    ordered: true,
+    seen: [],
+    src: 'Tanvir sir L1 p4 (image)',
   },
   {
     id: 'l-ce-attributes',
@@ -284,25 +377,25 @@ const cards: PcCard[] = [
     id: 'c-ce-authority',
     topic: T,
     front: 'Attribute **Authority**: on what is it based?',
-    back: 'Extensive education in systematic theory highlights the **layperson’s comparative ignorance**; **functional specificity** — like law and medicine, civil engineers are granted authority based on their extensive education.',
+    back: 'Extensive education in systematic theory highlights the **layperson’s comparative ignorance**; **functional specificity** — like law and medicine, civil engineers are granted authority based on their extensive education. (Class Test 1 marks True: a licensed engineer can override a paying client’s technical instructions that would compromise structural safety.)',
     seen: ATTR_SEEN,
-    src: 'Tanvir sir L1 p10',
+    src: 'Tanvir sir L1 p10; Class Test 1 (i)',
   },
   {
     id: 'c-ce-sanction',
     topic: T,
     front: 'Attribute **Community sanction**: what does it mean in practice?',
-    back: '**State-sponsored boards** and **license or registration** — society formally recognises who may practise.',
+    back: '**State-sponsored boards** and **license or registration** — a formal sanction by the state of who may practise, **not** an informal agreement among professional peers that a colleague is trustworthy.',
     seen: ATTR_SEEN,
-    src: 'Tanvir sir L1 p10',
+    src: 'Tanvir sir L1 p10; Class Test 1 (c)',
   },
   {
     id: 'c-ce-theory',
     topic: T,
     front: 'Attribute **Systematic body of theory**: what does it require?',
-    back: 'Skills flow from an **internally consistent system**; a **spirit of rationality** and expansion of theory; the theory is based on **mathematics and natural science**.',
+    back: 'Skills flow from an **internally consistent system**; a **spirit of rationality** and expansion of theory; the theory is based on **mathematics and natural science** — **not** knowledge passed down purely by tradition or apprenticeship.',
     seen: ATTR_SEEN,
-    src: 'Tanvir sir L1 p10',
+    src: 'Tanvir sir L1 p10; Class Test 1 (j)',
   },
   {
     id: 'c-ce-materials',
@@ -324,8 +417,8 @@ const cards: PcCard[] = [
     id: 'c-ce-bodies-first',
     topic: T,
     front: 'First professional body of civil engineers, and when was ASCE founded?',
-    back: '**ICE** (British Institute of Civil Engineers) was chartered in **1818**; **ASCE** was founded in **1852**.',
-    src: 'Tanvir sir L1 p8',
+    back: '**ICE** (British Institute of Civil Engineers) was chartered in **1818** — widely recognized as the world’s first national civil engineering professional body; **ASCE** was founded in **1852**.',
+    src: 'Tanvir sir L1 p8; Class Test 1 (h)',
   },
   {
     id: 'c-ce-profession-start',
@@ -355,6 +448,42 @@ const cards: PcCard[] = [
     back: '**Empire State Building** (1930–31; tallest structure 1931–1967). **CN Tower**, Toronto (1973–76).',
     src: 'Tanvir sir L1 p20',
   },
+  // ---------- Class Test 1 (Audri ma'am, this term): True / False, answers as printed ----------
+  {
+    id: 'c-ce-ct1-a',
+    topic: T,
+    front: '**True or false** (Class Test 1): "According to the ASCE Body of Knowledge, civil engineers are expected to play a role in shaping public environmental and infrastructure policy, not just designing and constructing structures."',
+    back: '**True.** The definition’s last role: "leaders in discussions and decisions shaping public environmental and infrastructure policy".',
+    src: 'Class Test 1 (a), this term — printed answer True; Tanvir sir L1 p3',
+  },
+  {
+    id: 'c-ce-ct1-c',
+    topic: T,
+    front: '**True or false** (Class Test 1): "Community sanction refers to an informal agreement among professional peers that a colleague is trustworthy and competent."',
+    back: '**False.** Community sanction is formal: **state-sponsored boards** and **license or registration**.',
+    src: 'Class Test 1 (c), this term — printed answer False; Tanvir sir L1 p10',
+  },
+  {
+    id: 'c-ce-ct1-h',
+    topic: T,
+    front: '**True or false** (Class Test 1): "The British Institute of Civil Engineers (ICE), established in 1818, is widely recognized as the world’s first national civil engineering professional body."',
+    back: '**True.** ICE was chartered in **1818** — the first on the slide’s list (then ASCE 1852, ICEI 1860, AICCP and SAICE 1903, JSCE 1914, CICE 1936).',
+    src: 'Class Test 1 (h), this term — printed answer True; Tanvir sir L1 p8',
+  },
+  {
+    id: 'c-ce-ct1-i',
+    topic: T,
+    front: '**True or false** (Class Test 1): "Authority as an attribute of a profession means that a licensed engineer can override a paying client’s technical instructions when those instructions would compromise structural safety."',
+    back: '**True.** Authority rests on extensive education in systematic theory, which highlights the **layperson’s comparative ignorance** (functional specificity, as in law & medicine).',
+    src: 'Class Test 1 (i), this term — printed answer True; slide basis Tanvir sir L1 p10 (the slide does not use the word "override")',
+  },
+  {
+    id: 'c-ce-ct1-j',
+    topic: T,
+    front: '**True or false** (Class Test 1): "A systematic body of theory in the context of a profession means knowledge or skills that is passed down purely by tradition or apprenticeship."',
+    back: '**False.** Skills flow from an **internally consistent system** with a **spirit of rationality**; the theory is based on **mathematics and natural science**.',
+    src: 'Class Test 1 (j), this term — printed answer False; Tanvir sir L1 p10',
+  },
 ]
 
 const answers: PcAnswer[] = [
@@ -363,17 +492,11 @@ const answers: PcAnswer[] = [
     topic: T,
     q: 'Define "Civil Engineers" as per the ASCE Body of Knowledge.',
     seen: DEF_SEEN,
-    a: `"**Entrusted by society to create a sustainable world and enhance the global quality of life**, Civil Engineers serve, **competently, collaboratively, and ethically** as:
-
-1. **master planners, designers, constructors**;
-2. **stewards of the natural environment and its resources**;
-3. **innovators and integrators**;
-4. **managers of risk and uncertainty**;
-5. **leaders in discussions and decisions shaping public environmental and infrastructure policy**."
+    a: `"**Entrusted by society** to create a **sustainable world** and enhance the **global quality of life**, Civil Engineers serve, **competently, collaboratively, and ethically** as: **master planners, designers, constructors**; **stewards of the natural environment** and its resources; **innovators and integrators**; **managers of risk and uncertainty**; **leaders in discussions and decisions** shaping public environmental and **infrastructure policy**."
 
 — ASCE Body of Knowledge
 
-Some books give the longer ASCE Vision-2025 wording ("… constructors and operators of society’s economic and social engine …"); the class slide uses the version above.`,
+Write it as one quoted sentence, word for word: the five roles are separated by semicolons. (Some books give the longer ASCE Vision-2025 wording, "… constructors and operators of society’s economic and social engine …"; the class slide uses the version above.)`,
     keys: [
       'Entrusted by society',
       'sustainable world',
@@ -394,27 +517,49 @@ Some books give the longer ASCE Vision-2025 wording ("… constructors and opera
     topic: T,
     q: 'Describe the five basic attributes of civil engineering as a profession.',
     seen: ATTR_SEEN,
-    a: `Professional bodies (ICE 1818, ASCE 1852 …) helped formalize civil engineering as a profession. A profession has **five basic characteristics**, and they define today’s professional civil engineer:
+    a: `Professional bodies (ICE 1818, ASCE 1852 …) helped to formalize civil engineering as a profession. There are **five basic characteristics of a profession**; these characteristics help define today’s professional civil engineer.
 
-1. **Systematic body of theory** — skills flow from an internally consistent system with a **spirit of rationality** and expansion of theory; the theory is based on **mathematics and natural science**.
-2. **Authority** — extensive education highlights the layperson’s comparative ignorance; through **functional specificity**, like law and medicine, civil engineers are granted authority based on their extensive education.
-3. **Community sanction** — **state-sponsored boards** and **license or registration**.
-4. **Ethical codes** — civil engineers are held to well-documented ethical codes and are expected to be their clients’ **trusted advisors**: ethical (professional), client-professional (impulse to perform maximally), colleague to colleague (cooperative, egalitarian, supportive).
-5. **A culture** — providing valuable services to society, behaving appropriately (sounding like a professional, saying "no" gracefully, presentations and meetings) and sharing a **rich history and folklore**; symbols such as argot/jargon and insignia/emblem.`,
+### 1. Systematic body of theory
+- Skills flow from an **internally consistent system**.
+- **Spirit of rationality**; expansion of theory — civil engineers must be adequately prepared with a systematic body of theory that incorporates a spirit of rationality.
+- This theory is based on **mathematics and natural science**.
+
+### 2. Authority
+- Extensive education in systematic theory highlights the layperson’s **comparative ignorance**.
+- **Functional specificity** — like other professions, for instance law & medicine, civil engineers are granted authority based on their extensive education.
+
+### 3. Community sanction
+- **State-sponsored boards**.
+- **License or registration**.
+
+### 4. Ethical codes
+- Civil engineers are held to well-documented ethical codes and are expected to be their clients’ **trusted advisors**.
+- Ethical: professional. Client-professional: **impulse to perform maximally**. Colleague to colleague: cooperative, egalitarian, supportive.
+
+### 5. A culture
+- A civil engineer should have a culture of their own that involves providing valuable services to society, behaving appropriately, and sharing a rich **history and folklore**.
+- Social values; services valuable to the community.
+- Various modes of "appropriate" behavior: sounding like a professional, saying "no" gracefully, making presentations & conducting meetings.
+- Symbols: argot, jargon; insignia, emblem; history and folklore.`,
     keys: [
       'Systematic body of theory',
+      'internally consistent system',
       'spirit of rationality',
+      'mathematics and natural science',
       'Authority',
+      'comparative ignorance',
       'functional specificity',
       'Community sanction',
+      'State-sponsored boards',
       'license or registration',
       'Ethical codes',
       'trusted advisors',
+      'impulse to perform maximally',
       'A culture',
       'history and folklore',
     ],
     lists: ['l-ce-attributes', 'l-ce-ethics-relations', 'l-ce-culture'],
-    src: 'Tanvir sir L1 p9–12',
+    src: 'Tanvir sir L1 p9–12 (slide bullets under each name, as the 18-batch solve writes 2014-15 4a). For 15 marks open with the background of the profession (L1 p7–8) — it is on the 15-mark parts.',
   },
   {
     id: 'a-ce-outcomes',
@@ -455,10 +600,13 @@ Material science, mechanics, experiments, problem recognition & solving, design,
 3. **Arch & vault**
 4. **Truss**
 
-### Materials decided the system
-- **Mesopotamia** had lots of clay but no stone or wood → preferred **corbel or arch & vault**.
-- **Egypt** (clay & stone) and **Greece & China** (stone, clay and wood) → favoured **post & lintel**.
-- **Europe** had abundant wood → developed the **truss**.
+### Which civilisation used which device
+| Civilisation | Material available | Structural device |
+|---|---|---|
+| **Mesopotamia** | lots of clay, but no stone or wood | corbel or arch & vault |
+| Egypt | clay & stone | post & lintel |
+| Greece & China | stone, clay and wood | post & lintel |
+| **Europe** | abundant sources of wood | developed the truss |
 
 ### Three factors behind the success of ancient engineers
 1. **Intensive & careful use of existing principles and tools**
@@ -468,7 +616,26 @@ Material science, mechanics, experiments, problem recognition & solving, design,
 Some books list "dome" among ancient systems; the class slide’s four are corbel, post & lintel, arch & vault, truss.`,
     keys: ['locally available materials', 'Corbel', 'Post & lintel', 'Arch & vault', 'Truss', 'Mesopotamia', 'Europe', 'Unlimited labor', 'perspective of time', 'infinite patience'],
     lists: ['l-ce-ancient-devices', 'l-ce-ancient-factors'],
-    src: 'Tanvir sir L1 p18–19',
+    src: 'Tanvir sir L1 p18–19; the table is how the 18-batch solve writes 2017-18 5(b) (it heads the columns Continent | Material | Device and leaves out Greece, which the slide pairs with China)',
+  },
+  {
+    id: 'a-ce-career',
+    topic: T,
+    q: 'Show diagrammatically the preparation for a career in civil engineering by ASCE (today and tomorrow).',
+    seen: [],
+    a: `Draw two tracks, one under the other (the slide is this figure).
+
+### Today’s CE professional
+**Baccalaureate education** → **Experience** → **Exam/License** → **Professional practice and lifelong learning**
+- The first two boxes sit inside a box marked "Body of Knowledge (**implicit**)".
+
+### Tomorrow’s CE professional track
+**Modified baccalaureate education** → **More focused experience** and **Master’s degree** or ≈ **30 credits** → Exam/License (possibly **more comprehensive**) → Professional practice and lifelong learning with **specialty certification** option
+- The first two boxes sit inside a box marked "Body of Knowledge (**explicit**)".`,
+    keys: ['Baccalaureate education', 'Experience', 'implicit', 'Exam/License', 'Professional practice and lifelong learning', 'Modified baccalaureate education', 'More focused experience', 'Master’s degree', '30 credits', 'explicit', 'more comprehensive', 'specialty certification'],
+    lists: ['l-ce-career-today', 'l-ce-career-tomorrow'],
+    src: 'Tanvir sir L1 p4 (the slide is this figure only). Not in our 12 papers: Nafee bhai’s note sets it as a question ("Draw preparation diagram for career in CE today and tomorrow by ASCE") and a classmate’s note lists it as a past question.',
+    Fig: CareerFig,
   },
 ]
 

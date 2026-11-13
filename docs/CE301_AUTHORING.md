@@ -12,6 +12,9 @@ CE 301 lives in `src/ppc/` (route `/ce301`, every id prefixed `pc-`). The course
 
 Types: `src/ppc/types.ts` (read it first). Topics: `src/ppc/registry.ts`.
 
+## Revision pass (13 Nov 2026)
+Every answer was revised to follow the teachers' own material, Nafee bhai's notes and the 18-batch term-final solves. Start from `CE301/Claude digests/v2_README.md` (the `v2_*.md` digests and their revision lists) and `v3_revise_brief.md` (the rules that pass followed). They override the first-pass digests below wherever they differ: BoQs carry unit and quantity but no rate or amount; a specification answer ends with its BoQ item; the TDS uses the class formulas (`src/ppc/engine/tds.ts`); statute text and slide lists are word for word.
+
 ## Sources (read the digests, not the PDFs)
 `CE301/Claude digests/`: `lec_procurement.md` (IA sir), `lec_project_legal.md` (OIA Ma'am, Tanvir sir's slides), `lec_communication.md` (AAN sir / Kabirul sir), `papers_new.md` (2016-17, 2017-18, 2023-24 as printed), `src/question_bank.txt` (earlier Claude-made answers for 9 papers; standard texts, NOT the teachers), `part_owners.md` (which block answers which part).
 **The teacher's material wins** over the question bank. Where they differ, write the teacher's version and mention the other in `note` (lists) or a short line at the end of the answer ("Some books give …"). Content with no class source says so in `src` (`'question bank only (Lesikar)'`).
@@ -31,7 +34,7 @@ A topic file is `src/ppc/content/<suffix>.ts` (or `.tsx` when it has a `Fig`) fo
 - `points[].k`: the keyword as you'd write it in the script, 1–7 words, teacher's wording. `alt`: other wordings that should also count when typed (question-bank wording, abbreviations like `'DBB'`, a shorter form like `'indemnity'`). Matching is forgiving (stemming, typos, half the meaning words of a phrase), so `alt` is for genuinely different words. `d`: one plain line of explanation.
 - `ordered: true` only when order is examined or matters (flow charts, documents in order of priority, steps, phases).
 - `hook`: a memory hook that genuinely helps: first-letter mnemonic, a sentence or a picture ("**C**an **C**ats …"). Skip it for lists of ≤ 3 points or when nothing natural fits. Never put the answer itself in the hook in full.
-- `seen`: labels exactly as in `PC_PAPERS`: `'2023-24' 'May 2024' '2021-22' '2020-21' 'Jan 2021' '2017-18' '2016-17' '2015-16' '2014-15' '2013-14' '2012-13' '2011-12'`. Frequency drives the drill order, so get it right.
+- `seen`: labels exactly as in `PC_PAPERS`: `'2023-24' '2022-23' '2021-22' '2020-21' 'Jan 2021' '2017-18' '2016-17' '2015-16' '2014-15' '2013-14' '2012-13' '2011-12'`. Frequency drives the drill order, so get it right.
 - `src`: `'Tanvir sir L5 p4'`, `'PPR 2008 r.98(2)'`, `'Kabirul sir note ch.3'`, `'question bank only'`.
 
 **Cards (`PcCard`)** — definitions, distinctions (Act vs Regulation, DBB vs DB, bid vs performance bond), numbers (tender security %, validity days), who-does-what, one-line "why" facts. `front` is a question; `back` ≤ 60 words. Don't duplicate a list as a card (lists become cards automatically). Aim for 10–25 per topic.

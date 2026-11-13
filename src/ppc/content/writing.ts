@@ -1,89 +1,265 @@
 // pc-writing — reports, abstracts, proposals, business messages.
-// Sources: Kabirul sir's note ch.3 (proposals), ch.4 (reports), ch.7 (business messages), ch.1 (abstracting).
-// Report importance, proposal chronology and the methods checklist have no class source (question bank only).
+// Sources: Noor sir's slides L05 (Writing Project Proposals), L06 (Reports), L08 (Preparing Effective Business
+// Messages) and L02 (abstraction) — almost word for word Kabirul sir's set, which the 18-batch solve (Shafi) copies.
+// Lists, cards and answers follow the slide wording. Only "why reports are important" has no slide (18-batch solve).
+// Figures are built with createElement so the file can stay .ts.
+import { createElement as h, type FC, type ReactNode } from 'react'
 import type { PcTopicContent } from '../types'
 
 const T = 'pc-writing' as const
-const KN3 = 'Kabirul sir note ch.3'
-const KN4 = 'Kabirul sir note ch.4'
-const KN7 = 'Kabirul sir note ch.7'
-const QB = 'question bank only (Lesikar / Murphy & Hildebrandt)'
+const S2 = 'Noor sir L02 slides (differences in perception of reality)'
+const S5 = 'Noor sir L05 slides (Writing Project Proposals)'
+const S6 = 'Noor sir L06 slides (Reports)'
+const S8 = 'Noor sir L08 slides (Preparing Effective Business Messages)'
+const SH = '18-batch solve (Shafi) copies the same bullets'
+
+// ---------- figures (theme tokens only) ----------
+const ink = 'var(--c-ink)'
+const mute = 'var(--c-mute)'
+const line = 'var(--c-line)'
+const panel = 'var(--c-panel)'
+const panel2 = 'var(--c-panel2)'
+const aan = 'var(--c-aan)'
+
+const box = (x: number, y: number, w: number, hgt: number, t: string[], strong = false): ReactNode =>
+  h(
+    'g',
+    null,
+    h('rect', { x, y, width: w, height: hgt, rx: 5, fill: panel2, stroke: strong ? aan : line, strokeWidth: strong ? 2 : 1.3 }),
+    ...t.map((s, i) =>
+      h('text', { x: x + w / 2, y: y + hgt / 2 + 4 - ((t.length - 1) * 13) / 2 + i * 13, textAnchor: 'middle', fontSize: 11.5, fill: ink }, s),
+    ),
+  )
+const wire = (d: string, arrow = false): ReactNode =>
+  h('path', { d, fill: 'none', stroke: mute, strokeWidth: 1.4, markerEnd: arrow ? 'url(#pc-arr-w)' : undefined })
+const arrowDef = (): ReactNode =>
+  h(
+    'defs',
+    null,
+    h('marker', { id: 'pc-arr-w', viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto' }, h('path', { d: 'M0,0 L10,5 L0,10 z', fill: mute })),
+  )
+
+const CHRONO: string[][] = [
+  ['1. Soliciting company publicly announces the project', '(professional publications, newspapers, or writes to companies)'],
+  ['2. Contracting companies submit preliminary proposals'],
+  ['3. Soliciting company reviews, eliminates some companies,', 'establishes short list of finalists'],
+  ['4. Soliciting company asks each finalist for a highly', 'detailed proposal and sets deadlines'],
+  ['5. Finalists select written and oral presentation teams;', 'several editions of the proposal; oral rehearsals'],
+  ['6. Finalists submit proposals;', 'dates established for oral presentation'],
+  ['7. Finalist companies make their presentation'],
+  ['8. Finalist companies wait for response'],
+]
+
+const ChronologyFig: FC = () =>
+  h(
+    'svg',
+    { viewBox: '0 0 440 404', width: '100%', role: 'img', 'aria-label': 'Flow chart: chronology of procedures for solicited major proposals, eight steps' },
+    arrowDef(),
+    ...CHRONO.flatMap((t, i) => {
+      const y = 6 + i * 50
+      return [box(20, y, 400, 38, t, i === 0 || i === 7), i < 7 ? wire(`M220,${y + 38} V${y + 49}`, true) : null]
+    }),
+  )
+
+const FormatsFig: FC = () =>
+  h(
+    'svg',
+    { viewBox: '0 0 600 236', width: '100%', role: 'img', 'aria-label': 'Tree: formats of short reports' },
+    box(200, 6, 200, 28, ['Formats of short reports'], true),
+    wire('M300,34 V50 M75,50 H485 M75,50 V66 M260,50 V66 M485,50 V66'),
+    box(10, 66, 130, 38, ['Letter report']),
+    box(160, 66, 200, 38, ['Informational', 'memorandum report']),
+    box(380, 66, 210, 38, ['Interpretative / analytical', 'memorandum report']),
+    h('text', { x: 75, y: 122, textAnchor: 'middle', fontSize: 11, fill: mute }, 'letter form, to a reader'),
+    h('text', { x: 75, y: 136, textAnchor: 'middle', fontSize: 11, fill: mute }, 'outside the organization'),
+    wire('M176,104 V209 M176,141 H192 M176,175 H192 M176,209 H192'),
+    box(192, 128, 160, 26, ['Conference report']),
+    box(192, 162, 160, 26, ['Progress report']),
+    box(192, 196, 160, 26, ['Periodic report']),
+    wire('M396,104 V184 M396,141 H412 M396,184 H412'),
+    box(412, 128, 170, 26, ['Personnel report']),
+    box(412, 164, 170, 40, ['Recommendation-', 'justification report']),
+  )
+
+const PARTS_COLS: { head: string; rows: [string, boolean?][] }[] = [
+  {
+    head: 'Prefatory parts',
+    rows: [
+      ['Cover, with title'],
+      ['Inside title page'],
+      ['Table of contents (TOC)'],
+      ['List of tables and/or figures'],
+      ['Request for proposal letter'],
+      ['Response to proposal'],
+      ['Description of owner’s requirement'],
+      ['Schedule for selecting personnel'],
+      ['Executive summary or abstract'],
+      ['Draft contract'],
+    ],
+  },
+  {
+    head: 'Body',
+    rows: [
+      ['Introduction', true],
+      ['Problem · Need · Scope'],
+      ['Background'],
+      ['Objective or purpose'],
+      ['Project team'],
+      ['Procedures', true],
+      ['Methods, procedures, sources'],
+      ['Plan of attack'],
+      ['Sequence of activities'],
+      ['Equipment, facilities, products'],
+      ['Personnel qualifications'],
+      ['Budget of costs, prices, total bids'],
+    ],
+  },
+  {
+    head: 'Supplementary parts',
+    rows: [['Maps, graphs, tables, charts'], ['Letter of support'], ['Letter of endorsement'], ['References'], ['Forms'], ['Table of definition'], ['Project schedules']],
+  },
+]
+
+const ProposalPartsFig: FC = () =>
+  h(
+    'svg',
+    { viewBox: '0 0 640 250', width: '100%', role: 'img', 'aria-label': 'Three parts of a proposal: prefatory parts, body, supplementary parts' },
+    ...PARTS_COLS.flatMap((c, ci) => {
+      const x = 4 + ci * 214
+      return [
+        h('rect', { x, y: 4, width: 204, height: 242, rx: 6, fill: panel, stroke: line, strokeWidth: 1.2 }),
+        box(x + 8, 10, 188, 26, [c.head], true),
+        ...c.rows.map(([s, head], ri) =>
+          h('text', { x: x + (head ? 12 : 20), y: 56 + ri * 16, fontSize: 11, fill: head ? aan : ink, fontWeight: head ? 700 : 400 }, s),
+        ),
+      ]
+    }),
+  )
 
 export default {
   lists: [
+    // ---------- reports (L06) ----------
     {
       id: 'l-report-types',
       topic: T,
-      title: 'Kinds of report',
+      title: 'Types of reports',
       points: [
-        { k: 'Short report', alt: ['short'] },
-        { k: 'Long report', alt: ['long'] },
-        { k: 'Informational report', alt: ['informational'], d: 'Facts only.' },
-        { k: 'Interpretative report', alt: ['interpretative', 'analytical'], d: 'Facts plus analysis, conclusions, recommendations.' },
+        { k: 'Short', alt: ['short report'] },
+        { k: 'Long', alt: ['long report'], d: 'Extension of a short report: greater length and depth of discussion of more complex problems.' },
+        { k: 'Informational', alt: ['informational report'], d: 'Summarizes information by reviewing facts covered; no inferences, opinions, judgement or recommendations.' },
+        { k: 'Interpretative', alt: ['interpretative report', 'analytical'], d: 'Analytical: seeks to analyze a situation, has a conclusion, may or may not have a recommendation.' },
       ],
       hook: 'Two by length (short / long) × two by job (inform / interpret).',
       seen: [],
-      src: KN4,
+      src: S6,
     },
     {
       id: 'l-report-importance',
       topic: T,
       title: 'Why reports are important',
+      ask: 'Why are reports important?',
       points: [
-        { k: 'Informed decision making', alt: ['decision', 'decision-makers'] },
-        { k: 'Record of work done', alt: ['record', 'accountability', 'audit'] },
-        { k: 'Monitor performance against plan', alt: ['monitor', 'performance'] },
-        { k: 'Coordinate departments', alt: ['coordination'] },
-        { k: 'Transmit findings and recommendations', alt: ['findings', 'recommendations'] },
-        { k: 'Evidence in disputes', alt: ['legal evidence', 'evidence'] },
+        { k: 'Useful insights for management', alt: ['insights', 'management', 'informed decision making', 'decision'], d: 'On spending, profits and growth.' },
+        { k: 'Detail for forecasts, plans, budgets, decisions', alt: ['forecasts', 'marketing plans', 'budget planning', 'decision-making', 'decision-makers'], d: 'Gives the detail needed for forecasts, marketing plans, budget planning and decision-making.' },
+        { k: 'Track progress, identify trends or irregularities', alt: ['track progress', 'trends', 'irregularities', 'monitor', 'performance', 'monitor performance against plan'], d: 'Tracks progress and growth.' },
+        { k: 'Audit trail of business activities', alt: ['audit trail', 'audit', 'record', 'record of work done', 'accountability'] },
+        { k: 'Transparency; annual report a legal requirement', alt: ['transparency', 'legal requirement', 'annual report', 'evidence', 'legal evidence'] },
+        { k: 'Compare performance with others in the sector', alt: ['compare', 'comparison', 'sector'] },
       ],
-      hook: '**D**on’t **R**ead **M**y **C**ase **F**ile **E**arly — Decide, Record, Monitor, Coordinate, Findings, Evidence.',
+      hook: 'I-D-T-A-T-C — **I**nsight, **D**etail, **T**rack, **A**udit, **T**ransparency, **C**ompare: “**I** **D**on’t **T**rust **A**ny **T**yped **C**opy” (so I read the report).',
       seen: ['2015-16'],
-      src: QB,
+      src: '18-batch solve (Shafi), 2015-16 Q6(a) — not on the slides',
+      note: 'No slide gives the importance of reports. Rahat’s note (CE22) writes four: informed decisions on the basis of facts; permanent written record of facts, progress and problems; carries information upward, downward and across the organisation; gives conclusions and recommendations that solve problems. The earlier version of this site (question bank) had: decision making, record, monitoring, coordination, findings and recommendations, evidence in disputes.',
     },
     {
       id: 'l-report-steps',
       topic: T,
-      title: 'Steps for writing a report',
+      title: 'Writing the long report: four steps',
+      ask: 'What are the four steps of writing a long report?',
       ordered: true,
       points: [
-        { k: 'Specify problem, collect and organise data', alt: ['problem specifying', 'data collection', 'organisation', 'define problem'] },
-        { k: 'Write first draft', alt: ['first draft', 'drafting'] },
-        { k: 'Edit and revise draft', alt: ['editing', 'revising', 'revise'] },
-        { k: 'Type the document', alt: ['typing', 'final document', 'produce'] },
+        { k: 'First step: define problem, collect, outline', alt: ['first step', 'define the problem', 'define problem', 'problem specifying', 'data collection', 'organisation', 'collect all needed material'], d: 'Define the problem; collect all needed material; sort and interpret data; organize the final outline; prepare visual aids; finally write, edit, revise, type.' },
+        { k: 'Second step: writing first draft', alt: ['first draft', 'drafting', 'write first draft', 'second step'], d: 'Begin; write outline and start writing; summary, conclusions, recommendations; introduction; executive summary, letter of transmittal, bibliography or endnotes, table of contents, table of figures, tables etc.' },
+        { k: 'Third step: editing, revising draft', alt: ['editing', 'revising', 'revise', 'edit and revise draft', 'third step'], d: 'Lay aside first draft for several days; look objectively at the material and identify weakness of the draft; revise, rewrite draft several times.' },
+        { k: 'Final step: type the document', alt: ['typing', 'type', 'final document', 'final step'], d: 'Harmonious style; spacing; top margin of 1.5 to 2 inch; page numbers (small Roman numerals for prefatory pages, Arabic numbers for supplemental sheets).' },
       ],
-      hook: '**P**lan, **D**raft, **R**evise, **T**ype — “**P**lease **D**on’t **R**ush **T**yping”.',
+      hook: '**D**efine → **D**raft → **E**dit → **T**ype.',
+      seen: [],
+      src: S6,
+      note: 'These are the LONG-report steps. The 2015-16 question asks the steps in writing a SHORT report — answer that with Introduction / Body or text / Terminal section (list “Writing a short report”).',
+    },
+    {
+      id: 'l-short-report-writing',
+      topic: T,
+      title: 'Writing a short report (the steps)',
+      ask: 'Briefly describe the steps to be followed in writing a short report.',
+      ordered: true,
+      points: [
+        { k: 'Introduction', alt: ['intro', 'prefatory part'], d: 'Give purpose or aim (always), background, list of topics to be discussed, authorization. For short introductions (one or two short paragraphs) the title “Introduction” is generally omitted.' },
+        { k: 'Body or text', alt: ['body', 'text', 'discussion'], d: 'Present all relevant facts accurately and impartially; organise; emphasize important ideas; headings; visual aids; topic sentences; introductory paragraphs; apply seven C’s.' },
+        { k: 'Terminal section', alt: ['terminal', 'conclusion', 'closing section'], d: 'Summarize, conclude and offer recommendation; same order as topics discussed in the text; do not include new material.' },
+      ],
       seen: ['2015-16'],
-      src: `${KN4} (given for long reports)`,
-      note: 'Question bank (short report): define problem and reader; decide scope; gather information; analyse and conclude; choose format and order; outline and draft with headings; add visual aids; revise, proofread, submit.',
+      src: `${S6}; ${SH} (2015-16 Q6a)`,
+    },
+    {
+      id: 'l-short-report-intro',
+      topic: T,
+      title: 'What the introduction of a short report gives',
+      points: [
+        { k: 'Purpose or aim (always)', alt: ['purpose', 'aim'] },
+        { k: 'Background' },
+        { k: 'List of topics to be discussed', alt: ['topics', 'list of topics'] },
+        { k: 'Authorization', alt: ['authorisation'], d: 'Who asked for the report.' },
+      ],
+      hook: '**P**lease **B**ring **T**he **A**uthorization — Purpose, Background, Topics, Authorization.',
+      seen: ['2022-23', '2015-16'],
+      src: S6,
+    },
+    {
+      id: 'l-short-report-body',
+      topic: T,
+      title: 'Rules for the body (text) of a short report',
+      points: [
+        { k: 'Present all relevant facts accurately and impartially', alt: ['accurately', 'impartially', 'relevant facts'], d: 'Impartially = fairly, without bias, favoritism, or taking sides.' },
+        { k: 'Organise', alt: ['organize', 'organised'] },
+        { k: 'Emphasize important ideas', alt: ['emphasis', 'important ideas'], d: 'By giving important details, placement in document of relevant information.' },
+        { k: 'Use headings to guide reader', alt: ['headings'] },
+        { k: 'Include visual aids whenever they clarify', alt: ['visual aids', 'graphs', 'charts', 'pictures'], d: 'Graphs, charts, pictures.' },
+        { k: 'Topic sentences at beginning of paragraph', alt: ['topic sentence', 'topic sentences'], d: 'Topic sentence = the main or introductory sentence of a paragraph that summarizes its core point.' },
+        { k: 'Introductory paragraphs at beginning of major section', alt: ['introductory paragraph', 'introductory paragraphs'] },
+        { k: 'Apply seven C’s of writing principles', alt: ["seven C's", '7 Cs', 'seven Cs'] },
+      ],
+      hook: 'Facts → Organise → Emphasize, then the four signposts (**H**eadings, **V**isual aids, **T**opic sentences, **I**ntroductory paragraphs), and the 7 C’s over everything.',
+      seen: ['2022-23', '2015-16'],
+      src: S6,
     },
     {
       id: 'l-report-short-structure',
       topic: T,
       title: 'Structure of a short report',
+      ask: 'Outline the structure of a short report.',
       ordered: true,
       points: [
-        { k: 'Introduction', d: 'Purpose/aim, background, authorization — kept short.' },
-        { k: 'Body or text', alt: ['body', 'text', 'findings', 'discussion'], d: 'Facts accurately presented and organised, headings, visual aids, topic sentences, seven C’s.' },
-        { k: 'Terminal section', alt: ['terminal', 'closing section', 'conclusion'], d: 'Summary + conclusion + recommendation + offer; same order as the body; nothing new.' },
+        { k: 'Prefatory part or introduction', alt: ['introduction', 'prefatory part', 'prefatory'], d: 'Purpose or aim (always), background, list of topics to be discussed, authorization.' },
+        { k: 'Discussion, text or body', alt: ['body', 'text', 'discussion', 'body or text', 'findings'], d: 'All relevant facts, accurately and impartially, organised, with headings, visual aids and topic sentences.' },
+        { k: 'Terminal section', alt: ['terminal', 'closing section', 'conclusion', 'summary conclusions recommendations'], d: 'Includes summary, conclusions and recommendations.' },
       ],
-      seen: ['May 2024'],
-      src: KN4,
-      note: 'Question bank gives six parts: title; introduction; findings/discussion; conclusions; recommendations; attachments. Class note: three parts.',
+      seen: ['2022-23'],
+      src: S6,
     },
     {
       id: 'l-report-terminal',
       topic: T,
       title: 'Contents of the terminal section of a short report',
       points: [
-        { k: 'Summarization', alt: ['summary', 'summarise'] },
-        { k: 'Conclusion', alt: ['conclusions'] },
-        { k: 'Recommendation', alt: ['recommendations'] },
-        { k: 'Offer' },
+        { k: 'Summary', alt: ['summarization', 'summarise', 'summarize'], d: 'Condenses the text.' },
+        { k: 'Conclusions', alt: ['conclusion', 'conclude'], d: 'Evaluate and infer from the text.' },
+        { k: 'Recommendations', alt: ['recommendation', 'recommend'], d: 'Offer a specific course of action.' },
       ],
-      hook: '**S**ome **C**ats **R**efuse **O**ffers.',
-      seen: ['May 2024'],
-      src: KN4,
+      seen: ['2022-23', '2015-16'],
+      src: S6,
+      note: 'Nafee bhai’s note (Kabirul sir’s class) adds a fourth, “offer” — on the slide the offer to discuss further belongs to the last paragraph of a LETTER report, not to the terminal section.',
     },
     {
       id: 'l-report-short-formats',
@@ -91,328 +267,810 @@ export default {
       title: 'Formats of short reports',
       ask: 'What are the different formats of short report?',
       points: [
-        { k: 'Memorandum report', alt: ['memo report', 'memorandum'], d: 'Informational or interpretative memorandum, inside the organisation.' },
-        { k: 'Conference report', alt: ['conference'], d: 'By an employee who attended a conference; topics in chronological order.' },
-        { k: 'Progress report', alt: ['progress'], d: 'Progress/accomplishment over time.' },
-        { k: 'Periodic report', alt: ['periodic'], d: 'At regular periods — weekly, monthly, quarterly.' },
-        { k: 'Letter report', alt: ['letter'], d: 'Small report in letter form, often to an outside organisation.' },
-        { k: 'Personnel report', alt: ['personnel'], d: 'Introduction → main body with headings → terminal section.' },
-        { k: 'Recommendation / justification report', alt: ['recommendation report', 'justification report', 'justification'], d: 'Recommends a change and supports it.' },
+        { k: 'Letter report', alt: ['letter'], d: 'Small report in letter form, sent to a reader outside the organization.' },
+        { k: 'Informational memorandum report', alt: ['informational memorandum', 'informational memo', 'memorandum report', 'memo report', 'memorandum'], d: 'Informational report in memorandum form, circulated within the organization. Three kinds: conference, progress, periodic.' },
+        { k: 'Conference report', alt: ['conference'], d: '(informational) Written after a significant conference; by topics discussed or in chronological fashion.' },
+        { k: 'Progress report', alt: ['progress'], d: '(informational) Shows progress, i.e. accomplishments, over time or at a given stage of a major assignment.' },
+        { k: 'Periodic report', alt: ['periodic'], d: '(informational) At regular recurring periods — weekly, monthly, quarterly.' },
+        { k: 'Interpretative / analytical memorandum report', alt: ['interpretative memorandum', 'analytical memorandum', 'analytical', 'interpretative'], d: 'Seeks to analyze a situation; has a conclusion; may or may not have a recommendation. Two kinds: personnel, recommendation-justification.' },
+        { k: 'Personnel report', alt: ['personnel'], d: '(analytical) Employee human-resource reports.' },
+        { k: 'Recommendation-justification report', alt: ['recommendation report', 'justification report', 'justification', 'recommendation / justification report'], d: '(analytical) Recommends a change or remaining with the status quo, and justifies it.' },
       ],
-      hook: '**M**y **C**ousin **P**rints **P**apers, **L**etters, **P**osters, **R**eceipts — Memo, Conference, Progress, Periodic, Letter, Personnel, Recommendation.',
+      hook: 'A tree of **1 + 3 + 2**: the **Letter** goes outside alone; the **Informational memo** has **C-P-P** (Conference, Progress, Periodic); the **Analytical memo** has **P-R** (Personnel, Recommendation-justification).',
       seen: ['2023-24'],
-      src: KN4,
+      src: S6,
+      note: 'Three formats, the two memorandum formats having sub-types. The earlier version of this site listed seven flat formats (memorandum, conference, progress, periodic, letter, personnel, recommendation / justification) from Nafee bhai’s note.',
+    },
+    {
+      id: 'l-letter-report-parts',
+      topic: T,
+      title: 'What a letter report includes',
+      ordered: true,
+      points: [
+        { k: 'Date' },
+        { k: 'Inside address', alt: ['address'] },
+        { k: 'Salutation', alt: ['greeting'], d: 'A greeting used at the beginning of a letter to acknowledge the recipient.' },
+        { k: 'Subject line (optional)', alt: ['subject', 'subject line'] },
+        { k: 'Body' },
+        { k: 'Complimentary close', alt: ['close', 'closing'] },
+        { k: 'Signature' },
+        { k: 'Reference section', alt: ['reference', 'references'] },
+      ],
+      hook: 'Read a letter top to bottom: date → address → “Dear …” → subject → body → “Yours sincerely” → signature → references.',
+      seen: [],
+      src: S6,
+    },
+    {
+      id: 'l-letter-report-paragraphs',
+      topic: T,
+      title: 'Writing a letter report — the three paragraphs',
+      ordered: true,
+      points: [
+        { k: 'First paragraph', alt: ['first', 'opening paragraph'], d: 'Pleasant greeting and authorization (date and name of person making request); purpose, aim (always); problem, issues (if problems exist); conclusion, statement of results (optional).' },
+        { k: 'Middle paragraph', alt: ['middle', 'body paragraph'], d: 'Present all facts, favorable or unfavorable; mention sources and methodology used, if any; emphasis on finding results; headings and visual aids whenever necessary.' },
+        { k: 'Last paragraph', alt: ['last', 'closing paragraph'], d: 'Bring the letter to a pleasant friendly close; conclude or recommend if you desire to do so; offer to discuss further, if appropriate.' },
+      ],
+      seen: [],
+      src: S6,
     },
     {
       id: 'l-report-progress',
       topic: T,
-      title: 'Structure of a progress report',
+      title: 'Contents of a progress report',
       ordered: true,
       points: [
         { k: 'Introduction' },
-        { k: 'Accomplishments', alt: ['work done', 'accomplishment'] },
-        { k: 'Unanticipated problems', alt: ['problems'] },
-        { k: 'Plan for next reporting period', alt: ['next period plan', 'plans'] },
-        { k: 'Summary' },
+        { k: 'Description of accomplishments during period', alt: ['accomplishments', 'work done', 'accomplishment'] },
+        { k: 'Unanticipated problems (if any)', alt: ['problems', 'unanticipated problems'] },
+        { k: 'Plans for next reporting period', alt: ['next period plan', 'plans', 'plan for next reporting period'] },
+        { k: 'Summary', alt: ['overall appraisal'], d: 'Overall appraisal of progress to date.' },
       ],
-      hook: '**I** **A**m **U**sually **P**unctual, **S**ir.',
+      hook: '**I** **A**m **U**sually **P**unctual, **S**ir — Introduction, Accomplishments, Unanticipated problems, Plans, Summary.',
       seen: [],
-      src: KN4,
+      src: S6,
+    },
+    {
+      id: 'l-recjust-aspects',
+      topic: T,
+      title: 'What a recommendation-justification report does (three aspects)',
+      points: [
+        { k: 'Policy aspect', alt: ['policy', 'recommend a change', 'status quo'], d: 'Recommend a change or remain with status quo.' },
+        { k: 'Value aspect', alt: ['value', 'desirable or undesirable'], d: 'Support the idea that something is desirable or undesirable.' },
+        { k: 'Fact aspect', alt: ['fact', 'accuracy of information'], d: 'Defend the accuracy of information.' },
+      ],
+      seen: [],
+      src: S6,
+      note: 'The report may be in response to a request or it may be voluntary. Status quo = the existing state of affairs.',
+    },
+    {
+      id: 'l-recjust-sections',
+      topic: T,
+      title: 'Sections of a recommendation-justification report',
+      ordered: true,
+      points: [
+        { k: 'Introduction', d: 'Purpose; authorization; layout of report.' },
+        { k: 'Body (text, discussion)', alt: ['body', 'text', 'discussion'], d: 'Current state of the problem; effects and causes of problems; possible options to remove problems; criteria in evaluating solution; recommended solution.' },
+        { k: 'Terminal section (conclusion, recommendation)', alt: ['terminal section', 'terminal', 'conclusion'], d: 'Brief summary of major points; conclusion; recommendation.' },
+      ],
+      seen: [],
+      src: S6,
     },
     {
       id: 'l-report-long-structure',
       topic: T,
-      title: 'Parts of a long report',
+      title: 'Structure of a long report',
       ordered: true,
       points: [
-        { k: 'Prefatory part', alt: ['preliminary', 'front matter'], d: 'Cover, copyright notice, acknowledgement, abstract, frontispiece, forwarding letter, list of illustrations, contents, preface, executive summary.' },
-        { k: 'Main body', alt: ['body'], d: 'Introduction, discussion/text, conclusions, recommendations.' },
-        { k: 'Back matter', alt: ['supplementary', 'end matter'], d: 'Appendices, bibliography, index, reference list, glossary.' },
+        { k: 'Prefatory part', alt: ['preliminary', 'front matter', 'prefatory'], d: 'Cover; frontispiece; copyright notice; forwarding letter / transmittal letter; preface; acknowledgements; table of contents; list of illustrations; abstract and executive summary.' },
+        { k: 'Main body', alt: ['body'], d: 'Introduction (section or separate chapter); discussion or text (chapters, sections, subsections); conclusions; recommendations.' },
+        { k: 'Back matter', alt: ['supplementary', 'end matter'], d: 'Appendices; list of references; bibliography; glossary; index.' },
       ],
       seen: [],
-      src: KN4,
+      src: S6,
+    },
+    {
+      id: 'l-long-prefatory',
+      topic: T,
+      title: 'Prefatory part of a long report',
+      ordered: true,
+      points: [
+        { k: 'Cover' },
+        { k: 'Frontispiece', d: 'An illustration or photograph on the page facing the title page.' },
+        { k: 'Copyright notice', alt: ['copyright'] },
+        { k: 'Forwarding letter / transmittal letter', alt: ['forwarding letter', 'transmittal letter', 'letter of transmittal'] },
+        { k: 'Preface' },
+        { k: 'Acknowledgements', alt: ['acknowledgement'] },
+        { k: 'Table of contents', alt: ['contents', 'TOC'] },
+        { k: 'List of illustrations', alt: ['illustrations'] },
+        { k: 'Abstract and executive summary', alt: ['abstract', 'executive summary'] },
+      ],
+      hook: '**C**an **F**ive **C**ivil **F**irms **P**repare **A** **T**ender **L**ist **A**ccurately? — Cover, Frontispiece, Copyright, Forwarding letter, Preface, Acknowledgements, TOC, List of illustrations, Abstract.',
+      seen: [],
+      src: S6,
+    },
+    {
+      id: 'l-long-back',
+      topic: T,
+      title: 'Back matter of a long report',
+      ordered: true,
+      points: [
+        { k: 'Appendices', alt: ['appendix'] },
+        { k: 'List of references', alt: ['references', 'reference list'] },
+        { k: 'Bibliography' },
+        { k: 'Glossary', d: 'Alphabetical list of specialized, technical or unfamiliar terms with their definitions.' },
+        { k: 'Index' },
+      ],
+      hook: '**A** **L**ong **B**ook’s **G**lossary and **I**ndex — Appendices, List of references, Bibliography, Glossary, Index.',
+      seen: [],
+      src: S6,
+    },
+    {
+      id: 'l-long-prep-steps',
+      topic: T,
+      title: 'Preparatory steps of a long report',
+      ordered: true,
+      points: [
+        { k: 'Recognize issues, problems, purpose, scope of report', alt: ['issues', 'problems', 'purpose', 'scope'] },
+        { k: 'Realize who your readers will be', alt: ['readers', 'audience'] },
+        { k: 'Get an idea of sources of information', alt: ['sources of information', 'sources'] },
+        { k: 'Understand when the report needs to be completed', alt: ['deadline', 'when', 'completion time'] },
+        { k: 'Recognize financial and time constraints', alt: ['constraints', 'financial constraints', 'time constraints'] },
+      ],
+      hook: '**What** (issues, purpose, scope) → **Who** (readers) → **Where from** (sources) → **When** (completion) → **With what** (money and time).',
+      seen: [],
+      src: S6,
+    },
+    {
+      id: 'l-report-title-5w',
+      topic: T,
+      title: 'Five W’s of a report title (cover)',
+      points: [
+        { k: 'Who', d: 'By whom and for whom.' },
+        { k: 'What', d: 'Title or subject matter.' },
+        { k: 'When', d: 'Date.' },
+        { k: 'Where' },
+        { k: 'Why' },
+      ],
+      seen: [],
+      src: S6,
+      note: 'Titles should be short; extremely short and vague titles should be avoided; judgement terms should not be used.',
+    },
+    {
+      id: 'l-transmittal-parts',
+      topic: T,
+      title: 'Five parts of a letter of transmittal',
+      ordered: true,
+      points: [
+        { k: 'Authorization', alt: ['authorisation'], d: 'Opening words refer to the request made for preparing the report, including the date the request was made.' },
+        { k: 'Transmittal details', alt: ['transmittal'], d: 'Puts into words the handing over of the report to the recipient.' },
+        { k: 'Background and methodology', alt: ['background', 'methodology'], d: 'Briefly suggests research methods employed, scope and limits of the report; background and qualifications of the author and committee members.' },
+        { k: 'Highlights', d: 'Briefly mentions conclusions — precise for a friendly audience, more general for a less friendly audience.' },
+        { k: 'Courteous ending', alt: ['ending', 'courteous close'], d: 'Acknowledge those who assisted; willingness to respond to further questions; later reports or findings forthcoming.' },
+      ],
+      hook: '**A** **T**ransmittal **B**rings **H**ighlights **C**ourteously — Authorization, Transmittal details, Background, Highlights, Courteous ending.',
+      seen: [],
+      src: S6,
+    },
+    {
+      id: 'l-report-exec-summary',
+      topic: T,
+      title: 'Issues addressed in the executive summary of a report',
+      points: [
+        { k: 'Purpose' },
+        { k: 'Scope' },
+        { k: 'Background' },
+        { k: 'Data analysis' },
+        { k: 'Methods of research', alt: ['research methods', 'methods'] },
+        { k: 'Current issues' },
+        { k: 'Causes' },
+        { k: 'Effects' },
+        { k: 'Problem analysis' },
+        { k: 'Solutions criteria', alt: ['solution criteria', 'criteria'] },
+        { k: 'Conclusions' },
+        { k: 'Possible solutions / recommendations', alt: ['possible solutions', 'recommendations'] },
+        { k: 'Benefits' },
+      ],
+      hook: 'The report in miniature: **set-up** (purpose, scope, background) → **study** (data analysis, methods) → **problem** (current issues, causes, effects, problem analysis) → **answer** (criteria, conclusions, solutions, benefits).',
+      seen: [],
+      src: S6,
+    },
+
+    // ---------- proposals (L05) ----------
+    {
+      id: 'l-proposal-tasks',
+      topic: T,
+      title: 'Tasks a proposal may be written for',
+      ask: 'A proposal is a written plan or presentation for completing a task. The task may be to …?',
+      points: [
+        { k: 'Solve a problem', alt: ['problem'] },
+        { k: 'Alter a procedure', alt: ['procedure'] },
+        { k: 'Find answers to questions', alt: ['answers', 'questions'] },
+        { k: 'Offer advice or training', alt: ['advice', 'training'] },
+        { k: 'Conduct research on a topic', alt: ['research'] },
+      ],
+      hook: '**S**ome **A**nts **F**ind **O**ld **C**rumbs — Solve, Alter, Find, Offer, Conduct.',
+      seen: ['2017-18'],
+      src: S5,
+    },
+    {
+      id: 'l-proposal-topics',
+      topic: T,
+      title: 'Proposal topics (examples on the slide)',
+      points: [
+        { k: 'To construct a structure', alt: ['construct', 'structure'] },
+        { k: 'To survey an area or population group', alt: ['survey'] },
+        { k: 'To design or build an industrial plant', alt: ['design', 'build', 'manufacturing plant', 'plant'], d: 'An industrial or manufacturing plant.' },
+      ],
+      seen: [],
+      src: S5,
     },
     {
       id: 'l-proposal-types',
       topic: T,
-      title: 'Types of proposal',
+      title: 'Types of proposals',
       points: [
-        { k: 'Research proposal', alt: ['research'], d: 'For an academic investigation.' },
-        { k: 'Business proposal', alt: ['business'], d: 'For a business purpose.' },
-        { k: 'Solicited proposal', alt: ['solicited', 'RFP'], d: 'Requested by the organisation for a specific need; many bidders.' },
-        { k: 'Unsolicited proposal', alt: ['unsolicited'], d: 'Sent on one’s own to convince an organisation that you can solve its problem.' },
+        { k: 'Research proposal', alt: ['research'], d: 'Deals with academic investigation.' },
+        { k: 'Business proposal', alt: ['business'], d: 'Deals with securing business.' },
+        { k: 'Solicited proposal', alt: ['solicited', 'RFP'], d: 'Solicited by a business organization to meet its specific needs; has many competitors bidding for a contract.' },
+        { k: 'Unsolicited proposal', alt: ['unsolicited'], d: 'Sent to convince a business or organization that the proposal sender has skills to solve their problems; resolution of problems would significantly benefit the organization.' },
       ],
-      seen: ['2017-18'],
-      src: KN3,
+      seen: [],
+      src: S5,
+    },
+    {
+      id: 'l-proposal-attributes',
+      topic: T,
+      title: 'Key attributes of a proposal (three basic attributes)',
+      ordered: true,
+      points: [
+        { k: 'Describe / identify the problem', alt: ['describe the problem', 'identify the problem', 'problem'], d: 'Find new scope, magnitude or complexity of the problem; establish credibility.' },
+        { k: 'Offer a viable solution', alt: ['viable solution', 'solution'] },
+        { k: 'Demonstrate skill and resources', alt: ['skill', 'resources'] },
+      ],
+      seen: [],
+      src: S5,
     },
     {
       id: 'l-proposal-parts',
       topic: T,
-      title: 'Parts of a business proposal',
+      title: 'Parts of a proposal',
       ordered: true,
       points: [
-        { k: 'Prefatory part', alt: ['prefatory', 'front matter'] },
-        { k: 'Body', alt: ['body part', 'main body'] },
-        { k: 'Supplementary part', alt: ['supplementary', 'appendix', 'back matter'] },
+        { k: 'Prefatory parts', alt: ['prefatory', 'prefatory part', 'front matter'] },
+        { k: 'Body', alt: ['body part', 'main body'], d: 'Introduction and procedures.' },
+        { k: 'Supplementary parts', alt: ['supplementary', 'supplementary part', 'appendix', 'back matter'] },
       ],
-      seen: ['2017-18', '2016-17', '2012-13'],
-      src: KN3,
-      note: 'Question bank lists them flat: letter of transmittal, title page and contents, executive summary, introduction, background, proposed plan, staffing, budget, schedule, authorisation request, appendices.',
+      seen: ['2016-17', '2012-13'],
+      src: S5,
     },
     {
       id: 'l-proposal-prefatory',
       topic: T,
-      title: 'Prefatory part of a proposal',
+      title: 'Prefatory parts of a proposal',
+      ordered: true,
       points: [
-        { k: 'Cover with title', alt: ['cover', 'title'] },
-        { k: 'Inside title page', alt: ['title page'] },
-        { k: 'Table of contents', alt: ['contents'] },
-        { k: 'List of tables and figures', alt: ['list of figures', 'list of tables'] },
-        { k: 'Request for proposal (RFP)', alt: ['RFP', 'request for proposal', 'draft contract'] },
-        { k: 'Response to proposal (RTP)', alt: ['RTP'] },
-        { k: 'Owner’s requirements', alt: ["owner's requirement", 'requirements'] },
-        { k: 'Scheduled interview time', alt: ['interview time'] },
-        { k: 'Executive summary', alt: ['summary', 'abstract'] },
+        { k: 'Cover, with title', alt: ['cover', 'cover with title', 'title'] },
+        { k: 'Inside title page', alt: ['title page'], d: 'Title; to whom submitted; by whom submitted; date.' },
+        { k: 'Table of contents (TOC)', alt: ['contents', 'TOC', 'table of contents'], d: 'Brief proposals do not require one.' },
+        { k: 'List of tables and/or figures', alt: ['list of figures', 'list of tables', 'list of tables and figures'] },
+        { k: 'Request for proposal letter', alt: ['RFP', 'request for proposal', 'owner’s solicitation letter', 'solicitation letter', 'request for proposal (RFP)'], d: 'The owner’s solicitation letter.' },
+        { k: 'Response to proposal', alt: ['RTP', 'company’s cover letter', 'cover letter', 'response to proposal (RTP)'], d: 'The company’s cover letter.' },
+        { k: 'Description of owner’s requirement', alt: ["owner's requirement", 'owner’s requirements', 'requirements', 'owner requirement'] },
+        { k: 'Schedule for selecting personnel', alt: ['scheduled interview time', 'interview time', 'personnel schedule'] },
+        { k: 'Executive summary or abstract', alt: ['executive summary', 'summary', 'abstract', 'synopsis'], d: 'Most important part of a proposal.' },
+        { k: 'Draft contract', d: 'Inserted after the executive summary for long proposals; immediate overview of the work including financial information.' },
       ],
-      hook: 'From the outside in: **cover → title page → contents → figures**, then the paperwork of the deal (**RFP → RTP → owner’s needs → interview**), and last the **summary** the evaluator reads first.',
+      hook: 'Outside in: **cover → title page → TOC → lists**; two letters (**owner’s RFP letter → company’s response**); the owner’s side (**requirement → schedule for selecting personnel**); last the **executive summary** and the **draft contract** that follows it. 4 + 2 + 2 + 2 = 10.',
       seen: ['2016-17', '2012-13'],
-      src: KN3,
+      src: `${S5}; ${SH} (2016-17 Q6a)`,
+      note: 'Nafee bhai’s note (and the earlier version of this site) had nine: “RFP / draft contract” as one item, “RTP”, and “scheduled interview time” for the schedule for selecting personnel. The slide has ten, with Draft contract as its own last item.',
     },
     {
       id: 'l-proposal-body',
       topic: T,
-      title: 'Body of a proposal',
+      title: 'Body of a proposal (two sections)',
+      ask: 'What does the body of a proposal contain?',
+      ordered: true,
       points: [
-        { k: 'Introduction', alt: ['background', 'objective', 'scope', 'need'], d: 'Background, objective, scope, need/problem.' },
-        { k: 'Procedure (plan of attack)', alt: ['procedure', 'plan of attack', 'method', 'methodology'], d: 'Methods, sources, sequence of activities, equipment and facilities, personnel.' },
-        { k: 'Project team / qualifications', alt: ['qualifications', 'personnel', 'staffing'] },
-        { k: 'Products (deliverables)', alt: ['deliverables', 'products'] },
-        { k: 'Budget / price', alt: ['budget', 'cost', 'price'] },
-        { k: 'Project schedule', alt: ['schedule'] },
+        { k: 'Introduction', alt: ['intro'], d: 'Problem; need; scope; background; objective or purpose; project team.' },
+        { k: 'Procedures', alt: ['procedure', 'methods', 'plan of attack', 'methodology'], d: 'Methods, procedures, sources; plan of attack; sequence of activities; equipment, facilities, products; personnel qualifications; budget of costs, prices, total bids.' },
       ],
-      hook: '**Why** (introduction) → **How** (procedure) → **Who** (team) → **What** (products) → **How much** (budget) → **When** (schedule).',
       seen: ['2016-17', '2012-13'],
-      src: KN3,
+      src: S5,
+      note: 'Also asked alone in 2010-11 Q2(b), 2009-10 Q2(b), 2008-09 Q1(a) (Rahat’s question list). The earlier version of this site listed six flat items (introduction, procedure, project team, products, budget, project schedule): on the slide the project team sits in the Introduction, products with equipment and facilities, the budget in Procedures, and project schedules in the supplementary parts.',
+    },
+    {
+      id: 'l-proposal-intro',
+      topic: T,
+      title: 'Body of a proposal: Introduction',
+      points: [
+        { k: 'Problem', d: 'Clearly state the problem and demonstrate clear understanding of it; if pertinent, mention difficulties that may be encountered and methods proposed to overcome them.' },
+        { k: 'Need' },
+        { k: 'Scope', d: 'The boundaries being set for the project to accomplish objectives: what you will do and what you will not do.' },
+        { k: 'Background', d: 'May be omitted for short proposals. Long: previous work on identical or related projects; literature review and its evaluation; how the proposal will build on already completed projects and research.' },
+        { k: 'Objective or purpose', alt: ['objective', 'purpose'], d: 'In simple language, as if approaching a non-specialist; often in infinitive form: to recommend, to bid, to supply.' },
+        { k: 'Project team', alt: ['team'], d: 'List of individuals who will work for the project; in long proposals a brief curriculum vitae of each.' },
+      ],
+      hook: '**P**lease **N**ever **S**kip **B**ackground **O**r **P**eople — Problem, Need, Scope, Background, Objective, Project team.',
+      seen: ['2016-17', '2012-13'],
+      src: S5,
+    },
+    {
+      id: 'l-proposal-procedures',
+      topic: T,
+      title: 'Body of a proposal: Procedures',
+      points: [
+        { k: 'Methods, procedures, sources', alt: ['methods', 'method', 'sources', 'methodology'], d: 'State how project requirements will be met (five-item checklist).' },
+        { k: 'Plan of attack' },
+        { k: 'Sequence of activities', alt: ['sequence'] },
+        { k: 'Equipment, facilities, products', alt: ['equipment', 'facilities', 'products', 'deliverables'], d: 'What facilities will be needed; what you already have; how you will get what you do not have.' },
+        { k: 'Personnel qualifications', alt: ['personnel', 'qualifications', 'staffing'], d: 'Personnel arrangements; company areas involved; individual qualifications in complete biographic form; percentages of time devoted.' },
+        { k: 'Budget of costs, prices, total bids', alt: ['budget', 'cost', 'price', 'total bids'], d: 'As specified in the RFP, with a budget justification section.' },
+      ],
+      hook: '**How** (methods → plan of attack → sequence) → **with what** (equipment, facilities, products) → **by whom** (personnel) → **for how much** (budget).',
+      seen: ['2016-17', '2012-13'],
+      src: S5,
     },
     {
       id: 'l-proposal-supplementary',
       topic: T,
-      title: 'Supplementary part of a proposal',
+      title: 'Supplementary parts of a proposal',
       ask: 'What do the supplementary parts of a project proposal generally contain?',
       points: [
         { k: 'Maps, graphs, tables, charts', alt: ['maps', 'graphs', 'charts', 'tables'] },
-        { k: 'Letter of support', alt: ['support letter'] },
+        { k: 'Letter of support', alt: ['support letter', 'support'] },
         { k: 'Letter of endorsement', alt: ['endorsement'] },
-        { k: 'References', alt: ['reference'] },
+        { k: 'References', alt: ['reference', 'list of references'] },
         { k: 'Forms' },
-        { k: 'Table of definitions', alt: ['definitions', 'glossary'] },
+        { k: 'Table of definition', alt: ['definitions', 'table of definitions', 'glossary'] },
+        { k: 'Project schedules', alt: ['project schedule', 'schedule', 'schedules'] },
       ],
-      hook: '**M**any **S**upporters **E**ndorse **R**eal **F**orm **D**ata — Maps, Support, Endorsement, References, Forms, Definitions.',
-      seen: ['2017-18', '2016-17'],
-      src: KN3,
+      hook: '**M**any **S**upporters **E**ndorse **R**eal **F**orm **D**ata **P**romptly — Maps, Support, Endorsement, References, Forms, Definition, Project schedules.',
+      seen: ['2017-18', '2016-17', '2012-13'],
+      src: `${S5}; ${SH} (2017-18 Q8b)`,
+      note: 'Seven items — project schedules is the one usually forgotten (it is supplementary, not part of the body).',
     },
     {
-      id: 'l-proposal-chronology',
+      id: 'l-proposal-title-page',
       topic: T,
-      title: 'Chronology of a major solicited proposal',
-      ordered: true,
+      title: 'What the title page of a proposal should include (as a minimum)',
       points: [
-        { k: 'Client identifies need, prepares RFP', alt: ['RFP prepared', 'need identified'] },
-        { k: 'RFP issued to firms', alt: ['RFP issued'] },
-        { k: 'Go / no-go decision', alt: ['bid no-bid', 'go no go'] },
-        { k: 'Pre-proposal conference and clarifications', alt: ['pre-proposal conference', 'site visit', 'clarification'] },
-        { k: 'Appoint proposal manager and team', alt: ['proposal team', 'proposal manager'] },
-        { k: 'Research client and develop approach', alt: ['research', 'technical approach', 'methodology'] },
-        { k: 'Staffing, work plan, schedule, cost estimate', alt: ['cost estimate', 'work plan', 'staffing'] },
-        { k: 'Write sections, executive summary last', alt: ['write', 'writing', 'executive summary'] },
-        { k: 'Internal review, edit, check compliance', alt: ['red team', 'review', 'edit', 'compliance'] },
-        { k: 'Approval, signatures, packaging', alt: ['approval', 'signatures', 'packaging', 'production'] },
-        { k: 'Submit before deadline', alt: ['submit', 'submission'] },
-        { k: 'Client evaluates; presentations/interviews', alt: ['evaluation', 'interview', 'presentation'] },
-        { k: 'Ranking, negotiation, award, contract', alt: ['award', 'negotiation', 'contract signing'] },
-        { k: 'Debriefing of unsuccessful firms', alt: ['debriefing', 'debrief'] },
+        { k: 'Title' },
+        { k: 'To whom the proposal is submitted', alt: ['to whom', 'recipient', 'client'], d: 'Name of person or company to whom proposal is submitted.' },
+        { k: 'Who is submitting the proposal', alt: ['by whom', 'submitter', 'company submitting'], d: 'Name of person or company submitting the proposal.' },
+        { k: 'Date' },
       ],
-      hook: 'Three acts — **Client asks** (need → RFP → issue), **Firm writes** (go/no-go → conference → team → research → costs → write → review → sign → submit), **Client decides** (evaluate → award → debrief).',
-      seen: ['2017-18', '2012-13'],
-      src: QB,
+      seen: ['2016-17'],
+      src: S5,
     },
     {
       id: 'l-exec-summary',
       topic: T,
-      title: 'Issues for the executive summary of a proposal',
+      title: 'Issues for the executive summary (abstract, synopsis) of a proposal',
       ask: 'What are the main issues to consider when preparing the executive summary / abstract / synopsis of a proposal?',
       points: [
-        { k: 'Most important part, read first', alt: ['most important part', 'read first', 'evaluators read it first'], d: 'Evaluators read it first to get a quick overview.' },
-        { k: 'Covers the whole proposal', alt: ['whole proposal'] },
-        { k: 'Stands alone', alt: ['stand alone', 'standalone'] },
-        { k: 'Summarises the objectives', alt: ['objectives'] },
-        { k: 'Summarises the procedures to be followed', alt: ['procedures', 'methods'] },
-        { k: 'Immediate overview of the work', alt: ['overview', 'immediate overview'] },
-        { k: 'Key financial information', alt: ['cost', 'financial information', 'price'] },
+        { k: 'Most important part of a proposal', alt: ['most important part', 'most important'] },
+        { k: 'Many evaluators read only the executive summary', alt: ['read only', 'quick overview', 'evaluators', 'read first', 'evaluators read it first'], d: 'To gain a quick overview.' },
+        { k: 'Should speak for the complete proposal', alt: ['complete proposal', 'whole proposal', 'covers the whole proposal', 'speak for'] },
+        { k: 'Should be able to stand alone', alt: ['stand alone', 'stands alone', 'standalone'] },
+        { k: 'Summarize what objectives will be met', alt: ['objectives', 'summarises the objectives'] },
+        { k: 'Summarize what procedures will be followed', alt: ['procedures', 'methods', 'summarises the procedures to be followed'] },
       ],
-      hook: 'The evaluator’s **one page**: whole proposal, **alone**, **why** (objectives), **how** (procedures), **what** at a glance, **how much**.',
+      hook: 'Two **M**’s and four **S**’s: **M**ost important · **M**any read only it · **S**peak for all · **S**tand alone · **S**ummarize objectives · **S**ummarize procedures.',
       seen: ['Jan 2021'],
-      src: KN3,
-      note: 'Question bank adds: write it last; about one page (5–10 % of the proposal); state the client’s need; give schedule and deliverables; show why the proposer should be chosen; use the client’s terms, no jargon, nothing not in the body.',
+      src: `${S5}; ${SH} (Jan 2021 Q4b)`,
+      note: '“Immediate overview of the work including financial information” is NOT an executive-summary point — on the slide it describes the Draft contract (the earlier version of this site had it here).',
     },
     {
       id: 'l-proposal-methods-checklist',
       topic: T,
-      title: 'Checklist for the methods and procedures section of a proposal',
+      title: 'Checklist for the methods and procedures of a proposal',
+      ask: 'What are the checklist items to keep in mind when preparing methods and procedures of a proposal?',
+      ordered: true,
       points: [
-        { k: 'Each task described step by step', alt: ['step by step', 'tasks'] },
-        { k: 'Methods linked to objectives and ToR', alt: ['objectives', 'ToR', 'terms of reference'] },
-        { k: 'Feasibility shown, alternatives considered', alt: ['feasibility', 'alternatives'] },
-        { k: 'Personnel, equipment, facilities, materials', alt: ['personnel', 'equipment', 'facilities'] },
-        { k: 'Schedule with milestones and deliverables', alt: ['schedule', 'milestones', 'deliverables'] },
-        { k: 'Quality control and monitoring', alt: ['quality control', 'monitoring', 'evaluation'] },
-        { k: 'Assumptions and client inputs', alt: ['assumptions', 'client inputs'] },
-        { k: 'Risks and their management', alt: ['risks', 'risk management'] },
-        { k: 'Clear, specific language', alt: ['clear language', 'specific'] },
+        { k: 'Be realistic as to what you can accomplish', alt: ['realistic', 'be realistic', 'feasibility'], d: 'Avoid overextending your capabilities and those of your company.' },
+        { k: 'Be specific as to method of meeting goals', alt: ['specific', 'be specific', 'method of meeting all goals'], d: 'Be specific as to the method of meeting all goals.' },
+        { k: 'Be precise with the time schedule', alt: ['precise', 'time schedule', 'schedule'] },
+        { k: 'Be clear how you will evaluate your work', alt: ['clear', 'evaluate', 'evaluation', 'quality control'], d: 'Be clear as to how you will evaluate your work, production or product.' },
+        { k: 'Be exact to the scope', alt: ['exact', 'scope'], d: 'What you will do and what you will not do.' },
       ],
+      hook: '**R**eal **S**ites **P**our **C**oncrete **E**arly — Realistic, Specific, Precise (schedule), Clear (evaluation), Exact (scope).',
       seen: ['Jan 2021'],
-      src: `${QB}; the class note only lists method, sources, sequence of activities, equipment and facilities, personnel`,
+      src: `${S5}; ${SH} (Jan 2021 Q4b)`,
+      note: 'Opening line on the slide: “State how project requirements will be met. The following checklist may be used for that purpose.” The earlier version of this site had a nine-item textbook checklist (step-by-step tasks, feasibility, quality control, risks …) — not the teacher’s.',
     },
+    {
+      id: 'l-proposal-equipment',
+      topic: T,
+      title: 'Methods: equipment and facilities',
+      ordered: true,
+      points: [
+        { k: 'State what facilities will be needed', alt: ['facilities needed', 'needed'] },
+        { k: 'State what you already have', alt: ['already have'] },
+        { k: 'Show how you will get the rest', alt: ['do not have', 'how you will get what you do not have'], d: 'Show how you will get what you do not have.' },
+      ],
+      seen: ['2016-17'],
+      src: S5,
+    },
+    {
+      id: 'l-proposal-personnel',
+      topic: T,
+      title: 'Methods: personnel information to include',
+      points: [
+        { k: 'Personnel arrangements', alt: ['arrangements'] },
+        { k: 'Company areas involved', alt: ['company areas'] },
+        { k: 'Individual qualifications in complete biographic form', alt: ['qualifications', 'biographic form', 'biography', 'CV'] },
+        { k: 'Percentages of time devoted to the project', alt: ['percentage of time', 'time'] },
+      ],
+      seen: ['2016-17'],
+      src: S5,
+    },
+    {
+      id: 'l-rfp-contents',
+      topic: T,
+      title: 'Information a request for proposal (RFP) may contain',
+      points: [
+        { k: 'Product or service for which bids are desired', alt: ['product', 'service', 'bids'], d: 'Express it clearly.' },
+        { k: 'Name, address, phone number of recipient', alt: ['name', 'address', 'phone number'], d: 'Of the person to whom the proposal should be sent.' },
+        { k: 'What bidders must include', alt: ['bidders must include', 'precise'], d: 'Be precise — this makes initial screening easier for locating qualified candidates.' },
+        { k: 'Time by which the proposal should arrive', alt: ['time', 'deadline'] },
+      ],
+      hook: '**What** is wanted → **to whom** it is sent → **what to include** → **by when**.',
+      seen: [],
+      src: S5,
+    },
+    {
+      id: 'l-proposal-chronology',
+      topic: T,
+      title: 'Chronology of procedures for solicited major proposals',
+      ask: 'Give the chronology of procedures for a major solicited proposal.',
+      ordered: true,
+      points: [
+        { k: 'Soliciting company publicly announces the project', alt: ['announce', 'public announcement', 'announces a project', 'RFP issued', 'need identified'], d: 'Soliciting company publicly announces a project in professional publications, newspapers or writes to companies asking if they are interested in bidding on the project.' },
+        { k: 'Contracting companies submit preliminary proposals', alt: ['preliminary proposals', 'preliminary proposal'], d: 'Contracting companies and others reacting to the public announcement submit preliminary proposals based on initial request information.' },
+        { k: 'Review, eliminate, short list of finalists', alt: ['short list', 'shortlist', 'review', 'eliminates', 'finalists'], d: 'Soliciting company reviews all submitted documents, eliminates some companies on the basis of preliminary review. Establishes short list of finalists.' },
+        { k: 'Finalists asked for highly detailed proposal, deadlines', alt: ['detailed proposal', 'highly detailed proposal', 'deadlines', 'deadline'], d: 'Soliciting company asks each finalist bidding for the project to submit a highly detailed proposal and sets deadlines for receiving the proposal.' },
+        { k: 'Finalists select teams; several editions; oral rehearsals', alt: ['presentation teams', 'teams', 'rehearsals', 'several editions', 'proposal team', 'write'], d: 'Finalist companies select their written and oral presentation teams; writing of their proposal proceeds through several editions; oral rehearsals based on proposal occur.' },
+        { k: 'Finalists submit proposals; oral presentation dates set', alt: ['submit', 'submission', 'submit proposals', 'dates for oral presentation'], d: 'Finalist companies submit proposals to the soliciting group; dates are established for oral presentation to the soliciting group.' },
+        { k: 'Finalist companies make their presentation', alt: ['presentation', 'oral presentation', 'present'] },
+        { k: 'Finalist companies wait for response', alt: ['wait', 'response', 'wait for response', 'award'] },
+      ],
+      hook: '**A**nnounce → **P**reliminary → **S**hort list → **D**etailed → **T**eams → **S**ubmit → **P**resent → **W**ait. Who acts: steps 1, 3, 4 begin “Soliciting company …”, step 2 “Contracting companies …”, steps 5–8 “Finalist companies …”.',
+      seen: ['2017-18', '2012-13'],
+      src: `${S5}; ${SH} (2017-18 Q8b)`,
+      note: 'Also 2009-10 Q2(a). Eight steps. The earlier version of this site had a 14-step textbook chronology (RFP, go / no-go, pre-proposal conference … award, debriefing) — not the teacher’s; write the eight slide steps.',
+    },
+    {
+      id: 'l-proposal-style',
+      topic: T,
+      title: 'Writing style and appearance of a proposal — issues to consider',
+      points: [
+        { k: 'General appearance', alt: ['appearance'] },
+        { k: 'Neatness', alt: ['neat'] },
+        { k: 'Specific appearance of individual parts', alt: ['specific appearance', 'table of contents', 'list of figures', 'title page', 'maps', 'graphs', 'charts'], d: 'Table of contents, list of figures, title page, maps, graphs, charts.' },
+        { k: 'Consistency of style', alt: ['consistency'] },
+        { k: 'Title properly describes the project', alt: ['title'], d: 'Title, whether it properly describes the project.' },
+        { k: 'Completeness', alt: ['complete'] },
+        { k: 'Professionalism', alt: ['professional'] },
+        { k: 'Checking and rechecking of final draft', alt: ['checking', 'rechecking', 'final draft'], d: 'Until satisfactory.' },
+        { k: 'Proper typing, proofing, graphs', alt: ['typing', 'proofing', 'proofreading'], d: 'Check for proper typing, proofing, graphs, etc.' },
+      ],
+      hook: 'Looks first (**general appearance, neatness, specific appearance**), then the text (**consistency, title, completeness, professionalism**), then the last checks (**recheck the draft, typing and proofing**) — 3 + 4 + 2.',
+      seen: [],
+      src: `${S5} — asked 2008-09 Q1(b) (Rahat’s question list)`,
+    },
+
+    // ---------- business messages (L08) ----------
     {
       id: 'l-msg-planning',
       topic: T,
-      title: 'Planning steps for an effective business message',
+      title: 'Planning steps for preparing effective business messages',
+      ask: 'What are the planning steps for preparing effective business messages?',
       ordered: true,
       points: [
-        { k: 'Identify the purpose', alt: ['purpose', 'identifying purpose'] },
-        { k: 'Analyse the audience', alt: ['audience', 'analyzing audience', 'anticipate audience'] },
-        { k: 'Choose ideas', alt: ['choosing idea', 'ideas'] },
-        { k: 'Collect data to support ideas', alt: ['collect data', 'research', 'data'] },
-        { k: 'Organise the message', alt: ['organising', 'organize', 'outline'] },
+        { k: 'Identifying purpose', alt: ['purpose', 'identify the purpose', 'identifying your purpose'], d: 'To provide information, to persuade, to negotiate, to refuse a request; transmit the message clearly, simultaneously creating goodwill.' },
+        { k: 'Analyzing audience', alt: ['audience', 'analyse the audience', 'analysing audience', 'anticipate audience'], d: 'Adapt the message to the receiver’s views, attitudes, needs, culture.' },
+        { k: 'Choosing ideas', alt: ['ideas', 'choose ideas', 'choosing idea'], d: 'List ideas as they come; choose ideas likely to get a desired response; depends on type of message, background of the receiver, location of receiver.' },
+        { k: 'Collecting data to support ideas', alt: ['collect data', 'data', 'research', 'collecting data'], d: 'Facts, figures, quotations, any evidence; check and verify names of individuals, dates, addresses, statistics.' },
+        { k: 'Organizing the message', alt: ['organising', 'organize', 'organise the message', 'outline'], d: 'Ordering of ideas; as important as the ideas themselves; outline the message on paper before writing the draft; disorganized messages look careless, unimportant, confusing.' },
       ],
-      hook: '**P**lease **A**sk **I**f **D**ata’s **O**K — Purpose, Audience, Ideas, Data, Organise.',
+      hook: '**P**lease **A**sk **I**f **D**ata’s **O**K — Purpose, Audience, Ideas, Data, Organizing.',
       seen: ['Jan 2021'],
-      src: KN7,
-      note: 'Question bank: the 3×3 process — analyse purpose, anticipate audience, adapt, research, organise, compose, revise.',
+      src: `${S8}; ${SH} (Jan 2021 Q4a)`,
+    },
+    {
+      id: 'l-msg-purposes',
+      topic: T,
+      title: 'Purposes a message may have',
+      points: [
+        { k: 'To provide information', alt: ['information', 'inform'] },
+        { k: 'To persuade', alt: ['persuade', 'persuasion'] },
+        { k: 'To negotiate', alt: ['negotiate', 'negotiation'] },
+        { k: 'To refuse a request', alt: ['refuse', 'refusal'] },
+      ],
+      seen: ['Jan 2021'],
+      src: S8,
+      note: 'It is important to transmit a message clearly, simultaneously creating goodwill.',
+    },
+    {
+      id: 'l-msg-adapt',
+      topic: T,
+      title: 'The message must be adapted to the receiver’s …',
+      ask: 'To get the desired response from the receiver, the message must be adapted to the receiver’s …?',
+      points: [{ k: 'Views' }, { k: 'Attitudes', alt: ['attitude'] }, { k: 'Needs', alt: ['need'] }, { k: 'Culture' }],
+      hook: '**V-A-N-C** — the receiver’s **VAN** of **C**ulture.',
+      seen: ['Jan 2021'],
+      src: S8,
     },
     {
       id: 'l-msg-audience',
       topic: T,
-      title: 'Issues to consider when analysing the audience',
+      title: 'Aspects of the receiver to analyze when sending a message',
+      ask: 'Describe the issues to consider when analyzing your audience.',
       points: [
         { k: 'Professional background', alt: ['background'] },
-        { k: 'Professional position', alt: ['position', 'status'] },
-        { k: 'Age and sex', alt: ['age', 'gender', 'sex'] },
+        { k: 'Position in the company', alt: ['position', 'professional position', 'status'] },
+        { k: 'Gender', alt: ['sex', 'age and sex'] },
+        { k: 'Age' },
         { k: 'Educational level', alt: ['education'] },
-        { k: 'Knowledge, attitude and cultural values', alt: ['knowledge', 'attitude', 'culture', 'cultural values'] },
+        { k: 'Knowledge, attitude, cultural values', alt: ['knowledge', 'attitude', 'culture', 'cultural values'] },
       ],
-      hook: 'Read the receiver’s **CV**: background, post, age/sex, degree — then their head (knowledge), heart (attitude) and roots (culture).',
+      hook: 'Read the receiver’s **CV**: background, post, gender, age, degree — then their head (knowledge), heart (attitude) and roots (cultural values).',
       seen: ['Jan 2021'],
-      src: KN7,
-      note: 'Question bank: primary/secondary audience, their knowledge, expected reaction, relationship/status, needs and benefits, demographics and culture, size and preferred channel.',
+      src: `${S8}; ${SH} (Jan 2021 Q4a)`,
+      note: 'Six separate aspects. Kabirul sir’s slide (the 18-batch solve) says “Sex”; Noor sir’s says “Gender”. Add: when writing to a business, organization, or country, it is essential to know the communication principles of the organization, business, or country.',
     },
     {
       id: 'l-msg-approach',
       topic: T,
-      title: 'Organisational plans (approaches) for a message',
+      title: 'Organizational plans (approaches) for composing a message',
       points: [
-        { k: 'Direct (deductive)', alt: ['direct', 'deductive'], d: 'Favourable/neutral reaction: main idea first, details, friendly close.' },
-        { k: 'Indirect (inductive)', alt: ['indirect', 'inductive'], d: 'Bad news or persuasion: reasons first, main idea later.' },
+        { k: 'Direct or deductive', alt: ['direct', 'deductive', 'direct (deductive)'], d: 'Receiver will have a favorable or neutral reaction: begin with the main ideas or best news → explanatory details → friendly closing.' },
+        { k: 'Indirect or inductive', alt: ['indirect', 'inductive', 'indirect (inductive)'], d: 'Persuasive request or bad news — the reader must be convinced or may react negatively.' },
       ],
       seen: [],
-      src: KN7,
+      src: `${S8} — asked 2010-11 Q3(b) (Rahat’s question list)`,
+    },
+    {
+      id: 'l-msg-direct-plan',
+      topic: T,
+      title: 'How a direct (deductive) message runs',
+      ordered: true,
+      points: [
+        { k: 'Begin with the main ideas or best news', alt: ['main idea', 'best news', 'main ideas'] },
+        { k: 'Include all necessary explanatory details', alt: ['explanatory details', 'details'], d: 'After the opening, in one or several paragraphs.' },
+        { k: 'End with an appropriate friendly closing', alt: ['friendly closing', 'closing', 'friendly close'] },
+      ],
+      seen: [],
+      src: S8,
+    },
+    {
+      id: 'l-msg-direct-situations',
+      topic: T,
+      title: 'Two situations when the direct approach is used',
+      points: [
+        { k: 'Direct request', d: 'The main purpose of the message is to make a request; the request by its very nature should require little persuasion.' },
+        { k: 'Good news', d: 'Used to grant requests; announce favorable or neutral information; exchange routine information between companies.' },
+      ],
+      seen: [],
+      src: S8,
+    },
+    {
+      id: 'l-msg-indirect-situations',
+      topic: T,
+      title: 'Two situations when the indirect approach is used',
+      points: [
+        { k: 'Persuasive request', d: 'The request by its very nature would require extensive persuasion and convincing; use attention-getting statements to induce the receiver to read further; make clear the what, why, how, where and when of the request.' },
+        { k: 'Bad news', d: 'Used to deny requests; announce unfavorable or negative information; difficult to prepare as the reader may react negatively.' },
+      ],
+      seen: [],
+      src: S8,
+    },
+    {
+      id: 'l-msg-beginnings-endings',
+      topic: T,
+      title: 'Beginnings and endings of a message',
+      points: [
+        { k: 'Main favorable ideas at beginning and end', alt: ['placement', 'favorable ideas', 'favourable ideas'] },
+        { k: 'Beginning gets reader immediately into opening thought', alt: ['opening thought', 'beginning'] },
+        { k: 'Emphasize the reader, focus on positive aspects', alt: ['emphasize the reader', 'positive aspects', 'positive'] },
+        { k: 'Ending focuses on desired action, leaves goodwill', alt: ['desired action', 'goodwill', 'ending'] },
+        { k: 'Ending reinforces central purpose of the message', alt: ['central purpose', 'reinforce'] },
+        { k: 'Show appreciation and offer to help further', alt: ['appreciation', 'offer to help'] },
+      ],
+      seen: [],
+      src: S8,
     },
     {
       id: 'l-msg-composing',
       topic: T,
-      title: 'Steps for composing a message',
+      title: 'Composing the message (four stages)',
       ordered: true,
       points: [
-        { k: 'Drafting', alt: ['draft'] },
-        { k: 'Revising', alt: ['revise'] },
-        { k: 'Editing', alt: ['edit'] },
-        { k: 'Proofreading', alt: ['proofread'] },
+        { k: 'Drafting', alt: ['draft', 'drafting the message'], d: 'After completing the planning steps, get the whole message on paper: the first draft.' },
+        { k: 'Revising', alt: ['revise', 'revising the message'], d: 'Evaluate content, organization, and style of the draft.' },
+        { k: 'Editing', alt: ['edit', 'editing the message'], d: 'Check all paragraphs: topic sentences, sentence structure, grammar, spelling, punctuation, effectiveness.' },
+        { k: 'Proofreading', alt: ['proofread', 'proofreading the message'], d: 'Ensure there are no errors; even minor errors reduce the effectiveness of the message and undermine credibility.' },
       ],
       hook: '**D**on’t **R**ush **E**very **P**age.',
       seen: [],
-      src: KN7,
+      src: S8,
+    },
+    {
+      id: 'l-msg-revising',
+      topic: T,
+      title: 'Steps (questions) when revising a message',
+      ordered: true,
+      points: [
+        { k: 'Does the message accomplish its purpose?', alt: ['purpose', 'accomplish its purpose'] },
+        { k: 'Is the organizational plan effective?', alt: ['organizational plan', 'organisation'] },
+        { k: 'Are points supported by adequate material?', alt: ['adequate material', 'supported'] },
+        { k: 'Is language complete, concise, considerate, concrete, clear, courteous?', alt: ['language', 'seven Cs', '7 Cs', 'complete concise considerate concrete clear courteous'] },
+        { k: 'Is there variety in sentence structure?', alt: ['variety', 'sentence structure'] },
+        { k: 'Delete unnecessary, include additional material', alt: ['delete unnecessary material', 'additional material'], d: 'Delete unnecessary material and include additional material if needed.' },
+      ],
+      hook: 'Purpose → Plan → Proof (material) → Language (six C’s) → Sentences → Cut and add.',
+      seen: [],
+      src: S8,
+    },
+    {
+      id: 'l-msg-editing',
+      topic: T,
+      title: 'What to check when editing a message',
+      points: [
+        { k: 'Good topic sentences', alt: ['topic sentences', 'topic sentence'] },
+        { k: 'Sound sentence structure', alt: ['sentence structure'] },
+        { k: 'Correct grammar', alt: ['grammar'] },
+        { k: 'Spelling' },
+        { k: 'Punctuation' },
+        { k: 'Effectiveness of the message', alt: ['effectiveness'] },
+      ],
+      seen: [],
+      src: S8,
     },
   ],
 
   cards: [
-    { id: 'c-report-define', topic: T, front: 'Define a **report** (class wording).', back: 'A **formal statement of facts and information** written for a **specific audience** for **making an informed decision**.', seen: ['2015-16'], src: KN4 },
-    { id: 'c-proposal-define', topic: T, front: 'What is a **proposal** (project proposal)?', back: 'A **written plan or presentation for completing a task**, offered to a client or organisation for approval.', seen: ['2017-18'], src: KN3 },
-    { id: 'c-proposal-solicited', topic: T, front: '**Solicited** vs **unsolicited** proposal?', back: '**Solicited**: the organisation asks for it (RFP) for a specific need — many bidders compete. **Unsolicited**: sent on one’s own initiative to convince an organisation that the sender has the skills to solve its problem.', src: KN3 },
-    { id: 'c-exec-summary-why', topic: T, front: 'Why is the **executive summary** the most important part of a proposal?', back: 'Evaluators read it **first** (often only it) to get a quick overview — so it must cover the whole proposal and **stand alone**.', seen: ['Jan 2021'], src: KN3 },
-    { id: 'c-report-terminal-rule', topic: T, front: 'Two rules for the **terminal section** of a short report.', back: 'Summarise in the **same order as the body** topics, and **add no new topic or material** there.', seen: ['May 2024'], src: KN4 },
-    { id: 'c-report-body-rules', topic: T, front: 'How is the **body** of a short report written?', back: 'Relevant facts presented accurately and organised; important ideas emphasised; **headings** guide the reader; **visual aids**; each paragraph with a **topic sentence**; each major section with an introductory paragraph; follow the **seven C’s**.', seen: ['May 2024'], src: KN4 },
-    { id: 'c-report-conference', topic: T, front: 'What is a **conference report**?', back: 'Written by an employee/executive who attended a conference, giving the discussed topics in **chronological order**.', seen: ['2023-24'], src: KN4 },
-    { id: 'c-report-periodic', topic: T, front: 'What is a **periodic report**?', back: 'A report at a **regular recurring period** (weekly, monthly, quarterly). Favourable news in about half a page; unfavourable news may take a page, with how it will be handled.', seen: ['2023-24'], src: KN4 },
-    { id: 'c-report-letter', topic: T, front: 'What is a **letter report**?', back: 'A small report in **letter form**, usually to an outside organisation: first paragraph purpose/problem and method, middle results under headings, last paragraph conclusion, recommendation and offer.', seen: ['2023-24'], src: KN4 },
-    { id: 'c-report-justification', topic: T, front: 'What is a **recommendation / justification report**?', back: 'It **recommends a change** (vs the status quo): introduction states the recommendation, body supports it with accurate information, terminal section requests a response or action.', seen: ['2023-24'], src: KN4 },
-    { id: 'c-report-personnel', topic: T, front: 'Structure of a **personnel report**.', back: '**Introduction** (purpose, background, methodology, plan) → **main body** (headings and sub-headings) → **terminal section** (summary + conclusion).', src: KN4 },
-    { id: 'c-report-biblio', topic: T, front: 'What is a **bibliography**, and which two formats are common?', back: 'The list of sources (and additional reading) at the **end of the document**. Formats: **MLA** (Modern Language Association) and **APA** (American Psychological Association).', src: KN4 },
-    { id: 'c-report-footnote', topic: T, front: '**Footnote** vs **endnote** — and why use them?', back: 'Both explain content, **identify the source** and add information, increasing trust in the report. **Footnote**: bottom of the page. **Endnote**: end of the chapter or book. Numbered in order.', src: KN4 },
-    { id: 'c-msg-direct', topic: T, front: 'When is the **direct (deductive)** plan used, and how does it run?', back: 'When the receiver’s reaction will be **favourable or neutral** (routine request, good news, routine information). **Main idea / best news first** → necessary details → friendly closing.', src: KN7 },
-    { id: 'c-msg-indirect', topic: T, front: 'When is the **indirect (inductive)** plan used?', back: 'For **persuasive requests** and **bad news** (request denied, unfavourable announcement) — reasons come before the main idea, because the reader may react badly.', src: KN7 },
-    { id: 'c-abstract-define', topic: T, front: 'What is **abstraction**, and why is it necessary?', back: 'Selecting **some details** of an object or event and **omitting the rest**. Necessary because no one can perceive or report every detail; it lets us summarise and generalise — abstracts and executive summaries depend on it.', seen: ['2023-24', '2020-21'], src: 'Kabirul sir note ch.1' },
-    { id: 'c-slanted-abstract', topic: T, front: 'What is a **slanted abstract**, and what is its purpose?', back: 'An abstract whose details are chosen (still **factual**) to **mislead or deceive** — to favour one side. Purpose: to **persuade/influence** (ads, proposals, propaganda). Avoid it in objective reports.', seen: ['2023-24', '2020-21'], src: 'Kabirul sir note ch.1' },
+    // reports
+    { id: 'c-report-define', topic: T, front: 'Define a **report** (slide wording).', back: 'A **formal statement of facts, information**, written for a **specific audience**, for **making informed decision**. A report also contains **inferences made, conclusions reached, recommendations provided** — based on **facts** and **supporting evidence** included.', seen: ['2015-16'], src: S6 },
+    { id: 'c-report-inference', topic: T, front: 'What is an **inference**?', back: 'The process of **drawing a conclusion based on evidence and reasoning** rather than on direct observation.', src: `${S6} (teacher’s glossary box)` },
+    { id: 'c-report-fact-evidence', topic: T, front: '**Fact** vs **supporting evidence**?', back: 'A **fact** is an indisputably true piece of information; **supporting evidence** is the strategic use of that fact to prove a specific claim or argument.', src: `${S6} (teacher’s glossary box)` },
+    { id: 'c-report-body-rules', topic: T, front: 'How must the facts be presented in the **body** of a short report — and what does *impartially* mean?', back: 'Present **all relevant facts accurately and impartially**. Impartially = making decisions or treating people **fairly, without bias, favoritism, or taking sides**.', seen: ['2022-23', '2015-16'], src: S6 },
+    { id: 'c-report-terminal-rule', topic: T, front: 'Two rules for the **terminal section** of a short report.', back: 'Summarize points in the **same order as topics discussed in the text**, and **do not include new material** in the terminal section.', seen: ['2022-23', '2015-16'], src: S6 },
+    { id: 'c-report-topic-sentence', topic: T, front: 'What is a **topic sentence**, and where does it go?', back: 'The **main or introductory sentence** of a paragraph that **summarizes its core point**; used at the **beginning of a paragraph**.', src: `${S6} (teacher’s glossary box)` },
+    { id: 'c-report-intro-title', topic: T, front: 'When is the title “Introduction” omitted in a short report?', back: 'For **short introductions** (one or two short paragraphs) the title “Introduction” is generally omitted.', src: S6 },
+    { id: 'c-report-memorandum', topic: T, front: 'What is a **memorandum** (memo)?', back: 'A written message or document used primarily for **communication within** a business, organization, or government agency.', seen: ['2023-24'], src: `${S6} (teacher’s glossary box)` },
+    { id: 'c-report-letter', topic: T, front: 'What is a **letter report**?', back: 'A **small report in letter form**, used to send information to a reader **outside the organization**. It includes date, inside address, salutation, subject line (optional), body, complimentary close, signature, reference section.', seen: ['2023-24'], src: S6 },
+    { id: 'c-report-informational', topic: T, front: 'What does an **informational report** do — and avoid?', back: '**Summarizes information by reviewing facts covered**. Avoids giving **inferences, opinions, judgement, recommendations** from presented data; uses **neutral, unbiased language** rather than a particular point of view.', src: S6 },
+    { id: 'c-report-info-memo', topic: T, front: 'What is an **informational memorandum report**?', back: 'An informational report presented in **memorandum form**, normally used for **circulation within the organization** by email, fax etc. Kinds: **conference, progress, periodic**.', seen: ['2023-24'], src: S6 },
+    { id: 'c-report-conference', topic: T, front: 'What is a **conference report**?', back: 'Written by **employees or executives after a significant conference** with individuals or committees. Text organized **by topics discussed** or presented simply in **chronological fashion**.', seen: ['2023-24'], src: S6 },
+    { id: 'c-report-progress', topic: T, front: 'What is a **progress report**, and how is it organized?', back: 'Shows **progress, i.e. accomplishments** — over time, or at a given stage of a major assignment. Its organizational plan is usually **inductive**: specific facts and details first, main conclusions / overall status at the end.', seen: ['2023-24'], src: S6 },
+    { id: 'c-report-periodic', topic: T, front: 'What is a **periodic report** (and how long, in a USA company)?', back: 'Written at **regular recurring periods** — weekly, monthly, quarterly. Expected to be **half a page if the news is favorable**; for **unfavorable news it may be one page**, including the reasons for the unfavorable situation and the way it was being handled.', seen: ['2023-24'], src: S6 },
+    { id: 'c-report-analytical', topic: T, front: 'What do **analytical memorandum reports** do?', back: '**Seek to analyze a situation**; have a **conclusion**; **may or may not** have a recommendation. Kinds: **personnel** and **recommendation-justification** reports.', seen: ['2023-24'], src: S6 },
+    { id: 'c-report-personnel', topic: T, front: 'What is a **personnel report**?', back: 'The personnel report category contains **employee human-resource reports**. Topics: assignment, attendance, benefits, awards, new employees, terminated employees, discipline, disability, and more.', seen: ['2023-24'], src: `${S6}. (Nafee bhai’s note gave its structure instead: introduction → main body → terminal section.)` },
+    { id: 'c-report-justification', topic: T, front: 'What does a **recommendation-justification report** do?', back: '**Recommends a change or remaining with the status quo** (policy aspect); **supports the idea that something is desirable or undesirable** (value aspect); **defends the accuracy of information** (fact aspect). It may be in response to a request or voluntary.', seen: ['2023-24'], src: S6 },
+    { id: 'c-report-status-quo', topic: T, front: 'What does **status quo** mean?', back: 'A Latin phrase: the **existing state of affairs**, the current situation.', src: `${S6} (teacher’s glossary box)` },
+    { id: 'c-long-report', topic: T, front: 'What is a **long report**?', back: 'An **extension of a short report**: greater length and depth of discussion of **more complex problems**; requires more preliminary collecting, sorting, interpreting, writing, editing and creation of visuals; a **mix of informative and persuasive information**.', src: S6 },
+    { id: 'c-long-numbering', topic: T, front: 'Page **numbering scheme** of a long report.', back: '**Cover and title fly**: do not count. **Title page** and **transmittal document**: count but do not insert number. **Table of contents, table of tables, executive summary**: count and number. Small **Roman** numerals for prefatory pages, **Arabic** numbers for supplemental sheets.', src: S6 },
+    { id: 'c-long-typing', topic: T, front: 'Typing a long report: spacing and margin rules.', back: 'Harmonious style throughout; double or **single spacing** (more popular in recent years); always **double space between paragraphs**, before and after quotations, visual aids and footnotes; single space for the transmittal document, quotations, lists, footnotes, tables; **top margin 1.5 to 2 inch**.', src: S6 },
+    { id: 'c-report-title-fly', topic: T, front: 'What is a **title fly**, and what are the four parts of the **title page**?', back: 'Title fly: a **blank sheet between the cover and the internal title page** (it carries at most the title). Title page: **title** as stated on the exterior cover, the **recipient** of the report, the **preparer**, the **date**.', src: S6 },
+    { id: 'c-report-frontispiece', topic: T, front: 'What is a **frontispiece**?', back: 'An **illustration or photograph** positioned on the page **facing the title page**.', src: `${S6} (teacher’s glossary box)` },
+    { id: 'c-report-toc', topic: T, front: 'Rules for the **table of contents** of a long report.', back: 'Prepare the ToC **last** — after assigning headings and final page numbers; place it **just before the report body**; all headings in the ToC should **parallel those in the text**. Table of tables = list of illustrations, data, visuals.', src: S6 },
+    { id: 'c-report-exec-summary', topic: T, front: 'The **executive summary of a report** — where is it placed and why does it matter?', back: 'Generally placed **right after the transmittal letter**. It is the **most read part**: many executives decide from it whether to read the report; some firms circulate only it to management. It may be **deductively organized (recommendations first)**.', src: S6 },
+    { id: 'c-report-biblio', topic: T, front: 'What is a **bibliography**, and which two forms are common?', back: 'The **list of sources cited as documentation** for relevant content in the report, included at the **end of the document** (scholarly report always, business report optional); also sources for additional reading. Forms: **MLA** (Modern Language Association) and **APA** (American Psychological Association).', src: S6 },
+    { id: 'c-report-footnote', topic: T, front: '**Footnotes and endnotes** — what are they for and how are they marked?', back: 'They **explain content or identify sources** (citation), which **improves credibility** and lets the reader examine sources. Placed at the **bottom of the page, end of chapter or end of book**; marked with **superscript numerals**, numbered consecutively through the report or restarting with each chapter.', src: S6 },
+
+    // proposals
+    { id: 'c-proposal-define', topic: T, front: 'What is a **proposal** (project proposal)?', back: 'A **written plan or presentation for completing a task**. The task may be to: solve a problem; alter a procedure; find answers to questions; offer advice or training; conduct research on a topic.', seen: ['2017-18'], src: S5 },
+    { id: 'c-proposal-solicited', topic: T, front: '**Solicited** vs **unsolicited** proposal?', back: '**Solicited**: solicited by a business organization to meet its specific needs — has many competitors bidding for a contract. **Unsolicited**: sent to convince a business or organization that the sender has the skills to solve their problems; resolution of the problems would significantly benefit the organization.', src: S5 },
+    { id: 'c-proposal-research-business', topic: T, front: '**Research** proposal vs **business** proposal?', back: 'Research proposal: deals with **academic investigation**. Business proposal: deals with **securing business**.', src: S5 },
+    { id: 'c-exec-summary-why', topic: T, front: 'Why is the **executive summary** the most important part of a proposal?', back: '**Many evaluators read only the executive summary** to gain a quick overview — so it should **speak for the complete proposal** and be able to **stand alone**.', seen: ['Jan 2021'], src: S5 },
+    { id: 'c-draft-contract', topic: T, front: 'What is the **draft contract** in a proposal?', back: '**Inserted after the executive summary for long proposals**; gives an **immediate overview of the work including financial information**. (These two points belong to the draft contract, not to the executive summary.)', seen: ['2016-17'], src: S5 },
+    { id: 'c-proposal-toc', topic: T, front: 'When does a proposal need a **table of contents**?', back: '**Brief proposals do not require a TOC.** Long proposals require a TOC as well as a list of **tables, figures, illustrations**.', src: S5 },
+    { id: 'c-proposal-purpose', topic: T, front: 'How is the **purpose** written in the introduction of a proposal?', back: 'In **simple language, as if approaching a non-specialist**; often stated in **infinitive form** — to recommend, to bid, to supply.', src: S5 },
+    { id: 'c-proposal-problem', topic: T, front: 'What does the **problem** statement of a proposal do?', back: '**Clearly states the problem** and demonstrates **clear understanding** of it. If pertinent, mentions **difficulties that may be encountered** and **methods proposed to overcome** the problems.', src: S5 },
+    { id: 'c-proposal-scope', topic: T, front: 'What is the **scope** in a proposal?', back: 'It defines the **boundaries being set for the project** to accomplish objectives — **what you will do and what you will not do**.', src: S5 },
+    { id: 'c-proposal-team', topic: T, front: 'What goes under **project team** in a proposal?', back: 'The **list of individuals who will work for the project**; in long proposals, a **brief curriculum vitae** of each individual.', src: S5 },
+    { id: 'c-proposal-background', topic: T, front: 'What does the **background** of a long proposal include?', back: 'May be **omitted for short proposals**. For long ones: **previous work** completed on identical or related projects; **literature review** on the subject and its evaluation; a statement showing how the proposal will **build on already completed projects and research**.', src: S5 },
+    { id: 'c-proposal-budget', topic: T, front: 'How is the **budget** presented in a proposal?', back: 'Present the budget **as specified in the RFP**. Add a **budget justification section**: state in paragraph form the rationale for the financial figures shown in tabular, graphical or chart format — salaries and wages, capital equipment, travel, consultants etc.', src: S5 },
+    { id: 'c-proposal-appendices', topic: T, front: 'Advice on **appendices** of a proposal.', back: 'Appendices: graphs, tables, letters of support and endorsement, list of references. Some reviewers read them **last, if at all**; additional bulk could produce a **negative reaction**. **When in doubt, leave it out.**', src: S5 },
+    { id: 'c-rfp-who', topic: T, front: 'Who sends a **request for proposal (RFP)**, and to whom?', back: 'A **government, company, agency or individual** may send an RFP to **outside vendors who they feel are qualified** to complete a given project.', src: S5 },
+
+    // business messages
+    { id: 'c-msg-goodwill', topic: T, front: 'Whatever the purpose, how must a business message be transmitted?', back: '**Clearly**, and **simultaneously creating goodwill**.', src: S8 },
+    { id: 'c-msg-principles', topic: T, front: 'What must you know when writing to a business, organization, or country?', back: 'The **communication principles** of the organization, business, or country.', seen: ['Jan 2021'], src: S8 },
+    { id: 'c-msg-disorganized', topic: T, front: 'Why organize a message — what do disorganized messages look like?', back: 'Organization (ordering of ideas) is **as important as the ideas themselves**; first step: **outline the message on paper before writing the draft**. Disorganized messages look **careless, unimportant, confusing**.', src: S8 },
+    { id: 'c-msg-direct', topic: T, front: 'When is the **direct (deductive)** approach used, and how does it run?', back: 'When you think the receiver will have a **favorable or neutral reaction**. **Begin with the main ideas or best news** → after the opening, all necessary **explanatory details** in one or several paragraphs → end with an appropriate **friendly closing**. Situations: **direct request**, **good news**.', src: S8 },
+    { id: 'c-msg-indirect', topic: T, front: 'When is the **indirect (inductive)** approach used?', back: 'Two situations: a **persuasive request** (needs extensive persuasion and convincing — attention-getting statements; make clear the what, why, how, where and when) and **bad news** (deny requests, announce unfavorable or negative information — the reader may react negatively).', src: S8 },
+    { id: 'c-msg-proofreading', topic: T, front: 'Why **proofread** a message?', back: 'To ensure there are **no errors** — even minor errors can **reduce the effectiveness** of the message and **undermine credibility**.', src: S8 },
+
+    // abstract
+    { id: 'c-abstract-define', topic: T, front: 'What is **abstraction**, and why is it necessary?', back: '**Focusing on some details and omitting others.** Facts pertinent to the problem are selected due to **limitations of time, space, purpose** — so it is necessary and desirable.', seen: ['2022-23', '2020-21', '2017-18', '2016-17', '2014-15', '2012-13', '2011-12'], src: `${S2}; “necessary and desirable” from the 18-batch solve` },
+    { id: 'c-slanted-abstract', topic: T, front: 'What is a **slanted abstract**, and what is its purpose?', back: 'When facts are selected to **distort reality or support one’s own view of reality**: slanted abstract. **Purpose: to deceive, mislead, miscommunicate.** E.g. selling a car by naming only its brand-new engine and great gas mileage, hiding the broken AC and failing transmission.', seen: ['2023-24', '2020-21'], src: S2 },
   ],
 
   answers: [
     {
       id: 'a-writing-report',
       topic: T,
-      q: 'Define a report. Why are reports important? Briefly describe the steps to be followed in writing a (short) report.',
+      q: 'Define a report. Why are reports important? Briefly describe the steps to be followed in writing a short report.',
       seen: ['2015-16'],
       a: `### Definition
-A report is a **formal statement of facts and information** written for a **specific audience** for **making an informed decision**. Reports are short or long, and informational or interpretative.
+**Report:** a **formal statement of facts, information**, which is written for a **specific audience** for **making informed decision**, is called a report.
 
-### Importance
-1. **Decision making** — gives decision-makers facts and analysis.
-2. **Record** — records work done (progress, inspection, test) for accountability and audit.
-3. **Monitoring** — checks performance against plan.
-4. **Coordination** — links departments.
-5. **Findings and recommendations** — carries them to those who act.
-6. **Evidence** — serves as evidence in disputes.
+A report also contains **inferences made, conclusions reached and recommendations provided**, based on facts and the supporting evidence included.
 
-### Steps (class note)
-1. **Problem specifying, data collection and organisation** — define the problem and reader, collect facts, organise them.
-2. **Writing the first draft** — introduction, body with headings, terminal section; add visual aids.
-3. **Editing and revising** the draft — seven C’s, accuracy.
-4. **Typing the document** — final copy with bibliography and documentation.
+### Importance of reports
+1. **Useful insights for management** — on spending, profits and growth.
+2. **Detail for forecasts**, marketing plans, budget planning and decision-making.
+3. **Track progress** and growth; identify trends or irregularities.
+4. **Audit trail** of business activities.
+5. **Transparency** — the annual report is a legal requirement.
+6. **Compare performance** with others in the sector.
 
-*The importance points are from standard texts (no class source). Books split the steps further: define problem and reader, scope, gather, analyse, choose format, draft, visual aids, revise and submit.*`,
-      keys: ['formal statement of facts and information', 'specific audience', 'informed decision', 'Record', 'Monitoring', 'Coordination', 'Evidence', 'first draft', 'Editing and revising', 'Typing'],
-      lists: ['l-report-importance', 'l-report-steps', 'l-report-types'],
-      src: `${KN4}; importance = ${QB}`,
+### Steps in writing a short report
+**1. Introduction**
+- Give **purpose or aim (always)**, background, list of topics to be discussed, authorization.
+- For short introductions (one or two short paragraphs), the title “Introduction” is generally omitted.
+
+**2. Body or text**
+- Present all relevant facts **accurately and impartially**.
+- Organise.
+- Emphasize important ideas by giving important details, placement in document of relevant information.
+- Use **headings** to guide reader through the report.
+- Include **visual aids** like graphs, charts, pictures whenever they clarify.
+- Use **topic sentences** at the beginning of a paragraph.
+- Use introductory paragraphs at the beginning of a major section.
+- Apply **seven C’s** of writing principles.
+
+**3. Terminal section**
+- Summarize, conclude and offer recommendation.
+- Summary condenses text, conclusions evaluate and infer from text, recommendations offer specific course of action.
+- Summarize points in the **same order** as topics discussed in the text.
+- Do not include **new material** in the terminal section of the report.`,
+      keys: ['formal statement of facts, information', 'specific audience', 'making informed decision', 'insights for management', 'Audit trail', 'Transparency', 'purpose or aim (always)', 'accurately and impartially', 'headings', 'visual aids', 'topic sentences', 'Terminal section', 'same order', 'new material'],
+      lists: ['l-report-importance', 'l-short-report-writing', 'l-short-report-intro', 'l-short-report-body', 'l-report-terminal'],
+      src: `${S6}; ${SH} (2015-16 Q6a). Importance: not on the slides — the six points are the 18-batch solve’s. The steps asked are the SHORT-report steps (Introduction / Body / Terminal), not the four long-report steps.`,
     },
     {
       id: 'a-writing-short-structure',
       topic: T,
       q: 'Outline the structure of a short report.',
-      seen: ['May 2024'],
+      seen: ['2022-23'],
       a: `A short report has **three parts**:
 
-1. **Introduction** — purpose/aim, background, authorization; kept short (may be dropped in a very short report).
-2. **Body or text** — relevant facts presented accurately and organised; important ideas emphasised; **headings** to guide the reader; **visual aids** (graph, chart, picture); every paragraph with a **topic sentence**; each major section with an introductory paragraph; follow the seven C’s.
-3. **Terminal section** — **summarization, conclusion, recommendation and offer**, in the same order as the body; no new topic or material is added.
-
-*Some books outline it as title; introduction; findings; conclusions; recommendations; attachments.*`,
-      keys: ['three parts', 'Introduction', 'Body or text', 'Terminal section', 'headings', 'visual aids', 'topic sentence', 'summarization, conclusion, recommendation and offer', 'no new topic'],
-      lists: ['l-report-short-structure', 'l-report-terminal'],
-      src: KN4,
+1. **Prefatory part or introduction** — gives the purpose or aim (always), background, list of topics to be discussed and authorization.
+2. **Discussion, text or body** — presents all relevant facts accurately and impartially, organised, with headings, visual aids and topic sentences; the seven C’s are applied.
+3. **Terminal section** — includes **summary, conclusions and recommendations**: the summary condenses the text, the conclusions evaluate and infer from the text, the recommendations offer a specific course of action. Points come in the same order as in the text, and **no new material** is included.`,
+      keys: ['three parts', 'Prefatory part or introduction', 'Discussion, text or body', 'Terminal section', 'summary, conclusions and recommendations', 'purpose or aim', 'headings', 'no new material'],
+      lists: ['l-report-short-structure', 'l-report-terminal', 'l-short-report-intro', 'l-short-report-body'],
+      src: S6,
     },
     {
       id: 'a-writing-short-formats',
       topic: T,
       q: 'What are the different formats of short report?',
       seen: ['2023-24'],
-      a: `1. **Memorandum report** — informational or interpretative memorandum, for use inside the organisation.
-2. **Conference report** — by an employee who attended a conference; topics in chronological order.
-3. **Progress report** — shows progress over time: introduction → accomplishments → unanticipated problems → plan for next period → summary.
-4. **Periodic report** — at regular periods (weekly, monthly, quarterly); good news brief, bad news with the remedy.
-5. **Letter report** — a small report in letter form, often to an outside organisation.
-6. **Personnel report** — introduction → main body with headings → terminal section.
-7. **Recommendation / justification report** — recommends a change and supports it, then asks for a response.`,
-      keys: ['Memorandum report', 'Conference report', 'Progress report', 'Periodic report', 'Letter report', 'Personnel report', 'justification report'],
-      lists: ['l-report-short-formats', 'l-report-progress'],
-      src: KN4,
+      a: `Short reports come in **three formats** (draw the tree):
+
+### 1. Letter report
+- A small report in **letter form**, used to send information to a reader **outside the organization**.
+- Includes: date, inside address, salutation, subject line (optional), body, complimentary close, signature, reference section.
+
+### 2. Informational memorandum report
+An informational report presented in memorandum form, normally circulated **within the organization** (email, fax etc.). It summarizes facts and avoids inferences, opinions, judgement and recommendations.
+- **Conference report** — written by employees or executives after a significant conference with individuals or committees; organized by topics discussed or in chronological fashion.
+- **Progress report** — shows progress, i.e. accomplishments, over time or at a given stage of a major assignment; its plan is usually inductive.
+- **Periodic report** — written at regular recurring periods: weekly, monthly, quarterly.
+
+### 3. Interpretative / analytical memorandum report
+It seeks to **analyze a situation**, has a conclusion, and may or may not have a recommendation.
+- **Personnel report** — employee human-resource reports: assignment, attendance, benefits, awards, new employees, terminated employees, discipline, disability.
+- **Recommendation-justification report** — recommends a change or remaining with the status quo (policy aspect), supports the idea that something is desirable or undesirable (value aspect), defends the accuracy of information (fact aspect).`,
+      keys: ['three formats', 'Letter report', 'letter form', 'outside the organization', 'Informational memorandum report', 'within the organization', 'Conference report', 'Progress report', 'Periodic report', 'analytical memorandum report', 'Personnel report', 'Recommendation-justification report'],
+      lists: ['l-report-short-formats', 'l-letter-report-parts', 'l-letter-report-paragraphs', 'l-report-progress', 'l-recjust-aspects', 'l-recjust-sections'],
+      src: `${S6}; the tree is how Rahat’s note (CE22) draws the slide`,
+      Fig: FormatsFig,
     },
     {
       id: 'a-writing-slanted-abstract',
@@ -420,99 +1078,242 @@ A report is a **formal statement of facts and information** written for a **spec
       q: 'What is abstraction and why is it necessary? Explain what a slanted abstract is and its purpose.',
       seen: ['2023-24', '2020-21'],
       a: `### Abstraction
-**Abstraction** (abstracting) is selecting **some details** of an object or event and **omitting the rest**. Words sit on a ladder from concrete (“Jamuna Bridge”) to general (“bridge”, “structure”, “asset”).
+**Abstraction** (abstracting) is **focusing on some details and omitting others**. It comes under differences in perception of reality.
 
-### Why necessary
-- Reality has endless details; no one can perceive or report them all.
-- It lets us **summarise, classify and generalise** and communicate quickly — abstracts and executive summaries depend on it.
-- The writer must choose the right level: concrete enough to be clear, general enough to be brief.
+### Why it is necessary
+- Facts pertinent to the problem are selected due to **limitations of time, space, purpose** — no message can carry every detail of reality.
+- So abstraction is **necessary and desirable**.
+- Example: a site engineer’s daily report mentions the concrete poured, the labour used and the problems faced — not every minute on site.
 
 ### Slanted abstract
-A **slanted abstract** selects details (still **factual**) or uses loaded words to favour one side and **mislead or deceive** the receiver; it reveals the sender’s bias. E.g. “The contractor finished 90 % of the work” vs “The contractor failed to finish 10 % of the work”.
+When facts are selected to **distort reality** or to support one’s **own view of reality**, the result is a **slanted abstract**: the favourable facts are kept and the unfavourable ones left out.
 
 ### Purpose
-To **persuade or influence** the receiver’s attitude — used in advertising, sales letters, proposals and propaganda. In objective technical reports it should be avoided; receivers should recognise it and look for the omitted facts.`,
-      keys: ['Abstraction', 'some details', 'omitting the rest', 'summarise, classify and generalise', 'slanted abstract', 'factual', 'mislead or deceive', 'persuade or influence', 'bias'],
-      src: 'Kabirul sir note ch.1 (definitions); necessity and purpose from question bank (standard text)',
+The purpose of a slanted abstract is **to deceive, mislead, miscommunicate**.
+
+### Example
+- **Reality:** the car has a **brand-new engine**, gets great gas mileage, the AC is completely broken, and the transmission is starting to fail.
+- **Slanted abstract:** “I’m selling my car. It has a brand-new engine and gets great gas mileage.” The faults are hidden, so the buyer is misled.
+- **Honest abstract:** “I’m selling my car. It has a brand-new engine and gets great gas mileage, but it will need transmission and AC work.”
+- Civil example: a contractor’s report that mentions only the completed items and hides the failed cube tests.`,
+      keys: ['focusing on some details and omitting others', 'limitations of time, space, purpose', 'necessary and desirable', 'distort reality', 'own view of reality', 'slanted abstract', 'to deceive, mislead, miscommunicate', 'brand-new engine'],
+      src: `${S2}: definition, necessity, slanted abstract, purpose and the car (reality + honest version) are the slide’s; “necessary and desirable” is the 18-batch solve’s; the slanted version of the car advert and the site / contractor examples are from Rahat’s note. For 8 marks (2023-24) give one line on abstraction, then the slanted abstract, purpose and car example.`,
     },
     {
       id: 'a-writing-proposal-parts',
       topic: T,
       q: 'Describe (list in detail) the different parts of a business proposal and what they contain.',
-      seen: ['2017-18', '2016-17', '2012-13'],
-      a: `A proposal is a **written plan or presentation for completing a task**. It has three parts:
+      seen: ['2016-17', '2012-13'],
+      a: `**Proposal:** a written plan or presentation for completing a task is called a proposal. It has three parts: **prefatory parts**, **body** and **supplementary parts**.
 
-### 1. Prefatory part
-Cover with title; inside title page; table of contents; list of tables and figures; **request for proposal (RFP)** / draft contract; **response to proposal (RTP)**; owner’s requirements; scheduled interview time; **executive summary**.
+### 1. Prefatory parts
+1. **Cover, with title**
+2. **Inside title page** — title; name of person or company to whom the proposal is submitted; name of person or company submitting the proposal; date.
+3. **Table of contents (TOC)** — brief proposals do not require a TOC; long proposals require a TOC as well as a list of tables, figures, illustrations.
+4. **List of tables and/or figures**
+5. **Request for proposal letter** (owner’s solicitation letter)
+6. **Response to proposal** (company’s cover letter)
+7. **Description of owner’s requirement**
+8. **Schedule for selecting personnel**
+9. **Executive summary or abstract** — most important part of a proposal; many evaluators read only it to gain a quick overview; should speak for the complete proposal and be able to stand alone; summarizes what objectives will be met and what procedures will be followed.
+10. **Draft contract** — inserted after the executive summary for long proposals; gives an immediate overview of the work including financial information.
 
 ### 2. Body
-- **Introduction** — background, objective, scope, need/problem.
-- **Procedure (plan of attack)** — methods, sources, sequence of activities, equipment and facilities.
-- **Project team / qualifications** — personnel and their experience.
-- **Products** — deliverables.
-- **Budget** — price and cost breakdown.
-- **Project schedule** — bar chart with milestones.
+**a. Introduction**
+- **Problem** — clearly state the problem and demonstrate clear understanding of it; if pertinent, mention difficulties that may be encountered and methods proposed to overcome them.
+- **Need**
+- **Scope** — the boundaries set for the project: what you will do and what you will not do.
+- **Background** — may be omitted for short proposals; for long proposals: previous work on identical or related projects, literature review and its evaluation, how the proposal will build on already completed projects and research.
+- **Objective or purpose** — in simple language, as if approaching a non-specialist; often in infinitive form: to recommend, to bid, to supply.
+- **Project team** — list of individuals who will work for the project; in long proposals a brief curriculum vitae of each.
 
-### 3. Supplementary part
-Maps, graphs, tables and charts; **letter of support**; **letter of endorsement**; references; forms; table of definitions.
+**b. Procedures**
+- **Methods, procedures, sources** — state how project requirements will be met: be realistic, be specific as to the method, be precise with the time schedule, be clear how the work will be evaluated, be exact to the scope.
+- **Plan of attack**
+- **Sequence of activities**
+- **Equipment, facilities, products** — what facilities will be needed, what you already have, how you will get what you do not have.
+- **Personnel qualifications** — personnel arrangements; company areas involved; individual qualifications in complete biographic form; percentages of time personnel will devote to the project.
+- **Budget of costs, prices, total bids** — as specified in the RFP, with a budget justification section (salaries and wages, capital equipment, travel, consultants etc.).
 
-*Books also add a letter of transmittal in front and an authorisation request at the end.*`,
-      keys: ['written plan', 'Prefatory part', 'Body', 'Supplementary part', 'executive summary', 'RFP', 'Introduction', 'Procedure', 'Budget', 'Project schedule', 'letter of support', 'letter of endorsement'],
-      lists: ['l-proposal-parts', 'l-proposal-prefatory', 'l-proposal-body', 'l-proposal-supplementary', 'l-proposal-types'],
-      src: KN3,
+### 3. Supplementary parts
+1. Maps, graphs, tables, charts
+2. **Letter of support**
+3. **Letter of endorsement**
+4. References
+5. Forms
+6. Table of definition
+7. **Project schedules**`,
+      keys: ['written plan or presentation for completing a task', 'Prefatory parts', 'Inside title page', 'Request for proposal letter', 'Response to proposal', 'Schedule for selecting personnel', 'Executive summary or abstract', 'Draft contract', 'Introduction', 'Procedures', 'Plan of attack', 'Personnel qualifications', 'Supplementary parts', 'Letter of support', 'Letter of endorsement', 'Project schedules'],
+      lists: ['l-proposal-parts', 'l-proposal-prefatory', 'l-proposal-body', 'l-proposal-intro', 'l-proposal-procedures', 'l-proposal-supplementary', 'l-proposal-title-page', 'l-proposal-equipment', 'l-proposal-personnel'],
+      src: `${S5}; shape = 18-batch solve (2016-17 Q6a); the three-column sketch is how Rahat’s note draws it. For “list” wording the names alone are enough; “in detail / what they contain” needs the sub-points.`,
+      Fig: ProposalPartsFig,
+    },
+    {
+      id: 'a-writing-proposal-def-supp',
+      topic: T,
+      q: 'What is a project proposal? What do the supplementary parts of a project proposal generally contain?',
+      seen: ['2017-18'],
+      a: `### Project proposal
+**Project proposal:** a **written plan or presentation for completing a task** is called a project proposal. The task may be to:
+- solve a problem
+- alter a procedure
+- find answers to questions
+- offer advice or training
+- conduct research on a topic
+
+### Supplementary parts
+The supplementary parts of a project proposal generally contain:
+1. **Maps, graphs, tables, charts**
+2. **Letter of support**
+3. **Letter of endorsement**
+4. **References**
+5. **Forms**
+6. **Table of definition**
+7. **Project schedules**
+
+Some reviewers leave the reading of appendices to the last, if they read them at all, and additional bulk could produce a negative reaction — when in doubt whether a document is necessary, leave it out.`,
+      keys: ['written plan or presentation for completing a task', 'solve a problem', 'Maps, graphs, tables, charts', 'Letter of support', 'Letter of endorsement', 'References', 'Forms', 'Table of definition', 'Project schedules'],
+      lists: ['l-proposal-tasks', 'l-proposal-supplementary'],
+      src: `${S5}; ${SH} (2017-18 Q8b). The third part of that question is the chronology (separate answer).`,
     },
     {
       id: 'a-writing-proposal-chronology',
       topic: T,
       q: 'Give a complete chronological description of the steps (procedures) followed during the entire process of a major solicited proposal.',
       seen: ['2017-18', '2012-13'],
-      a: `1. **Need and RFP** — the client identifies the need and prepares a request for proposal (often after EOI short-listing).
-2. **RFP issued** to short-listed or interested firms.
-3. **Go / no-go decision** — the firm studies the RFP and decides whether to bid.
-4. **Pre-proposal conference** / site visit; written clarifications sought.
-5. **Proposal team** — proposal manager and team appointed; outline, responsibilities and internal deadlines set; partners arranged.
-6. **Research** the client, project and site; develop the technical approach.
-7. **Staffing, work plan, schedule and cost estimate** prepared.
-8. **Writing** — sections and graphics; executive summary written last.
-9. **Internal review** — revise, edit, proofread; check compliance with every RFP requirement.
-10. **Approval and packaging** — management approval, signatures; technical and financial parts in separate envelopes.
-11. **Submit** before the deadline; obtain a receipt.
-12. **Evaluation** — the client evaluates; may ask for clarifications, presentations or interviews.
-13. **Award** — ranking, negotiation with the top firm, award and contract signing.
-14. **Debriefing** — unsuccessful firms ask for a debriefing to learn for next time.`,
-      keys: ['RFP', 'Go / no-go', 'Pre-proposal conference', 'Proposal team', 'cost estimate', 'executive summary written last', 'Internal review', 'Submit', 'Evaluation', 'Award', 'Debriefing'],
+      a: `The chronology of procedures for solicited major proposals is given below:
+
+1. **Soliciting company publicly announces** a project in professional publications, newspapers, or writes to companies asking if they are interested in bidding on the project.
+2. Contracting companies and others reacting to the public announcement submit **preliminary proposals** based on initial request information.
+3. Soliciting company reviews all submitted documents and eliminates some companies on the basis of preliminary review. It establishes a **short list of finalists**.
+4. Soliciting company asks each finalist bidding for the project to submit a **highly detailed proposal** and **sets deadlines** for receiving the proposal.
+5. Finalist companies select their **written and oral presentation teams**; writing of their proposal proceeds through **several editions**; **oral rehearsals** based on the proposal occur.
+6. Finalist companies **submit proposals** to the soliciting group; dates are established for oral presentation to the soliciting group.
+7. Finalist companies **make their presentation**.
+8. Finalist companies **wait for response**.`,
+      keys: ['Soliciting company publicly announces', 'preliminary proposals', 'short list of finalists', 'highly detailed proposal', 'sets deadlines', 'written and oral presentation teams', 'several editions', 'oral rehearsals', 'submit proposals', 'make their presentation', 'wait for response'],
       lists: ['l-proposal-chronology'],
-      src: QB,
+      src: `${S5}; ${SH} (2017-18 Q8b); also 2009-10 Q2(a). The vertical flow chart is Rahat’s tip.`,
+      Fig: ChronologyFig,
     },
     {
       id: 'a-writing-exec-summary',
       topic: T,
       q: 'What are the main issues to consider when preparing the executive summary/abstract or synopsis of a proposal? What are the checklist items for methods and procedures of a proposal?',
       seen: ['Jan 2021'],
-      a: `### Executive summary
-1. **Most important part** — evaluators read it first to get a quick overview.
-2. **Whole proposal** — it must tell about the whole proposal.
-3. **Stand alone** — readable without the rest.
-4. **Objectives** — summarise the objectives of the proposal.
-5. **Procedures** — summarise the procedures to be followed.
-6. **Immediate overview** of the work, with key **financial information** (cost) and schedule.
-7. **Write it last**, about one page, in the client’s terms — no jargon and nothing not in the body (standard text).
+      a: `### Executive summary, abstract or synopsis
+The main issues to consider when preparing the executive summary of a proposal are given below:
+1. It is the **most important part** of a proposal.
+2. Many evaluators **read only the executive summary** to gain a **quick overview**.
+3. It should **speak for the complete proposal**.
+4. It should be able to **stand alone**.
+5. It should summarize **what objectives will be met**.
+6. It should summarize **what procedures will be followed**.
 
 ### Checklist for methods and procedures
-1. Each task described **step by step** in logical order.
-2. Methods linked to the **objectives** and ToR.
-3. **Feasibility** shown; alternatives considered.
-4. Personnel, equipment, facilities and materials for each task.
-5. **Schedule** with milestones and deliverables.
-6. **Quality control** and monitoring.
-7. Assumptions and inputs expected from the client.
-8. **Risks** and how they will be managed.
-9. Clear, specific language.
-
-*The checklist is from standard texts; the class note’s procedure section lists method, sources, sequence of activities, equipment and facilities, and personnel.*`,
-      keys: ['Most important part', 'Whole proposal', 'Stand alone', 'Objectives', 'Procedures', 'Immediate overview', 'financial information', 'step by step', 'Feasibility', 'Quality control', 'Risks'],
+State how project requirements will be met. The following checklist may be used for that purpose:
+1. **Be realistic** as to what you can accomplish. Avoid **overextending** your capabilities and those of your company.
+2. **Be specific** as to the method of meeting all goals.
+3. **Be precise** with the time schedule.
+4. **Be clear** as to how you will evaluate your work, production or product.
+5. **Be exact to the scope**: what you will do and what you will not do.`,
+      keys: ['most important part', 'read only the executive summary', 'quick overview', 'speak for the complete proposal', 'stand alone', 'what objectives will be met', 'what procedures will be followed', 'Be realistic', 'overextending', 'Be specific', 'Be precise', 'Be clear', 'Be exact to the scope'],
       lists: ['l-exec-summary', 'l-proposal-methods-checklist'],
-      src: `${KN3}; checklist = ${QB}`,
+      src: `${S5}; ${SH} (Jan 2021 Q4b)`,
+    },
+    {
+      id: 'a-writing-proposal-body',
+      topic: T,
+      q: 'List in detail what the body of a proposal should contain.',
+      seen: [],
+      a: `The body of a proposal has two sections: **Introduction** and **Procedures**.
+
+### 1. Introduction
+1. **Problem** — clearly state the problem and demonstrate clear understanding of the problem; if pertinent, mention difficulties that may be encountered and methods proposed to overcome the problems.
+2. **Need**
+3. **Scope** — define the boundaries that are being set for the project to accomplish objectives: what you will do and what you will not do.
+4. **Background** — may be omitted for short proposals; for long proposals include previous work completed on identical or related projects, literature review on the subject and its evaluation, and a statement showing how the proposal will build on already completed projects and research.
+5. **Objective or purpose** — written in a simple language as if approaching a non-specialist; often stated in infinitive form: to recommend, to bid, to supply.
+6. **Project team** — list of individuals who will work for the project; in long proposals, a brief curriculum vitae of each individual.
+
+### 2. Procedures
+1. **Methods, procedures, sources** — state how project requirements will be met (be realistic; be specific as to the method of meeting all goals; be precise with the time schedule; be clear as to how you will evaluate your work; be exact to the scope).
+2. **Plan of attack**
+3. **Sequence of activities**
+4. **Equipment, facilities, products** — state what facilities will be needed to accomplish the project; state what you already have; show how you will get what you do not have.
+5. **Personnel qualifications** — personnel arrangements; company areas involved; individual qualifications, expressed in complete biographic form; percentages of time that personnel will devote to the project.
+6. **Budget of costs, prices, total bids** — present the budget as specified in the RFP; add a budget justification section (salaries and wages, capital equipment, travel, consultants etc.).`,
+      keys: ['Introduction', 'Procedures', 'Problem', 'Need', 'Scope', 'Background', 'Objective or purpose', 'Project team', 'Methods, procedures, sources', 'Plan of attack', 'Sequence of activities', 'Equipment, facilities, products', 'Personnel qualifications', 'Budget of costs, prices, total bids'],
+      lists: ['l-proposal-body', 'l-proposal-intro', 'l-proposal-procedures', 'l-proposal-methods-checklist', 'l-proposal-equipment', 'l-proposal-personnel'],
+      src: `${S5}. Not in our 12 papers — asked 2010-11 Q2(b), 2009-10 Q2(b), 2008-09 Q1(a) (Rahat’s question list); 2008-09 also wants the definition of a proposal first.`,
+    },
+    {
+      id: 'a-writing-proposal-style',
+      topic: T,
+      q: 'Describe briefly the important considerations in terms of writing style and appearance when writing a proposal.',
+      seen: [],
+      a: `Style and appearance of a proposal is very important. The following issues are to be considered:
+
+1. **General appearance**
+2. **Neatness**
+3. **Specific appearance** of: table of contents, list of figures, title page, maps, graphs, charts
+4. **Consistency of style**
+5. **Title** — whether it properly describes the project
+6. **Completeness**
+7. **Professionalism**
+8. **Checking and rechecking** of the final draft until satisfactory
+9. Check for proper **typing, proofing**, graphs, etc.`,
+      keys: ['General appearance', 'Neatness', 'Specific appearance', 'Consistency of style', 'Title', 'Completeness', 'Professionalism', 'Checking and rechecking', 'typing, proofing'],
+      lists: ['l-proposal-style'],
+      src: `${S5}. Not in our 12 papers — asked 2008-09 Q1(b) (Rahat’s question list).`,
+    },
+    {
+      id: 'a-writing-rfp',
+      topic: T,
+      q: 'What is a request for proposal (RFP)? What information may it contain?',
+      seen: [],
+      a: `A government, company, agency or individual may send a **request for proposal (RFP)** to **outside vendors** who they feel are qualified to complete a given project.
+
+An RFP may contain the following information:
+1. Express clearly the **product or service** for which bids are desired.
+2. Give the **name, address, phone number** of the person to whom the proposal should be sent.
+3. Be precise as to **what bidders must include** — this makes initial screening easier for locating qualified candidates.
+4. Indicate the **time by which the proposal should arrive**.`,
+      keys: ['request for proposal (RFP)', 'outside vendors', 'product or service', 'name, address, phone number', 'what bidders must include', 'time by which the proposal should arrive'],
+      lists: ['l-rfp-contents'],
+      src: `${S5}. On this term’s slides, not asked yet (Rahat’s note marks it a possible short question).`,
+    },
+    {
+      id: 'a-writing-long-report',
+      topic: T,
+      q: 'What is a long report? Describe its structure and the steps of writing it.',
+      seen: [],
+      a: `### Long report
+A long report is an **extension of a short report**: greater length and depth of discussion of more complex problems; more preliminary collecting, sorting, interpreting, writing, editing and creation of visuals; a mix of informative and persuasive information.
+
+### Structure
+1. **Prefatory part** — cover; frontispiece; copyright notice; forwarding letter / transmittal letter; preface; acknowledgements; table of contents; list of illustrations; abstract and executive summary.
+2. **Main body** — introduction; discussion or text (chapters, sections, subsections); conclusions; recommendations.
+3. **Back matter** — appendices; list of references; bibliography; glossary; index.
+
+### Preparatory steps
+1. Recognize clearly the issues, problems, purpose, scope of the report.
+2. Realize who your readers will be.
+3. Get an idea of sources of information.
+4. Understand when the report needs to be completed.
+5. Recognize financial and time constraints.
+
+### Writing the long report: four steps
+1. **First step** — define the problem; collect all needed material; sort and interpret data; organize the final outline; prepare visual aids; finally write, edit, revise, type.
+2. **Second step (writing first draft)** — write the outline and start writing; summary, conclusions, recommendations; introduction; then executive summary, letter of transmittal, bibliography or endnotes, table of contents, table of figures.
+3. **Third step (editing, revising draft)** — lay aside the first draft for several days; look objectively at the material and identify weakness of the draft; revise, rewrite the draft several times.
+4. **Final step (type the document)** — harmonious style throughout; double or single spacing; top margin of 1.5 to 2 inch; every page except the cover and title fly numbered.
+
+### Letter of transmittal
+A cover letter or cover memorandum with five parts: **authorization**, **transmittal details**, **background and methodology**, **highlights**, **courteous ending**.`,
+      keys: ['extension of a short report', 'Prefatory part', 'Main body', 'Back matter', 'frontispiece', 'glossary', 'First step', 'writing first draft', 'editing, revising draft', 'type the document', 'authorization', 'transmittal details', 'background and methodology', 'highlights', 'courteous ending'],
+      lists: ['l-report-long-structure', 'l-long-prefatory', 'l-long-back', 'l-long-prep-steps', 'l-report-steps', 'l-transmittal-parts', 'l-report-title-5w', 'l-report-exec-summary'],
+      src: `${S6}. Half of the report slides, never asked yet (Rahat’s note marks it a likely new question).`,
     },
     {
       id: 'a-writing-business-messages',
@@ -520,26 +1321,85 @@ Maps, graphs, tables and charts; **letter of support**; **letter of endorsement*
       q: 'What are the planning steps for preparing effective business messages? Describe the issues to consider when analysing your audience.',
       seen: ['Jan 2021'],
       a: `### Planning steps
-1. **Identify the purpose** — what should the receiver know, do or feel?
-2. **Analyse the audience** — who will read it and how they will react.
-3. **Choose ideas** — the main points to carry the purpose.
-4. **Collect data** to support the ideas.
-5. **Organise the message** — direct (deductive) plan for good/neutral news, indirect (inductive) plan for bad news or persuasion.
+The planning steps for preparing effective business messages are given below:
+1. **Identifying purpose** — to provide information, to persuade, to negotiate, to refuse a request; the message must be transmitted clearly, simultaneously creating goodwill.
+2. **Analyzing audience**
+3. **Choosing ideas** — list ideas as they come; choose ideas likely to get a desired response; they depend on the type of message, background of the receiver and location of receiver.
+4. **Collecting data to support ideas** — facts, figures, quotations, any evidence; check and verify names of individuals, dates, addresses, statistics.
+5. **Organizing the message** — ordering of ideas; outline the message on paper before writing the draft; disorganized messages look careless, unimportant, confusing.
 
-### Analysing the audience
-Know the receiver so the message gets the **desired response** — consider their views, attitudes, needs and culture:
-1. **Professional background**
-2. **Professional position** (status, relationship to you)
-3. **Age and sex**
-4. **Educational level**
-5. **Knowledge, attitude and cultural values**
+### Issues to consider when analyzing the audience
+**1.** To get the **desired response** from the receiver of the message, the message must be adapted to the receiver’s **views, attitudes, needs, culture**.
 
-Write the message keeping these in mind and following the organisation’s communication principles. After planning: drafting → revising → editing → proofreading.
+**2.** The following aspects of the receiver of a message must be analyzed when sending a message:
+- **Professional background**
+- **Position in the company**
+- **Gender** (sex)
+- **Age**
+- **Educational level**
+- **Knowledge, attitude, cultural values**
 
-*Some books add: primary vs secondary audience, expected reaction, needs and benefits, size and preferred channel.*`,
-      keys: ['Identify the purpose', 'Analyse the audience', 'Choose ideas', 'Collect data', 'Organise the message', 'desired response', 'Professional background', 'Professional position', 'Age and sex', 'Educational level', 'cultural values'],
-      lists: ['l-msg-planning', 'l-msg-audience', 'l-msg-approach', 'l-msg-composing'],
-      src: KN7,
+**3.** When writing to a business, organization, or country, it is essential to know the **communication principles** of the organization, business, or country.`,
+      keys: ['Identifying purpose', 'Analyzing audience', 'Choosing ideas', 'Collecting data to support ideas', 'Organizing the message', 'desired response', 'views, attitudes, needs, culture', 'Professional background', 'Position in the company', 'Gender', 'Educational level', 'Knowledge, attitude, cultural values', 'communication principles'],
+      lists: ['l-msg-planning', 'l-msg-purposes', 'l-msg-adapt', 'l-msg-audience'],
+      src: `${S8}; ${SH} (Jan 2021 Q4a: 5 + 12 marks)`,
+    },
+    {
+      id: 'a-writing-deductive-inductive',
+      topic: T,
+      q: 'Describe the deductive and inductive approach in organizing a message.',
+      seen: [],
+      a: `Fundamentally, two types of organizational plans or approaches are used when composing a business message.
+
+### 1. Direct or deductive approach
+- Used when you think the receiver will have a **favorable or neutral reaction** to your message.
+- **Begin with the main ideas or best news**.
+- After the opening, include all necessary **explanatory details** in one or several paragraphs.
+- End with an appropriate **friendly closing**.
+- Two situations: **direct request** (the request by its very nature requires little persuasion) and **good news** (grant requests; announce favorable or neutral information; exchange routine information between companies).
+
+### 2. Indirect or inductive approach
+Two situations:
+- **Persuasive request** — the request by its very nature would require extensive persuasion and convincing; use **attention-getting statements** to induce the receiver to read further; make clear the what, why, how, where and when of the request.
+- **Bad news** — used to deny requests and announce unfavorable or negative information; difficult to prepare as the reader may react negatively.
+
+| Point | Direct / deductive | Indirect / inductive |
+|---|---|---|
+| Receiver’s expected reaction | Favorable or neutral | Negative, or needs persuasion |
+| Main idea placed | At the beginning | After the explanation / reasons |
+| Used for | Direct requests, good news | Persuasive requests, bad news |
+
+### Beginnings and endings
+Main favorable ideas are generally placed at the beginning and the end of the message; the ending should focus on the desired action, leave a sense of goodwill, show appreciation and offer to help further.`,
+      keys: ['Direct or deductive', 'favorable or neutral reaction', 'Begin with the main ideas or best news', 'explanatory details', 'friendly closing', 'direct request', 'good news', 'Indirect or inductive', 'Persuasive request', 'attention-getting statements', 'Bad news'],
+      lists: ['l-msg-approach', 'l-msg-direct-plan', 'l-msg-direct-situations', 'l-msg-indirect-situations', 'l-msg-beginnings-endings'],
+      src: `${S8}; the comparison table is from Rahat’s note. Not in our 12 papers — asked 2010-11 Q3(b) (Rahat’s question list).`,
+    },
+    {
+      id: 'a-writing-composing',
+      topic: T,
+      q: 'Describe the steps of composing a business message (drafting, revising, editing, proofreading).',
+      seen: [],
+      a: `### 1. Drafting the message
+After completing the planning steps, get the whole message on paper: the **first draft**.
+
+### 2. Revising the message
+Evaluate **content, organization, and style** of the draft. Follow these steps when revising:
+- Does the message accomplish its purpose?
+- Is the organizational plan effective?
+- Are points supported by adequate material?
+- Is language complete, concise, considerate, concrete, clear, and courteous?
+- Is there variety in sentence structure?
+- Delete unnecessary material and include additional material if needed.
+
+### 3. Editing the message
+Check all paragraphs for: good **topic sentences**; sound sentence structure; correct **grammar**; spelling; **punctuation**; effectiveness of the message.
+
+### 4. Proofreading the message
+Ensure there are **no errors** in the message — even minor errors can reduce the effectiveness of the message and **undermine credibility**.`,
+      keys: ['Drafting', 'first draft', 'Revising', 'content, organization, and style', 'accomplish its purpose', 'Editing', 'topic sentences', 'grammar', 'punctuation', 'Proofreading', 'no errors', 'undermine credibility'],
+      lists: ['l-msg-composing', 'l-msg-revising', 'l-msg-editing'],
+      src: `${S8}. On this term’s slides, not asked yet.`,
     },
   ],
 } satisfies PcTopicContent

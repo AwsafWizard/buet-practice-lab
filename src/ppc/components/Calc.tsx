@@ -1,8 +1,9 @@
-// Worked solutions for the number-type parts: the QCBS score sheet and the Tender Data Sheet.
+// Worked solutions for the number-type parts: the QCBS score sheet and the Tender Data Sheet,
+// laid out the way the class solves write them.
 
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { qcbs } from '../engine/qcbs'
-import { cr, tds, tdsKey } from '../engine/tds'
+import { cr, num, tds, TDS_ORDER, tdsKey } from '../engine/tds'
 import type { PcCalc } from '../types'
 
 const f2 = (x: number) => (Math.abs(x - Math.round(x)) < 1e-9 ? String(Math.round(x)) : x.toFixed(2))
@@ -15,52 +16,53 @@ function QcbsSheet({ calc }: { calc: Extract<PcCalc, { kind: 'qcbs' }> }) {
   const r = qcbs(calc.firms, calc.techWeight, calc.qualify)
   const unit = calc.unit ?? ''
   const T = calc.techWeight / 100
+  const out = r.rows.filter((x) => !x.qualified)
   return (
     <div className="text-sm space-y-2">
-      <div className="font-bold">QCBS score sheet</div>
+      <div className="font-bold">QCBS ranking</div>
       <ol className="list-decimal pl-5 space-y-1">
         <li>
-          Technical proposals are evaluated first. Firms below the qualifying mark of <b>{calc.qualify}</b> are rejected and their financial proposals returned unopened
-          {r.rows.some((x) => !x.qualified) ? `: ${r.rows.filter((x) => !x.qualified).map((x) => x.name).join(', ')}.` : ' (none here).'}
+          Technical proposals are evaluated first. A firm scoring below the qualifying mark of <b>{calc.qualify}</b> is not considered and its financial proposal is returned unopened
+          {out.length ? `: ${out.map((x) => x.name).join(', ')}.` : ' (none here).'}
         </li>
         <li>
-          Financial score of each qualified firm: S<sub>f</sub> = 100 × F<sub>m</sub> / F, with F<sub>m</sub> = lowest evaluated price = <b>{r.fm !== undefined ? `${f2(r.fm)} ${unit}` : '—'}</b>.
+          Financial score F<sub>s</sub> = 100 × F<sub>m</sub> / F, where F<sub>m</sub> is the lowest financial offer among the qualified firms = <b>{r.fm !== undefined ? `${f2(r.fm)} ${unit}` : '—'}</b> and F is the firm’s own offer.
         </li>
         <li>
-          Combined score S = S<sub>t</sub> × {f2(T)} + S<sub>f</sub> × {f2(1 - T)} (weights {calc.techWeight} : {100 - calc.techWeight}).
+          Combined score = {f2(T)} T<sub>s</sub> + {f2(1 - T)} F<sub>s</sub> (technical weight {calc.techWeight}%, financial weight {100 - calc.techWeight}%).
         </li>
       </ol>
       <div className="overflow-x-auto">
         <table className="tbl">
           <thead>
             <tr>
-              <th>Firm</th>
-              <th>S<sub>t</sub></th>
-              <th>Qualified?</th>
-              <th>Price</th>
-              <th>S<sub>f</sub></th>
-              <th>S = {f2(T)}S<sub>t</sub> + {f2(1 - T)}S<sub>f</sub></th>
-              <th>Rank</th>
+              <th>Name of the firm</th>
+              <th>T<sub>s</sub> (100)</th>
+              <th>Financial offer{unit ? ` (${unit})` : ''}</th>
+              <th>F<sub>s</sub></th>
+              <th>Combined score ({f2(T)} T<sub>s</sub> + {f2(1 - T)} F<sub>s</sub>)</th>
+              <th>Ranking</th>
             </tr>
           </thead>
           <tbody>
             {r.rows.map((x) => (
               <tr key={x.name} className={x.rank === 1 ? 'font-bold' : ''}>
                 <td>{x.name}</td>
-                <td className="num">{x.tech}</td>
-                <td>{x.qualified ? 'yes' : <span className="text-bad">no — unopened</span>}</td>
-                <td className="num">{x.price !== undefined ? `${f2(x.price)} ${unit}` : '—'}</td>
+                <td className="num">{x.qualified ? x.tech : <span className="text-bad">{x.tech} (×)</span>}</td>
+                <td className="num">{x.qualified && x.price !== undefined ? f2(x.price) : '—'}</td>
                 <td className="num">{x.sf !== undefined ? `100 × ${f2(r.fm!)} / ${f2(x.price!)} = ${f2(x.sf)}` : '—'}</td>
                 <td className="num">{x.s !== undefined ? `${f2(T * x.tech)} + ${f2((1 - T) * x.sf!)} = ${f2(x.s)}` : '—'}</td>
-                <td className="num">{x.rank ?? '—'}</td>
+                <td className="num">{x.rank ?? (x.qualified ? '—' : 'not qualified')}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
       <div>
-        <b>{r.winner}</b> has the highest combined score and is invited for negotiation; if negotiation fails, the next-ranked firm is invited.
-        {r.tie && <span className="text-load"> The top two scores are equal: the firm with the higher technical score is shown first. Write the tie down and say how you broke it.</span>}
+        <b>{r.winner} is selected</b>: it has the highest combined score and is invited for negotiation. If the negotiation fails, the firm ranked next is invited.
+        {r.tie && (
+          <span className="text-load"> The top two combined scores are equal. Class rule: when the combined scores are equal, the firm with the greater technical score is selected. Write that line in the answer.</span>
+        )}
       </div>
     </div>
   )
@@ -68,47 +70,74 @@ function QcbsSheet({ calc }: { calc: Extract<PcCalc, { kind: 'qcbs' }> }) {
 
 function TdsSheet({ calc }: { calc: Extract<PcCalc, { kind: 'tds' }> }) {
   const [why, setWhy] = useState(true)
-  const r = tds({ costCrore: calc.costCrore, months: calc.months, storeys: calc.storeys })
-  const rows = calc.items.map((it) => ({ it, line: r.lines[tdsKey(it) ?? ''] }))
-  const tag = { PPR: 'PPR 2008', class: 'class note', practice: 'standard practice' }
+  const r = tds({ costCrore: calc.costCrore, months: calc.months, storeys: calc.storeys, lengthM: calc.lengthM, billingPct: calc.billingPct })
+  // the items this paper asks for, in the order the class table is written
+  const asked = new Set(calc.items.map(tdsKey))
+  const keys = TDS_ORDER.filter((k) => asked.has(k))
+  const other = calc.items.filter((it) => !tdsKey(it))
+  const groups = ['Qualification Criteria', 'Tender Preparation'] as const
+  const cols = why ? 3 : 2
   return (
     <div className="text-sm space-y-2">
       <div className="flex items-center gap-2">
-        <div className="font-bold flex-1">Tender Data Sheet (TDS) entries</div>
+        <div className="font-bold flex-1">Tender Data Sheet</div>
         <button className="btn !py-0.5 !text-xs" onClick={() => setWhy(!why)}>
           {why ? 'hide' : 'show'} working
         </button>
       </div>
       <div className="text-mute">
-        Estimate {cr(calc.costCrore)}, {calc.months} months{calc.storeys ? `, ${calc.storeys} storeys` : ''} → about {cr(r.annual)} of work a year, {cr(r.monthly)} a month.
+        Total cost {cr(calc.costCrore)}, duration {num(calc.months)} months ({num(r.years)} years){calc.storeys ? `, ${calc.storeys} storeys` : ''}
+        {calc.lengthM ? `, ${num(calc.lengthM, 0)} m long` : ''}. Assuming the billing amount is {num(r.billingPct)}%{calc.billingPct ? ' (given)' : ''}.
       </div>
       <div className="overflow-x-auto">
         <table className="tbl [&_td]:!font-sans [&_td]:!text-[13px]">
           <thead>
             <tr>
-              <th>ITT clause / item</th>
-              <th>TDS entry</th>
-              {why && <th>How the figure was set</th>}
+              <th>ITT clause</th>
+              <th>Tender Data Sheet entry</th>
+              {why && <th>Working</th>}
             </tr>
           </thead>
           <tbody>
-            {rows.map(({ it, line }) => (
+            {groups.map((g) => {
+              const ks = keys.filter((k) => r.lines[k].group === g)
+              if (!ks.length) return null
+              return (
+                <Fragment key={g}>
+                  <tr>
+                    <td colSpan={cols} className="font-bold text-accent">
+                      {g}
+                    </td>
+                  </tr>
+                  {ks.map((k) => {
+                    const line = r.lines[k]
+                    return (
+                      <tr key={k}>
+                        <td className="font-semibold whitespace-nowrap">
+                          {line.itt}
+                          <div className="font-normal text-mute">{line.item}</div>
+                        </td>
+                        <td>{line.entry}</td>
+                        {why && <td className="text-mute">{line.basis}</td>}
+                      </tr>
+                    )
+                  })}
+                </Fragment>
+              )
+            })}
+            {other.map((it) => (
               <tr key={it}>
                 <td className="font-semibold">{it}</td>
-                <td>{line ? line.entry : 'State the requirement for this tender (see the answer).'}</td>
-                {why && (
-                  <td className="text-mute">
-                    {line?.basis} {line && <span className="chip !text-[10px]">{tag[line.from]}</span>}
-                  </td>
-                )}
+                <td colSpan={cols - 1}>State the requirement for this tender (see the answer).</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
       <div className="text-xs text-mute">
-        Only the tender-security rule is in PPR 2008 (a rounded fixed amount, never a percentage, at most 3% of the official estimate). The experience, turnover and liquid-asset multiples are
-        standard-document practice, so the paper accepts reasonable values when you state the basis, as above. (2023-24: “Assume reasonable value for missing data.”)
+        These are the class formulas: turnover = (total cost ÷ years) × 3; liquid asset = cost per month × (months between two bills + 3 months of assumed delay), rounded up; tender security 2 to 3% of the
+        cost. PPR 2008 r.22 words the security as a rounded fixed amount, never a percentage, of at most 3% of the official estimate. Always write your assumptions (billing amount, and the duration if the
+        paper does not give one).
       </div>
     </div>
   )

@@ -40,7 +40,7 @@ export function qcbs(firms: QcbsFirm[], techWeight: number, qualify: number): Qc
     r.sf = (100 * fm!) / r.price!
     r.s = r.tech * T + r.sf * P
   }
-  // equal combined scores: the technically stronger firm first
+  // class rule (note Ques-14 N.B.): if the combined scores are equal, the firm with the greater technical score is selected
   const ranked = [...priced].sort((a, b) => b.s! - a.s! || b.tech - a.tech)
   ranked.forEach((r, i) => (r.rank = i + 1))
   const tie = ranked.length > 1 && Math.abs(ranked[0].s! - ranked[1].s!) < 1e-9

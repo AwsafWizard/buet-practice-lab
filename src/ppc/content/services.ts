@@ -22,7 +22,7 @@ const lists: PcList[] = [
       { k: 'Design Contest Selection', alt: ['DC', 'design contest'], d: 'Technical excellence and innovation prime.' },
     ],
     hook: 'Two preferred (Quality+Cost, Fixed budget) + six others “Little Children Sing In Quiet Dens” — LCS, CSO, SSS, Individual, QBS, Design contest (PPA s.38 (a)–(f) order).',
-    seen: ['2023-24', 'May 2024', '2014-15'],
+    seen: ['2023-24', '2022-23', '2014-15'],
     src: 'PPA 2006 s.37–38; PPR r.103–112; IA sir “Steps” slide p3',
     note: 'Slide calls them FBS and QBS; PPR calls them SFB and SBCQ.',
   },
@@ -37,7 +37,7 @@ const lists: PcList[] = [
       { k: 'Only one firm qualified / rare experience', alt: ['only one firm', 'exceptional worth'] },
       { k: 'Urgent need after catastrophic event', alt: ['catastrophe', 'disaster'] },
     ],
-    seen: ['2023-24', 'May 2024', '2014-15'],
+    seen: ['2023-24', '2022-23', '2014-15'],
     src: 'PPA s.38(1)(c); PPR r.104(d); senior note Q15',
     note: 'Why restricted (PPR r.104(d)(1)): no benefits of competition in quality and cost, lacks transparency, could encourage fraudulent practices.',
   },
@@ -123,7 +123,7 @@ const lists: PcList[] = [
       { k: 'Reimbursables (time-based)', alt: ['reimbursables'] },
       { k: 'Proposed contract price', alt: ['price'] },
     ],
-    seen: ['May 2024'],
+    seen: ['2022-23'],
     src: 'PPR r.122(3)',
     note: 'Staff remuneration rates are never re-negotiated where price was an evaluation factor (r.122(4)).',
   },
@@ -188,7 +188,7 @@ const answers: PcAnswer[] = [
     id: 'a-services-methods',
     topic: T,
     q: 'According to PPA 2006, what are the methods for procurement of intellectual services? Describe the applicability of each (with examples).',
-    seen: ['2023-24', 'May 2024', '2014-15'],
+    seen: ['2023-24', '2022-23', '2014-15'],
     a: `### Preferred methods (PPA s.37) — preceded by short-listing
 1. **Quality and Cost Based Selection (QCBS)** — competitive process among short-listed consultants considering **quality and the probable cost** judiciously; used in most cases. *e.g. detailed design and supervision of a highway.*
 2. **Fixed Budget Selection (FBS / SFB)** — **simple and precisely defined** assignment with a **fixed budget** stated in the RFP; best technical proposal within the budget. *e.g. a feasibility study with a fixed allocation.*
@@ -293,7 +293,7 @@ The procuring entity is not responsible for any cost of preparing the EoI and **
     id: 'a-qcbs-method',
     topic: T,
     q: 'How does QCBS work? Show how technical and financial scores are combined (method and formula).',
-    seen: ['May 2024', '2020-21', '2016-17', '2014-15', '2011-12'],
+    seen: ['2022-23', '2020-21', '2016-17', '2014-15', '2011-12'],
     a: `### Method (PPR r.105, 119–122)
 1. **Technical evaluation** — PEC members score each technical proposal out of 100 (specific experience, methodology and work plan, key staff, transfer of knowledge, national participation); the score is the average of members.
 2. **Qualifying mark** — proposals below the minimum technical score (PPR: **70**, or as stated in the RFP) are non-responsive; their **financial proposals are returned unopened**.

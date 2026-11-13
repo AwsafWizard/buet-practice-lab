@@ -164,7 +164,7 @@ export default {
         { k: 'Democratic', alt: ['participative', 'participatory'], d: 'Chair guides, invites all, seeks consensus/vote. Better decisions and buy-in; slower.' },
         { k: 'Laissez-faire', alt: ['free-rein', 'free rein', 'laissez faire'], d: 'Little direction; works only with expert, motivated members.' },
       ],
-      seen: ['2023-24', 'May 2024'],
+      seen: ['2023-24', '2022-23'],
       src: QB,
       note: 'Not in the class note. Most effective: democratic, adjusted to the situation.',
     },
@@ -181,8 +181,8 @@ export default {
     { id: 'c-meeting-informal', topic: T, front: '**Informal** vs **suggested-solution** meeting?', back: '**Informal**: open discussion where members learn and share about a new matter. **Suggested-solution**: possible solutions are proposed and the final solution is chosen.', src: KN6 },
     { id: 'c-meeting-physical', topic: T, front: 'What “physical arrangements” are checked before a meeting?', back: '**Visual aids**, **seating pattern** and **materials needed**.', seen: ['2013-14'], src: KN6 },
     { id: 'c-meeting-conciliator', topic: T, front: 'Meeting roles: **conciliator** vs **energizer**?', back: '**Conciliator**: settles conflicts and keeps harmony. **Energizer**: motivates the group, keeps the energy up.', src: KN6 },
-    { id: 'c-leadership-best', topic: T, front: 'Which meeting leadership style is most effective, and why? (one line)', back: '**Democratic** — engineering/business meetings exist to pool knowledge and reach decisions members must carry out; participation gives better decisions and buy-in. Chair still controls time and turns directive when a quick decision is needed.', seen: ['2023-24', 'May 2024'], src: QB },
-    { id: 'c-leadership-autocratic', topic: T, front: 'When does an **autocratic** meeting style work?', back: 'In **emergencies**, when a fast decision is needed, or with an inexperienced group. Downside: stifles ideas and commitment.', seen: ['2023-24', 'May 2024'], src: QB },
+    { id: 'c-leadership-best', topic: T, front: 'Which meeting leadership style is most effective, and why? (one line)', back: '**Democratic** — engineering/business meetings exist to pool knowledge and reach decisions members must carry out; participation gives better decisions and buy-in. Chair still controls time and turns directive when a quick decision is needed.', seen: ['2023-24', '2022-23'], src: QB },
+    { id: 'c-leadership-autocratic', topic: T, front: 'When does an **autocratic** meeting style work?', back: 'In **emergencies**, when a fast decision is needed, or with an inexperienced group. Downside: stifles ideas and commitment.', seen: ['2023-24', '2022-23'], src: QB },
   ],
 
   answers: [
@@ -262,7 +262,7 @@ Organizer, clarifier, questioner, idea creator, conflict tester, conciliator, fa
       id: 'a-meeting-leadership',
       topic: T,
       q: 'What leadership styles are followed in meetings? Briefly explain. In your opinion, which method is more effective and why?',
-      seen: ['2023-24', 'May 2024'],
+      seen: ['2023-24', '2022-23'],
       a: `### 1. Autocratic (directive)
 The chair sets the agenda, controls the discussion and takes the decisions. **Fast** and useful in emergencies or with inexperienced groups, but **stifles ideas** and commitment.
 

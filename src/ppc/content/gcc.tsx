@@ -102,7 +102,7 @@ const lists: PcList[] = [
       { k: 'Changes in the law', alt: ['change in law'] },
     ],
     hook: 'Who (definitions, arbitrator, JVCA, personnel, equipment) – Money (escalation, compensation, security, advance, currencies, retention, bonus, damages) – Time (sectional completion) – Law (changes in law).',
-    seen: ['May 2024', '2017-18', '2016-17', '2015-16', '2014-15', '2012-13'],
+    seen: ['2022-23', '2017-18', '2016-17', '2015-16', '2014-15', '2012-13'],
     src: 'IA sir GCC+TEC slides 2–3; Tender Document slide 6',
   },
   {
@@ -204,7 +204,7 @@ const lists: PcList[] = [
       { k: 'Completion certificate and taking over', alt: ['taking over'] },
       { k: 'Termination for excessive delay', alt: ['termination', 'fundamental breach'] },
     ],
-    seen: ['May 2024', '2016-17', '2015-16'],
+    seen: ['2022-23', '2016-17', '2015-16'],
     src: 'PPR r.2(30), 39(1)–(4),(27)–(33), 42; IA sir GCC+TEC slide 3 (bonus, delay damages, sectional completion)',
   },
 ]
@@ -237,7 +237,7 @@ const answers: PcAnswer[] = [
     id: 'a-gcc-pcc-relation',
     topic: T,
     q: 'State the relationship between GCC and PCC.',
-    seen: ['May 2024', '2017-18', '2016-17', '2014-15', '2012-13'],
+    seen: ['2022-23', '2017-18', '2016-17', '2014-15', '2012-13'],
     a: `**Conditions of contract** define the conditions under which the contractor executes the contract, including the **rights, responsibilities and relationships** of the parties. They have two parts:
 1. **General Conditions of Contract (GCC)** — core clauses generally applicable to most projects; **kept unchanged for all tenders**; only general conditions, not project-specific ones (definitions, arbitrator, JVCA, price escalation, compensation events, performance security, retention, delay damages …).
 2. **Particular Conditions of Contract (PCC)** — specifically written to **expand on the GCC** for the particular project: the **project-specific figures** for each GCC clause (amount of compensation, performance security, LD rate), list of key personnel, and any **modification** of GCC clauses.
@@ -254,7 +254,7 @@ const answers: PcAnswer[] = [
     id: 'a-gcc-clauses',
     topic: T,
     q: 'Prepare corresponding GCC and PCC clauses for: definitions, completion time, liquidated damages, compensation events, retention, performance security, advance payment, variation, payment, price adjustment, arbitration.',
-    seen: ['May 2024', '2017-18', '2016-17', '2014-15', '2012-13'],
+    seen: ['2022-23', '2017-18', '2016-17', '2014-15', '2012-13'],
     a: `${ROWS}
 | **Definitions** | Employer: the body that commissions the works. Contractor: person whose tender is accepted and who executes the works. **Engineer**: person named in the contract or appointed by the PE, responsible for supervising the works and administering the contract. **Day**: calendar day unless working day is stated. | Employer: Executive Engineer, … Division, RHD. Engineer: Superintending Engineer, … Circle. Contractor: M/s X Ltd. |
 | **Completion time** | Contractor starts on the Start Date and completes by the **Intended Completion Date**; programme submitted and updated; extension for compensation events/variations. | Start: 14 days after signing. Intended completion: 730 days. EOT decided within 21 days. |

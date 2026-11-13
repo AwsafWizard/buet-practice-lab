@@ -204,11 +204,11 @@ const LifeCycleFig: FC = () => (
 
 // ---------- seen labels ----------
 const DEF_SEEN = ['2020-21', '2017-18', '2016-17', '2015-16', '2014-15', '2011-12']
-const TRI_SEEN = ['May 2024', '2017-18', '2016-17', '2014-15', '2013-14', '2011-12']
+const TRI_SEEN = ['2022-23', '2017-18', '2016-17', '2014-15', '2013-14', '2011-12']
 const CHAR_SEEN = ['2021-22', '2020-21', '2017-18', '2016-17', '2014-15', '2012-13']
 const FLOW_SEEN = ['2017-18', '2016-17', '2015-16', '2014-15', '2012-13', '2011-12']
-const CONCERN_SEEN = ['2023-24', 'May 2024', '2021-22', '2017-18']
-const BRIEF_SEEN = ['2023-24', 'May 2024', '2021-22', '2020-21']
+const CONCERN_SEEN = ['2023-24', '2022-23', '2021-22', '2017-18']
+const BRIEF_SEEN = ['2023-24', '2022-23', '2021-22', '2020-21']
 const PART_SEEN = ['Jan 2021', '2020-21', '2015-16', '2014-15', '2013-14']
 
 const lists: PcList[] = [
@@ -248,7 +248,7 @@ const lists: PcList[] = [
       { k: 'Cost', d: 'rate of resource expenditure compared to budgeted resources' },
       { k: 'Performance', d: 'outputs compared to objectives, specifications and requirements — a measure of quality' },
     ],
-    seen: ['May 2024', '2015-16', '2013-14'],
+    seen: ['2022-23', '2015-16', '2013-14'],
     src: 'Tanvir sir L2 p12–13',
     note: 'The question bank answers "scope, schedule and budget" — wrong for this course; the slide says Time, Cost, Performance.',
   },
@@ -349,7 +349,7 @@ const lists: PcList[] = [
       { k: 'Lending institutions' },
       { k: 'Inspectors' },
     ],
-    seen: ['May 2024', 'Jan 2021'],
+    seen: ['2022-23', 'Jan 2021'],
     src: 'Tanvir sir L3 p9',
   },
   {
@@ -738,7 +738,7 @@ const cards: PcCard[] = [
     topic: T,
     front: 'Measure of project activity: **Time** means…',
     back: 'The **temporal progress of activities** and the **extent to which schedules and deadlines are being met**.',
-    seen: ['May 2024', '2015-16', '2013-14'],
+    seen: ['2022-23', '2015-16', '2013-14'],
     src: 'Tanvir sir L2 p13',
   },
   {
@@ -746,7 +746,7 @@ const cards: PcCard[] = [
     topic: T,
     front: 'Measure of project activity: **Cost** means…',
     back: 'The **rate of resource expenditure as compared to budgeted resources**.',
-    seen: ['May 2024', '2015-16', '2013-14'],
+    seen: ['2022-23', '2015-16', '2013-14'],
     src: 'Tanvir sir L2 p13',
   },
   {
@@ -754,7 +754,7 @@ const cards: PcCard[] = [
     topic: T,
     front: 'Measure of project activity: **Performance** means…',
     back: '**Outputs of the project compared to objectives, specifications and requirements**; the ability to meet performance requirements is one measure of the **quality** of the project output.',
-    seen: ['May 2024', '2015-16', '2013-14'],
+    seen: ['2022-23', '2015-16', '2013-14'],
     src: 'Tanvir sir L2 p13',
   },
   {
@@ -829,7 +829,7 @@ const cards: PcCard[] = [
     topic: T,
     front: 'On what principle has the **AEC industry** always operated?',
     back: 'The **"virtual" organization principle** — it is infamous for its **fragmentation**: a staggering number of players come together for one-of-a-kind projects.',
-    seen: ['May 2024'],
+    seen: ['2022-23'],
     src: 'Tanvir sir L3 p9',
   },
   {
@@ -837,7 +837,7 @@ const cards: PcCard[] = [
     topic: T,
     front: 'How do the **owner’s** and the **designers’** perspectives differ?',
     back: 'The **owner** thinks in terms of **quality and short- and long-term costs**; architects and engineers are motivated to **avoid mishaps and minimize their costs relative to billable hours**.',
-    seen: ['May 2024'],
+    seen: ['2022-23'],
     src: 'Tanvir sir L3 p10',
   },
   {
@@ -889,7 +889,7 @@ Some books use the PMI definition ("a temporary endeavour to create a unique pro
     id: 'a-pr-measures',
     topic: T,
     q: 'Briefly discuss the three measures of project activity.',
-    seen: ['May 2024', '2015-16', '2013-14'],
+    seen: ['2022-23', '2015-16', '2013-14'],
     a: `Besides the level of activity, its nature and emphasis change over the life cycle (clients & planners early; designers, builders & implementers in the middle; users & operators later). Despite these changes, **three measures of project activity apply throughout a project’s full span**:
 
 1. **Time** — the **temporal progress of activities** and the extent to which **schedules and deadlines are being met**.
@@ -981,7 +981,7 @@ Project activity against time: the **period-by-period** curve is bell-shaped (sl
     id: 'a-pr-aec',
     topic: T,
     q: 'Why is the AEC industry infamous for its fragmentation?',
-    seen: ['May 2024'],
+    seen: ['2022-23'],
     a: `The AEC industry is infamous for its **fragmentation** because:
 
 1. **"Virtual" organization principle** — the architectural, engineering and construction (AEC) industry has always operated this way: firms come together for a project and then disperse.

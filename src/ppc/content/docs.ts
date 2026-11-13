@@ -45,29 +45,30 @@ const lists: PcList[] = [
     ],
     ordered: true,
     hook: '“A New Tender Pays Good Teachers Good Dollars — Bills Owed”: Agreement, NOA, Tender, PCC, GCC, Technical spec, General spec, Drawings, BoQ, Others. Rule of thumb: specific beats general (PCC > GCC, technical > general spec).',
-    seen: ['May 2024', '2020-21', 'Jan 2021', '2017-18', '2013-14', '2011-12'],
+    seen: ['2022-23', '2020-21', 'Jan 2021', '2017-18', '2013-14', '2011-12'],
     src: 'PPR 2008 r.4(7)',
     note: 'The question bank cites this as “Rule 15(7)”; the correct citation is PPR r.4(7). The list itself is the same.',
   },
   {
     id: 'l-tds-items',
     topic: T,
-    title: 'Qualification items set in a Tender Data Sheet',
-    ask: 'Prepare the TDS items (at least five) for a works tender.',
+    title: 'Items set in a Tender Data Sheet',
+    ask: 'Which items are prepared in the Tender Data Sheet of a works tender?',
     points: [
-      { k: 'General experience', alt: ['years of experience'], d: 'Years in construction as prime contractor (7 / 10 / 15 by size).' },
-      { k: 'Specific experience', alt: ['similar experience'], d: 'Physical (similar type/size) and financial (≈70% one / 50% two contracts) within 7 years.' },
-      { k: 'Construction turnover', alt: ['turnover', 'annual turnover'], d: 'Average annual inflow over 5 years ≥ 1.5 × annual value.' },
-      { k: 'Liquid asset / credit facility', alt: ['liquid asset', 'working capital', 'cash flow'], d: '≈ 10% of the total work.' },
-      { k: 'Tender security', alt: ['bid security'], d: 'Fixed sum ≤ 3% of estimate (≈2%), valid 28 days beyond validity.' },
+      { k: 'General experience', alt: ['years of experience', 'general exp'], d: 'A reasonable number of years: 5 (Five) years, counting backward from the date of publication of IFT.' },
+      { k: 'Specific experience', alt: ['similar experience', 'specific exp'], d: 'A job close to the tendered one in size and in money: about 0.75 × the storeys, 80% of the cost, under 1 contract in the last 5 years.' },
+      { k: 'Liquid asset / credit facility', alt: ['liquid asset', 'working capital', 'credit facility', 'cash flow'], d: '(total cost ÷ months) × gap between one bill, rounded up to a whole crore.' },
+      { k: 'Annual construction turnover', alt: ['turnover', 'construction turnover', 'annual turnover'], d: '(total cost ÷ years) × 3, as the average of the last 5 years.' },
+      { k: 'Tender security', alt: ['bid security'], d: '(2 to 3%) × total cost, written as a fixed amount; the only item under “Tender Preparation”.' },
+      { k: 'Tender validity', alt: ['validity period'], d: 'Generally 90–120 days (PPR: 60–120 days).' },
+      { k: 'Pre-tender meeting', alt: ['pre tender meeting', 'pre-bid meeting'], d: 'Date, time, place; minutes to all purchasers.' },
       { k: 'Key personnel', alt: ['technical personnel'], d: 'Project manager, engineers: degree and years.' },
       { k: 'Plant and equipment', alt: ['equipment'], d: 'Owned or leased, by type and number.' },
-      { k: 'Tender validity', alt: ['validity period'], d: 'Normally 60–120 days.' },
-      { k: 'Pre-tender meeting', alt: ['pre tender meeting'], d: 'Date, time, place; minutes to all buyers.' },
     ],
-    hook: 'Gary Spent The Liquid Savings Keeping Plant Valid Pre-tender — General, Specific, Turnover, Liquid, Security, Key personnel, Plant, Validity, Pre-tender meeting.',
+    hook: 'The class table, top to bottom. Qualification Criteria: General, Specific, Liquid, Turnover (“Good Sites Lack Trouble”). Tender Preparation: Security. The other four are asked only when the paper names them.',
     seen: ['2023-24', '2021-22', '2016-17', '2013-14', '2012-13', '2011-12'],
-    src: 'IA sir TD slide 5; senior note Q19, Q21; PPR r.22, 48–49, Sch II (multiples = standard practice)',
+    src: '18-batch term-final solve pp.35–36 (“Important for Term Final”); typed note Ques-23, Ques-24; IA sir Tender Document slide 5',
+    note: 'The first five are the ones every paper asks. An older rule of thumb in Nafee bhai’s note (Ques-25): liquid asset is about 10% of the total work.',
   },
   {
     id: 'l-accompaniments',
@@ -128,12 +129,16 @@ const cards: PcCard[] = [
   { id: 'c-docs-itt-vs-tds', topic: T, front: 'ITT vs TDS?', back: 'ITT gives **generalised** rules, the same for all tenders, without details — e.g. “deposit tender security” but not the amount. TDS gives the **particular data**: tender security amount (say 2–3%), required turnover, experience, dates.', src: 'IA sir Tender Document slide 5' },
   { id: 'c-docs-tender-bid', topic: T, front: 'Tender vs bid vs offer?', back: '**Tender** = documents completed by a tenderer and returned for evaluation. **Bid** is the US equivalent and, in UK use, covers verbal and written offers; **offer** likewise — so neither is used in contract documents.', src: 'IA sir Tender Document slide 3' },
   { id: 'c-docs-addenda', topic: T, front: 'What are addenda?', back: 'Changes to the tender documents **after they have been sent to tenderers and before acceptance**; they become part of the tender document; deadline extended if issued in the last third of the preparation time.', src: 'IA sir TD slide 4; PPA s.45' },
-  { id: 'c-docs-vo', topic: T, front: 'Define a variation order (terminology slide).', back: 'The Project Manager’s **order for alterations, additions and omissions** to the Works.', src: 'IA sir TD slide 4' },
+  { id: 'c-docs-vo', topic: T, front: 'Define a variation order.', back: 'The Project Manager’s **order for alterations, additions and omissions** to the Works. The Project Manager may issue a Variation Order to cover **increase or decrease in quantities**, including the introduction of **new work items (non-tendered items)** due to change of plans, design or alignment to suit actual field conditions, **within the general scope** and physical boundaries of the contract.', src: 'IA sir TD slide 4; 18-batch term-final solve p.34' },
   { id: 'c-docs-contract-docn', topic: T, front: 'What is “contract documentation”?', back: 'Pre-qualification, tender and contract documents **collectively** — all documents prepared by the design team.', src: 'IA sir TD slide 2' },
-  { id: 'c-docs-ts-fixed', topic: T, front: 'How is tender security written in the TDS?', back: 'As a **rounded fixed Taka amount** — not as a % — at most **3% of the official estimate**, set slightly below the 2% or 3% figure so the estimate cannot be guessed (PPR r.22(3)–(4)). E.g. Tk 80 crore → Tk 1.55 crore.', src: 'PPR r.22, Sch II' },
-  { id: 'c-docs-turnover', topic: T, front: 'What is “turnover” in a TDS and how is it set?', back: 'A year’s **total inflow** of the firm; the TDS asks an **average annual construction turnover** over the last 5 years of about **1.5 × the annual value** of the contract (cost ÷ duration in years), from audited statements.', src: 'Senior note Q21; standard practice' },
-  { id: 'c-docs-liquid', topic: T, front: 'How is the liquid asset / credit facility requirement set?', back: 'About **10% of the total work** (class note) — roughly 3–4 months of cash flow on a 3-year job — as liquid assets or a credit line certified by a scheduled bank.', src: 'Senior note Q21; standard practice' },
-  { id: 'c-docs-specific', topic: T, front: 'How is “specific experience” written in a TDS?', back: 'Both **physical** (similar type and size — e.g. a building of ≥ 75% of the storeys) and **financial** (one contract ≥ ~70% of the estimate, or two ≥ ~50% each) completed within the last 7 years, with completion certificates.', src: 'Senior note Q21; standard practice' },
+  { id: 'c-docs-ts-fixed', topic: T, front: 'How is the tender security fixed and written in the TDS?', back: '**Tender security = (2 to 3%) × total cost**; the solves take **2%** (Tk 50 crore → **Tk 1 crore**; Tk 80 crore → Tk 1.6 crore). It is written as a **rounded fixed amount**, not as a percentage (PPR r.22), under “Tender Preparation”, ITT 17.1(a).', src: '18-batch term-final solve pp.35–36; PPR r.22' },
+  { id: 'c-docs-turnover', topic: T, front: 'What is “turnover” in a TDS and how is it set?', back: 'Turnover is the money that **flows in** in a year (not the profit). **Annual turnover = (total cost ÷ project duration in years) × 3** (3 = multiplying factor). TDS: “The minimum average annual construction turnover shall be greater than Tk … crore in the last 5 (Five) years.” Tk 50 crore, 4 years → **Tk 37.5 crore**.', src: '18-batch term-final solve pp.35–36; typed note Ques-23, Ques-25' },
+  { id: 'c-docs-liquid', topic: T, front: 'How is the liquid asset / credit facility requirement set?', back: '**Gap between one bill = duration in months ÷ number of bills + 3** (3 months is the assumed delay). **Liquid asset = (total cost ÷ duration in months) × gap**, rounded up. Tk 50 crore, 48 months, 10% billing: gap (48 ÷ 10) + 3 = 7.8; (50 ÷ 48) × 7.8 = 8.125 → **Tk 9 crore**.', src: '18-batch term-final solve pp.35–36; typed note Ques-23' },
+  { id: 'c-docs-specific', topic: T, front: 'How is “specific experience” written in a TDS?', back: 'A work **close to the tendered work**, with the money also close. For a 20-storey, Tk 50 crore building: “A satisfactory completion of **15 storied building** of at least **Tk 40 crore** under **1 contract** over a period of **5 (Five) years** shall be required.” (About three-quarters of the storeys, 80% of the cost.)', src: '18-batch term-final solve pp.35–36' },
+  { id: 'c-docs-general', topic: T, front: 'How is “general experience” written in a TDS?', back: 'A **reasonable number of years**: “The minimum number of years of general experience of the Tenderer as Contractor shall be **5 (Five) years**. Years counting backward from the **date of publication of IFT** in the newspaper.” IFT = Invitation for Tenders.', src: '18-batch term-final solve pp.35–36' },
+  { id: 'c-docs-tds-layout', topic: T, front: 'How is the Tender Data Sheet table laid out, and which ITT clauses does it fill?', back: 'Band **“Qualification Criteria”**: ITT 14.1(a) General Experience, 14.1(b) Specific Experience, 15.1(a) Liquid Assets, 18.1(b) Turnover. Band **“Tender Preparation”**: ITT 17.1(a) Tender Security. The working (gap, liquid asset, turnover) is written under the table.', src: '18-batch term-final solve p.36; typed note Ques-24 (Pallab’s table)' },
+  { id: 'c-docs-billing', topic: T, front: 'In a TDS problem, what is the “billing amount”, and what if the paper does not give it?', back: 'The share of the work after which one bill is paid. **10%** means a bill after every 10% of the work, so **10 bills**. If the paper is silent, write “Assuming the billing amount is 10%”.', src: '18-batch term-final solve p.36; typed note Ques-23' },
+  { id: 'c-docs-validity', topic: T, front: 'Guideline for fixing the tender validity period?', back: 'Long enough to finish the **complete evaluation**, the **comparative assessment**, the **necessary approvals** and to issue the **Notification of Award** within it (PPA s.14(a)). 1st extension: head of the procuring entity; 2nd: next higher authority. **Generally 90–120 days** (PPR: 60–120).', src: 'Typed note Ques-19; question marked by Sir in class in the annotated PPA; PPA s.14(a)' },
   { id: 'c-docs-tech-fin-offer', topic: T, front: 'Technical offer vs financial offer of a tenderer?', back: '**Technical offer**: general and specific experience, key technical personnel, plant and equipment, turnover, liquid asset. **Financial offer**: the price at which the tenderer offers to do the work.', src: 'Senior note Q21; OneNote' },
   { id: 'c-docs-noa-def', topic: T, front: 'What is an NOA?', back: 'The **Notification of Award** — the official notice by the employer (procuring entity) telling the tenderer its tender has been accepted; it states price, performance security and signing dates and forms the contract.', src: 'Senior note Q5; PPR r.102' },
   { id: 'c-docs-ps-noa', topic: T, front: 'Performance security in the NOA — amount and deadline?', back: 'Typically **10%** of the contract price for works (e.g. Tk 3.5 crore on Tk 35 crore), within **14 days** of acceptance of the NOA (national). The question bank’s “28 days” is the international limit.', src: 'IA sir Assignment 02; PPR Sch II, Sch VII' },
@@ -163,7 +168,7 @@ const answers: PcAnswer[] = [
     id: 'a-contract-priority',
     topic: T,
     q: 'List, in order of priority, the documents that form the contract.',
-    seen: ['May 2024', '2020-21', 'Jan 2021', '2017-18', '2013-14', '2011-12'],
+    seen: ['2022-23', '2020-21', 'Jan 2021', '2017-18', '2013-14', '2011-12'],
     a: `PPR 2008 **r.4(7)** — the documents forming the contract, in **order of precedence**:
 1. The **signed Contract Agreement**
 2. The **Notification of Award**
@@ -184,25 +189,43 @@ If two documents conflict, the higher one governs — the more specific document
   {
     id: 'a-tds-method',
     topic: T,
-    q: 'How do you prepare a Tender Data Sheet (TDS) for a works tender? (general experience, specific experience, turnover, liquid asset, tender security …)',
+    q: 'How do you prepare a Tender Data Sheet (TDS) for a works tender? (general experience, specific experience, liquid asset, turnover, tender security)',
     seen: ['2023-24', '2021-22', '2016-17', '2013-14', '2012-13', '2011-12'],
-    a: `The **TDS** gives the particular data for the ITT clauses — “the ITT provides generalized information; the particular data is provided in the TDS”. Write it as a table **ITT clause | TDS entry**.
+    a: `The **TDS** gives the particular data for the ITT clauses. Draw the table, then write the working under it.
 
-### Work out first
-- **Annual value** = estimated cost ÷ duration in years; **monthly cash flow** = cost ÷ months.
+### Class formulas
+- **General experience** — a reasonable number of years (5 years).
+- **Specific experience** — a work close to the tendered work, with the money also close (15 storeys for 20; Tk 40 crore for Tk 50 crore), under 1 contract in the last 5 years.
+- **Annual turnover** = (Total cost ÷ Project duration in years) **× 3** (multiplying factor).
+- **Gap between one bill** = Project duration in months ÷ number of bills **+ 3** (3 months is the additional assumed delay).
+- **Liquid asset** = (Total cost ÷ Project duration in months) × Gap between one bill, rounded up.
+- **Tender security** = **(2 to 3%)** × Total cost.
 
-### Items
-1. **General experience** — at least 7 / 10 / 15 years in construction as prime contractor, scaled to size.
-2. **Specific experience** — **physical** (similar type and size, e.g. building of ≥ 75% of the storeys) and **financial**: within the last 7 years, one contract ≥ about **70%** of the estimate, or two contracts ≥ **50%** each; completion certificates.
-3. **Construction turnover** — average annual turnover over the last **5 years** ≥ **1.5 × annual value**, from audited statements (turnover = a year's total inflow).
-4. **Liquid asset / credit facility** — about **10% of the total work** (≈ 3–4 months' cash flow on a 3-year job), certified by a scheduled bank.
-5. **Tender security** — a **fixed amount**, never a %, at most **3%** of the official estimate, set slightly under 2% and rounded down (PPR r.22); bank guarantee / pay order; valid **28 days beyond tender validity**.
-6. Others as asked: tender validity (60–120 days), **pre-tender meeting** (date, time, venue, site visit, minutes to all buyers), key personnel, equipment, JV allowed, deadlines.
+### Example: twenty storied building, Tk 50 crore, four years
+Assuming the **billing amount is 10%** (10 bills).
 
-Only the tender-security rule is in PPR; the experience and turnover multiples are standard-document practice (class note: liquid asset ≈ 10% of work; turnover = average annual inflow).`,
-    keys: ['TDS', 'Annual value', 'General experience', 'Specific experience', 'physical', 'financial', '70%', 'Construction turnover', '1.5 × annual value', 'Liquid asset', '10% of the total work', 'Tender security', 'fixed amount', '3%', '28 days beyond tender validity', 'pre-tender meeting'],
+**Tender Data Sheet**
+
+| ITT clause | Item | TDS entry |
+|---|---|---|
+| | **Qualification Criteria** | |
+| ITT 14.1(a) | General Experience | The minimum number of years of general experience of the Tenderer as Contractor shall be **5 (Five) years**. Years **counting backward from the date of publication of IFT** in the newspaper. |
+| ITT 14.1(b) | Specific Experience | A satisfactory completion of **15 storied building** of at least **Tk 40 crore** under 1 contract over a period of 5 (Five) years shall be required. |
+| ITT 15.1(a) | Liquid Asset | The minimum amount of liquid assets in form of working capital or credit facilities of **Tk 9 crore**. |
+| ITT 18.1(b) | Turnover | The minimum average annual construction turnover shall be greater than **Tk 37.5 crore** in the last 5 (Five) years. |
+| | **Tender Preparation** | |
+| ITT 17.1(a) | Tender Security | The amount of the Tender Security shall be **Tk 1 crore**. |
+
+### Working
+- Gap between one bill = (4 × 12 ÷ 10) + 3 = **7.8** months
+- Liquid asset = (50 ÷ 48) × 7.8 = 8.125 crore, so Tk 9 crore
+- Annual turnover = (50 ÷ 4) × 3 = Tk 37.5 crore
+- Tender security = 2% × 50 = Tk 1 crore, written as a fixed amount, not as a percentage
+
+If the paper gives no duration or billing amount, assume one and say so. Other items when asked: tender validity (generally 90–120 days), pre-tender meeting (date, time, place; minutes to all purchasers).`,
+    keys: ['Qualification Criteria', 'Tender Preparation', 'ITT 14.1(a)', '5 (Five) years', 'counting backward from the date of publication of IFT', '15 storied building', 'Tk 40 crore', '× 3', 'Gap between one bill', '+ 3', '7.8', 'Tk 9 crore', 'Tk 37.5 crore', '(2 to 3%)', 'Tk 1 crore', 'billing amount is 10%'],
     lists: ['l-tds-items'],
-    src: 'IA sir TD slide 5; PPR r.22, Sch II; senior note Q19, Q21; multiples = standard practice',
+    src: '18-batch term-final solve pp.35–36 (formulas and the worked table, “Important for Term Final”); typed note Ques-23 and Ques-24 (ITT clause column); the gap is kept unrounded as in the solve',
   },
   {
     id: 'a-accompaniments',

@@ -130,7 +130,8 @@ const qnum = (q: PcQ) => q.no.replace(/\(.*$/, '')
 
 function Mock({ paperId, qs }: { paperId: string; qs: PcQ[] }) {
   const p = pcPaperById(paperId)!
-  const total = 180 * 60
+  // '3 hours' or '2 hours 30 minutes'
+  const total = (parseInt(p.time) * 60 + (parseInt(p.time.split('hours')[1] ?? '') || 0)) * 60
   const [start] = useState(() => Date.now())
   const [now, setNow] = useState(Date.now())
   const [done, setDone] = useState(false)
@@ -151,6 +152,13 @@ function Mock({ paperId, qs }: { paperId: string; qs: PcQ[] }) {
     const per = new Map<string, number>()
     for (const q of qs.filter((x) => x.sec === sec)) per.set(qnum(q), (per.get(qnum(q)) ?? 0) + (got[q.id] ?? 0))
     const n = p.format[sec].includes('any 5') ? 5 : 3
+    // Jan 2021, Section B: Q5 is compulsory, then the best 2 of the rest
+    const must = /Q(\d+) is compulsory/.exec(p.format[sec])?.[1]
+    if (must) {
+      const first = per.get(must) ?? 0
+      per.delete(must)
+      return first + [...per.values()].sort((a, b) => b - a).slice(0, n - 1).reduce((a, b) => a + b, 0)
+    }
     return [...per.values()].sort((a, b) => b - a).slice(0, n).reduce((a, b) => a + b, 0)
   }
   return (
