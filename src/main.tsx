@@ -51,6 +51,10 @@ function Visits() {
   )
 }
 
+// A plain path like /ce301 (served by the vercel.json rewrite) becomes the hash route /#/ce301.
+if (!ARTIFACT && location.pathname !== '/' && !location.hash)
+  history.replaceState(null, '', '/#' + location.pathname + location.search)
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     {ARTIFACT ? (
