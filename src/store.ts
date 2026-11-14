@@ -84,6 +84,8 @@ export interface Attempt {
   correct: boolean
   firstTry: boolean
   at: number
+  /** wiped by a "Clear all": counts as never tried (kept as a record so the clear survives syncing) */
+  cleared?: boolean
 }
 
 export interface PlanBlock {
@@ -144,6 +146,8 @@ interface State {
   setBmdSide(s: 'compression' | 'tension'): void
   setRotSign(s: 'cw' | 'ccw'): void
   record(id: string, correct: boolean, topic?: string): Attempt
+  /** forget these checks' results (they read as never tried again; xp already earned stays) */
+  clearAttempts(ids: string[]): void
   reveal(id: string): void
   setPlanner(p: PlannerState): void
   setPlanner315(p: PlannerState): void
@@ -200,11 +204,13 @@ export const useStore = create<State>()(
       setBmdSide: (bmdSide) => set({ bmdSide, stamps: stamp(get().stamps, 'bmdSide') }),
       setRotSign: (rotSign) => set({ rotSign, stamps: stamp(get().stamps, 'rotSign') }),
       record(id, correct) {
-        const prev = get().attempts[id]
+        const p0 = get().attempts[id]
+        const prev = p0 && !p0.cleared ? p0 : undefined
         const a: Attempt = prev
           ? { ...prev, tries: prev.tries + 1, correct: prev.correct || correct, at: Date.now() }
           : { tries: 1, correct, firstTry: correct, at: Date.now() }
-        const gained = correct && !(prev && prev.correct) ? (a.tries === 1 ? 15 : 8) : 0
+        // a check cleared and done again earns nothing new: the xp was counted the first time
+        const gained = correct && !(prev && prev.correct) && !p0?.cleared ? (a.tries === 1 ? 15 : 8) : 0
         const t = today()
         const st = get().streak
         let streak = st
@@ -220,6 +226,12 @@ export const useStore = create<State>()(
           activity: { ...get().activity, [t]: (get().activity[t] ?? 0) + 1 },
         })
         return a
+      },
+      clearAttempts(ids) {
+        const now = Date.now()
+        const attempts = { ...get().attempts }
+        for (const id of ids) if (attempts[id] && !attempts[id].cleared) attempts[id] = { tries: 0, correct: false, firstTry: false, at: now, cleared: true }
+        set({ attempts })
       },
       reveal: (id) => set({ revealed: { ...get().revealed, [id]: true } }),
       setPlanner: (planner) => set({ planner, stamps: stamp(get().stamps, 'planner') }),
@@ -272,7 +284,7 @@ export function topicStats(attempts: Record<string, Attempt>, topic: string) {
     correct = 0,
     first = 0
   for (const [k, a] of Object.entries(attempts)) {
-    if (!k.startsWith(topic + ':')) continue
+    if (!k.startsWith(topic + ':') || a.cleared) continue
     tried++
     if (a.correct) correct++
     if (a.firstTry) first++

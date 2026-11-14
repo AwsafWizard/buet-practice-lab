@@ -15,7 +15,7 @@ export function ListPicker({ lists, value, onChange, scoreKey }: { lists: PcList
     <select className="field !py-1 text-sm max-w-full" value={value} onChange={(e) => onChange(e.target.value)}>
       {lists.map((l) => {
         const a = attempts[scoreKey(l)]
-        const mark = !a ? '○' : a.correct ? '●' : '◐'
+        const mark = !a || a.cleared ? '○' : a.correct ? '●' : '◐'
         return (
           <option key={l.id} value={l.id}>
             {mark} {l.title} ({l.points.length}){l.seen.length ? ` · asked ${l.seen.length}×` : ''}
@@ -37,6 +37,19 @@ export function KeywordRecall({ lists, showTopic = false }: { lists: PcList[]; s
   const attempts = useStore((s) => s.attempts)
   const firstOpen = () => sorted.find((l) => !useStore.getState().attempts[key(l)]?.correct)?.id ?? sorted[0]?.id ?? ''
   const [id, setId] = useState(firstOpen)
+  const [round, setRound] = useState(0)
+  const clearAttempts = useStore((s) => s.clearAttempts)
+  const tried = sorted.filter((l) => attempts[key(l)] && !attempts[key(l)].cleared).length
+  const clearAll = () => {
+    if (!tried) return
+    const ok = window.confirm(
+      `Clear your keyword-recall results for these ${sorted.length} lists?\n\nThe ● / ◐ marks and the “recalled in full” count go back to zero, and the list you are on starts over. Flashcards are not affected.`,
+    )
+    if (!ok) return
+    clearAttempts(sorted.map(key))
+    setRound((r) => r + 1)
+    setId(sorted[0]?.id ?? '')
+  }
   useEffect(() => setId(firstOpen()), [sorted]) // eslint-disable-line react-hooks/exhaustive-deps
   const list = sorted.find((l) => l.id === id)
   const next = () => {
@@ -55,8 +68,16 @@ export function KeywordRecall({ lists, showTopic = false }: { lists: PcList[]; s
         <span className="text-xs text-mute">
           <b className="num text-ink">{sorted.filter((l) => attempts[key(l)]?.correct).length}</b>/{sorted.length} lists recalled in full at least once
         </span>
+        <button
+          className="btn !py-1 !text-xs ml-auto text-bad hover:!border-bad/60 disabled:opacity-40 disabled:pointer-events-none"
+          onClick={clearAll}
+          disabled={!tried}
+          title={tried ? `Forget the results of the ${tried} list${tried === 1 ? '' : 's'} you have tried here` : 'Nothing to clear yet'}
+        >
+          ⟲ Clear all
+        </button>
       </div>
-      <Recall key={list.id} list={list} showTopic={showTopic} onNext={next} />
+      <Recall key={`${list.id}:${round}`} list={list} showTopic={showTopic} onNext={next} />
     </div>
   )
 }
