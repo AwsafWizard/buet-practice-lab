@@ -27,7 +27,7 @@ const specConcrete: PcPartMap = { topics: [SPE], ans: ['a-spec-concrete'] }
 const specWhyAttrs: PcPartMap = { topics: [SPE], ans: ['a-spec-why', 'a-spec-attrs'] }
 const gccClauses: PcPartMap = { topics: [GCC], ans: ['a-gcc-pcc-relation', 'a-gcc-clauses'] }
 
-const qbFlowNote = 'Question bank adds a first box “prepare and approve tender document”; IA sir’s chart starts at Tender Notice.'
+const qbFlowNote = 'The question bank and the 18-batch solve’s simple chart (TF p.29: Prepare Tender Documents → Publish Tender Notice → Pre-bid Meeting (optional) → Receive and Evaluate Bids → Evaluation and Selection of Preferred Bidder → Award Contract → Signing Contract) start by preparing the tender document. IA sir’s chart starts at Tender Notice and (12 May 2015 version) has no separate opening box — draw sir’s.'
 const priorityNote = 'Cite PPR 2008 r.4(7) — the question bank writes “Rule 15(7)”.'
 
 // ---------- BoQ (pc-spec parts) ----------
@@ -66,15 +66,15 @@ export const IA_MAP: Record<string, PcPartMap> = {
   'pc-may-2024-4b': {
     topics: [GCC],
     ans: ['a-gcc-pcc-relation', 'a-gcc-clauses'],
-    extra: `Write only these four rows of the clause table:
+    extra: `Write the relation paragraph in two lines, then only these four rows:
 
-| Item | GCC provision | PCC provision (example) |
+| Terminology | GCC Clause | PCC Clause |
 |---|---|---|
-| (i) Liquidated damage | Contractor pays LD at the rate per day in the PCC for each day beyond the Intended Completion Date, up to the maximum; deducted from payments; does not relieve obligations (PPR r.39(27)–(28)) | 0.05% of contract price per day; maximum 10% |
-| (ii) Completion time | Start on the Start Date, complete by the Intended Completion Date; programme; extension for compensation events/variations (r.39(1)–(4)) | Start 14 days after signing; 730 days; EOT decided within 21 days (≤ 20% without HOPE) |
-| (iii) Retention money | % of each bill retained till completion; half repaid at completion, rest within 28 days after the Defects Correction Certificate or against a bank guarantee (r.28) | 5% of each bill; retention + PS ≤ 10% when no advance payment |
-| (iv) Price adjustment | Prices adjusted for rise/fall of labour, materials, equipment, fuel by the formula, only if the PCC provides; contracts > 18 months (r.5(3)–(5)) | Applicable; Pc = A + B(Ic/Io); indices from BBS; base date 28 days before tender closing |`,
-    notes: ['PCC figures are examples; keep within PPR limits.'],
+| (i) Liquidated Damage | The Contractor pays liquidated damages at the rate in the PCC for each week of delay beyond the Intended Completion Date, up to the maximum in the PCC; deducted from payments; once the maximum is reached the Procuring Entity may terminate; payment does not relieve the Contractor of its obligations | The applicable rate for liquidated damages for delay shall be 0.5 percent of the Contract Price for each week of delay. The maximum amount of liquidated damages shall be Ten (10%) percent of the Contract Price |
+| (ii) Completion Time | The Contractor shall commence the Works on the Start Date and complete the whole of the Works by the Intended Completion Date; only the Project Manager can extend it, if a compensation event occurs or a variation is issued (decision within 21 days; up to 20% of the original time, above that HOPE) | The Start Date shall be [date]. The Intended Completion Date for the whole of the Works shall be [date] (e.g. 730 days from the Start Date) |
+| (iii) Retention Money | 29. The Procuring Entity shall retain from each progressive payment due to the Contractor at the percentage specified in the PCC until completion of the whole of the Works. On completion of the whole of the Works the first half of the total amount retained shall be repaid to the Contractor and the remaining second half after the Defects Liability Period has passed | The amount of Retention Money to hold in each progress claim is 10% of the work done and up to 5% of the contract sum |
+| (iv) Price Adjustment | The Contract Price shall be adjusted for rise or fall in the cost of inputs (labour, materials, fuel) only if provided for in the PCC, using the formula stated there (PPR r.5: contracts longer than 18 months) | Price adjustment is applicable; the coefficients for labour, materials and fuel and the base indices are stated |`,
+    notes: ['LD and retention rows follow the 18-batch solve (0.5% per week, max 10%; 10% of the work done, up to 5% of the contract sum). No senior solve of this paper exists; the completion-time and price-adjustment wording is the typed note’s (PYQ-32, current batch).'],
   },
   'pc-may-2024-5b': {
     topics: [SPE],
@@ -108,7 +108,7 @@ The whole 50 m³ is put against the footing. If the foundation also has grade be
   // ===== 2021-22 =====
   'pc-2021-22-3b': { topics: [SVC], ans: ['a-terms-compare'] },
   'pc-2021-22-4': { ...methodsApplic, ans: ['a-tender-methods-list', 'a-methods-applicability'] },
-  'pc-2021-22-7b': { topics: [PRO], ans: ['a-otm-steps'] },
+  'pc-2021-22-7b': { topics: [PRO], ans: ['a-otm-steps', 'a-tender-flow'], notes: ['Seniors file this part under IA sir’s tender flow chart (typed note PYQ-21). The four-column steps chart is IA sir’s own “Steps with tentative timeline” slide: draw it as four boxed columns PQ → Tendering → Evaluation → Contracting with arrows, then the tender flow chart if time allows.'] },
   'pc-2021-22-8a': {
     topics: [DOC],
     ans: ['a-tds-method'],
@@ -167,7 +167,7 @@ Write one of the two. The older solve heads its columns SL. No, Description of W
   'pc-2015-16-1a': evalSteps,
   'pc-2015-16-1b': flow,
   'pc-2015-16-2a': docElements,
-  'pc-2015-16-2b': jv,
+  'pc-2015-16-2b': { ...jv, extra: 'Only 5 marks: PPA s.27 (the three sub-sections) and requirements 1–3; the words **joint and several liability** are compulsory.' },
   'pc-2015-16-2c': { topics: [GCC], ans: ['a-gcc-timely'] },
   'pc-2015-16-3a': {
     topics: [SPE],
@@ -222,14 +222,32 @@ Either is accepted in class; the 6.1 item is the latest one and agrees with the 
   'pc-2013-14-2b': {
     topics: [DOC],
     ans: ['a-noa'],
-    extra: `Fill the standard NOA for this case:
+    extra: `The 18-batch solve of this part (write it in full):
 
-- Letterhead: **Bangladesh University of Engineering and Technology (BUET), Office of the Chief Engineer, Dhaka-1000**; Memo/Contract No. BUET/W-…/…; date.
-- To: The Managing Director, **X-Brothers Ltd.**, [address].
-- “Your Tender dated … for the execution of the Works for **Construction of a Residential Hall at BUET** for the Contract Price of Tk … (in words) as corrected and modified in accordance with the Instructions to Tenderers, has been approved by BUET.”
-- Actions: (i) accept in writing within **7 days**; (ii) performance security **10%** of the contract price within **14 days**, not later than [date]; (iii) sign the contract within **28 days**, not later than [date].
-- Proceed only after these; NOA constitutes formation of the contract; draft contract attached.
-- Signed for and on behalf of BUET (Chief Engineer); copies to VC, Treasurer, TEC chair.`,
+**Government of The People's Republic of Bangladesh**
+
+**Bangladesh University of Engineering & Technology**
+
+**Notification of Award**
+
+Contract No: 322.29315 — Date: 29/3/2023
+
+To, X-Brothers Ltd, Niketan, Gulshan, Dhaka.
+
+This is to notify you that your Tender dated 1/1/2023 for construction work of a Residential hall at BUET for the Contract Price of Tk. 10,00,00,000 (Ten crore BDT) as corrected and modified in accordance with the Instructions to Tenderers, has been approved by competent authority.
+
+You are thus requested to take following actions:
+1. Accept in writing the Notification of Award within seven (7) days of its issuance pursuant to ITT sub-clause 32.1.
+2. Furnish a Performance security in the specified format and in the amount of Tk. 1,00,00,000 (1 crore BDT) within fourteen (14) days of issuance of this letter but not later than 12/4/2023, in accordance with ITT clause 32.3.
+3. Sign the contract within twenty eight (28) days of issuance of this letter but not later than 26/4/2023, in accordance with ITT clause 32.6.
+
+You may proceed with the execution of the works only upon completion of the above tasks. You may also please note that this Notification of Award shall constitute the formation of this contract which shall become binding upon you.
+
+We attach the draft contract and all other documents for your perusal and signature.
+
+[Signature, date] — Duly authorised to sign for and on behalf of the Project coordinator, BUET.
+
+The paper gives no price or dates: the solve assumes Tk 10 crore, so the performance security is 10% = Tk 1 crore.`,
     notes: ['The question bank’s sample gives 28 days for performance security; PPR Sch VII and IA sir’s Assignment 02 give 14 days.'],
   },
   'pc-2013-14-2c': flow,
@@ -279,7 +297,7 @@ This is the class RCC item (1:1.5:3, f′c = 25 MPa, f′cr = 33.5 MPa, water ce
 
 Further TDS items:
 
-| ITT clause | TDS entry |
+| Item | TDS entry |
 |---|---|
 | Employer / contract | Executive Engineer, [ ] Road Division, RHD; Construction of 240 m PC girder bridge (4 × 60 m) over [ ] river |
 | Tender validity | 120 days from the tender closing date (class: generally 90–120 days; PPR: 60–120 days) |
@@ -369,7 +387,7 @@ ${boqConc([['6.1.1', FOOTING, '50']])}
   'pc-2011-12-7': {
     topics: [PRO, GCC],
     ans: ['a-arbitration', 'a-postqual', 'a-arith-correction', 'a-front-loading', 'a-jv'],
-    extra: 'Short notes, about 4 marks each: definition + 3–4 points per term. (e) JVCA = Joint Venture, Consortium or Association — definition plus the conditions list.',
+    extra: 'Short notes, about 4 marks each: definition + 3–4 points per term. (e) JVCA = Joint Venture, Consortium or Association — definition, PPA s.27(3) and the words **joint and several liability** (Sir gives 0 without them).',
   },
 
   // ===== 2016-17 =====
@@ -383,6 +401,7 @@ ${boqConc([['6.1.1', FOOTING, '50']])}
     topics: [DOC],
     ans: ['a-noa'],
     extra: 'Fill the standard NOA for the 20-storied building (Tk 50 crore): contract price as corrected; accept within 7 days; performance security **Tk 5 crore (10%)** within 14 days; sign within 28 days; NOA forms the contract.',
+    notes: ['The senior solve (Pallab / Nafee, RCCR → Silver Tech) writes performance security Tk 50 lakh — that is 1%; it should be 10% = Tk 5 crore. It also cites “ITT Clause” without numbers: use 32.1 / 32.3 / 32.6.'],
   },
   'pc-2016-17-2a': {
     ...gccClauses,
@@ -418,8 +437,8 @@ The 18-batch typed solve of this part used weaker concrete for a building: f′c
       ],
       unit: 'crore',
     },
-    extra: 'A (70 < 75) is disqualified — financial proposal returned unopened. B and C tie at 88.0; C is placed first on the higher technical score (quality is the prime consideration, PPR r.103) and invited to negotiate — state the tie and your tie-break.',
-    notes: ['Tie-break by technical score is the engine’s convention; PPR has no QCBS tie rule.'],
+    extra: 'A (70 < 75) is disqualified — financial proposal returned unopened. B and C both get **88**. Class rule (N.B.): if the combined score of two consulting firms is the same, the firm with the **greater technical score** is selected — so **C (90) is 1st, B 2nd, D 3rd. C is selected** and invited to negotiate. Write the N.B. line under the table.',
+    notes: ['Class rule: TF solve p.19 and typed note Ques-14 N.B.; Pallab’s solve gives the same ranking “[As technical score has more weightage]”.'],
   },
 
   // ===== 2017-18 =====

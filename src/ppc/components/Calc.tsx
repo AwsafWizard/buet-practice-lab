@@ -6,6 +6,7 @@ import { qcbs } from '../engine/qcbs'
 import { cr, num, tds, TDS_ORDER, tdsKey } from '../engine/tds'
 import type { PcCalc } from '../types'
 
+const ORD = (n: number) => `${n}${['th', 'st', 'nd', 'rd'][n % 100 > 10 && n % 100 < 14 ? 0 : n % 10 < 4 ? n % 10 : 0]}`
 const f2 = (x: number) => (Math.abs(x - Math.round(x)) < 1e-9 ? String(Math.round(x)) : x.toFixed(2))
 
 export function CalcSolution({ calc }: { calc: PcCalc }) {
@@ -52,7 +53,7 @@ function QcbsSheet({ calc }: { calc: Extract<PcCalc, { kind: 'qcbs' }> }) {
                 <td className="num">{x.qualified && x.price !== undefined ? f2(x.price) : '—'}</td>
                 <td className="num">{x.sf !== undefined ? `100 × ${f2(r.fm!)} / ${f2(x.price!)} = ${f2(x.sf)}` : '—'}</td>
                 <td className="num">{x.s !== undefined ? `${f2(T * x.tech)} + ${f2((1 - T) * x.sf!)} = ${f2(x.s)}` : '—'}</td>
-                <td className="num">{x.rank ?? (x.qualified ? '—' : 'not qualified')}</td>
+                <td className="num">{x.rank !== undefined ? ORD(x.rank) : '—'}</td>
               </tr>
             ))}
           </tbody>

@@ -2,14 +2,12 @@
 // Answers live in content/comm.ts, 7cs.ts, writing.ts, oral.ts, ethics.ts.
 import type { PcPartMap } from '../types'
 
-const QB_ONLY = 'No class-note source — answer is from the standard texts (question bank).'
-
 export const AAN_MAP: Record<string, PcPartMap> = {
   // ---------- 2023-24 ----------
   'pc-2023-24-1a': {
     topics: ['pc-comm'],
     ans: ['a-comm-definition', 'a-comm-process', 'a-comm-skills-traits'],
-    extra: 'The skills and traits are to be **named only** (no description): skills — listening, reading, writing, speaking; traits — perception, precision, credibility, control, congeniality.',
+    extra: 'The skills and traits are to be **named only** (no description): skills — listening, speaking, reading, writing; traits — perception, precision, credibility, control, congeniality. Draw the process diagram (context box: sender → message → channel → receiver, feedback arrow back).',
   },
   'pc-2023-24-1b': { topics: ['pc-writing', 'pc-comm'], ans: ['a-writing-slanted-abstract'], extra: 'For 8 marks: abstraction in one line (focusing on some details and omitting others), then the **slanted abstract** — facts selected to distort reality or support one’s own view of reality — its **purpose: to deceive, mislead, miscommunicate** (slide), and the **car example** (reality → slanted version → honest version).' },
   'pc-2023-24-1c': { topics: ['pc-writing'], ans: ['a-writing-short-formats'], extra: '9 marks: draw the tree (letter report · informational memorandum report → conference, progress, periodic · interpretative / analytical memorandum report → personnel, recommendation-justification), then one line on each.' },
@@ -21,11 +19,11 @@ export const AAN_MAP: Record<string, PcPartMap> = {
   'pc-2023-24-2b': { topics: ['pc-ethics'], ans: ['a-ethics-peers'], extra: '23 marks: Sections **11, 12, 13, 14, 15** word for word, each with a line in your own words; add **Section 9** (fair compensation of those engaged in engineering work) as a sixth point and close with one example.' },
   'pc-2023-24-3a': { topics: ['pc-oral'], ans: ['a-meeting-leadership'] },
 
-  // ---------- May 2024 (printed 2021-22, second sitting) ----------
+  // ---------- 2022-23 (held May 2024; sheet prints 2021-2022) ----------
   'pc-may-2024-5a': {
     topics: ['pc-comm'],
     ans: ['a-comm-nonverbal', 'a-comm-barriers', 'a-comm-denotation-connotation', 'a-comm-abstracting-inferring'],
-    extra: 'Only **denotation** (not connotation) and **abstraction** (not inferring) are asked in the last line — keep those two short.',
+    extra: 'Only **denotation** (not connotation) and **abstraction** (not inferring) are asked in the last line — keep those two short. Barrier = the slide sentence: “A communication barrier (problem or noise) is any interference in the communication process that distorts or obscures the sender’s meaning.” Then the three differences with their sub-categories.',
   },
   'pc-may-2024-6a': { topics: ['pc-ethics'], ans: ['a-ethics-principles'], extra: '12 marks: the opening line (“The Engineer, to uphold and advance the honor and dignity of the engineering profession …”), the **three** principles word for word, and a line of explanation for each.' },
   'pc-may-2024-6b': { topics: ['pc-ethics'], ans: ['a-ethics-client'], extra: '20 marks: Sections **1, 6, 7, 8, 10, 5** and the “overruled” clause of **Section 2**, each word for word, and one combined example.' },
@@ -52,7 +50,7 @@ export const AAN_MAP: Record<string, PcPartMap> = {
   },
   'pc-2020-21-2a': { topics: ['pc-7cs'], ans: ['a-7cs-courtesy'] },
   'pc-2020-21-2b': { topics: ['pc-writing', 'pc-comm'], ans: ['a-writing-slanted-abstract'], extra: '18 marks, four parts: abstraction → why necessary (limitations of time, space, purpose; necessary and desirable) → slanted abstract → purpose (**to deceive, mislead, miscommunicate**), with the car example.' },
-  'pc-2020-21-3b': { topics: ['pc-comm'], ans: ['a-comm-categories'] },
+  'pc-2020-21-3b': { topics: ['pc-comm'], ans: ['a-comm-categories'], extra: 'Name the three categories in one line each, then describe the three internal directions in detail (slide wording) with an example each: downward — the PM issues a work schedule to site engineers; upward — a site engineer’s daily progress report; horizontal — the design team coordinates with the procurement team.' },
 
   // ---------- Jan 2021 ----------
   'pc-jan-2021-4a': { topics: ['pc-writing'], ans: ['a-writing-business-messages'] },
@@ -69,7 +67,7 @@ export const AAN_MAP: Record<string, PcPartMap> = {
   'pc-2017-18-6c': {
     topics: ['pc-comm'],
     ans: ['a-comm-nonverbal', 'a-comm-barriers', 'a-comm-abstracting-inferring'],
-    notes: ['Printed “three main elements of verbal communication” — almost certainly non-verbal (the same question as May 2024 5(a)); answer appearance, body language, silence/time/space and say so.'],
+    notes: ['Printed “three main elements of verbal communication”. The slides only have the non-verbal three (appearance; body language; silence, time and space) — write those. The 18-batch solve answered it literally as verbal: body language 55 % (postures, gestures, eye contact), voice tonality 38 %, words 7 % — add that in one line.'],
   },
   'pc-2017-18-8a': { topics: ['pc-comm'], ans: ['a-comm-definition', 'a-comm-process', 'a-comm-importance'] },
   'pc-2017-18-8b': {
@@ -95,7 +93,7 @@ export const AAN_MAP: Record<string, PcPartMap> = {
   },
 
   // ---------- 2014-15 ----------
-  'pc-2014-15-5a': { topics: ['pc-comm'], ans: ['a-comm-business-types'] },
+  'pc-2014-15-5a': { topics: ['pc-comm'], ans: ['a-comm-categories'], extra: '“Types of business communication” = the three broad categories (the 18-batch solve answered it so): internal operational (horizontal, upward, downward), external operational (the four publics), interpersonal (the six features). 15 marks: definitions and the lists, without all ten external methods.' },
   'pc-2014-15-5b': { topics: ['pc-comm'], ans: ['a-comm-abstracting-inferring', 'a-comm-denotation-connotation'] },
   'pc-2014-15-6b': { topics: ['pc-7cs'], ans: ['a-7cs-concreteness', 'a-7cs-conciseness', 'a-7cs-completeness'] },
   'pc-2014-15-8': {
@@ -122,7 +120,7 @@ export const AAN_MAP: Record<string, PcPartMap> = {
   'pc-2012-13-8c': { topics: ['pc-comm'], ans: ['a-comm-abstracting-inferring', 'a-comm-denotation-connotation'] },
 
   // ---------- 2011-12 ----------
-  'pc-2011-12-8': { topics: ['pc-comm'], ans: ['a-comm-categories'], extra: 'For 21 marks give examples under each category: internal (work orders, progress reports, site meetings, memos), external (tender notices, letters to clients, proposals, press releases), personal (casual talk, greetings, social events).' },
+  'pc-2011-12-8': { topics: ['pc-comm'], ans: ['a-comm-categories'], extra: 'For 21 marks write everything on the slide: the three internal directions with their definitions, the four publics, the objective (warmth, understanding, positiveness), **all ten external methods**, and the **six interpersonal features**; one example per internal direction.' },
   'pc-2011-12-11c': { topics: ['pc-comm'], ans: ['a-comm-abstracting-inferring'] },
   'pc-2011-12-14a': {
     topics: ['pc-comm'],

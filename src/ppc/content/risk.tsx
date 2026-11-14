@@ -910,8 +910,8 @@ const cards: PcCard[] = [
     id: 'c-rk-hierarchy',
     topic: T,
     front: 'In what kind of organisation is construction risk managed? Which **two organizational forms** does it blend?',
-    back: 'In **hierarchical networks of firms**. **Hierarchy**: clear contractual chains of command, authority, and liability flowing top-down (main contractor → subcontractors → sub-subcontractors/suppliers). **Network**: interdependent, temporary alliances of legally independent firms collaborating to deliver a single project.',
-    src: 'Tanvir sir L5 new deck p3',
+    back: 'In **hierarchical networks of firms**. **Hierarchy**: clear contractual chains of command, authority, and liability flowing top-down (main contractor → subcontractors → sub-subcontractors/suppliers). **Network**: interdependent, temporary alliances of legally independent firms collaborating to deliver a single project. Problems are **highly interdependent** while the people, methods and organizations involved are **extraordinarily independent** (old L5 p5).',
+    src: 'Tanvir sir L5 new deck p3; Lecture 05.pdf p5',
   },
   {
     id: 'c-rk-interdependent',

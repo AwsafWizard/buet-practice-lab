@@ -69,7 +69,7 @@ export const OIA_MAP: Record<string, PcPartMap> = {
     topics: [CT],
     ans: ['a-ct-triple', 'a-ct-pricing'],
     extra: `For 16 marks add one line per delivery system:
-- **DBB** — design complete, then contractors bid, client contracts the winning builder; designer and contractor have no contract.
+- **DBB** — design complete, then contractors bid, client contracts the winning builder; designer and contractor share no direct, formal contract.
 - **Multiple Prime** — several prime contractors instead of one GC; no GC fee, but the client coordinates.
 - **CM at Risk** — CM helps manage design, then builds; early guaranteed cost.
 - **Agency CM** — CM is the client’s consultant and does not build.
@@ -143,13 +143,23 @@ export const OIA_MAP: Record<string, PcPartMap> = {
   'pc-2015-16-7b': {
     topics: [CT, PR],
     ans: ['a-ct-think-twice', 'a-pr-participants'],
-    extra: `### Four groups — names of professionals/organisations
-1. **Client (owner)** — private owners, developers, government agencies.
-2. **Engineer and/or architect** — engineers, architects, other designers.
-3. **Contractor** — builders, product & material suppliers.
-4. **Fourth group** — legislative and statutory bodies; regulatory and permitting agencies; licensing organizations and professional societies; the public and special interest groups.`,
+    extra: `### Four groups of project development (as the 18-batch solve writes it)
+1. **Client (owner)**: prime mover and sometimes the user.
+2. **Engineer and/or architect (designer)**: developer of the design.
+3. **Contractor (builder)**: organizer and builder.
+4. **Fourth group**: legislative and statutory bodies; regulatory and permitting agencies; licensing organizations and professional societies; the public and special interest groups.`,
   },
-  'pc-2015-16-8a': { topics: [CT, RK], ans: ['a-ct-triple', 'a-rk-pli-concerns'] },
+  'pc-2015-16-8a': {
+    topics: [CT, RK],
+    ans: ['a-ct-triple', 'a-rk-pli-concerns'],
+    extra: `For 18 marks the 18-batch solve describes all six delivery systems (as in 2017-18 7a), then names the procurement methods and contract formats, then the nine PLI concerns. One line per delivery system:
+- **DBB**: design complete, then contractors bid, client contracts the winning builder; designer and contractor share no direct, formal contract.
+- **Multiple Prime**: several prime contractors instead of one GC; no GC fee, but the client coordinates.
+- **CM at Risk**: CM helps manage design, then builds; early guaranteed cost.
+- **Agency CM**: CM is the client’s consultant and does not build.
+- **DB**: one entity designs and builds.
+- **Design-Assist**: contractor hired as consultant during DBB design.`,
+  },
   'pc-2015-16-8b': { topics: [RK, CT], ans: ['a-rk-bonds', 'a-rk-fiduciary', 'a-ct-model', 'a-ct-dbb'] },
 
   // ---------- 2014-15 ----------
@@ -233,7 +243,8 @@ export const OIA_MAP: Record<string, PcPartMap> = {
   'pc-2016-17-7b': {
     topics: [PR, CT],
     ans: ['a-pr-flow', 'a-ct-pricing'],
-    notes: ['"Contract format in project delivery" = the pricing formats of the clients’ acquisition strategy (lump sum, cost plus a fixed fee, GMP, target, unit price).'],
+    extra: 'The 18-batch solve read "contract format" here as the seven *typical contract formats* (conventional proposal, negotiated terms and conditions, multiple contracts, special contracts for major projects, client-developed contracts, purchase orders, model contracts). With 18 marks, add them as one line each after the pricing formats.',
+    notes: ['"Contract format in project delivery": the slide heading "Contracts in Project Delivery → Contract Format" (L4 p38–39, p55–61) supports the pricing formats (lump sum, cost plus a fixed fee, GMP, target, unit price), which come first; the 18-batch solve wrote the seven typical contract formats (L4 p14), so both readings are covered.'],
   },
   'pc-2016-17-8a': {
     topics: [RK, CT],

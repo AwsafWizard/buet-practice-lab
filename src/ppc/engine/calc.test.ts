@@ -60,6 +60,7 @@ describe('tds (class formulas)', () => {
     expect(r.lines.specific.entry).toContain('Tk 40 crore')
     expect(r.lines.turnover.entry).toContain('Tk 37.5 crore')
     expect(r.lines.liquid.basis).toContain('8.13')
+    expect(r.lines.liquid.entry).toContain('in form of working capital')
   })
   it('2023-24 Q7(a): 30-storey, Tk 120 crore, 60 months', () => {
     const r = tds({ costCrore: 120, months: 60, storeys: 30 })

@@ -71,46 +71,46 @@ export function tds({ costCrore: C, months, storeys, lengthM, billingPct = 10 }:
   const spec = up(0.8 * C, 1)
   const simStoreys = storeys ? Math.floor(storeys * 0.75) : undefined
   const similar = simStoreys
-    ? `a ${simStoreys} storied building`
+    ? `${simStoreys} storied building`
     : lengthM
       ? `a bridge at least ${num(0.8 * lengthM, 0)} m long`
       : 'a work of similar nature and complexity'
   const bills = 100 / billingPct
   const lines: Record<TdsKey, TdsLine> = {
     general: {
-      item: 'General experience',
+      item: 'General Experience',
       itt: 'ITT 14.1(a)',
       group: 'Qualification Criteria',
-      entry: `The minimum number of years of general experience of the Tenderer as Contractor shall be ${genYears} (${WORD[genYears]}) years, counting backward from the date of publication of IFT in the newspaper.`,
+      entry: `The minimum number of years of general experience of the Tenderer as Contractor shall be ${genYears} (${WORD[genYears]}) years. Years counting backward from the date of publication of IFT in the newspaper.`,
       basis: `a reasonable number of years${genYears > 5 ? ' (a very large job, so more than the usual 5)' : ''}`,
     },
     specific: {
-      item: 'Specific experience',
+      item: 'Specific Experience',
       itt: 'ITT 14.1(b)',
       group: 'Qualification Criteria',
-      entry: `Satisfactory completion of ${similar} of at least ${cr(spec)} under 1 (one) contract over a period of the last 5 (Five) years shall be required.`,
+      entry: `A satisfactory completion of ${similar} of at least ${cr(spec)} under 1 contract over a period of 5 (Five) years shall be required.`,
       basis: `a job close to this one in size and in money: ${simStoreys ? `${simStoreys} storeys for ${storeys}, ` : lengthM ? `${num(0.8 * lengthM, 0)} m for ${num(lengthM, 0)} m, ` : ''}80 % of ${cr(C)} = ${cr(0.8 * C)}`,
     },
     liquid: {
-      item: 'Liquid assets',
+      item: 'Liquid Asset',
       itt: 'ITT 15.1(a)',
       group: 'Qualification Criteria',
-      entry: `The minimum amount of liquid assets or working capital or credit facilities of the Tenderer shall be ${cr(liquid)}.`,
+      entry: `The minimum amount of liquid assets in form of working capital or credit facilities of ${cr(liquid)}.`,
       basis: `gap between bills = ${num(months)} months ${Number.isInteger(bills) ? `÷ ${bills} bills` : `× ${num(billingPct)} %`} + 3 = ${num(gap)} months; liquid asset = (${num(C)} ÷ ${num(months)}) × ${num(gap)} = ${cr(liquidExact)}${Math.abs(liquid - liquidExact) > 1e-9 ? ` → ${cr(liquid)}` : ''}`,
     },
     turnover: {
-      item: 'Annual construction turnover',
+      item: 'Turnover',
       itt: 'ITT 18.1(b)',
       group: 'Qualification Criteria',
       entry: `The minimum average annual construction turnover shall be greater than ${cr(turnover)} in the last 5 (Five) years.`,
       basis: `(total cost ÷ duration in years) × 3 = (${num(C)} ÷ ${num(years)}) × 3 = ${cr(turnover)}`,
     },
     security: {
-      item: 'Tender security',
+      item: 'Tender Security',
       itt: 'ITT 17.1(a)',
       group: 'Tender Preparation',
-      entry: `The amount of tender security shall be ${cr(security)}, in the form of a bank draft, pay order or bank guarantee from a scheduled bank of Bangladesh.`,
-      basis: `2 to 3 % of the total cost: 2 % × ${cr(C)} = ${cr(0.02 * C)}, written as a fixed amount, never as a percentage (PPR 2008 r.22)`,
+      entry: `The amount of the Tender Security shall be ${cr(security)}.`,
+      basis: `2 to 3 % of the total cost: 2 % × ${cr(C)} = ${cr(0.02 * C)}, written as a fixed amount, never as a percentage (PPR 2008 r.22); in the form of a bank draft, pay order or bank guarantee from a scheduled bank of Bangladesh`,
     },
   }
   return { annual, monthly, years, billingPct, gap, turnover, liquid, liquidExact, security, genYears, spec, lines }

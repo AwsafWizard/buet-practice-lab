@@ -16,7 +16,7 @@ const lists: PcList[] = [
       { k: 'General Conditions of Contract (GCC)', alt: ['GCC'], d: 'Same for all tenders; definitions, arbitrators, JVCA, risk, compensation events.' },
       { k: 'Particular Conditions of Contract (PCC)', alt: ['PCC', 'special conditions'], d: 'Project-specific figures for the GCC; varies tender to tender.' },
       { k: 'Tender Form', alt: ['tender submission sheet', 'forms'], d: 'Varies tender to tender.' },
-      { k: 'Bill of Quantities (BoQ)', alt: ['BoQ', 'BOQ'], d: 'All items with quantities; basis of contract price and payment.' },
+      { k: 'Bill of Quantities (BoQ)', alt: ['BoQ', 'BOQ'], d: 'Most important part of the tender document; all items with quantities; basis of contract price and payment.' },
       { k: 'General Specification', alt: ['general specifications'], d: 'Site requirements, health & safety, pollution, security.' },
       { k: 'Particular Specification', alt: ['technical specification', 'particular specifications'], d: 'Steel, concrete, bricks, electrical items.' },
       { k: 'The Drawings', alt: ['drawings'], d: 'Detailing of the task.' },
@@ -95,17 +95,34 @@ const lists: PcList[] = [
     src: 'IA sir TD slides 11–12; PPR r.4(2)(d), 48–49, Sch XI',
   },
   {
+    id: 'l-technical-offer',
+    topic: T,
+    title: 'Technical offer of a tenderer',
+    ask: 'Describe the technical offer of a tenderer.',
+    points: [
+      { k: 'General experience', d: 'Years of experience (5 / 10 years).' },
+      { k: 'Specific experience: physical and financial', alt: ['specific experience'], d: 'Physical: built more storeys; financial: done higher-value work.' },
+      { k: 'Key technical personnel', alt: ['key personnel'], d: 'Qualification of the engineers who will do the work.' },
+      { k: 'Plant and equipment', alt: ['equipment'], d: 'The machinery the work needs.' },
+      { k: 'Turnover', d: 'Total inflow of one year; average of 5 years; outflow not counted.' },
+      { k: 'Liquid asset / credit facility', alt: ['liquid asset', 'credit facility'], d: 'Cash in the bank — about 10% of the total work.' },
+    ],
+    seen: [],
+    src: 'Nafee bhai note Q21 (typed Ques-25)',
+    note: 'Tenderers make two offers: the technical offer (these six) and the financial offer (the price). For “criteria for tender evaluation” discuss both.',
+  },
+  {
     id: 'l-noa-actions',
     topic: T,
     title: 'Actions the NOA asks of the successful tenderer',
     points: [
-      { k: 'Accept NOA in writing within 7 days', alt: ['accept in writing', 'acceptance'] },
-      { k: 'Furnish performance security within 14 days', alt: ['performance security'] },
-      { k: 'Sign contract within 28 days', alt: ['sign the contract'] },
+      { k: 'Accept NOA in writing within 7 days', alt: ['accept in writing', 'acceptance'], d: 'ITT sub-clause 32.1' },
+      { k: 'Furnish performance security within 14 days', alt: ['performance security'], d: 'Tender security forfeited if not furnished; ITT clause 32.3; 10% of contract price' },
+      { k: 'Sign contract within 28 days', alt: ['sign the contract'], d: 'ITT clause 32.6; NOA forms the contract' },
     ],
     ordered: true,
     seen: ['2016-17', '2013-14'],
-    src: 'PPR Sch VII; IA sir Assignment 02; PPR Sch II r.102',
+    src: 'PPR Sch VII; IA sir Assignment 02; PPR Sch II r.102; 18-batch TF solve pp.10–11',
   },
   {
     id: 'l-doc-parties',
@@ -139,8 +156,9 @@ const cards: PcCard[] = [
   { id: 'c-docs-tds-layout', topic: T, front: 'How is the Tender Data Sheet table laid out, and which ITT clauses does it fill?', back: 'Band **“Qualification Criteria”**: ITT 14.1(a) General Experience, 14.1(b) Specific Experience, 15.1(a) Liquid Assets, 18.1(b) Turnover. Band **“Tender Preparation”**: ITT 17.1(a) Tender Security. The working (gap, liquid asset, turnover) is written under the table.', src: '18-batch term-final solve p.36; typed note Ques-24 (Pallab’s table)' },
   { id: 'c-docs-billing', topic: T, front: 'In a TDS problem, what is the “billing amount”, and what if the paper does not give it?', back: 'The share of the work after which one bill is paid. **10%** means a bill after every 10% of the work, so **10 bills**. If the paper is silent, write “Assuming the billing amount is 10%”.', src: '18-batch term-final solve p.36; typed note Ques-23' },
   { id: 'c-docs-validity', topic: T, front: 'Guideline for fixing the tender validity period?', back: 'Long enough to finish the **complete evaluation**, the **comparative assessment**, the **necessary approvals** and to issue the **Notification of Award** within it (PPA s.14(a)). 1st extension: head of the procuring entity; 2nd: next higher authority. **Generally 90–120 days** (PPR: 60–120).', src: 'Typed note Ques-19; question marked by Sir in class in the annotated PPA; PPA s.14(a)' },
-  { id: 'c-docs-tech-fin-offer', topic: T, front: 'Technical offer vs financial offer of a tenderer?', back: '**Technical offer**: general and specific experience, key technical personnel, plant and equipment, turnover, liquid asset. **Financial offer**: the price at which the tenderer offers to do the work.', src: 'Senior note Q21; OneNote' },
-  { id: 'c-docs-noa-def', topic: T, front: 'What is an NOA?', back: 'The **Notification of Award** — the official notice by the employer (procuring entity) telling the tenderer its tender has been accepted; it states price, performance security and signing dates and forms the contract.', src: 'Senior note Q5; PPR r.102' },
+  { id: 'c-docs-tech-fin-offer', topic: T, front: 'Technical offer vs financial offer of a tenderer?', back: '**Technical offer**: the six items of the technical-offer list. **Financial offer**: the price at which the tenderer offers to do the work.', src: 'Senior note Q21; OneNote' },
+  { id: 'c-docs-tds-2018', topic: T, front: 'TDS for a 20-storied building, Tk 80 crore, 4 years, minimum billing amount 10% (senior notes’ “2018-19” Q2(a)) — the four figures?', back: 'Tender security 2% = **Tk 1.6 crore**. Specific: **15 storied** building of at least **Tk 64 crore**, 1 contract, 5 years. Turnover (80 ÷ 4) × 3 = **Tk 60 crore**. Gap (48 ÷ 10) + 3 = 7.8; liquid asset (80 ÷ 48) × 7.8 = **Tk 13 crore**.', seen: [], src: 'senior notes’ “2018-19” paper (typed note PYQ-19); class formulas' },
+  { id: 'c-docs-noa-def', topic: T, front: 'What is an NOA?', back: '**NOA (Notification of Award)** means the official notice issued by the employer notifying the contractor that his bid has been accepted. It states the contract price and asks for acceptance (7 days), performance security (14 days) and signing (28 days); it constitutes the formation of the contract.', src: 'Nafee bhai note Q5 (typed Ques-30); PPR Sch VII' },
   { id: 'c-docs-ps-noa', topic: T, front: 'Performance security in the NOA — amount and deadline?', back: 'Typically **10%** of the contract price for works (e.g. Tk 3.5 crore on Tk 35 crore), within **14 days** of acceptance of the NOA (national). The question bank’s “28 days” is the international limit.', src: 'IA sir Assignment 02; PPR Sch II, Sch VII' },
 ]
 
@@ -156,32 +174,39 @@ const answers: PcAnswer[] = [
 3. **General Conditions of Contract (GCC)** — same for all tenders; general conditions only: definitions, arbitrators, JVCA, risk, compensation events, performance security.
 4. **Particular Conditions of Contract (PCC)** — varies tender to tender; specific figures for the GCC (amount of compensation, performance security), key personnel, modifications.
 5. **Tender Form** — the tender submission sheet and forms; varies tender to tender.
-6. **Bill of Quantities (BoQ)** — all items of work with quantities; used to calculate the **contract price**; contractor paid at the quoted rates.
+6. **Bill of Quantities (BoQ)** — all items of work with quantities; used to calculate the **contract price**; contractor paid at the quoted rates — the most important part of the tender document.
 7. **General Specification** — general site requirements, health and safety, measures against environmental pollution, security.
 8. **Particular Specification** — strength and properties of steel, strength of concrete, bricks, electrical items.
-9. **The Drawings** — drawing work giving the detailing of the task.`,
-    keys: ['CPTU standard documents', 'Instructions to Tenderer', 'Tender Data Sheet', 'tender security', 'turnover', 'General Conditions of Contract', 'Particular Conditions of Contract', 'Tender Form', 'Bill of Quantities', 'contract price', 'General Specification', 'Particular Specification', 'Drawings'],
+9. **The Drawings** — drawing work giving the detailing of the task.
+
+### Correlated pairs (class note)
+- **ITT and TDS** — these two are correlated (the TDS gives the particular data for the ITT clauses).
+- **GCC and PCC** — these two are correlated.
+- **General and Particular Specification** — these two are correlated.
+
+**BoQ — Most important part of Tender Document.**`,
+    keys: ['CPTU standard documents', 'Instructions to Tenderer', 'Tender Data Sheet', 'tender security', 'turnover', 'General Conditions of Contract', 'Particular Conditions of Contract', 'Tender Form', 'Bill of Quantities', 'contract price', 'General Specification', 'Particular Specification', 'Drawings', 'correlated', 'Most important part of Tender Document'],
     lists: ['l-tender-doc-elements'],
-    src: 'IA sir Tender Document slides 4–9; PPR r.4',
+    src: 'IA sir Tender Document slides 4–9; PPR r.4; TF p.34; typed note Ques-22',
   },
   {
     id: 'a-contract-priority',
     topic: T,
     q: 'List, in order of priority, the documents that form the contract.',
     seen: ['2022-23', '2020-21', 'Jan 2021', '2017-18', '2013-14', '2011-12'],
-    a: `PPR 2008 **r.4(7)** — the documents forming the contract, in **order of precedence**:
-1. The **signed Contract Agreement**
-2. The **Notification of Award**
-3. The **Tender and the appendices** to the Tender
-4. **Particular Conditions of Contract**
-5. **General Conditions of Contract**
-6. **Technical specifications**
-7. **General specifications**
-8. **Drawings**
-9. **Priced Bill of Quantities** (works) / price schedule and schedule of requirements (goods)
-10. **Other documents**, including correspondence
+    a: `PPR 2008 **r.4(7)**: “The Documents forming the Contract shall be in the following **order of precedence**, namely:—”
+1. (a) The **signed Contract Agreement**
+2. (b) The **Notification of Award**
+3. (c) The **Tender and the appendices** to the Tender
+4. (d) **Particular Conditions of Contract**
+5. (e) **General Conditions of Contract**
+6. (f) **Technical specifications**
+7. (g) **General specifications**
+8. (h) **Drawings**
+9. (i) Price Schedule and schedule of requirements for Goods or **Priced Bill of Quantities** for works
+10. (j) **Other Documents including correspondences**
 
-If two documents conflict, the higher one governs — the more specific document (PCC, technical specification) overrides the general one.`,
+If two documents conflict, the higher one governs — the more specific document (PCC, technical specification) overrides the general one. (18-batch solve: lacking of BoQ will be specified in Technical Specification.)`,
     keys: ['r.4(7)', 'order of precedence', 'Contract Agreement', 'Notification of Award', 'Tender and the appendices', 'Particular Conditions', 'General Conditions', 'Technical specifications', 'General specifications', 'Drawings', 'Priced Bill of Quantities', 'correspondence'],
     lists: ['l-contract-priority'],
     src: 'PPR 2008 r.4(7)',
@@ -222,7 +247,9 @@ Assuming the **billing amount is 10%** (10 bills).
 - Annual turnover = (50 ÷ 4) × 3 = Tk 37.5 crore
 - Tender security = 2% × 50 = Tk 1 crore, written as a fixed amount, not as a percentage
 
-If the paper gives no duration or billing amount, assume one and say so. Other items when asked: tender validity (generally 90–120 days), pre-tender meeting (date, time, place; minutes to all purchasers).`,
+If the paper gives no duration or billing amount, assume one and say so. Other items when asked: tender validity (generally 90–120 days), pre-tender meeting (date, time, place; minutes to all purchasers).
+
+The formula sheet also says to round the gap up to the next whole month; the worked example keeps 7.8. Either is accepted — with a 3-year job the rounded gap (7) gives a liquid asset one crore higher (Tk 80 crore → Tk 16 crore).`,
     keys: ['Qualification Criteria', 'Tender Preparation', 'ITT 14.1(a)', '5 (Five) years', 'counting backward from the date of publication of IFT', '15 storied building', 'Tk 40 crore', '× 3', 'Gap between one bill', '+ 3', '7.8', 'Tk 9 crore', 'Tk 37.5 crore', '(2 to 3%)', 'Tk 1 crore', 'billing amount is 10%'],
     lists: ['l-tds-items'],
     src: '18-batch term-final solve pp.35–36 (formulas and the worked table, “Important for Term Final”); typed note Ques-23 and Ques-24 (ITT clause column); the gap is kept unrounded as in the solve',
@@ -255,6 +282,8 @@ If the paper gives no duration or billing amount, assume one and say so. Other i
     q: 'Prepare a standard Notification of Award (NOA).',
     seen: ['2016-17', '2013-14'],
     a: `### [Name of Procuring Entity, address]
+**NOA (Notification of Award)** means the **official notice** issued by the employer notifying the contractor that his bid has been accepted.
+
 **NOTIFICATION OF AWARD**
 
 Contract No: …………  Date: …………
@@ -264,9 +293,9 @@ To: [Name and address of the Contractor]
 This is to notify you that your **Tender dated** [date] for the execution of the Works for [name of project / contract] for the **Contract Price** of Tk [figures] ([words]) **as corrected and modified in accordance with the Instructions to Tenderers**, has been **approved by** [name of Procuring Entity].
 
 You are thus requested to take following actions:
-1. **Accept in writing** the Notification of Award **within seven (7) days** of its issuance.
-2. **Furnish a Performance Security** in the specified format and in the amount of Tk [10% of contract price] **within fourteen (14) days** of issuance of this letter but not later than [date].
-3. **Sign the Contract within twenty-eight (28) days** of issuance of this letter but not later than [date].
+1. **Accept in writing** the Notification of Award **within seven (7) days** of its issuance pursuant to **ITT sub-clause 32.1**.
+2. **Furnish a Performance Security** in the specified format and in the amount of Tk [10% of contract price] **within fourteen (14) days** of issuance of this letter but not later than [date], in accordance with **ITT clause 32.3**.
+3. **Sign the Contract within twenty-eight (28) days** of issuance of this letter but not later than [date], in accordance with **ITT clause 32.6**.
 
 You may proceed with the execution of the Works only upon completion of the above tasks. You may also please note that this Notification of Award shall constitute the **formation of this Contract** which shall become binding upon you.
 
@@ -276,10 +305,12 @@ Signed …………
 **Duly authorised to sign for and on behalf of** [Procuring Entity]
 Date: …………
 
-(Tender validity date is critical to the NOA.)`,
-    keys: ['NOTIFICATION OF AWARD', 'Contract No', 'Tender dated', 'Contract Price', 'as corrected and modified', 'Accept in writing', 'within seven (7) days', 'Performance Security', 'within fourteen (14) days', 'twenty-eight (28) days', 'formation of this Contract', 'draft Contract', 'on behalf of'],
+(Tender validity date is critical to the NOA.)
+
+The 18-batch solve writes “approved by competent authority”; either is accepted.`,
+    keys: ['NOTIFICATION OF AWARD', 'Contract No', 'Tender dated', 'Contract Price', 'as corrected and modified', 'Accept in writing', 'within seven (7) days', 'Performance Security', 'within fourteen (14) days', 'twenty-eight (28) days', 'formation of this Contract', 'draft Contract', 'on behalf of', 'official notice', 'ITT sub-clause 32.1'],
     lists: ['l-noa-actions'],
-    src: 'PPR Sch VII; IA sir Assignment 02 (DNCC NOA)',
+    src: 'PPR Sch VII; IA sir Assignment 02 (DNCC NOA); 18-batch TF solve pp.9–11; Nafee bhai note Q5 / typed note Ques-30',
   },
 ]
 

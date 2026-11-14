@@ -67,7 +67,7 @@ const TenderFlowFig: FC = () => (
     </text>
     <path d="M70,342 V372 H200 M193,342 V372" fill="none" stroke={mute} strokeWidth={1.4} />
     <Arrow d="M200,372 V384" />
-    <Box x={110} y={386} w={180} t={['Lowest evaluated bidder']} strong />
+    <Box x={110} y={386} w={180} t={['Lowest bidder/tenderer']} strong />
     <Arrow d="M200,414 V430" />
     <Diamond cx={200} cy={458} t={['Post-', 'qualification']} />
     <path d="M110,458 H60 V400 H108" fill="none" stroke={mute} strokeWidth={1.4} markerEnd="url(#pc-arr)" />
@@ -100,7 +100,7 @@ const TenderFlowFig: FC = () => (
     </text>
     <Box x={95} y={578} w={210} t={['Invited to contract — NOA']} strong />
     <Arrow d="M200,606 V618" />
-    <Box x={95} y={620} w={210} t={['Performance security + contract sign']} />
+    <Box x={95} y={620} w={210} t={['Contract sign']} />
     <Arrow d="M200,648 V658" />
     <Box x={95} y={660} w={210} h={26} t={['Contractor']} strong />
   </svg>
@@ -130,9 +130,9 @@ const lists: PcList[] = [
     ],
     ordered: true,
     hook: 'No Bidder Plays Safe Over Exams Or Lunch; Post-lunch, HOPE Nods; Contract Concludes — Notice, Buy, Pre-tender, Submit, Open, Evaluate, Outcome, Lowest, Post-qual, HOPE, NOA, Contract sign, Contractor.',
-    seen: ['2023-24', '2022-23', 'Jan 2021', '2017-18', '2015-16', '2013-14', '2011-12'],
+    seen: ['2023-24', '2022-23', '2021-22', 'Jan 2021', '2017-18', '2015-16', '2013-14', '2011-12'],
     src: 'IA sir Tender Flow Chart (12 May 2015); GCC+TEC slide 6 (adds Tender Opening)',
-    note: 'The 2014 version has no pre-tender meeting, opening or post-qualification; the 2015 GCC+TEC version adds opening; the May 2015 chart adds post-qualification and HOPE approval.',
+    note: 'IA sir’s chart of 12 May 2015 (the one the seniors paste, TF p.47 = Nafee p.20) has no Tender Opening box: Pre-tender meeting → Tender submission → Tender evaluation by TEC, with Contract Sign as a side box. His GCC+TEC slide 6 (May 2015) shows Tender Opening, so either chart is accepted. The 2014 version has no pre-tender meeting or post-qualification.',
   },
   {
     id: 'l-tender-outcomes',
@@ -144,7 +144,7 @@ const lists: PcList[] = [
       { k: 'Non-responsive tenderer', alt: ['non-response', 'non responsive'], d: 'Material deviation or reservation.' },
       { k: 'Rejected tenderer', alt: ['rejected'], d: 'Fails eligibility/mandatory documents, or refuses correction.' },
     ],
-    seen: ['2023-24', '2022-23', 'Jan 2021', '2017-18', '2015-16', '2013-14', '2011-12'],
+    seen: ['2023-24', '2022-23', '2021-22', 'Jan 2021', '2017-18', '2015-16', '2013-14', '2011-12'],
     src: 'IA sir Tender Flow Chart; PPR r.98(5)–(7)',
   },
   {
@@ -204,6 +204,7 @@ const lists: PcList[] = [
       { k: 'Minimum liquid asset', alt: ['liquid asset'] },
       { k: 'VAT & IT related certificate', alt: ['VAT certificate', 'income tax', 'TIN'] },
       { k: 'Valid trade license', alt: ['trade licence'] },
+      { k: 'Authorization letter', alt: ['authorisation letter', 'power of attorney'], d: '18-batch solve (TF p.46) puts it first in the second group.' },
       { k: 'All pages duly signed', alt: ['signed pages'] },
       { k: 'Price schedule', alt: ['priced BoQ'] },
       { k: 'Tender validity period', alt: ['validity'] },
@@ -211,9 +212,10 @@ const lists: PcList[] = [
       { k: 'Tender security', alt: ['bid security'] },
       { k: 'Any additional condition imposed by tenderer', alt: ['additional condition', 'deviation'] },
     ],
-    hook: 'Eligibility + three minimums (experience, similar experience, liquid asset) + two papers (VAT/IT, trade licence) + five sheets (signed pages, price schedule, validity, submission sheet, security) + no conditions.',
+    hook: 'Eligibility + three minimums (experience, similar experience, liquid asset) + two papers (VAT/IT, trade licence) + six sheets (authorization letter, signed pages, price schedule, validity, submission sheet, security) + no conditions.',
     seen: ['2020-21', '2015-16'],
-    src: 'IA sir Tender Document slide 11; GCC+TEC slides 7–8 (“Preliminary Security” = preliminary examination)',
+    src: 'IA sir Tender Document slide 11; GCC+TEC slides 7–8 (“Preliminary Security” = preliminary examination); 18-batch TF solve p.46',
+    note: 'IA sir’s slides head both groups “Preliminary Security”; the 18-batch solve heads items 1–6 “Preliminary Scrutiny”, 7–12 “Preliminary Security” and the second list “Detailed Examinations”, and adds “Authorization letter”.',
   },
   {
     id: 'l-eval-detailed',
@@ -231,7 +233,7 @@ const lists: PcList[] = [
       { k: 'Credit facility available', alt: ['credit facility', 'credit line'] },
     ],
     hook: 'People, Plant, General, Similar, Liquid, Turnover, Arithmetic, Credit — “PP-GS-LT-AC”.',
-    seen: ['2020-21', '2015-16'],
+    seen: ['2020-21', '2017-18', '2016-17', '2015-16'],
     src: 'IA sir Tender Document slide 12; GCC+TEC slide 8',
   },
   {
@@ -261,14 +263,14 @@ const lists: PcList[] = [
     topic: T,
     title: 'Rules of arithmetic correction',
     points: [
-      { k: 'Unit rate prevails over line total', alt: ['rate prevails'], d: 'Unless an obvious misplaced decimal point in the rate.' },
-      { k: 'Sub-totals prevail over total', alt: ['subtotal prevails'] },
-      { k: 'Words prevail over figures', alt: ['amount in words'], d: 'Senior note: “words amount will be considered”.' },
+      { k: 'Unit price prevails over line total', alt: ['unit rate prevails', 'rate prevails', 'unit price prevails'], d: 'ITT 44.1(a); unless an obvious misplacement of the decimal point in the unit price — then the total as quoted governs.' },
+      { k: 'Subtotals prevail over total', alt: ['sub-totals prevail', 'subtotal prevails'], d: 'ITT 44.1(b).' },
+      { k: 'Words prevail over figures', alt: ['amount in words'], d: 'ITT 44.1(c); unless the words relate to an arithmetic error.' },
       { k: 'Unpriced item covered by other rates', alt: ['no rate quoted', 'deemed covered'], d: 'PPR r.98(12): price not changed.' },
-      { k: 'Refusal: tender rejected, security forfeited', alt: ['not accept correction', 'forfeit'], d: 'PPR r.98(15)(b), r.25(e).' },
+      { k: 'Refusal: non-responsive, security forfeited', alt: ['not accept correction', 'forfeit', 'non-responsive'], d: 'ITT 44.2; PPR r.98(15)(b), r.25(e).' },
     ],
     seen: ['2020-21', '2013-14', '2011-12'],
-    src: 'PPR r.98(11)–(15), 25(e); senior note Q8; rules 1–2 standard ITT (question bank)',
+    src: 'Standard Tender Document ITT 44.1–44.2 (Nafee bhai note Ques-28; 18-batch TF solve pp.44–45); PPR r.98(11)–(15), 25(e)',
   },
   {
     id: 'l-forfeit',
@@ -284,7 +286,7 @@ const lists: PcList[] = [
     ],
     hook: '“W-A-P-S-C”: the tenderer Walks away, won’t Accept, won’t Pay security, won’t Sign, won’t accept Correction — every step after opening where he backs out.',
     seen: ['2023-24', '2021-22', '2020-21', '2011-12'],
-    src: 'PPR 2008 r.25',
+    src: 'PPR 2008 r.25 (word for word in a-forfeit); Nafee bhai note Ques-20(b) (“Important for Term Final”)',
     note: 'Refusing to extend validity is NOT a forfeiture ground — the security is returned (r.23(2)).',
   },
   {
@@ -310,7 +312,7 @@ const lists: PcList[] = [
     points: [
       { k: 'JV agreement on non-judicial stamp', alt: ['JV agreement', 'stamped agreement'], d: 'Signed by all authorised representatives (Tk 300 stamp).' },
       { k: 'Or notarised letter of intent', alt: ['letter of intent', 'LoI'], d: 'With a copy of the proposed agreement; a bare LoI is not enough.' },
-      { k: 'Jointly and severally liable', alt: ['joint and several liability', 'jointly liable'] },
+      { k: 'Joint and several liability', alt: ['jointly and severally liable', 'jointly and individually liable', 'jointly liable'], d: 'PPA s.27(3): “jointly and individually liable to the procuring entity”. Sir gives 0 if it is missing.' },
       { k: 'Nominated lead partner / representative', alt: ['lead partner', 'representative'], d: 'Authorised to conduct all business and receive payments.' },
       { k: 'Minimum qualification for each partner', alt: ['partner qualification'] },
       { k: 'Specific experience not aggregated', alt: ['no aggregation'], d: '3 + 2 years ≠ 5 years; 50 + 30 + 20 m spans ≠ 100 m bridge.' },
@@ -323,6 +325,56 @@ const lists: PcList[] = [
     seen: ['2015-16', '2014-15', '2011-12'],
     src: 'PPA s.27; PPR r.54, 96(2); RHD EoI notice',
     note: 'Question bank adds “lead ≥ 40–50%, others ≥ 25%” and “≤ 3 partners” — not in IA sir’s material; the RHD EoI says limiting to 3 firms is “preferable”.',
+  },
+  {
+    id: 'l-jv-requirements',
+    topic: T,
+    title: 'Requirements of a Joint Venture tender (18-batch solve)',
+    ask: 'What are the requirements of a Joint Venture tender?',
+    points: [
+      { k: 'Work distribution', alt: ['distribution of work'], d: 'Must contain details about work distribution.' },
+      { k: 'Joint and several liability', alt: ['jointly and severally liable', 'jointly and individually liable'], d: 'For any failure in performance or mismanagement. Sir gives 0 without it.' },
+      { k: 'Lead partner with major share', alt: ['lead partner', 'share distribution'], d: 'Lead partner with the major portion of share, the second (and third) partner; share distribution stated.' },
+      { k: 'Budget keeps time in control', alt: ['budget'], d: 'Budget designed so that time and duration stay in control.' },
+      { k: 'Risk shared as per contribution', alt: ['risk factor', 'risk distribution'], d: 'Risk factor distributed among all parties as per contribution.' },
+      { k: 'JV agreement submitted with tender', alt: ['JV agreement', 'part of the contract'], d: 'Becomes a part of the contract when the contract is signed.' },
+    ],
+    hook: 'W-J-L-B-R-A: “We Join, Lead, Budget, Risk, Agree”.',
+    seen: ['2015-16', '2014-15', '2011-12'],
+    src: 'Pallab’s 18-batch solve, 2014-15 Q3(a)',
+  },
+  {
+    id: 'l-jv-purposes',
+    topic: T,
+    title: 'Purposes of a joint venture',
+    ask: 'What are the purposes of a joint venture?',
+    points: [
+      { k: 'Scale efficiency by combining assets', alt: ['scale efficiency', 'combining assets and operations'], d: 'To gain scale efficiency by combining assets and operations.' },
+      { k: 'Share risk for major investment', alt: ['share risk'] },
+      { k: 'Access skills and capabilities', alt: ['skills'] },
+      { k: 'More resources', alt: ['resources'] },
+      { k: 'Greater capacity', alt: ['capacity'] },
+      { k: 'Increase technical expertise', alt: ['technical expertise'] },
+    ],
+    seen: [],
+    src: 'Nafee bhai note Ques-34 (∗∗)',
+  },
+  {
+    id: 'l-jv-elements',
+    topic: T,
+    title: 'Essential elements of a joint venture',
+    ask: 'What are the essential elements of a joint venture?',
+    points: [
+      { k: 'Contractual agreement', alt: ['agreement', 'implied agreement'] },
+      { k: 'Intention to form a joint venture', alt: ['intention'] },
+      { k: 'Joint property interest', alt: ['joint ownership', 'property interest'] },
+      { k: 'Joint control over the venture', alt: ['joint control', 'joint operation'] },
+      { k: 'Shared profit and losses', alt: ['profit and loss', 'shared profit'] },
+    ],
+    hook: 'C-I-P-C-S: “Contract, Intention, Property, Control, Share”.',
+    seen: [],
+    src: 'Nafee bhai note Ques-34 (∗∗)',
+    note: 'The note marks three as “major”: joint ownership, joint operation, implied agreement.',
   },
   {
     id: 'l-tos-readout',
@@ -373,13 +425,14 @@ const lists: PcList[] = [
 const cards: PcCard[] = [
   { id: 'c-proc-responsive', topic: T, front: 'What makes a tender “responsive”?', back: 'It complies with all mandatory requirements of the tender document **without material deviation or reservation** (PPR r.98(5)); “qualified for consideration on the basis of evaluation criteria … specified in the tender document” (PPA s.2(28)).', src: 'PPR r.98(5)' },
   { id: 'c-proc-material-dev', topic: T, front: 'What is a material deviation?', back: 'One that substantially affects the **scope, quality or performance** of the works; substantially limits the PE’s rights or the tenderer’s obligations; or whose rectification would **unfairly affect other tenderers**. Minor deviations are quantified in money and the tender stays responsive.', src: 'PPR r.98(6)–(7)' },
-  { id: 'c-proc-validity', topic: T, front: 'Tender validity period — how long, and who approves extensions?', back: 'Long enough to evaluate, compare, approve and issue NOA within it — normally **60–120 days**. First extension: **HOPE**; second: the **next higher authority**. Requests ≥ 10 days before expiry.', src: 'PPA s.14(a); PPR r.19–21, Sch II' },
+  { id: 'c-proc-validity', topic: T, front: 'What is the guideline for determining the time frame for the tender validity period? (class question)', back: 'PPA s.14(a): the validity period shall be determined in a way sufficient to **complete the evaluation** of tenders, a **comparative assessment**, and to **obtain all necessary approvals** so that the **NOA** can be issued within it. First extension: **head of the procuring entity**; second: **next higher level of authority**. Generally **90–120 days** (class); PPR: 60–120.', src: 'PPA s.14(a) (class question in the annotated PPA); Nafee bhai note Ques-19; PPR r.19–21, Sch II' },
   { id: 'c-proc-ts-amount', topic: T, front: 'How is the tender security amount fixed?', back: 'As a **rounded fixed amount**, never stated as a %, **≤ 3% of the official estimate**, set slightly lower than the % figure so tenderers cannot work out the estimate (PPR r.22(3)–(4)). Teacher’s slide: “say, 2–3% of project cost”.', src: 'PPR r.22, Sch II; IA sir TD slide 5' },
   { id: 'c-proc-ts-validity', topic: T, front: 'Tender security — purpose, form and validity?', back: 'To **discourage tenders with ill motive**. Bank draft, pay order or bank guarantee of a scheduled bank; valid **28 days beyond the tender validity**.', src: 'PPR r.22' },
   { id: 'c-proc-ts-notneeded', topic: T, front: 'When is no tender security asked?', back: '**DPM and RFQ** (PPR r.22(6)); not mandatory in **LTM** (PPA s.14(b)); not in the first stage of two-stage; never for consultancy proposals (s.14(d)).', src: 'PPA s.14; PPR r.22, 66' },
   { id: 'c-proc-ts-return', topic: T, front: 'When are tender securities returned?', back: 'Never at opening. Non-responsive: after the evaluation report is approved. Responsive: after the winner signs and gives performance security. Others notified unsuccessful and paid back after signing (PPA s.53).', src: 'PPR r.26' },
   { id: 'c-proc-noa-times', topic: T, front: 'NOA time limits?', back: 'Issued within **7 working days** of approval and before validity expires. Accepted in writing within **7 days**; performance security within **14 days** of acceptance (28 for international); contract signed within **28 days** of NOA.', src: 'PPR r.102, Sch II, Sch VII' },
-  { id: 'c-proc-noa-contract', topic: T, front: 'What is the legal effect of the NOA?', back: 'It **establishes the contract** — “shall constitute the formation of this Contract which shall become binding upon you”; signature of the contract confirms it (PPR r.102(6), Sch VII).', src: 'PPR r.102(6)' },
+  { id: 'c-proc-reject-all', topic: T, front: 'Can the procuring entity reject all tenders? (PPA s.19)', back: '“The procuring entity may, subject to the specification in the tender or proposal document, **reject all tenders, proposals or quotations** at any time **prior to the issue of the notification of award** of contract, following the prescribed procedures” (s.19(1)). Actions after rejection are prescribed by rules (2); **no liability** of the procuring entity shall be imposed upon any person (3).', src: 'PPA 2006 s.19 (Nafee bhai note Ques-29(b), “THE END OF PPA”; 18-batch TF solve, extra questions discussed by Sir in class); grounds: PPR r.33(2) (l-reject-all)' },
+  { id: 'c-proc-noa-contract', topic: T, front: 'What is NOA, and what is its legal effect?', back: 'NOA (Notification of Award) means the official notice issued by the employer notifying the contractor that his bid has been accepted. It **establishes the contract** — “shall constitute the formation of this Contract which shall become binding upon you”; signing the contract confirms it (PPR r.102(6), Sch VII).', src: 'Nafee bhai note Ques-30 (∗∗∗); PPR r.102(6)' },
   { id: 'c-proc-tec', topic: T, front: 'Composition of the Tender Evaluation Committee?', back: '**5 to 7 members**, at least **2 from outside** the ministry/agency; low-value: 3 members. Each signs a declaration of impartiality; report sent sealed **directly to the approving authority**.', src: 'PPA s.7; PPR r.8, Sch II' },
   { id: 'c-proc-toc', topic: T, front: 'Tender Opening Committee and opening rules?', back: '3 members (Chair, Member, Member-Secretary) incl. **1 from the TEC**. Opens in public within **1 hour** of the deadline; no tender rejected at opening; late tenders returned unopened.', src: 'PPA s.6, 46–47; PPR r.97, Sch II' },
   { id: 'c-proc-no-nego', topic: T, front: 'May the TEC negotiate with the lowest tenderer?', back: '**No** — no negotiation, no lottery (PPA s.49). Exceptions: DPM, bulk divisible commodities, and price far above the estimate (scope reduction / risk reallocation, PPR r.99(1)(c)).', src: 'PPA s.49; PPR r.99' },
@@ -390,7 +443,8 @@ const cards: PcCard[] = [
   { id: 'c-proc-contract-price', topic: T, front: 'Define contract price.', back: '“The price stated in the **Notification of Award** and thereafter as **adjusted in accordance with the provisions of the Contract**” — variations, compensation events, price adjustment, measured quantities (PPR r.2(12)).', src: 'PPR r.2(12)', seen: ['2013-14'] },
   { id: 'c-proc-complaint-not', topic: T, front: 'What cannot be complained about under PPA s.29?', back: 'The choice of procurement method; refusal to short-list; a decision to reject applications/tenders; an award approved by the Cabinet Committee on Government Purchase.', src: 'PPA s.29(2)' },
   { id: 'c-proc-review-panel', topic: T, front: 'Review Panel — who and how fast?', back: '3 specialists (legal, procurement-technical, contract-management), **no public servant**; appeal via CPTU with fee and security deposit; decision within **12 working days**; final. NOA suspended meanwhile.', src: 'PPA s.30; PPR r.58–60, Sch II' },
-  { id: 'c-proc-jv-def', topic: T, front: 'What is a joint venture?', back: 'A business entity created by two or more parties, characterised by **shared ownership, shared returns and risks, and shared governance**. Purposes: scale, share risk, access skills, more resources and capacity, technical expertise.', src: 'Senior note Q6', seen: ['2011-12'] },
+  { id: 'c-proc-jv-def', topic: T, front: 'What is a joint venture?', back: 'A business entity created by two or more parties generally characterized by **shared ownership, shared returns and risks and shared governance**. Essential (major): joint ownership, joint operation, implied agreement.', src: 'Senior note Q6', seen: ['2011-12'] },
+  { id: 'c-jv-s27', topic: T, front: 'What does PPA s.27 say about joint ventures? (discussed by Sir in class)', back: '(1) Any Person may, individually or in joint venture along with another person or persons, national or foreign, submit an application, an expression of interest, a proposal or a tender. (2) No condition shall be imposed making it **mandatory** to tender under joint venture. (3) All such persons shall be **jointly and individually liable** to the procuring entity (**joint and several liability**).', src: 'PPA 2006 s.27; 18-batch TF solve p.33 (“extra questions discussed by Sir in class”)' },
 ]
 
 // ---------- answers ----------
@@ -399,7 +453,7 @@ const answers: PcAnswer[] = [
     id: 'a-tender-flow',
     topic: T,
     q: 'Describe the tender process using a flow-chart.',
-    seen: ['2023-24', '2022-23', 'Jan 2021', '2017-18', '2015-16', '2013-14', '2011-12'],
+    seen: ['2023-24', '2022-23', '2021-22', 'Jan 2021', '2017-18', '2015-16', '2013-14', '2011-12'],
     a: `### Flow chart (draw it) — then one line per box
 1. **Tender notice** — Invitation for Tender advertised in one Bangla and one English daily and websites (PPA s.40); min. 21 days NCT, 42 days ICT.
 2. **Interested bidders buy tender documents** — sold to all up to the day before the deadline.
@@ -413,7 +467,9 @@ const answers: PcAnswer[] = [
 10. **Approval from HOPE** — No, or none responsive / none post-qualifies → **cancel the process and arrange re-tender**.
 11. **Invited to contract — NOA** within tender validity (no complaint pending).
 12. **Contract sign** after performance security.
-13. **Contractor**.`,
+13. **Contractor**.
+
+Sir's 12 May 2015 chart has no separate opening box (pre-tender meeting → submission → evaluation by TEC); his GCC+TEC slide shows Tender Opening — either is accepted.`,
     keys: ['Tender notice', 'buy tender documents', 'Pre-tender meeting', 'Tender submission', 'tender security', 'Tender opening', 'Tender evaluation by TEC', 'substantially responsive', 'Lowest bidder', 'Post-qualification', 'try next lowest', 'Approval from HOPE', 're-tender', 'NOA', 'Contract sign'],
     lists: ['l-tender-flow', 'l-tender-outcomes'],
     src: 'IA sir Tender Flow Chart (12 May 2015); GCC+TEC slides 6–7; PPA s.40–53',
@@ -462,28 +518,29 @@ Examine and evaluate the tenders as per PPR 2008; check all required documents; 
 10. **Approval by HOPE** → NOA within tender validity.`,
     keys: ['Role of TEC', 'Tender opening', 'Declaration of impartiality', 'pre-disclosed criteria', 'Preliminary examination', 'tender security', 'Detailed examination', 'specification', 'Clarification', 'Arithmetic correction', 'Financial evaluation', 'Post-qualification', 'Evaluation report', 'Approval by HOPE'],
     lists: ['l-eval-steps', 'l-tec-role'],
-    src: 'IA sir GCC+TEC slides 7–9; PPA s.7, 48–51; PPR r.98, 100',
+    src: 'IA sir GCC+TEC slides 7–9 (role of TEC); Nafee bhai note Ques-27/30 (marked TF: checklist + 8 steps = the slide’s role of TEC); PPA s.7, 48–51; PPR r.98, 100. Pallab’s 2015-16 solve pastes PPR r.8 (committee) instead — weak.',
   },
   {
     id: 'a-eval-items',
     topic: T,
     q: 'List the items to be checked for preliminary and detailed evaluation to determine the responsiveness of a tender.',
     seen: ['2020-21', '2015-16'],
-    a: `### Preliminary examination
+    a: `### Preliminary examination (slide: “Preliminary Security”)
 1. **Tender and goods are eligible**
 2. **Minimum general experience**
 3. **Minimum similar contract type experience**
 4. **Minimum liquid asset**
 5. **VAT & IT related certificate**
 6. **Valid trade license**
-7. **All pages duly signed**
-8. **Price schedule**
-9. **Tender validity period**
-10. **Completed tender submission sheet**
-11. **Tender security**
-12. Any **additional condition** imposed by the tenderer
+7. **Authorization letter**
+8. **All pages duly signed**
+9. **Price schedule**
+10. **Tender validity period**
+11. **Completed tender submission sheet**
+12. **Tender security**
+13. Any **additional condition** imposed by the tenderer
 
-### Detailed examination
+### Detailed examination (“Detailed Examinations”)
 1. Qualification and experience of **key personnel**
 2. Adequacy of **plants and equipments**
 3. General experience
@@ -496,32 +553,36 @@ Examine and evaluate the tenders as per PPR 2008; check all required documents; 
 A tender passing all is **responsive**; minor deviations → substantially responsive (clarify); material deviation → non-responsive.`,
     keys: ['Preliminary examination', 'eligible', 'general experience', 'liquid asset', 'VAT & IT', 'trade license', 'duly signed', 'Tender validity', 'Tender security', 'Detailed examination', 'key personnel', 'plants and equipments', 'turnover', 'Arithmetic correction', 'Credit facility', 'responsive'],
     lists: ['l-eval-prelim', 'l-eval-detailed'],
-    src: 'IA sir Tender Document slides 11–12; GCC+TEC slides 7–8',
+    src: 'IA sir Tender Document slides 11–12; GCC+TEC slides 7–8; 18-batch TF solve p.46',
   },
   {
     id: 'a-arith-correction',
     topic: T,
     q: 'What is arithmetic correction? Describe its rules with an example.',
     seen: ['2020-21', '2013-14', '2011-12'],
-    a: `**Arithmetic correction** = the changes needed to correct computational errors in a tender's priced BoQ / price schedule, made by the TEC during evaluation; the TEC **notifies the tenderer** (PPR r.98(11)). The corrected amount is the evaluated price.
+    a: `**Arithmetic correction** refers to the process of correcting errors in the arithmetic calculations used to determine the prices and totals submitted by tenderers — mistakes in individual line items and in the addition or multiplication of those items. It is important because without it errors could **unfairly advantage or disadvantage** certain tenderers and could compromise the integrity of the evaluation process. A TEC shall correct any arithmetic errors discovered during the examination of tenders and shall **promptly notify** the concerned tenderer (PPR r.98(11)).
 
-### Rules
-1. **Unit rate prevails** over the line total (rate × quantity), unless the decimal point in the rate is obviously misplaced.
-2. **Sub-totals prevail** over a wrong total.
-3. **Words prevail over figures** unless the words themselves relate to an arithmetic error.
-4. An item with **no rate quoted** is deemed covered by other rates; price not changed (r.98(12)).
-5. The tenderer must **accept the correction**; if not, the tender is not evaluated further and the **tender security is forfeited** (r.98(15), r.25(e)).
+### Rules (Standard Tender Document, ITT 44)
+**44.1** Provided that the Tender is responsive, the TEC shall correct arithmetical errors on the following basis:
+- (a) if there is a discrepancy between the unit price and the line item total price that is obtained by multiplying the unit price and quantity, the **unit price will prevail** and the line item total price shall be corrected, unless in the opinion of the TEC there is an **obvious misplacement of the decimal point** in the unit price, in which case the total price as quoted will govern and the unit price will be corrected; and
+- (b) if there is an error in a total corresponding to the addition or subtraction of subtotals, the **subtotals shall prevail** and the total shall be corrected; and
+- (c) if there is a discrepancy between words and figures, the **amount in words shall prevail**, unless the amount expressed in words is related to an arithmetic error, in which case the amount in figures shall prevail subject to (a) and (b) above.
+
+**44.2** TEC shall correct the arithmetic errors and shall promptly notify the concerned Tenderer(s). If the Tenderer does not accept the correction of arithmetic errors, its Tender shall be considered **non-responsive**.
+
+PPR 2008 adds: an item with **no rate quoted** is deemed covered by the other rates and the tender price is not changed (r.98(12)); a tenderer who does not accept the correction is not evaluated further (r.98(15)(b)) and its **tender security is forfeited** (r.25(e)).
 
 ### Example
-| Item | Qty | Rate (figures) | Rate (words) | Quoted amount (Tk) | Corrected (Tk) |
+Supply of 100 air conditioners:
+
+| Item | Quantity | Price per unit (Tk.) | (In word) | Total Price (Tk.) | (In word) |
 |---|---|---|---|---|---|
-| Earthwork | 1,200 m³ | 205 | two hundred fifty | 2,46,000 | 3,00,000 (words) |
-| Brick flat soling | 800 m² | 450 | four hundred fifty | 3,80,000 | 3,60,000 (rate × qty) |
-| RCC in foundation | 150 m³ | 14,000 | fourteen thousand | 21,00,000 | 21,00,000 |
-| **Total** | | | | 27,00,000 | **27,60,000** |`,
-    keys: ['Arithmetic correction', 'notifies the tenderer', 'Unit rate prevails', 'Sub-totals prevail', 'Words prevail over figures', 'no rate quoted', 'accept the correction', 'tender security is forfeited'],
+| Air Conditioner | 100 | 2,00,000 | 2 lakh Tk. | 20,00,000 | 20 lakh Tk. |
+
+100 × 2,00,000 = 2,00,00,000. By 44.1(a) the unit price prevails, so the TEC corrects the total to **Tk 2 crore**, notifies the tenderer to accept it, and continues the evaluation on the corrected price.`,
+    keys: ['Arithmetic correction', 'unfairly advantage or disadvantage', 'promptly notify', '44.1', 'unit price will prevail', 'obvious misplacement of the decimal point', 'subtotals shall prevail', 'amount in words shall prevail', '44.2', 'non-responsive', 'no rate quoted', 'tender security is forfeited', 'Tk 2 crore'],
     lists: ['l-arith-rules'],
-    src: 'PPR r.25(e), 98(11)–(15); senior note Q8; rules 1–2 from the standard ITT (question bank)',
+    src: 'Standard Tender Document ITT 44.1–44.2 and the air-conditioner example (Nafee bhai note Ques-28 = 18-batch TF solve pp.44–45); PPR 2008 r.25(e), 98(11)–(15)',
   },
   {
     id: 'a-postqual',
@@ -530,7 +591,7 @@ A tender passing all is **responsive**; minor deviations → substantially respo
     seen: ['2013-14', '2011-12'],
     a: `**Post-qualification** is the TEC's check, before finishing the evaluation report, that the **lowest evaluated responsive tenderer** has the **requisite qualifications and financial capability** to carry out the contract (PPA s.50).
 1. Applies the **post-qualification criteria** stated in the tender document (experience, personnel, equipment, turnover, liquid asset).
-2. **Contacts references** on previous work; verifies bank and other statements.
+2. **Contacts references** on previous work and **verifies the truth** of the submitted documents (bank and land statements); if any is found false, the tender is rejected.
 3. May **visit the premises** — a general, visual inspection of facilities, plant and equipment; no discussion of the tender.
 4. If the lowest fails → the **next lowest** is checked, and so on; if remaining prices are far above the estimate → re-tender.
 5. Done **even if prequalification was carried out** — then it checks the tenderer is **still capable** (PPR r.93(20), 100(7)).
@@ -538,9 +599,9 @@ A tender passing all is **responsive**; minor deviations → substantially respo
 In the flow chart: Post-qualification OK → HOPE approval; Not OK → try next lowest.
 
 (The question bank calls it a replacement for prequalification; PPR requires it in every case.)`,
-    keys: ['Post-qualification', 'lowest evaluated responsive tenderer', 'financial capability', 'post-qualification criteria', 'references', 'visit the premises', 'next lowest', 'even if prequalification', 'still capable'],
+    keys: ['Post-qualification', 'lowest evaluated responsive tenderer', 'financial capability', 'post-qualification criteria', 'references', 'verifies the truth', 'visit the premises', 'next lowest', 'even if prequalification', 'still capable'],
     lists: ['l-postqual'],
-    src: 'PPA s.50; PPR r.93(20), 100; IA sir flow chart',
+    src: 'PPA s.50; PPR r.93(20), 100; IA sir flow chart; Nafee bhai note Ques-29(a)',
   },
   {
     id: 'a-contract-price',
@@ -559,15 +620,17 @@ In the flow chart: Post-qualification OK → HOPE approval; Not OK → try next 
     topic: T,
     q: 'List the conditions for which the tender security of a bidder can be forfeited.',
     seen: ['2023-24', '2021-22', '2020-21', '2011-12'],
-    a: `Tender security is taken “to discourage the submission of tenders with ill motive”. Under **PPR 2008 r.25** it is **forfeited** if the tenderer:
-1. **Withdraws** its tender **after the opening** of tenders but within the validity of the tender security;
-2. **Refuses to accept the Notification of Award** (or does not accept it in writing within 7 days, r.102(4));
-3. **Fails to furnish the performance security**, if required;
-4. **Refuses to sign the contract**;
-5. **Does not accept the correction** of the tender amount following **arithmetic correction** (r.98(11)).
+    a: `Tender security is taken “to discourage the submission of tenders with ill motive”.
 
-Not a forfeiture ground: refusing to extend tender validity — the security is then returned (r.23(2)).`,
-    keys: ['r.25', 'forfeited', 'Withdraws', 'after the opening', 'Refuses to accept the Notification of Award', 'performance security', 'Refuses to sign the contract', 'arithmetic correction'],
+Under **PPR 2008 r.25(1)** a Tender security shall be **forfeited** if the Tenderer —
+1. (a) **withdraws** his Tender **after the opening** of Tenders but within the validity of the Tender security; or
+2. (b) **refuses to accept a Notification of Award**; or
+3. (c) **fails to furnish performance security**, if so required; or
+4. (d) **refuses to sign the Contract**; or
+5. (e) **does not accept the correction** of the Tender amount following the correction of **arithmetic errors** pursuant to Rule 98(11).
+
+Also: no written acceptance of the NOA within 7 days → security forfeited (r.102(4)). Not a forfeiture ground: refusing to extend tender validity — the security is returned (r.23(2)).`,
+    keys: ['r.25', 'forfeited', 'withdraws', 'after the opening', 'refuses to accept a Notification of Award', 'fails to furnish performance security', 'refuses to sign the Contract', 'arithmetic errors'],
     lists: ['l-forfeit'],
     src: 'PPR 2008 r.22, 25, 102(4); senior note Q17',
   },
@@ -576,20 +639,72 @@ Not a forfeiture ground: refusing to extend tender validity — the security is 
     topic: T,
     q: 'What are the requirements of a Joint Venture tender (conditions for accepting a JV contractor)?',
     seen: ['2015-16', '2014-15', '2011-12'],
-    a: `A **joint venture (JVCA — Joint Venture, Consortium or Association)** is a business entity of two or more firms with shared ownership, returns, risks and governance. Any person may tender alone or in JV, national or foreign, but JV **cannot be made mandatory** (PPA s.27).
+    a: `A **joint venture** is a business entity created by two or more parties generally characterized by shared ownership, shared returns and risks and shared governance.
 
-### Conditions
-1. **JV agreement** on a non-judicial stamp signed by all authorised representatives — or a **letter of intent** signed by all partners, **notarised**, with the proposed agreement; a bare LoI is not enough (PPR r.54(1)–(3)).
-2. All partners **jointly and severally liable** (PPA s.27(3); r.54(4)).
-3. A **nominated representative / lead partner** authorised to act and receive payments for all (r.54(5)); other partners may not sign on its behalf.
-4. **Minimum qualification** for the lead and other partners, as in the TDS (r.54(6)).
-5. Capacities may be summed, but **specific experience is not aggregated** (e.g. 50 + 30 + 20 m spans ≠ a 100 m bridge) (r.54(12)–(13)).
-6. **Composition unchanged** before contract execution; later only with HOPE approval and a stronger partner (r.54(9)–(10)).
-7. Every partner **eligible and not debarred** (r.54(11)); a firm submits **only one tender** (r.96(2)).
-8. **Performance security, insurance** and indemnity in the name of the JVCA (r.54(14)).`,
-    keys: ['JVCA', 'cannot be made mandatory', 'JV agreement', 'letter of intent', 'notarised', 'jointly and severally liable', 'lead partner', 'Minimum qualification', 'specific experience is not aggregated', 'Composition unchanged', 'not debarred', 'only one tender'],
-    lists: ['l-jv-conditions'],
-    src: 'PPA s.27; PPR r.54, 96(2); RHD EoI notice; senior note Q6',
+### Requirements of a JV tender
+1. Must contain details about **work distribution**.
+2. For any kind of failure in performance or mismanagement, **joint and several liability** clauses should be mentioned.
+3. Should mention the **lead partner with major portion of share**, the second partner, also the third if there is one; **share distribution** should also be mentioned.
+4. **Budget** must be established and designed in such a way that the time and duration stay in control.
+5. **Risk factor** should be distributed among all the parties as per contribution.
+6. **JV agreement should be submitted with tender**; when the contract is signed, that agreement shall become a part of the contract.
+
+### PPA 2006 s.27 (word for word)
+- (1) Any Person may, individually or in joint venture along with another person or persons, national or foreign, submit an application, an expression of interest, a proposal or a tender.
+- (2) In the prequalification, expression of interest or tender or proposal document under this section, no such condition shall be imposed making it mandatory to submit an application, an expression of interest, a proposal or a tender under joint venture.
+- (3) In the case of a joint venture among persons, all such persons shall be jointly and individually liable to the procuring entity. (**Joint and several liability**)
+
+### Conditions in PPR 2008 r.54 (JVCA = Joint Venture, Consortium or Association)
+1. **JV agreement** on a non-judicial stamp signed by all authorised representatives — or a **letter of intent** signed by all partners, **notarised**, with the proposed agreement (r.54(1)–(3)).
+2. A **nominated representative / lead partner** authorised to act and receive payments for all (r.54(5)).
+3. **Minimum qualification** for the lead and the other partners, as in the TDS (r.54(6)).
+4. **Specific experience is not aggregated** (50 + 30 + 20 m spans ≠ a 100 m bridge) (r.54(12)–(13)).
+5. **Composition unchanged** before contract execution; later only with HOPE approval (r.54(9)–(10)).
+6. Every partner **not debarred**; a firm submits **only one tender** (r.54(11), r.96(2)).
+7. **Performance security, insurance** and indemnity in the name of the JVCA (r.54(14)).
+
+Sir: an answer without "joint and several liability" gets 0. For 5 marks write s.27 and requirements 1–3.`,
+    keys: ['joint venture', 'work distribution', 'joint and several liability', 'lead partner with major portion of share', 'share distribution', 'Budget', 'Risk factor', 'JV agreement should be submitted with tender', 'jointly and individually liable', 'mandatory', 'JVCA', 'letter of intent', 'notarised', 'Specific experience is not aggregated', 'Composition unchanged'],
+    lists: ['l-jv-requirements', 'l-jv-conditions'],
+    src: 'Pallab’s 18-batch solve, 2014-15 Q3(a) (six requirements); PPA 2006 s.27 (18-batch TF solve p.33; Nafee note PYQ-27 “(Joint and several liability)”); PPR r.54, 96(2); Nafee bhai note Ques-34 (definition; “Sir said: no joint and several liability = 0”)',
+  },
+  {
+    id: 'a-jv-agreement',
+    topic: T,
+    q: 'Prepare a Joint Venture Agreement to submit in the tender of works.',
+    seen: [],
+    a: `A **joint venture** is a business entity created by two or more parties generally characterized by shared ownership, shared returns and risks and shared governance. The agreement is submitted with the tender and becomes part of the contract if the tender is accepted.
+
+### JOINT VENTURE AGREEMENT — Construction of 15 storied Residential Building for Engineers and Staff at Rooppur, Ishwardi, Pabna
+This Joint Venture Agreement is made and entered into on [date], **by and between**:
+1. **Abdul Monem Limited ("AML")**, a construction firm existing under the laws of Bangladesh, engaged in building construction ("Party A");
+2. **Clandevous Electrics Ltd. ("CEL")**, an electrical system management organization existing under the laws of Bangladesh, engaged in electrical fittings ("Party B");
+
+collectively the "Parties".
+
+**RECITALS** — The Parties intend to combine their strengths by establishing a joint venture (the "Cerca Trova") to tender for and execute the above work. NOW, THEREFORE, in consideration of the recitals and the agreements contained, and intending to be legally bound, the Parties agree as follows:
+
+1. **Purpose of Agreement** — to submit a joint tender to the Procuring Entity and, if awarded, to jointly execute and complete the works.
+2. **Scope of Responsibilities** — AML completes the construction project without electrical fittings; CEL completes the electrical fittings of the whole project.
+3. **Lead Partner** — AML is designated as the Lead Partner; it submits the tender and is the main channel of communication with the Procuring Entity.
+4. **Contribution and Ownership** — AML contributes 80% and CEL 20% of the total work expenses; ownership is distributed 80% to AML and 20% to CEL.
+5. **Liabilities** — AML and CEL each shall have **joint and several liability**; both Parties acknowledge joint and several liability toward the Procuring Entity for complete project execution.
+6. **Confidential Information** — not revealed without the express prior written consent of the discloser.
+7. **Term and Termination** — the agreement concludes on project completion or rejection of the tender, and may be terminated earlier for an uncorrected material breach.
+8. **Default** — insolvency or bankruptcy of either party; levy, seizure or general assignment of a party's property for the benefit of creditors; any violation of this Agreement.
+9. **Amendment** — only in writing, signed by the Parties.
+10. **Governing Law** — the laws of Bangladesh; a dispute not settled amicably goes to **arbitration** under the Arbitration Act of Bangladesh.
+
+**IN WITNESS WHEREOF**, the Parties have executed this Agreement as of the date first written above.
+
+| For AML | For CEL |
+|---|---|
+| Signature, name, CEO | Signature, name, CEO |
+
+Sir: no "joint and several liability" → 0 marks. The note's long version has 15 clauses (adds Financial Accounting, Severability, Waiver of Contractual Right, Entire Agreement); this term's assignment used six headings (Purpose of Agreement, Scope of Responsibilities, Leadership and Tender Management, Cost & Revenue Sharing, Liabilities and Termination, Governing Law).`,
+    keys: ['joint venture', 'by and between', 'RECITALS', 'Purpose of Agreement', 'Scope of Responsibilities', 'Lead Partner', 'Contribution', 'joint and several liability', 'Default', 'Governing Law', 'arbitration', 'IN WITNESS WHEREOF'],
+    lists: ['l-jv-purposes', 'l-jv-elements'],
+    src: 'This term’s Assignment 3 (JV agreement, SCC free Wi-Fi; Simanto 2204049); Nafee bhai note Ques-34 (∗∗, AML–CEL agreement, “Sir said: no joint and several liability = 0”); 18-batch TF solve pp.11–13',
   },
   {
     id: 'a-front-loading',

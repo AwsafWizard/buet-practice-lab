@@ -228,7 +228,9 @@ Clause (d) is the "extra added point" (inserted later by amendment). Section 4: 
 3. To specify how products or services will be acquired and how **vendors will be managed** during the project.
 4. To include information such as the types of contracts that will be used and the planned delivery or implementation dates for the contracted products or services, which ensures lower cost.
 5. To avoid the surprises and **last-minute considerations**, if the budget is approved in the middle of the year.
-6. To ensure better competition and fair participation.`,
+6. To ensure better competition and fair participation.
+7. To help leaders decide what to buy, when to buy it and what source to purchase from.
+8. To allow project planners to determine if their expectations and requirements are realistic and can be completed in the proposed project timeline.`,
     keys: ['procurement plan', 'annual plan', 'HOPE', 'inform the bidders well ahead', 'transparency', 'better competition', 'better participation', 'lower cost', 'efficiency, effectiveness and transparency', 'vendors will be managed', 'last-minute considerations'],
     lists: ['l-pplan-purpose'],
     src: 'IA sir in class this term (annotated PPA p.8, the five); 18-batch TF solve p.5 and Nafee bhai note Ques-5 (definition and the six “in detail”); PPA s.11',

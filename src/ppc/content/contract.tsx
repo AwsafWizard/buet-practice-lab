@@ -402,7 +402,7 @@ const lists: PcList[] = [
       { k: 'Fee-based selection', alt: ['fee based', 'price based'], d: 'price alone' },
     ],
     hook: 'From no competition to pure price: Sole → Limited → Qualifications → Best value → Fee.',
-    seen: TRIPLE_SEEN,
+    seen: [...TRIPLE_SEEN, 'Jan 2021'],
     src: 'Tanvir sir L4 p39, p49–54',
     note: 'The question bank adds "competitive sealed bidding (low bid)" and the PPA methods — not in this slide table. The p49 bullet list names four (no QBS) but QBS is described on p51–52 and is in the table.',
   },
@@ -431,7 +431,7 @@ const lists: PcList[] = [
       { k: 'Several contractors give prices', d: 'select the lowest bid' },
       { k: 'Allowed in public procurement' },
     ],
-    seen: ['2022-23', '2015-16', '2013-14', '2012-13'],
+    seen: ['2022-23', '2017-18', '2015-16', '2013-14', '2012-13'],
     src: 'Tanvir sir L4 p42',
   },
   {
@@ -439,7 +439,7 @@ const lists: PcList[] = [
     topic: T,
     title: 'Downsides of DBB',
     points: [{ k: 'Contractor has no input in design' }, { k: 'Process tends not to be collaborative' }],
-    seen: ['2022-23', '2015-16', '2013-14', '2012-13'],
+    seen: ['2022-23', '2017-18', '2015-16', '2013-14', '2012-13'],
     src: 'Tanvir sir L4 p42',
   },
   {
@@ -453,7 +453,7 @@ const lists: PcList[] = [
       { k: 'Fewer changes, claims and litigation', d: 'owner no longer between designer and contractor' },
       { k: 'Risks allocated to those who best manage them', d: 'also accommodates complex phasing' },
     ],
-    seen: ['2022-23', '2013-14'],
+    seen: ['2022-23', '2017-18', '2013-14'],
     src: 'Tanvir sir L4 p43–44',
   },
   {
@@ -461,7 +461,7 @@ const lists: PcList[] = [
     topic: T,
     title: 'Two primary disadvantages of Multiple Prime',
     points: [{ k: 'Client’s duty to coordinate the primes' }, { k: 'Liability for delays caused by one prime' }],
-    seen: ['2016-17', '2013-14'],
+    seen: ['2017-18', '2016-17', '2013-14'],
     src: 'Tanvir sir L4 p45',
   },
   {
@@ -469,23 +469,26 @@ const lists: PcList[] = [
     topic: T,
     title: 'Steps of Qualification-Based Selection (two-envelope)',
     points: [
-      { k: 'RFP with clear requirements, budget, schedule' },
-      { k: 'Firms submit two envelopes', d: '1 = response to the RFP, 2 = cost for executing the work' },
-      { k: 'Rank on the first envelope' },
-      { k: 'Interview the short list and rank again' },
-      { k: 'Open the second envelope of the top firm' },
-      { k: 'Negotiate scope and price with the top-ranked firm' },
-      { k: 'If no agreement, negotiate with the second' },
+      { k: 'Selection on qualifications & project approach', alt: ['qualifications and project approach'] },
+      { k: 'Two-envelope system', alt: ['two envelopes', 'firms submit two envelopes'], d: 'first envelope = the engineer’s response to the RFP; second envelope = the cost for executing the proposed work' },
+      { k: 'Client issues an RFP', alt: ['RFP with clear requirements, budget, schedule'], d: 'ideally with a clear definition of project requirements and well-defined budget and schedule constraints' },
+      { k: 'Firms ranked on the first envelope', alt: ['rank on the first envelope'] },
+      { k: 'Short list interviewed and ranked again', alt: ['interview the short list'] },
+      { k: 'Client opens the second envelope', alt: ['open the second envelope'], d: 'to learn the price, after a firm has been selected on the merits of its proposal and interview(s)' },
+      { k: 'Negotiations with the top-ranked firm ensue', alt: ['negotiate with the top-ranked firm'] },
+      { k: 'Scope and/or services added or deleted', d: 'until a mutually acceptable price can be reached' },
+      { k: 'If no agreement, negotiate with firm ranked second', alt: ['negotiate with the second'] },
     ],
     ordered: true,
     seen: ['Jan 2021'],
-    src: 'Tanvir sir L4 p51–52',
+    src: 'Tanvir sir L4 p51–52 (the slide’s nine bullets, as the 18-batch solve numbers them)',
   },
   {
     id: 'l-ct-bv-steps',
     topic: T,
     title: 'Steps of Best Value selection (two-phase)',
     points: [
+      { k: 'Two-phase process: technical and cost criteria', alt: ['two-phase', 'technical and cost'] },
       { k: 'Client issues an RFQ; firms ranked' },
       { k: 'Short list issued an RFP', d: 'perhaps with a stipend or honorarium' },
       { k: 'Technical approach and cost scored independently' },
@@ -960,7 +963,7 @@ The question bank draws Turnkey/DBO instead of Design-Assist — not in the slid
     id: 'a-ct-pricing',
     topic: T,
     q: 'Briefly discuss the different types of contract format in project delivery (lump sum, cost reimbursable, unit price).',
-    seen: ['2016-17'],
+    seen: ['2021-22', '2016-17'],
     a: `### Lump sum (fixed price)
 A **single price**; the SOW must be very clear. **Risk is borne by the engineer**, who also accrues any savings; easy to administer; price, schedule and performance known at the outset.
 
@@ -1014,30 +1017,41 @@ Prices **variable quantities** (cubic yards of concrete, design hours, feet of p
     q: 'What options do clients have for procuring a consultant? Describe QBS and Best Value Selection.',
     seen: ['Jan 2021', '2012-13'],
     a: `### Options
-Private clients have a range of options: **sole source**, **limited competition (negotiated)**, **qualifications-based selection (QBS)**, **best value selection** and **fee-based selection**. Public clients are more limited by public contracting laws, and usage varies by jurisdiction.
+Private clients have a range of options open to them for selecting their consultants and contractors. These include:
+1. **Sole source** — the client simply chooses a designer or builder and enters into a contract; common in the private sector, especially when only one firm can provide highly specialized services; generally not permitted in the public sector unless issues involving **national security** or emergencies arise.
+2. **Limited competition — negotiated** — mostly the domain of private clients; the client prepares a list of potential service providers (often firms with previous positive experience); a client **selection panel** interviews each firm and enters into negotiations with the top one to three firms, then makes its selection.
+3. **Best value selection** — two-phase, technical + cost (below).
+4. **Fee-based selection** — the award criterion is **price alone**; the client's review is fast and uncomplicated, but there are few incentives for innovation, and it is not really appropriate for the highly judgmental and creative work of engineers.
+
+Due to public contracting laws, public clients are more limited; the ability to use these methods varies from jurisdiction to jurisdiction. **Qualification-Based Selection (QBS)** is described on the next slides.
 
 ### Qualification-Based Selection (QBS)
-1. Firms are selected on **qualifications & project approach**; ideally the RFP defines requirements, budget and schedule clearly.
-2. QBS is a **two-envelope system**: the **first envelope** holds the engineer’s response to the RFP, the **second envelope** the cost for executing the work.
-3. Firms are **ranked** on the first envelope; those on the **short list are interviewed** and ranked again.
-4. After selection on merit, the client **opens the second envelope** to learn the price.
-5. Negotiation with the **top-ranked firm** — scope/services added or deleted until a mutually acceptable price is reached; if no agreement, negotiate with the **second-ranked** firm.
+1. The selection of firms is based on their **qualifications & project approach**.
+2. QBS is a **two-envelope system**: the **first envelope** contains the engineer's response to the RFP; the **second envelope** contains the cost for executing the proposed work.
+3. Ideally, the client issues an RFP with a clear definition of project requirements and well-defined budget and schedule constraints.
+4. Proposing firms respond with the two envelopes and are **ranked** using the information contained in the first envelope.
+5. Those making the **short list** are interviewed and ranked again.
+6. After a firm has been selected on the merits of its proposal and interview(s), the client **opens the second envelope** to learn the price.
+7. Negotiations with the **top-ranked firm** ensue.
+8. Scope and/or services may be added or deleted until a **mutually acceptable price** can be reached.
+9. If the client and the top-ranked firm cannot reach an agreement, the client may open negotiations with the firm **ranked second**.
 
 ### Best Value (BV) selection
-1. A **two-phase process** combining **technical and cost** criteria.
-2. The client issues an **RFQ**; firms are ranked on their proposals.
-3. The short list is issued an **RFP**, perhaps with a **stipend or honorarium** for phase-two costs.
-4. Second proposals contain technical approach and cost, **scored independently** — so a **higher-cost firm can be selected** if its technical proposal is superior.`,
-    keys: ['sole source', 'limited competition', 'qualifications-based selection', 'best value', 'fee-based', 'two-envelope', 'first envelope', 'second envelope', 'short list', 'top-ranked firm', 'two-phase', 'RFQ', 'stipend', 'scored independently'],
+1. Best Value selection is a **two-phase** process that combines **technical and cost** criteria.
+2. The client issues an **RFQ**, and responding firms are ranked based on their proposals.
+3. Firms making the short list are then issued an **RFP** and perhaps given a **stipend** or honorarium to cover the costs of phase-two proposal preparation.
+4. Their second proposals include both their technical approach and cost, which are **scored independently**.
+5. Consequently, a firm with a **higher cost** could be selected over a firm with a lower cost if its technical proposal is superior.`,
+    keys: ['sole source', 'national security', 'limited competition', 'selection panel', 'best value', 'fee-based', 'price alone', 'Qualification-Based Selection', 'two-envelope', 'first envelope', 'second envelope', 'short list', 'top-ranked firm', 'mutually acceptable price', 'ranked second', 'two-phase', 'RFQ', 'stipend', 'scored independently', 'higher cost'],
     lists: ['l-ct-procurement', 'l-ct-qbs-steps', 'l-ct-bv-steps'],
-    src: 'Tanvir sir L4 p49–54',
+    src: 'Tanvir sir L4 p49–53; 18-batch TF solve (Jan 2021 7b: 4 options, QBS 9 steps, BVS 5 steps)',
   },
   {
     id: 'a-ct-formation',
     topic: T,
     q: 'What issues need to be considered during contract formation? Briefly describe each.',
     seen: ['2011-12'],
-    a: `1. **Assumption of liability** — liability in contract law centres on whether a provision has been breached. If a CE agrees to act non-negligently, a negligent act creates **both tort and contractual liability**. Avoid provisions demanding more than common law, e.g. "highest professional level"; the standard requires only **"ordinary skill and acceptance"**.
+    a: `1. **Assumption of liability** — liability in contract law centres on whether a provision has been breached. If a CE agrees to act non-negligently, a negligent act creates **both tort and contractual liability**. Avoid provisions demanding more than common law, e.g. "highest professional level"; the standard of practice requires only **"ordinary skill and acceptance"**.
 2. **Professional liability insurance** — most policies **exclude liabilities assumed in the contract**; tell the client, who may drop the clause, pay for the added coverage or buy additional services (e.g. field observation).
 3. **Disparate bargaining power** — one party has an unfair advantage; a **contract of adhesion** can result (e.g. the only big client in a small town). The CE can send a **letter** recording that the clause was accepted under disparate bargaining power.
 4. **Indemnifications** — "**to secure against loss or damage**"; clauses can protect either party (client indemnifies the CE for certifications; contractors indemnify owners and designers against jobsite injury suits).

@@ -240,6 +240,28 @@ const lists: PcList[] = [
     src: 'Tanvir sir L2 p3',
   },
   {
+    id: 'l-pr-evolution',
+    topic: T,
+    title: 'Evolution of design toward collaboration and integration (Modern → Postmodern)',
+    points: [
+      { k: 'Taylorism → Systems engineering', alt: ['Taylorism', 'systems engineering'], d: 'strict, tight control of work → manage the project as a whole, interconnected system' },
+      { k: 'Hierarchical/vertical → Flat/layered/horizontal', alt: ['hierarchical', 'flat'], d: 'bosses at the top give orders → everyone on a similar level, side by side' },
+      { k: 'Specialization → Interdisciplinary', alt: ['specialization', 'interdisciplinary'], d: 'narrow specific jobs → different fields working together as a team' },
+      { k: 'Rational order → Messy complexity', alt: ['rational order', 'messy complexity'], d: 'neat predictable plan → real-world problems, complicated and full of change' },
+      { k: 'Centralized control → Distributed control', alt: ['centralized control', 'distributed control'], d: 'one leader or office decides → power shared so several teams decide' },
+      { k: 'Experts → Meritocracy', alt: ['experts', 'meritocracy'], d: 'a few highly trained people give answers → power/rewards for good ideas and performance' },
+      { k: 'Tightly coupled system → Networked system', alt: ['tightly coupled', 'networked system'], d: 'if one part breaks everything stops → parts linked flexibly, still work if one fails' },
+      { k: 'Micro-management → Blackboxing', alt: ['micro-management', 'blackboxing'], d: 'boss controls every tiny detail → focus on the final result without forcing every step to be shown' },
+      { k: 'Hierarchical decision making → Consensus-reaching', alt: ['hierarchical decision making', 'consensus'], d: 'only top bosses decide → the whole group agrees' },
+      { k: 'Bureaucratic structure → Collegial community', alt: ['bureaucratic', 'collegial community'], d: 'rigid rules and paperwork → a group working together as equals' },
+      { k: 'Incremental → Discontinuous', alt: ['incremental', 'discontinuous'], d: 'slow, small step-by-step change → big, sudden jumps' },
+      { k: 'Closed → Open', alt: ['closed', 'open'], d: 'work kept private and isolated → information shared, others collaborate' },
+    ],
+    seen: [],
+    src: 'Tanvir sir L2 p4; paradigms glossary handout; Class Test 1 (d), (g)',
+    note: 'Left column = Modern (Taylorism), right column = Postmodern (Systems Engineering). CT-1: the postmodern model does NOT favour centralized control/specialization/hierarchical decisions (d = False); blackboxing does NOT mean controlling every detail (g = False).',
+  },
+  {
     id: 'l-pr-measures',
     topic: T,
     title: 'Measures of project activity (apply throughout the full span)',
@@ -250,7 +272,7 @@ const lists: PcList[] = [
     ],
     seen: ['2022-23', '2015-16', '2013-14'],
     src: 'Tanvir sir L2 p12–13',
-    note: 'The question bank answers "scope, schedule and budget" — wrong for this course; the slide says Time, Cost, Performance.',
+    note: 'The question bank (and the 18-batch solve, 2015-16 7a) answer "scope, schedule and budget" — that is the triangle; the slide says Time, Cost, Performance.',
   },
   {
     id: 'l-pr-characteristics',
@@ -334,6 +356,25 @@ const lists: PcList[] = [
     note: 'The question bank’s fourth group adds financiers, insurers, sureties and lawyers — not on the slide.',
   },
   {
+    id: 'l-pr-pm-plan',
+    topic: T,
+    title: 'Components of a project management plan',
+    points: [
+      { k: 'General project information' },
+      { k: 'Major client, stakeholder and general information' },
+      { k: 'Organizational structure', d: 'key disciplines, team members' },
+      { k: 'Scope of work and work plan' },
+      { k: 'Project schedule' },
+      { k: 'Project budget' },
+      { k: 'Communication plan' },
+      { k: 'Health and safety plan' },
+      { k: 'Project quality plan' },
+    ],
+    seen: ['Jan 2021'],
+    src: '18-batch TF solve only (not in this term’s slides)',
+    note: 'The solver himself marked it out of syllabus ("lecture slides of batch ’17 and ’18 are not exactly the same").',
+  },
+  {
     id: 'l-pr-aec-players',
     topic: T,
     title: 'Players involved in constructed products (AEC industry)',
@@ -395,7 +436,7 @@ const lists: PcList[] = [
       { k: 'Construction' },
     ],
     ordered: true,
-    seen: ['2017-18'],
+    seen: [],
     src: 'Tanvir sir L3 p22',
   },
   {
@@ -714,16 +755,30 @@ const cards: PcCard[] = [
     id: 'c-pr-pm-origin',
     topic: T,
     front: 'When was project management spawned, and what did **Morris** call its inception?',
-    back: 'Mid-20th century. A 1930s writer proposed a **coordinator** for tasks spanning several functional areas; Morris saw this **separate mechanism to integrate the entities of a project** as the inception of modern PM. Today: "**management by projects**".',
+    back: 'Mid-20th century. A 1930s writer proposed a **coordinator** for tasks spanning several functional areas; (Peter) **Morris** saw this **separate mechanism to integrate the entities of a project** as the inception of modern PM (Class Test 1 f: True). Today: "**management by projects**".',
     src: 'Tanvir sir L2 p2–3',
+  },
+  {
+    id: 'c-pr-blackboxing',
+    topic: T,
+    front: 'What is **blackboxing** in postmodern project management?',
+    back: 'Focusing on the **final result** without the manager controlling every internal step: the opposite of **micro-management**. (Class Test 1 g: "a senior manager must directly control every internal detail" is **False**.)',
+    src: 'Tanvir sir L2 p4; glossary; Class Test 1 (g)',
+  },
+  {
+    id: 'c-pr-postmodern',
+    topic: T,
+    front: 'Which model favours **distributed control, interdisciplinary work and consensus-reaching**?',
+    back: 'The **Postmodern** model (systems engineering). **Centralized control, specialization and hierarchical decision making** belong to the **Modern / Taylorist** model (Class Test 1 d: False).',
+    src: 'Tanvir sir L2 p4; Class Test 1 (d)',
   },
   {
     id: 'c-pr-quality',
     topic: T,
     front: 'Where does **quality** sit in the scope–schedule–budget relationship?',
-    back: 'The client includes quality thoughts in the scope details; **quality should connect the scope, schedule and budget**. If the final project does not meet or exceed the owner’s quality expectation, it will likely be **rejected**.',
+    back: 'The client includes quality thoughts in the scope details; **quality should connect the scope, schedule and budget**. If the final project does not meet or exceed the owner’s quality expectation, it will likely be **rejected**. Quality is **not an independent fourth constraint**: changing it affects the three sides (Class Test 1 e: False).',
     seen: TRI_SEEN,
-    src: 'Tanvir sir L2 p9',
+    src: 'Tanvir sir L2 p9; Class Test 1 (e)',
   },
   {
     id: 'c-pr-lifecycle',
@@ -886,6 +941,31 @@ Some books use the PMI definition ("a temporary endeavour to create a unique pro
     src: 'Tanvir sir L2 p5–6',
   },
   {
+    id: 'a-pr-evolution',
+    topic: T,
+    q: 'Show the evolution of design toward collaboration and integration (Modern vs Postmodern).',
+    seen: [],
+    a: `Project management moved from the **Modern** (Taylorist) model to the **Postmodern** (systems engineering) model:
+
+| Modern | Postmodern |
+|---|---|
+| **Taylorism** | **Systems Engineering** |
+| Hierarchical/vertical | Flat/layered/horizontal |
+| Specialization | Interdisciplinary |
+| Rational order | Messy complexity |
+| Centralized control | Distributed control |
+| Experts | Meritocracy |
+| Tightly coupled system | Networked system |
+| Micro-management | **Blackboxing** |
+| Hierarchical decision making | Consensus-reaching |
+| Bureaucratic structure | Collegial community |
+| Incremental | Discontinuous |
+| Closed | Open |`,
+    keys: ['Modern', 'Postmodern', 'Taylorism', 'Systems Engineering', 'Interdisciplinary', 'Distributed control', 'Meritocracy', 'Networked system', 'Blackboxing', 'Consensus-reaching', 'Collegial community'],
+    lists: ['l-pr-evolution'],
+    src: 'Tanvir sir L2 p4 (slide table); Class Test 1 (d), (g) tested it',
+  },
+  {
     id: 'a-pr-measures',
     topic: T,
     q: 'Briefly discuss the three measures of project activity.',
@@ -898,7 +978,7 @@ Some books use the PMI definition ("a temporary endeavour to create a unique pro
 
 The project organization attempts to achieve **time, cost and performance requirements** as it advances through the phases of the project life cycle.
 
-The question bank answers this with scope, schedule and budget — that is the triangle, not the three measures in the slides.`,
+The question bank and the 18-batch solve answer this with scope, schedule and budget — that is the triangle, not the three measures in the slides.`,
     keys: ['Time', 'Cost', 'Performance', 'temporal progress', 'schedules and deadlines', 'rate of resource expenditure', 'budgeted resources', 'objectives, specifications and requirements', 'quality', 'full span'],
     lists: ['l-pr-measures', 'l-pr-dominate'],
     src: 'Tanvir sir L2 p12–13',
@@ -916,6 +996,8 @@ The question bank answers this with scope, schedule and budget — that is the t
 
 ### Quality
 Quality is another important issue at this stage: the client includes its idea of quality in the scope details, and **quality should connect the scope, schedule and budget**. If the final project does not meet or exceed the owner’s quality expectation, it will likely be **rejected**.
+
+(The 18-batch solve adds: the three are the *triple constraint*; budget is a function of scope and schedule; with a constant budget only scope and schedule can vary, and a change of scope affects the schedule.)
 
 *Sketch: a triangle — SCOPE on the left side, BUDGET on the right side, SCHEDULE on the base; "A complete definition of the project" inside.*`,
     keys: ['scope of work', 'schedule and budget', 'connected triangle', 'essential component', 'project manager', 'interrelated', 'cannot move', 'complete definition of the project', 'quality should connect', 'rejected'],
@@ -1046,18 +1128,20 @@ Draw the six boxes joined by arrows, with the call-outs, and the design box expl
     q: 'Why does the construction document phase get higher emphasis during the design phase?',
     seen: ['2017-18'],
     a: `### Share of design effort
-In the flow of work the design effort splits **Schematic design 20% → Design development 30% → Construction documents 50%** — CD alone takes **half of the design effort**.
+In the flow of work the design effort splits **Schematic design 20% → Design development 30% → Construction documents 50%**. CD alone takes **half of the design effort**, because construction documents:
 
-### Why
-1. **Sufficient information to build** — construction documents must give the contractor everything needed to build the project; gaps become claims and change orders.
-2. **Responsibilities of the two parties** — they delineate the responsibilities of the owner and the contractor who sign the construction contract, and the role of the designer during bid and construction.
-3. **Drawings and a project manual** — complete plans, bidding/procurement requirements, conditions of the contract and **technical specifications** are produced here.
-4. **Opinion of probable construction cost** — the final cost opinion is prepared from the complete documents.
-5. **Constructability review** — the design is checked for buildability before it goes to bid.
-6. **QCP** — a quality control plan is implemented throughout design and **particularly in the construction document phase**, because errors here go straight into the contract.`,
-    keys: ['50%', 'half of the design effort', 'sufficient information to build', 'responsibilities', 'project manual', 'technical specifications', 'opinion of probable construction cost', 'constructability review', 'particularly in the construction document phase'],
+1. **Provide the contractor with sufficient information to build the project.**
+2. **Delineate the responsibilities of the two parties who sign the construction contract** (owner and contractor).
+3. **Provide information about the role of the designer**, who usually is not a party to this contract but who has responsibilities during the bidding & construction phase.
+4. **Comprise drawings & a project manual**, made up of bidding requirements and technical specifications.
+
+### Also done in this phase (L3 p24 table, p30)
+5. Supplying appropriate detail in plans and specs, and conducting a **constructability review**.
+6. Deliverables: complete plans, a complete project manual (procurement requirements, conditions of the contract, **technical specifications**) and the **opinion of probable construction cost**.
+7. A **quality control plan (QCP)** is implemented throughout design and **particularly in the construction document phase**.`,
+    keys: ['50%', 'half of the design effort', 'sufficient information to build', 'two parties who sign', 'role of the designer', 'not a party', 'project manual', 'technical specifications', 'constructability review', 'opinion of probable construction cost', 'particularly in the construction document phase'],
     lists: ['l-pr-design-sub'],
-    src: 'Tanvir sir L3 p13, p23–24, p30',
+    src: 'Tanvir sir L3 p23 (the four points the 18-batch solve writes), p24 table, p30',
   },
   {
     id: 'a-pr-predesign',
@@ -1213,6 +1297,24 @@ A comprehensive QCP **reduces the risk** of incomplete or poorly completed work 
     src: 'Tanvir sir L3 p21–24',
   },
   {
+    id: 'a-pr-phase-table',
+    topic: T,
+    q: 'Describe the purpose, activities and deliverables of the various phases of project development.',
+    seen: [],
+    a: `| Phase | Purpose | Activities | Deliverables |
+|---|---|---|---|
+| **Predesign** | establish project scope, budget and schedule; obtain necessary permits; select prime designer | assist client in analyzing project requirements, gaining funding approval, performing environmental impact report(s), obtaining geotechnical reports, preparing the RFP | design criteria, program or brief; order of magnitude cost estimate; schedule; RFP and SOW |
+| **Schematic Design (20%)** | establish basic geometry and relationships among project components | verifying information in RFP; organizing information and synthesizing possibilities; involving other designers and subconsultants; securing client understanding and acceptance | schematic plans; outline specifications; schematic cost estimate |
+| **Design Development (30%)** | develop a clear, coordinated description of the project, including major systems | defining major systems; workshops (value engineering, lifecycle analysis, sustainability review); documenting important decisions; freezing client's design changes | DD plans; DD specifications; DD cost estimate |
+| **Construction Documents (50%)** | provide contractor with sufficient information to build the project | delineating responsibilities of client (owner) and contractor; supplying appropriate detail in plans and specs; conducting constructability review | complete plans; complete project manual (procurement requirements, conditions of the contract, technical specifications); opinion of probable construction cost |
+| **Bid** | assist client in selecting contractor | conducting prebid conference; answering bidders' questions; assisting client in evaluating bids | addendum/a |
+| **Construction** | assist client in assuring contractor builds per contract documents | field observations; resolving problems and discrepancies as they arise | responses to RFIs; reviews of submittals and shop drawings |
+| **Postconstruction** | improve design/construct process and position firm to acquire new work | conducting post-occupancy review | post-occupancy review report |`,
+    keys: ['Predesign', 'Schematic Design (20%)', 'Design Development (30%)', 'Construction Documents (50%)', 'Bid', 'Postconstruction', 'sufficient information to build', 'constructability review', 'opinion of probable construction cost', 'post-occupancy review'],
+    lists: ['l-pr-predesign-purpose', 'l-pr-predesign-deliv', 'l-pr-design-sub'],
+    src: 'Tanvir sir L3 p24 (summary table, rendered); question from Rahat’s note ("2008-09", label unverified)',
+  },
+  {
     id: 'a-pr-engagement',
     topic: T,
     q: 'What is professional engagement? Give the business development process (flow chart).',
@@ -1233,7 +1335,7 @@ To win work, firms follow a **business development process** (David Evans & Asso
 10. **Start project**`,
     keys: ['secure professional services', 'statement of work', 'business development process', 'Tracking phase', 'Positioning phase', 'request for proposals', 'Proposal phase', 'Interview phase', 'selects consultant', 'Negotiation phase', 'Start project'],
     lists: ['l-pr-bizdev', 'l-pr-sow'],
-    src: 'Tanvir sir L3 p2–5',
+    src: 'Tanvir sir L3 p2–5 (DEA business development chart p5); Nafee bhai note asks "Give the basic development flowchart of professional engagement"',
   },
 ]
 

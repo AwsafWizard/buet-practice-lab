@@ -447,7 +447,7 @@ English advertisement; English documents; 42 days; two-currency dealings (local 
     seen: ['2015-16'],
     a: `**e-GP** is electronic Government Procurement. PPA s.65(1): "For carrying out the purposes of this Act, any or all government procurement under this Act may be undertaken using **electronic processing system**" — the online processing of data through a website.
 
-In Bangladesh the national **e-GP portal** is developed, owned and being operated by the **Central Procurement Technical Unit (CPTU), IME Division of the Ministry of Planning**. It provides an **online platform** to carry out the procurement activities of the public agencies — Procuring Agencies (PAs) and Procuring Entities (PEs).
+In Bangladesh the national **e-GP portal** is developed, owned and being operated by the **Central Procurement Technical Unit (CPTU), IME Division of the Ministry of Planning**. It provides an **online platform** to carry out the procurement activities of the public agencies — Procuring Agencies (PAs) and Procuring Entities (PEs). As amended, s.65(1) makes e-GP **mandatory** wherever the portal can process the procurement; exceptions only with the prior approval of the **BPPA**; procurement plans are published on the portal.
 
 ### How it eliminates malpractices
 1. Its key benefits are **Efficiency, Transparency, and Accountability**.

@@ -397,7 +397,7 @@ The Act says the same in **PPA s.15(1)**: to create impartial and open competiti
 - Cube strength at 28 days must be **1.2 times** cylinder strength at 28 days.
 - Curing time: **at least for 28 days**. Curing method: horizontal surface, **ponding with water**; other surfaces, wrapping by **moist jute fabric** with sprinkling water frequently.
 
-**Transportation** — Concrete shall be transported from the mixing machine to the laying place as soon as possible **without causing segregation** of materials and **maintaining workability**.
+**Transportation** — Concrete shall be transported from the mixing machine to the laying place as soon as possible **without causing segregation** of materials and **maintaining workability** (or ready-mixed concrete by transit mixer).
 
 **Compaction** — **Mechanical vibrator** shall be used.
 
