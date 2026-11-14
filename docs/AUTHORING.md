@@ -86,3 +86,12 @@ statics or Müller-Breslau, criterion for wheel loads…), then the engine-backe
 symmetry, orders of magnitude). Also run `npx tsc --noEmit`. Visual check (optional):
 `google-chrome --headless=new --disable-gpu --hide-scrollbars --virtual-time-budget=6000 --window-size=1400,2600 --screenshot=out.png "http://localhost:5173/#/q/<id>?sol=1"`
 (dev server is usually already running on port 5173).
+
+## Extract as PDF (every course, every problem)
+Every problem card and every theory card carries a ⋮ menu with **Extract as PDF**, **Open on its own page** and **Copy the question text**. The machinery is shared in `src/components/ExportPdf.tsx`; a new course only wires it in:
+- **Problem cards** (past questions and practice problems): put `<ProblemMenu doc={() => <ProblemDoc … />} filename={pdfName('CE xxx', paper, 'Q' + no)} footer="CE xxx Practice Lab" permalink=… copy=… />` at the top right of the card header, next to (not inside) the header's toggle button. `ProblemDoc` prints the question, the figure, what was given with the paper, the key answers (`checks`), the full solution and the assumptions. See `src/rc/components/RcQuestionCard.tsx` for a worked example.
+- **Theory cards** (a question with a markdown model answer): `<ProblemMenu doc={() => <TheoryDoc … />} … />`, as in `src/rc/components/TheoryList.tsx`.
+- **Recall courses** with their own answer shapes (CE 301) build their own documents from `PrintHead` / `PrintLabel` and call `exportPdf`, as in `src/ppc/components/ExportPdf.tsx`.
+- The page renders in the white print style `.print-doc` (`src/styles.css`). A new colour token the course's figures use must get a light value there, or it prints in the dark theme's colour.
+- While printing, `PrintMode` (from `components/ui.tsx`) is true: `Reveal` blocks print open, so a solution's collapsed steps appear in the PDF.
+- Add the course's card to `src/components/ExportPdf.test.tsx`; the test checks that the menu is there and that every problem renders as a printable document.

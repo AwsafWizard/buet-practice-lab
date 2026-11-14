@@ -297,7 +297,7 @@ body {
 }
 /* PDF export: always a white page with dark ink, whichever theme is on screen.
    Tailwind's --color-* are resolved at :root, so they are re-pointed here too. */
-.pc-print {
+.print-doc {
   --c-bg: #ffffff;
   --c-panel: #ffffff;
   --c-panel2: #f3f2f7;
@@ -319,6 +319,7 @@ body {
   --c-steel: #16161d;
   --c-conc: #f3f2f7;
   --c-water: #036a96;
+  --c-soil: #c8b48a;
   --c-ia: #036a96;
   --c-oia: #9b1349;
   --c-aan: #14710a;
@@ -341,11 +342,11 @@ body {
   font-size: 14px;
   line-height: 1.55;
 }
-.pc-print button,
-.pc-print details > summary {
+.print-doc button,
+.print-doc details > summary {
   display: none !important;
 }
-.pc-print .chip {
+.print-doc .chip {
   background: var(--c-panel2);
   border-color: var(--c-line);
   color: var(--c-ink);

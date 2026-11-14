@@ -5,7 +5,8 @@ import { Answer, Md, Reveal } from '../../components/ui'
 import { useStore } from '../../store'
 import { smTopicById } from '../registry'
 import { focusSmQuestion } from '../reference/pane'
-import { smPaperLabel, type SmQ } from '../types'
+import { smPaperById, smPaperLabel, type SmQ } from '../types'
+import { pdfName, ProblemDoc, ProblemMenu } from '../../components/ExportPdf'
 
 const STATUS: { v: 'todo' | 'tried' | 'solved' | 'review'; label: string; c: string }[] = [
   { v: 'todo', label: 'To do', c: 'var(--c-faint)' },
@@ -38,7 +39,8 @@ export function SmQuestionCard({ q, topic, showPaper = true, defaultOpen = false
   const st = STATUS.find((s) => s.v === status)!
   return (
     <article className="card overflow-hidden">
-      <button className="w-full text-left px-5 py-4 flex flex-wrap items-center gap-2 hover:bg-panel2/40" onClick={() => setOpen(!open)}>
+      <div className="flex items-start">
+      <button className="flex-1 min-w-0 text-left pl-5 pr-2 py-4 flex flex-wrap items-center gap-2 hover:bg-panel2/40" onClick={() => setOpen(!open)}>
         <span className={'inline-block transition-transform text-mute ' + (open ? 'rotate-90' : '')}>▸</span>
         {q.paper === 'own' ? (
           <span className="chip" style={{ color: 'var(--c-accent2)' }}>
@@ -74,6 +76,10 @@ export function SmQuestionCard({ q, topic, showPaper = true, defaultOpen = false
           {st.label}
         </span>
       </button>
+        <div className="pt-3 pr-3 shrink-0">
+          <Menu q={q} />
+        </div>
+      </div>
       {open && (
         <div className="px-5 pb-5 space-y-4 border-t border-line/60 pt-4">
           <Md>{q.text}</Md>
@@ -163,5 +169,38 @@ function GivenStrip({ q }: { q: SmQ }) {
         ),
       )}
     </div>
+  )
+}
+
+/** ⋮ menu: Extract as PDF (question, figure, key answers, full solution / model answer), open, copy */
+function Menu({ q }: { q: SmQ }) {
+  const own = q.paper === 'own'
+  const label = own ? 'Practice' : smPaperLabel(q.paper)
+  const syllabus = smTopicById(q.topics[0])?.note
+  return (
+    <ProblemMenu
+      label={own ? `More for “${q.title}”` : `More for ${label} Q${q.no}`}
+      filename={own ? pdfName('CE341', 'practice', q.title) : pdfName('CE341', label, 'Q' + q.no)}
+      footer="CE 341 Practice Lab"
+      permalink={`/ce341/q/${encodeURIComponent(q.id)}`}
+      copy={own ? `CE 341 practice: ${q.title}\n${q.text}` : `CE 341 ${label} Q${q.no} (${q.marks} marks)\n${q.text}`}
+      doc={() => (
+        <ProblemDoc
+          course="CE 341 · Principles of Soil Mechanics"
+          source={own ? `Practice problem (${q.level ?? 'practice'})` : `${label} term final (held ${smPaperById(q.paper)?.held ?? '—'})`}
+          title={q.title}
+          chips={[own ? '' : `Section ${q.sec} · Q${q.no}`, own ? '' : `${q.marks} marks`, q.theory ? 'theory' : '', ...q.topics.map((t) => smTopicById(t)?.title ?? t)]}
+          text={q.text}
+          given={q.given}
+          flag={[q.flag, syllabus].filter(Boolean).join(' · ') || undefined}
+          figure={q.figure}
+          checks={q.checks}
+          solution={q.solution}
+          solutionLabel={q.theory ? 'Model answer' : 'Full solution'}
+          notes={q.notes}
+          from="CE 341 Practice Lab"
+        />
+      )}
+    />
   )
 }

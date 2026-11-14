@@ -1,6 +1,6 @@
 import katex from 'katex'
 import { AnimatePresence, motion } from 'motion/react'
-import { Fragment, useMemo, useState, type ReactNode } from 'react'
+import { createContext, Fragment, useContext, useMemo, useState, type ReactNode } from 'react'
 import { useStore } from '../store'
 
 // ---------------------------------------------------------------- math
@@ -251,6 +251,9 @@ export function Choice<T extends string>({
 }
 
 // ---------------------------------------------------------------- reveal
+/** true while a page is being rendered for "Extract as PDF": collapsible steps print open */
+export const PrintMode = createContext(false)
+
 export function Reveal({
   id,
   title = 'Show solution',
@@ -265,7 +268,8 @@ export function Reveal({
   tone?: 'accent' | 'mute'
 }) {
   const reveal = useStore((s) => s.reveal)
-  const [open, setOpen] = useState(!!defaultOpen)
+  const print = useContext(PrintMode)
+  const [open, setOpen] = useState(!!defaultOpen || print)
   return (
     <div className={'rounded-xl border ' + (open ? 'border-accent/50' : 'border-line')}>
       <button

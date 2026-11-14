@@ -1,6 +1,7 @@
 // Theory drill: think of the answer, open the model answer, then say honestly whether you had it.
 
 import { useState } from 'react'
+import { pdfName, ProblemMenu, TheoryDoc } from '../../components/ExportPdf'
 import { Boundary } from '../../components/QuestionCard'
 import { Md } from '../../components/ui'
 import { useStore } from '../../store'
@@ -72,6 +73,13 @@ function TheoryCard({ it, showTopic }: { it: SmTheoryItem; showTopic: boolean })
             {a.correct ? '✓ remembered' : '✗ missed'}
           </span>
         )}
+        <ProblemMenu
+          label="More for this question"
+          filename={pdfName('CE341', 'theory', it.q.replace(/[*$\\]/g, '').slice(0, 50))}
+          footer="CE 341 Practice Lab"
+          copy={`CE 341: ${it.q}`}
+          doc={() => <TheoryDoc course="CE 341 · Principles of Soil Mechanics" q={it.q} a={it.a} Fig={it.Fig} seen={it.seen} topic={t?.title} from="CE 341 Practice Lab" />}
+        />
       </div>
       {!open ? (
         <button className="mt-3 btn !py-1 !px-3 !text-xs" onClick={() => setOpen(true)}>

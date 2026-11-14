@@ -1,11 +1,12 @@
 import { Component, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { givenFor, givenRefs } from '../pyq/given'
-import type { PYQ } from '../pyq/types'
+import { paperById, type PYQ } from '../pyq/types'
 import { focusQuestion } from '../reference/drawer'
 import { useStore } from '../store'
 import { topicById } from '../topics/registry'
 import { Answer, Md, Reveal } from './ui'
+import { pdfName, ProblemDoc, ProblemMenu } from './ExportPdf'
 
 declare const __PUBLIC_BUILD__: boolean
 export const SHOW_SCANS = typeof __PUBLIC_BUILD__ === 'undefined' ? true : !__PUBLIC_BUILD__
@@ -59,7 +60,8 @@ export function QuestionCard({ q, topic, showPaper = true, defaultOpen = false, 
   }, [q, open])
   return (
     <article className="card overflow-hidden">
-      <button className="w-full text-left px-5 py-4 flex flex-wrap items-center gap-2 hover:bg-panel2/40" onClick={() => setOpen(!open)}>
+      <div className="flex items-start">
+      <button className="flex-1 min-w-0 text-left pl-5 pr-2 py-4 flex flex-wrap items-center gap-2 hover:bg-panel2/40" onClick={() => setOpen(!open)}>
         <span className={'inline-block transition-transform text-mute ' + (open ? 'rotate-90' : '')}>▸</span>
         {q.paper === 'own' ? (
           <span className="chip" style={{ color: 'var(--c-accent2)' }}>
@@ -85,6 +87,10 @@ export function QuestionCard({ q, topic, showPaper = true, defaultOpen = false, 
           {STATUS.find((s) => s.v === status)!.label}
         </span>
       </button>
+        <div className="pt-3 pr-3 shrink-0">
+          <Menu q={q} />
+        </div>
+      </div>
       {open && (
         <div className="px-5 pb-5 space-y-4 border-t border-line/60 pt-4">
           <Md>{q.text}</Md>
@@ -180,5 +186,36 @@ function GivenStrip({ id }: { id: string }) {
         ),
       )}
     </div>
+  )
+}
+
+/** ⋮ menu: Extract as PDF (question, figure, key answers, full solution), open, copy */
+function Menu({ q }: { q: PYQ }) {
+  const own = q.paper === 'own'
+  const label = own ? 'Practice' : paperLabel(q.paper)
+  return (
+    <ProblemMenu
+      label={own ? `More for “${q.title}”` : `More for ${label} Q${q.no}`}
+      filename={own ? pdfName('CE311', 'practice', q.title) : pdfName('CE311', label, 'Q' + q.no)}
+      footer="CE 311 Practice Lab"
+      permalink={`/q/${encodeURIComponent(q.id)}`}
+      copy={own ? `CE 311 practice: ${q.title}\n${q.text}` : `CE 311 ${label} Q${q.no} (${q.marks} marks)\n${q.text}`}
+      doc={() => (
+        <ProblemDoc
+          course="CE 311 · Structural Analysis"
+          source={own ? `Practice problem (${q.level ?? 'practice'})` : `${label} term final (held ${paperById(q.paper).held})`}
+          title={q.title}
+          chips={[own ? '' : `Section ${q.sec} · Q${q.no}`, own ? '' : `${q.marks} marks`, ...q.topics.map((t) => topicById(t)?.title ?? t)]}
+          text={q.text}
+          given={givenFor(q.id)}
+          flag={q.legacy}
+          figure={q.figure}
+          checks={q.checks}
+          solution={q.solution}
+          notes={q.notes}
+          from="CE 311 Practice Lab"
+        />
+      )}
+    />
   )
 }

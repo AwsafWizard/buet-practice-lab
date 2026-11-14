@@ -5,7 +5,8 @@ import { Answer, Md, Reveal } from '../../components/ui'
 import { useStore } from '../../store'
 import { rcTopicById } from '../registry'
 import { focusRcQuestion } from '../reference/pane'
-import { rcPaperLabel, type RcQ } from '../types'
+import { rcPaperById, rcPaperLabel, type RcQ } from '../types'
+import { pdfName, ProblemDoc, ProblemMenu } from '../../components/ExportPdf'
 
 const STATUS: { v: 'todo' | 'tried' | 'solved' | 'review'; label: string; c: string }[] = [
   { v: 'todo', label: 'To do', c: 'var(--c-faint)' },
@@ -38,7 +39,8 @@ export function RcQuestionCard({ q, topic, showPaper = true, defaultOpen = false
   const st = STATUS.find((s) => s.v === status)!
   return (
     <article className="card overflow-hidden">
-      <button className="w-full text-left px-5 py-4 flex flex-wrap items-center gap-2 hover:bg-panel2/40" onClick={() => setOpen(!open)}>
+      <div className="flex items-start">
+      <button className="flex-1 min-w-0 text-left pl-5 pr-2 py-4 flex flex-wrap items-center gap-2 hover:bg-panel2/40" onClick={() => setOpen(!open)}>
         <span className={'inline-block transition-transform text-mute ' + (open ? 'rotate-90' : '')}>▸</span>
         {q.paper === 'own' ? (
           <span className="chip" style={{ color: 'var(--c-accent2)' }}>
@@ -69,6 +71,10 @@ export function RcQuestionCard({ q, topic, showPaper = true, defaultOpen = false
           {st.label}
         </span>
       </button>
+        <div className="pt-3 pr-3 shrink-0">
+          <Menu q={q} />
+        </div>
+      </div>
       {open && (
         <div className="px-5 pb-5 space-y-4 border-t border-line/60 pt-4">
           <Md>{q.text}</Md>
@@ -157,5 +163,37 @@ function GivenStrip({ q }: { q: RcQ }) {
         ),
       )}
     </div>
+  )
+}
+
+/** ⋮ menu: Extract as PDF (question, figure, key answers, full solution / model answer), open, copy */
+function Menu({ q }: { q: RcQ }) {
+  const own = q.paper === 'own'
+  const label = own ? 'Practice' : rcPaperLabel(q.paper)
+  return (
+    <ProblemMenu
+      label={own ? `More for “${q.title}”` : `More for ${label} Q${q.no}`}
+      filename={own ? pdfName('CE315', 'practice', q.title) : pdfName('CE315', label, 'Q' + q.no)}
+      footer="CE 315 Practice Lab"
+      permalink={`/ce315/q/${encodeURIComponent(q.id)}`}
+      copy={own ? `CE 315 practice: ${q.title}\n${q.text}` : `CE 315 ${label} Q${q.no} (${q.marks} marks)\n${q.text}`}
+      doc={() => (
+        <ProblemDoc
+          course="CE 315 · Design of Concrete Structures I"
+          source={own ? `Practice problem (${q.level ?? 'practice'})` : `${label} term final (held ${rcPaperById(q.paper)?.held ?? '—'})`}
+          title={q.title}
+          chips={[own ? '' : `Section ${q.sec} · Q${q.no}`, own ? '' : `${q.marks} marks`, q.theory ? 'theory' : '', ...q.topics.map((t) => rcTopicById(t)?.title ?? t)]}
+          text={q.text}
+          given={q.given}
+          flag={q.flag}
+          figure={q.figure}
+          checks={q.checks}
+          solution={q.solution}
+          solutionLabel={q.theory ? 'Model answer' : 'Full solution'}
+          notes={q.notes}
+          from="CE 315 Practice Lab"
+        />
+      )}
+    />
   )
 }
