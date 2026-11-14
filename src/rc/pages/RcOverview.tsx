@@ -9,6 +9,7 @@ import { RC_EXAM_DATE } from '../plan'
 import { RC_ALL } from '../pyq'
 import { RC_SECTION_LABEL, RC_TOPICS } from '../registry'
 import { RC_PAPERS } from '../types'
+import { TotalCell, TotalHead } from '../../components/TotalCell'
 
 export default function RcOverview() {
   const [p, setP] = usePlanner('ce315')
@@ -153,6 +154,7 @@ function Heatmap() {
     return m
   }, [])
   const max = Math.max(1, ...data.values())
+  const top = Math.max(1, ...RC_TOPICS.map((tp) => RC_PAPERS.reduce((a, p) => a + (data.get(`${tp.id}|${p.id}`) ?? 0), 0)))
   return (
     <div className="overflow-x-auto scroll-thin">
       <table className="text-xs border-separate border-spacing-[3px]">
@@ -166,7 +168,7 @@ function Heatmap() {
                 </Link>
               </th>
             ))}
-            <th className="text-faint px-2">Σ</th>
+            <TotalHead label="parts" />
           </tr>
         </thead>
         <tbody>
@@ -185,7 +187,7 @@ function Heatmap() {
                     {v || '·'}
                   </td>
                 ))}
-                <td className="text-center num font-bold">{sum}</td>
+                <TotalCell v={sum} max={top} color={tp.color} />
               </tr>
             )
           })}

@@ -12,6 +12,7 @@ import { PC_EXAM_DATE } from '../plan'
 import { PC_ALL } from '../pyq'
 import { PC_BLOCK_LABEL, PC_TOPICS, pcTopicById, type PcBlock } from '../registry'
 import { PC_PAPERS } from '../types'
+import { TotalCell, TotalHead } from '../../components/TotalCell'
 
 export default function PcOverview() {
   const [p, setP] = usePlanner('ce301')
@@ -195,6 +196,7 @@ function Heatmap() {
     return m
   }, [])
   const max = Math.max(1, ...data.values())
+  const top = Math.max(1, ...PC_TOPICS.map((tp) => PC_PAPERS.reduce((a, p) => a + (data.get(`${tp.id}|${p.id}`) ?? 0), 0)))
   return (
     <div className="overflow-x-auto scroll-thin">
       <table className="text-xs border-separate border-spacing-[3px]">
@@ -208,7 +210,7 @@ function Heatmap() {
                 </Link>
               </th>
             ))}
-            <th className="text-faint px-2">marks</th>
+            <TotalHead label="marks" />
           </tr>
         </thead>
         <tbody>
@@ -227,7 +229,7 @@ function Heatmap() {
                     {v || '·'}
                   </td>
                 ))}
-                <td className="text-center num font-bold">{sum}</td>
+                <TotalCell v={sum} max={top} color={tp.color} />
               </tr>
             )
           })}

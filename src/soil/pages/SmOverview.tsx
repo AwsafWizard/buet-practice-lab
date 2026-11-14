@@ -9,6 +9,7 @@ import { SM_EXAM_DATE } from '../plan'
 import { SM_ALL } from '../pyq'
 import { SM_SECTION_LABEL, SM_TOPICS } from '../registry'
 import { SM_PAPERS } from '../types'
+import { TotalCell, TotalHead } from '../../components/TotalCell'
 
 export default function SmOverview() {
   const [p, setP] = usePlanner('ce341')
@@ -152,6 +153,7 @@ function Heatmap() {
     return m
   }, [])
   const max = Math.max(1, ...data.values())
+  const top = Math.max(1, ...SM_TOPICS.map((tp) => SM_PAPERS.reduce((a, p) => a + (data.get(`${tp.id}|${p.id}`) ?? 0), 0)))
   return (
     <div className="overflow-x-auto scroll-thin">
       <table className="text-xs border-separate border-spacing-[3px]">
@@ -165,7 +167,7 @@ function Heatmap() {
                 </Link>
               </th>
             ))}
-            <th className="text-faint px-2">Σ</th>
+            <TotalHead label="parts" />
           </tr>
         </thead>
         <tbody>
@@ -184,7 +186,7 @@ function Heatmap() {
                     {v || '·'}
                   </td>
                 ))}
-                <td className="text-center num font-bold">{sum}</td>
+                <TotalCell v={sum} max={top} color={tp.color} />
               </tr>
             )
           })}
