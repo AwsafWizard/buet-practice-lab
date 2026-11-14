@@ -1,12 +1,12 @@
 // Blurt: write the whole answer from memory against the exam clock, then see which examiner keywords you hit.
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { Md } from '../../components/ui'
+import { useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { inline, Md, PrintMode } from '../../components/ui'
 import { useStore } from '../../store'
 import { keysFound } from '../engine/match'
-import { answerById } from '../content'
+import { answerById, listById } from '../content'
 import { pcTopicById } from '../registry'
-import type { PcAnswer } from '../types'
+import type { PcAnswer, PcList } from '../types'
 
 /** 210 marks in 180 minutes */
 export const MIN_PER_MARK = 180 / 210
@@ -199,7 +199,29 @@ export function AnswerBody({ a }: { a: PcAnswer }) {
           <a.Fig />
         </div>
       )}
+      <AnswerHooks a={a} />
       <div className="text-[11px] text-faint mt-2">Source: {a.src}</div>
+    </div>
+  )
+}
+
+/** the memory hooks of the lists an answer is built on (the PDF prints them with the lists instead) */
+function AnswerHooks({ a }: { a: PcAnswer }) {
+  const print = useContext(PrintMode)
+  const lists = (a.lists ?? []).map(listById).filter((l): l is PcList => !!l?.hook)
+  if (print || !lists.length) return null
+  return (
+    <div className="mt-3 rounded-xl border border-accent2/40 bg-accent2/5 px-3 py-2 text-sm space-y-1">
+      <div className="text-[11px] font-bold uppercase tracking-wider text-accent2">💡 Memory hook{lists.length > 1 ? 's' : ''}</div>
+      {lists.map((l) => (
+        <div key={l.id}>
+          <span className="text-mute">
+            {l.title}
+            {l.ordered ? ' (in order)' : ''}:
+          </span>{' '}
+          <span className="text-accent2">{inline(l.hook!)}</span>
+        </div>
+      ))}
     </div>
   )
 }
