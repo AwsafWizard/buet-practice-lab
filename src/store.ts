@@ -62,6 +62,7 @@ export type PcTopicId =
   | 'pc-comm'
   | 'pc-7cs'
   | 'pc-writing'
+  | 'pc-msg'
   | 'pc-oral'
   | 'pc-ethics'
 

@@ -40,8 +40,9 @@ export function pcBlocks(): PlanBlock[] {
     b(d3, 'mixed', 'Memory gym: procurement + project cards due today', 1, 'revise'),
     b(d3, 'pc-comm', 'Communication process, non-verbal, barriers, abstracting & inferring', 1.5),
     b(d3, 'pc-7cs', 'The seven C’s and each one’s guidelines', 1.5),
-    b(d3, 'pc-writing', 'Reports, short-report formats, slanted abstract, proposals', 1.5),
-    b(d3, 'pc-oral', 'Oral presentation steps, meetings and leadership styles', 1),
+    b(d3, 'pc-writing', 'Reports, short-report formats, slanted abstract, proposals', 1.25),
+    b(d3, 'pc-msg', 'Business messages: planning steps, audience, direct vs indirect, composing', 0.5),
+    b(d3, 'pc-oral', 'Oral presentation steps, meetings and leadership styles', 0.75),
     b(d3, 'pc-ethics', 'Code of ethics sections, conflict of interest, duties to peers', 1.5),
     // 16 Nov — protected: mock + sweep
     b(d4, 'mock', 'Mock: 2023-24 paper (3 h) + keyword self-marking', 3.5, 'mock'),

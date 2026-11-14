@@ -15,6 +15,7 @@ const P: Record<TopicId | RcTopicId | SmTopicId | PcTopicId, string> = {
   'pc-comm': 'M4 5 H15 V13 H9 L5 16 V13 H4 Z M17 9 H20 V17 H19 V20 L16 17 H11 V15',
   'pc-7cs': 'M5 12 a7 7 0 1 0 14 0 a7 7 0 1 0 -14 0 M12 12 h0.01 M12 5 V7 M12 17 V19 M5 12 H7 M17 12 H19',
   'pc-writing': 'M5 20 L6 15 L16 5 L19 8 L9 18 Z M14 7 L17 10',
+  'pc-msg': 'M3 6 H21 V18 H3 Z M3 6 L12 13 L21 6',
   'pc-oral': 'M9 3 H15 V13 H9 Z M6 11 a6 6 0 0 0 12 0 M12 17 V21 M8 21 H16',
   'pc-ethics': 'M12 3 V21 M5 8 H19 M5 8 L3 14 H7 Z M19 8 L17 14 H21 Z M9 21 H15',
   frames: 'M4 19 V7 H20 V19 M2 19 h4 M18 19 h4',

@@ -53,7 +53,7 @@ export const AAN_MAP: Record<string, PcPartMap> = {
   'pc-2020-21-3b': { topics: ['pc-comm'], ans: ['a-comm-categories'], extra: 'Name the three categories in one line each, then describe the three internal directions in detail (slide wording) with an example each: downward — the PM issues a work schedule to site engineers; upward — a site engineer’s daily progress report; horizontal — the design team coordinates with the procurement team.' },
 
   // ---------- Jan 2021 ----------
-  'pc-jan-2021-4a': { topics: ['pc-writing'], ans: ['a-writing-business-messages'] },
+  'pc-jan-2021-4a': { topics: ['pc-msg'], ans: ['a-writing-business-messages'] },
   'pc-jan-2021-4b': { topics: ['pc-writing'], ans: ['a-writing-exec-summary'], extra: '8 + 10 marks: the **six** executive-summary points, then the **five-item** checklist (be realistic · be specific · be precise · be clear · be exact to the scope) under the line “State how project requirements will be met”.' },
   'pc-jan-2021-5': {
     topics: ['pc-ethics'],

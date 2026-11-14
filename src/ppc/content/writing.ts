@@ -1,4 +1,4 @@
-// pc-writing — reports, abstracts, proposals, business messages.
+// pc-writing — reports, abstracts, proposals (business messages are their own topic: msg.tsx).
 // Sources: Noor sir's slides L05 (Writing Project Proposals), L06 (Reports), L08 (Preparing Effective Business
 // Messages) and L02 (abstraction) — almost word for word Kabirul sir's set, which the 18-batch solve (Shafi) copies.
 // Lists, cards and answers follow the slide wording. Only "why reports are important" has no slide (18-batch solve).
@@ -10,7 +10,6 @@ const T = 'pc-writing' as const
 const S2 = 'Noor sir L02 slides (differences in perception of reality)'
 const S5 = 'Noor sir L05 slides (Writing Project Proposals)'
 const S6 = 'Noor sir L06 slides (Reports)'
-const S8 = 'Noor sir L08 slides (Preparing Effective Business Messages)'
 const SH = '18-batch solve (Shafi) copies the same bullets'
 
 // ---------- figures (theme tokens only) ----------
@@ -760,174 +759,6 @@ export default {
       src: `${S5} — asked 2008-09 Q1(b) (Rahat’s question list)`,
     },
 
-    // ---------- business messages (L08) ----------
-    {
-      id: 'l-msg-planning',
-      topic: T,
-      title: 'Planning steps for preparing effective business messages',
-      ask: 'What are the planning steps for preparing effective business messages?',
-      ordered: true,
-      points: [
-        { k: 'Identifying purpose', alt: ['purpose', 'identify the purpose', 'identifying your purpose'], d: 'To provide information, to persuade, to negotiate, to refuse a request; transmit the message clearly, simultaneously creating goodwill.' },
-        { k: 'Analyzing audience', alt: ['audience', 'analyse the audience', 'analysing audience', 'anticipate audience'], d: 'Adapt the message to the receiver’s views, attitudes, needs, culture.' },
-        { k: 'Choosing ideas', alt: ['ideas', 'choose ideas', 'choosing idea'], d: 'List ideas as they come; choose ideas likely to get a desired response; depends on type of message, background of the receiver, location of receiver.' },
-        { k: 'Collecting data to support ideas', alt: ['collect data', 'data', 'research', 'collecting data'], d: 'Facts, figures, quotations, any evidence; check and verify names of individuals, dates, addresses, statistics.' },
-        { k: 'Organizing the message', alt: ['organising', 'organize', 'organise the message', 'outline'], d: 'Ordering of ideas; as important as the ideas themselves; outline the message on paper before writing the draft; disorganized messages look careless, unimportant, confusing.' },
-      ],
-      hook: '**P**lease **A**sk **I**f **D**ata’s **O**K — Purpose, Audience, Ideas, Data, Organizing.',
-      seen: ['Jan 2021'],
-      src: `${S8}; ${SH} (Jan 2021 Q4a)`,
-    },
-    {
-      id: 'l-msg-purposes',
-      topic: T,
-      title: 'Purposes a message may have',
-      points: [
-        { k: 'To provide information', alt: ['information', 'inform'] },
-        { k: 'To persuade', alt: ['persuade', 'persuasion'] },
-        { k: 'To negotiate', alt: ['negotiate', 'negotiation'] },
-        { k: 'To refuse a request', alt: ['refuse', 'refusal'] },
-      ],
-      seen: ['Jan 2021'],
-      src: S8,
-      note: 'It is important to transmit a message clearly, simultaneously creating goodwill.',
-    },
-    {
-      id: 'l-msg-adapt',
-      topic: T,
-      title: 'The message must be adapted to the receiver’s …',
-      ask: 'To get the desired response from the receiver, the message must be adapted to the receiver’s …?',
-      points: [{ k: 'Views' }, { k: 'Attitudes', alt: ['attitude'] }, { k: 'Needs', alt: ['need'] }, { k: 'Culture' }],
-      hook: '**V-A-N-C** — the receiver’s **VAN** of **C**ulture.',
-      seen: ['Jan 2021'],
-      src: S8,
-    },
-    {
-      id: 'l-msg-audience',
-      topic: T,
-      title: 'Aspects of the receiver to analyze when sending a message',
-      ask: 'Describe the issues to consider when analyzing your audience.',
-      points: [
-        { k: 'Professional background', alt: ['background'] },
-        { k: 'Position in the company', alt: ['position', 'professional position', 'status'] },
-        { k: 'Gender', alt: ['sex', 'age and sex'] },
-        { k: 'Age' },
-        { k: 'Educational level', alt: ['education'] },
-        { k: 'Knowledge, attitude, cultural values', alt: ['knowledge', 'attitude', 'culture', 'cultural values'] },
-      ],
-      hook: 'Read the receiver’s **CV**: background, post, gender, age, degree — then their head (knowledge), heart (attitude) and roots (cultural values).',
-      seen: ['Jan 2021'],
-      src: `${S8}; ${SH} (Jan 2021 Q4a)`,
-      note: 'Six separate aspects. Kabirul sir’s slide (the 18-batch solve) says “Sex”; Noor sir’s says “Gender”. Add: when writing to a business, organization, or country, it is essential to know the communication principles of the organization, business, or country.',
-    },
-    {
-      id: 'l-msg-approach',
-      topic: T,
-      title: 'Organizational plans (approaches) for composing a message',
-      points: [
-        { k: 'Direct or deductive', alt: ['direct', 'deductive', 'direct (deductive)'], d: 'Receiver will have a favorable or neutral reaction: begin with the main ideas or best news → explanatory details → friendly closing.' },
-        { k: 'Indirect or inductive', alt: ['indirect', 'inductive', 'indirect (inductive)'], d: 'Persuasive request or bad news — the reader must be convinced or may react negatively.' },
-      ],
-      seen: [],
-      src: `${S8} — asked 2010-11 Q3(b) (Rahat’s question list)`,
-    },
-    {
-      id: 'l-msg-direct-plan',
-      topic: T,
-      title: 'How a direct (deductive) message runs',
-      ordered: true,
-      points: [
-        { k: 'Begin with the main ideas or best news', alt: ['main idea', 'best news', 'main ideas'] },
-        { k: 'Include all necessary explanatory details', alt: ['explanatory details', 'details'], d: 'After the opening, in one or several paragraphs.' },
-        { k: 'End with an appropriate friendly closing', alt: ['friendly closing', 'closing', 'friendly close'] },
-      ],
-      seen: [],
-      src: S8,
-    },
-    {
-      id: 'l-msg-direct-situations',
-      topic: T,
-      title: 'Two situations when the direct approach is used',
-      points: [
-        { k: 'Direct request', d: 'The main purpose of the message is to make a request; the request by its very nature should require little persuasion.' },
-        { k: 'Good news', d: 'Used to grant requests; announce favorable or neutral information; exchange routine information between companies.' },
-      ],
-      seen: [],
-      src: S8,
-    },
-    {
-      id: 'l-msg-indirect-situations',
-      topic: T,
-      title: 'Two situations when the indirect approach is used',
-      points: [
-        { k: 'Persuasive request', d: 'The request by its very nature would require extensive persuasion and convincing; use attention-getting statements to induce the receiver to read further; make clear the what, why, how, where and when of the request.' },
-        { k: 'Bad news', d: 'Used to deny requests; announce unfavorable or negative information; difficult to prepare as the reader may react negatively.' },
-      ],
-      seen: [],
-      src: S8,
-    },
-    {
-      id: 'l-msg-beginnings-endings',
-      topic: T,
-      title: 'Beginnings and endings of a message',
-      points: [
-        { k: 'Main favorable ideas at beginning and end', alt: ['placement', 'favorable ideas', 'favourable ideas'] },
-        { k: 'Beginning gets reader immediately into opening thought', alt: ['opening thought', 'beginning'] },
-        { k: 'Emphasize the reader, focus on positive aspects', alt: ['emphasize the reader', 'positive aspects', 'positive'] },
-        { k: 'Ending focuses on desired action, leaves goodwill', alt: ['desired action', 'goodwill', 'ending'] },
-        { k: 'Ending reinforces central purpose of the message', alt: ['central purpose', 'reinforce'] },
-        { k: 'Show appreciation and offer to help further', alt: ['appreciation', 'offer to help'] },
-      ],
-      seen: [],
-      src: S8,
-    },
-    {
-      id: 'l-msg-composing',
-      topic: T,
-      title: 'Composing the message (four stages)',
-      ordered: true,
-      points: [
-        { k: 'Drafting', alt: ['draft', 'drafting the message'], d: 'After completing the planning steps, get the whole message on paper: the first draft.' },
-        { k: 'Revising', alt: ['revise', 'revising the message'], d: 'Evaluate content, organization, and style of the draft.' },
-        { k: 'Editing', alt: ['edit', 'editing the message'], d: 'Check all paragraphs: topic sentences, sentence structure, grammar, spelling, punctuation, effectiveness.' },
-        { k: 'Proofreading', alt: ['proofread', 'proofreading the message'], d: 'Ensure there are no errors; even minor errors reduce the effectiveness of the message and undermine credibility.' },
-      ],
-      hook: '**D**on’t **R**ush **E**very **P**age.',
-      seen: [],
-      src: S8,
-    },
-    {
-      id: 'l-msg-revising',
-      topic: T,
-      title: 'Steps (questions) when revising a message',
-      ordered: true,
-      points: [
-        { k: 'Does the message accomplish its purpose?', alt: ['purpose', 'accomplish its purpose'] },
-        { k: 'Is the organizational plan effective?', alt: ['organizational plan', 'organisation'] },
-        { k: 'Are points supported by adequate material?', alt: ['adequate material', 'supported'] },
-        { k: 'Is language complete, concise, considerate, concrete, clear, courteous?', alt: ['language', 'seven Cs', '7 Cs', 'complete concise considerate concrete clear courteous'] },
-        { k: 'Is there variety in sentence structure?', alt: ['variety', 'sentence structure'] },
-        { k: 'Delete unnecessary, include additional material', alt: ['delete unnecessary material', 'additional material'], d: 'Delete unnecessary material and include additional material if needed.' },
-      ],
-      hook: 'Purpose → Plan → Proof (material) → Language (six C’s) → Sentences → Cut and add.',
-      seen: [],
-      src: S8,
-    },
-    {
-      id: 'l-msg-editing',
-      topic: T,
-      title: 'What to check when editing a message',
-      points: [
-        { k: 'Good topic sentences', alt: ['topic sentences', 'topic sentence'] },
-        { k: 'Sound sentence structure', alt: ['sentence structure'] },
-        { k: 'Correct grammar', alt: ['grammar'] },
-        { k: 'Spelling' },
-        { k: 'Punctuation' },
-        { k: 'Effectiveness of the message', alt: ['effectiveness'] },
-      ],
-      seen: [],
-      src: S8,
-    },
   ],
 
   cards: [
@@ -975,14 +806,6 @@ export default {
     { id: 'c-proposal-budget', topic: T, front: 'How is the **budget** presented in a proposal?', back: 'Present the budget **as specified in the RFP**. Add a **budget justification section**: state in paragraph form the rationale for the financial figures shown in tabular, graphical or chart format — salaries and wages, capital equipment, travel, consultants etc.', src: S5 },
     { id: 'c-proposal-appendices', topic: T, front: 'Advice on **appendices** of a proposal.', back: 'Appendices: graphs, tables, letters of support and endorsement, list of references. Some reviewers read them **last, if at all**; additional bulk could produce a **negative reaction**. **When in doubt, leave it out.**', src: S5 },
     { id: 'c-rfp-who', topic: T, front: 'Who sends a **request for proposal (RFP)**, and to whom?', back: 'A **government, company, agency or individual** may send an RFP to **outside vendors who they feel are qualified** to complete a given project.', src: S5 },
-
-    // business messages
-    { id: 'c-msg-goodwill', topic: T, front: 'Whatever the purpose, how must a business message be transmitted?', back: '**Clearly**, and **simultaneously creating goodwill**.', src: S8 },
-    { id: 'c-msg-principles', topic: T, front: 'What must you know when writing to a business, organization, or country?', back: 'The **communication principles** of the organization, business, or country.', seen: ['Jan 2021'], src: S8 },
-    { id: 'c-msg-disorganized', topic: T, front: 'Why organize a message — what do disorganized messages look like?', back: 'Organization (ordering of ideas) is **as important as the ideas themselves**; first step: **outline the message on paper before writing the draft**. Disorganized messages look **careless, unimportant, confusing**.', src: S8 },
-    { id: 'c-msg-direct', topic: T, front: 'When is the **direct (deductive)** approach used, and how does it run?', back: 'When you think the receiver will have a **favorable or neutral reaction**. **Begin with the main ideas or best news** → after the opening, all necessary **explanatory details** in one or several paragraphs → end with an appropriate **friendly closing**. Situations: **direct request**, **good news**.', src: S8 },
-    { id: 'c-msg-indirect', topic: T, front: 'When is the **indirect (inductive)** approach used?', back: 'Two situations: a **persuasive request** (needs extensive persuasion and convincing — attention-getting statements; make clear the what, why, how, where and when) and **bad news** (deny requests, announce unfavorable or negative information — the reader may react negatively).', src: S8 },
-    { id: 'c-msg-proofreading', topic: T, front: 'Why **proofread** a message?', back: 'To ensure there are **no errors** — even minor errors can **reduce the effectiveness** of the message and **undermine credibility**.', src: S8 },
 
     // abstract
     { id: 'c-abstract-define', topic: T, front: 'What is **abstraction**, and why is it necessary?', back: '**Focusing on some details and omitting others.** Facts pertinent to the problem are selected due to **limitations of time, space, purpose** — so it is necessary and desirable.', seen: ['2022-23', '2020-21', '2017-18', '2016-17', '2014-15', '2012-13', '2011-12'], src: `${S2}; “necessary and desirable” from the 18-batch solve` },
@@ -1314,92 +1137,6 @@ A cover letter or cover memorandum with five parts: **authorization**, **transmi
       keys: ['extension of a short report', 'Prefatory part', 'Main body', 'Back matter', 'frontispiece', 'glossary', 'First step', 'writing first draft', 'editing, revising draft', 'type the document', 'authorization', 'transmittal details', 'background and methodology', 'highlights', 'courteous ending'],
       lists: ['l-report-long-structure', 'l-long-prefatory', 'l-long-back', 'l-long-prep-steps', 'l-report-steps', 'l-transmittal-parts', 'l-report-title-5w', 'l-report-exec-summary'],
       src: `${S6}. Half of the report slides, never asked yet (Rahat’s note marks it a likely new question).`,
-    },
-    {
-      id: 'a-writing-business-messages',
-      topic: T,
-      q: 'What are the planning steps for preparing effective business messages? Describe the issues to consider when analysing your audience.',
-      seen: ['Jan 2021'],
-      a: `### Planning steps
-The planning steps for preparing effective business messages are given below:
-1. **Identifying purpose** — to provide information, to persuade, to negotiate, to refuse a request; the message must be transmitted clearly, simultaneously creating goodwill.
-2. **Analyzing audience**
-3. **Choosing ideas** — list ideas as they come; choose ideas likely to get a desired response; they depend on the type of message, background of the receiver and location of receiver.
-4. **Collecting data to support ideas** — facts, figures, quotations, any evidence; check and verify names of individuals, dates, addresses, statistics.
-5. **Organizing the message** — ordering of ideas; outline the message on paper before writing the draft; disorganized messages look careless, unimportant, confusing.
-
-### Issues to consider when analyzing the audience
-**1.** To get the **desired response** from the receiver of the message, the message must be adapted to the receiver’s **views, attitudes, needs, culture**.
-
-**2.** The following aspects of the receiver of a message must be analyzed when sending a message:
-- **Professional background**
-- **Position in the company**
-- **Gender** (sex)
-- **Age**
-- **Educational level**
-- **Knowledge, attitude, cultural values**
-
-**3.** When writing to a business, organization, or country, it is essential to know the **communication principles** of the organization, business, or country.`,
-      keys: ['Identifying purpose', 'Analyzing audience', 'Choosing ideas', 'Collecting data to support ideas', 'Organizing the message', 'desired response', 'views, attitudes, needs, culture', 'Professional background', 'Position in the company', 'Gender', 'Educational level', 'Knowledge, attitude, cultural values', 'communication principles'],
-      lists: ['l-msg-planning', 'l-msg-purposes', 'l-msg-adapt', 'l-msg-audience'],
-      src: `${S8}; ${SH} (Jan 2021 Q4a: 5 + 12 marks)`,
-    },
-    {
-      id: 'a-writing-deductive-inductive',
-      topic: T,
-      q: 'Describe the deductive and inductive approach in organizing a message.',
-      seen: [],
-      a: `Fundamentally, two types of organizational plans or approaches are used when composing a business message.
-
-### 1. Direct or deductive approach
-- Used when you think the receiver will have a **favorable or neutral reaction** to your message.
-- **Begin with the main ideas or best news**.
-- After the opening, include all necessary **explanatory details** in one or several paragraphs.
-- End with an appropriate **friendly closing**.
-- Two situations: **direct request** (the request by its very nature requires little persuasion) and **good news** (grant requests; announce favorable or neutral information; exchange routine information between companies).
-
-### 2. Indirect or inductive approach
-Two situations:
-- **Persuasive request** — the request by its very nature would require extensive persuasion and convincing; use **attention-getting statements** to induce the receiver to read further; make clear the what, why, how, where and when of the request.
-- **Bad news** — used to deny requests and announce unfavorable or negative information; difficult to prepare as the reader may react negatively.
-
-| Point | Direct / deductive | Indirect / inductive |
-|---|---|---|
-| Receiver’s expected reaction | Favorable or neutral | Negative, or needs persuasion |
-| Main idea placed | At the beginning | After the explanation / reasons |
-| Used for | Direct requests, good news | Persuasive requests, bad news |
-
-### Beginnings and endings
-Main favorable ideas are generally placed at the beginning and the end of the message; the ending should focus on the desired action, leave a sense of goodwill, show appreciation and offer to help further.`,
-      keys: ['Direct or deductive', 'favorable or neutral reaction', 'Begin with the main ideas or best news', 'explanatory details', 'friendly closing', 'direct request', 'good news', 'Indirect or inductive', 'Persuasive request', 'attention-getting statements', 'Bad news'],
-      lists: ['l-msg-approach', 'l-msg-direct-plan', 'l-msg-direct-situations', 'l-msg-indirect-situations', 'l-msg-beginnings-endings'],
-      src: `${S8}; the comparison table is from Rahat’s note. Not in our 12 papers — asked 2010-11 Q3(b) (Rahat’s question list).`,
-    },
-    {
-      id: 'a-writing-composing',
-      topic: T,
-      q: 'Describe the steps of composing a business message (drafting, revising, editing, proofreading).',
-      seen: [],
-      a: `### 1. Drafting the message
-After completing the planning steps, get the whole message on paper: the **first draft**.
-
-### 2. Revising the message
-Evaluate **content, organization, and style** of the draft. Follow these steps when revising:
-- Does the message accomplish its purpose?
-- Is the organizational plan effective?
-- Are points supported by adequate material?
-- Is language complete, concise, considerate, concrete, clear, and courteous?
-- Is there variety in sentence structure?
-- Delete unnecessary material and include additional material if needed.
-
-### 3. Editing the message
-Check all paragraphs for: good **topic sentences**; sound sentence structure; correct **grammar**; spelling; **punctuation**; effectiveness of the message.
-
-### 4. Proofreading the message
-Ensure there are **no errors** in the message — even minor errors can reduce the effectiveness of the message and **undermine credibility**.`,
-      keys: ['Drafting', 'first draft', 'Revising', 'content, organization, and style', 'accomplish its purpose', 'Editing', 'topic sentences', 'grammar', 'punctuation', 'Proofreading', 'no errors', 'undermine credibility'],
-      lists: ['l-msg-composing', 'l-msg-revising', 'l-msg-editing'],
-      src: `${S8}. On this term’s slides, not asked yet.`,
     },
   ],
 } satisfies PcTopicContent
