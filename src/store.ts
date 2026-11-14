@@ -84,7 +84,7 @@ export interface Attempt {
   correct: boolean
   firstTry: boolean
   at: number
-  /** wiped by a "Clear all": counts as never tried (kept as a record so the clear survives syncing) */
+  /** wiped by the short-lived "Clear all" of 14 Nov: reads as never tried (such records may still be saved) */
   cleared?: boolean
 }
 
@@ -146,8 +146,6 @@ interface State {
   setBmdSide(s: 'compression' | 'tension'): void
   setRotSign(s: 'cw' | 'ccw'): void
   record(id: string, correct: boolean, topic?: string): Attempt
-  /** forget these checks' results (they read as never tried again; xp already earned stays) */
-  clearAttempts(ids: string[]): void
   reveal(id: string): void
   setPlanner(p: PlannerState): void
   setPlanner315(p: PlannerState): void
@@ -226,12 +224,6 @@ export const useStore = create<State>()(
           activity: { ...get().activity, [t]: (get().activity[t] ?? 0) + 1 },
         })
         return a
-      },
-      clearAttempts(ids) {
-        const now = Date.now()
-        const attempts = { ...get().attempts }
-        for (const id of ids) if (attempts[id] && !attempts[id].cleared) attempts[id] = { tries: 0, correct: false, firstTry: false, at: now, cleared: true }
-        set({ attempts })
       },
       reveal: (id) => set({ revealed: { ...get().revealed, [id]: true } }),
       setPlanner: (planner) => set({ planner, stamps: stamp(get().stamps, 'planner') }),

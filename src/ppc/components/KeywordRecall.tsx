@@ -37,19 +37,6 @@ export function KeywordRecall({ lists, showTopic = false }: { lists: PcList[]; s
   const attempts = useStore((s) => s.attempts)
   const firstOpen = () => sorted.find((l) => !useStore.getState().attempts[key(l)]?.correct)?.id ?? sorted[0]?.id ?? ''
   const [id, setId] = useState(firstOpen)
-  const [round, setRound] = useState(0)
-  const clearAttempts = useStore((s) => s.clearAttempts)
-  const tried = sorted.filter((l) => attempts[key(l)] && !attempts[key(l)].cleared).length
-  const clearAll = () => {
-    if (!tried) return
-    const ok = window.confirm(
-      `Clear your keyword-recall results for these ${sorted.length} lists?\n\nThe ● / ◐ marks and the “recalled in full” count go back to zero, and the list you are on starts over. Flashcards are not affected.`,
-    )
-    if (!ok) return
-    clearAttempts(sorted.map(key))
-    setRound((r) => r + 1)
-    setId(sorted[0]?.id ?? '')
-  }
   useEffect(() => setId(firstOpen()), [sorted]) // eslint-disable-line react-hooks/exhaustive-deps
   const list = sorted.find((l) => l.id === id)
   const next = () => {
@@ -68,16 +55,8 @@ export function KeywordRecall({ lists, showTopic = false }: { lists: PcList[]; s
         <span className="text-xs text-mute">
           <b className="num text-ink">{sorted.filter((l) => attempts[key(l)]?.correct).length}</b>/{sorted.length} lists recalled in full at least once
         </span>
-        <button
-          className="btn !py-1 !text-xs ml-auto text-bad hover:!border-bad/60 disabled:opacity-40 disabled:pointer-events-none"
-          onClick={clearAll}
-          disabled={!tried}
-          title={tried ? `Forget the results of the ${tried} list${tried === 1 ? '' : 's'} you have tried here` : 'Nothing to clear yet'}
-        >
-          ⟲ Clear all
-        </button>
       </div>
-      <Recall key={`${list.id}:${round}`} list={list} showTopic={showTopic} onNext={next} />
+      <Recall key={list.id} list={list} showTopic={showTopic} onNext={next} />
     </div>
   )
 }
@@ -127,6 +106,15 @@ function Recall({ list, showTopic, onNext }: { list: PcList; showTopic: boolean;
     }
     setText('')
     if (got.size === n) finish(got)
+    inp.current?.focus()
+  }
+
+  // start this list again: empty slots, no misses, no letter hints, nothing typed (nothing is recorded)
+  const clearCurrent = () => {
+    setFound(new Map())
+    setMisses([])
+    setHints(0)
+    setText('')
     inp.current?.focus()
   }
 
@@ -204,7 +192,15 @@ function Recall({ list, showTopic, onNext }: { list: PcList; showTopic: boolean;
             <button className="btn !py-0.5 !text-xs" onClick={() => setHints((h) => Math.min(h + 1, 3))} disabled={hints >= 3}>
               {hints ? 'More letters' : 'First letters'}
             </button>
-            <button className="btn !py-0.5 !text-xs ml-auto" onClick={() => finish(found)}>
+            <button
+              className="btn !py-0.5 !text-xs ml-auto disabled:opacity-40 disabled:pointer-events-none"
+              onClick={clearCurrent}
+              disabled={!found.size && !misses.length && !hints && !text}
+              title="Empty this list’s slots and start it again (your other lists are not touched)"
+            >
+              ⟲ Clear all
+            </button>
+            <button className="btn !py-0.5 !text-xs" onClick={() => finish(found)}>
               I’m stuck — show the rest
             </button>
           </div>
