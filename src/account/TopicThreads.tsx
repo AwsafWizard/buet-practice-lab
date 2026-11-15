@@ -1,5 +1,4 @@
-// Admin threads inside the course: on a topic page (its Overview tab, or CE 301's Threads tab)
-// and the course-wide ones on the course overview.
+// Admin threads inside the course: on a topic page (its Overview tab) and the course-wide ones on the course overview.
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CLOUD } from '../cloud'

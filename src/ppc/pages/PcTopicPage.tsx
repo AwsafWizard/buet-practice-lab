@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useAccount } from '../../account/api'
-import { TopicThreads, useTopicThreads } from '../../account/TopicThreads'
-import { CLOUD } from '../../cloud'
+import { useTopicThreads } from '../../account/TopicThreads'
 import { Boundary } from '../../components/QuestionCard'
 import { Ring, Tabs } from '../../components/ui'
 import { useStore } from '../../store'
@@ -12,12 +10,15 @@ import { KeywordSheet, TopicLab } from '../components/LabPanel'
 import { PcQuestionCard } from '../components/PcQuestionCard'
 import { answersFor, deckFor, listsFor } from '../content'
 import { pcQForTopic } from '../pyq'
+import { PcTopicOverview } from './PcTopicOverview'
 import { PC_BLOCK_LABEL, pcTopicById } from '../registry'
 
-type Tab = 'lab' | 'sheet' | 'answers' | 'pyq' | 'threads'
+type Tab = 'overview' | 'lab' | 'sheet' | 'answers' | 'pyq'
 
 export default function PcTopicPage() {
-  const { id = 'pc-law', tab = 'lab' } = useParams()
+  const { id = 'pc-law', tab: rawTab = 'overview' } = useParams()
+  // the old Threads tab is now part of the Overview
+  const tab = (rawTab === 'threads' ? 'overview' : rawTab) as Tab
   const nav = useNavigate()
   const meta = pcTopicById(id)
   const cards = useStore((s) => s.cards)
@@ -26,9 +27,6 @@ export default function PcTopicPage() {
   const nLists = listsFor(id).length
   const nAns = answersFor(id).length
   const threads = useTopicThreads(id)
-  const { admin } = useAccount()
-  // CE 301 topics have no Overview tab, so the admins' posts get a tab of their own (when there are any, or for admins)
-  const showThreads = CLOUD && (threads.list.length > 0 || admin)
   if (!meta) return <div>Unknown topic</div>
   const known = deck.filter((c) => (cards[c.id]?.box ?? 0) >= 4).length
   const seen = deck.filter((c) => cards[c.id]).length
@@ -60,19 +58,11 @@ export default function PcTopicPage() {
       </div>
       <div className="mb-5 sticky top-14 z-10 py-2 -mx-1 px-1 bg-bg/85 backdrop-blur">
         <Tabs<Tab>
-          value={tab as Tab}
+          value={tab}
           onChange={setTab}
           items={[
-            // the admins' posts come first, before the Lab
-            ...(showThreads
-              ? [
-                  {
-                    v: 'threads' as Tab,
-                    label: '💬 Threads',
-                    badge: <span className={'chip !py-0 num ' + (threads.fresh ? '!border-accent !text-accent' : '')}>{threads.fresh ? `${threads.fresh} new` : threads.list.length}</span>,
-                  },
-                ]
-              : []),
+            // the Overview holds the admins' threads for this topic, like the other courses
+            { v: 'overview', label: 'Overview', badge: threads.fresh ? <span className="chip !py-0 num !border-accent !text-accent">💬 {threads.fresh} new</span> : null },
             { v: 'lab', label: '🧠 Lab' },
             { v: 'sheet', label: 'Keyword sheet', badge: <span className="chip !py-0 num">{nLists}</span> },
             { v: 'answers', label: 'Model answers', badge: <span className="chip !py-0 num">{nAns}</span> },
@@ -80,18 +70,18 @@ export default function PcTopicPage() {
           ]}
         />
       </div>
-      {threads.fresh > 0 && tab !== 'threads' && (
-        <button className="w-full mb-4 card px-4 py-2.5 flex items-center gap-2 text-sm text-left border-accent/60 hover:border-accent" onClick={() => setTab('threads')}>
+      {threads.fresh > 0 && tab !== 'overview' && (
+        <button className="w-full mb-4 card px-4 py-2.5 flex items-center gap-2 text-sm text-left border-accent/60 hover:border-accent" onClick={() => setTab('overview')}>
           💬 <b>{threads.fresh} new</b> from the admins for this topic
           <span className="ml-auto text-accent">Open →</span>
         </button>
       )}
       <Boundary label={tab}>
+        {tab === 'overview' && <PcTopicOverview topic={id} go={setTab} />}
         {tab === 'lab' && <TopicLab topic={id} />}
         {tab === 'sheet' && <KeywordSheet topic={id} />}
         {tab === 'answers' && <AnswerList answers={answersFor(id)} />}
         {tab === 'pyq' && <PYQList topic={id} />}
-        {tab === 'threads' && <TopicThreads topic={id} variant="tab" />}
       </Boundary>
     </div>
   )
