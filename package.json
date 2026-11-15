@@ -16,9 +16,11 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.109.0",
     "@vercel/analytics": "^2.0.1",
+    "dompurify": "^3.4.18",
     "html2canvas-pro": "^2.5.0",
     "jspdf": "^4.2.1",
     "katex": "^0.16.47",
+    "marked": "^18.2.0",
     "motion": "^12.43.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",

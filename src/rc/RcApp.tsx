@@ -2,6 +2,7 @@
 
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
+import { accountRoutes, useAccountLinks } from '../account/nav'
 import { Header, SidebarFooter } from '../App'
 import { RailSidebar } from '../components/RailSidebar'
 import { Ring } from '../components/ui'
@@ -61,6 +62,7 @@ export default function RcApp() {
               <Route path="/ce315/q/:qid" element={<RcQuestionPage />} />
               <Route path="/ce315/theory" element={<RcTheoryBank />} />
               <Route path="/ce315/time" element={<ScreenTime />} />
+              {accountRoutes('ce315')}
               <Route path="*" element={<RcOverview />} />
             </Routes>
           </Suspense>
@@ -75,6 +77,7 @@ export default function RcApp() {
 }
 
 function RcSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const accountLinks = useAccountLinks('ce315')
   const qStatus = useStore((s) => s.qStatus)
   const glyph = (g: string) => <span className="text-center">{g}</span>
   const stats = (id: string) => {
@@ -91,6 +94,7 @@ function RcSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
         { to: '/ce315/papers', icon: glyph('▤'), label: 'Past papers & mocks', title: 'Past papers & mocks' },
         { to: '/ce315/theory', icon: glyph('✎'), label: 'Theory bank', title: 'Theory bank' },
         { to: '/ce315/time', icon: glyph('⏱'), label: 'Screen time', title: 'Screen time' },
+        ...accountLinks,
       ]}
       groups={(['A', 'B'] as const).map((sec) => ({
         label: RC_SECTION_LABEL[sec],

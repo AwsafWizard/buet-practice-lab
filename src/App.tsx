@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { Route, Routes, useLocation } from 'react-router-dom'
+import { Link, Route, Routes, useLocation } from 'react-router-dom'
+import { accountRoutes, useAccountLinks } from './account/nav'
 import { CodeDrawer, usePageGroup } from './components/CodeDrawer'
 import { CoursePicker, rememberCourseRoute } from './components/CoursePicker'
 import { RailSidebar } from './components/RailSidebar'
@@ -9,7 +10,8 @@ import { ALL_PYQ } from './pyq'
 import { useDrawer } from './reference/drawer'
 import { exportState, useStore } from './store'
 import { ARTIFACT, useSyncStatus, type SyncStatus } from './sync'
-import { CLOUD, sendMagicLink, signOut, useCloudUser } from './cloud'
+import { CLOUD, signOut, useCloudUser } from './cloud'
+import { accountPath, useAccount, type Course } from './account/api'
 import { SECTION_LABEL, TOPICS } from './topics/registry'
 import { TopicIcon } from './topics/icons'
 import { EXAM_DATE } from './pages/planner/template'
@@ -20,6 +22,7 @@ const Papers = lazy(() => import('./pages/Papers'))
 const Formulas = lazy(() => import('./pages/Formulas'))
 const QuestionPage = lazy(() => import('./pages/QuestionPage'))
 const ScreenTime = lazy(() => import('./pages/ScreenTime'))
+const HomeAccount = lazy(() => import('./account/HomeAccount'))
 
 const RcApp = lazy(() => import('./rc/RcApp'))
 const SmApp = lazy(() => import('./soil/SmApp'))
@@ -27,7 +30,7 @@ const PcApp = lazy(() => import('./ppc/PcApp'))
 
 export type CourseKey = 'home' | 'ce311' | 'ce315' | 'ce341' | 'ce301'
 export const courseOf = (pathname: string): CourseKey =>
-  pathname === '/' ? 'home' : pathname.startsWith('/ce315') ? 'ce315' : pathname.startsWith('/ce341') ? 'ce341' : pathname.startsWith('/ce301') ? 'ce301' : 'ce311'
+  pathname === '/' || pathname === '/account' ? 'home' : pathname.startsWith('/ce315') ? 'ce315' : pathname.startsWith('/ce341') ? 'ce341' : pathname.startsWith('/ce301') ? 'ce301' : 'ce311'
 
 export default function App() {
   const theme = useStore((s) => s.theme)
@@ -38,7 +41,7 @@ export default function App() {
   }, [theme])
   useEffect(() => {
     document.documentElement.dataset.course = course
-    document.title = course === 'home' ? 'Practice Lab' : `CE ${course.slice(2)} Practice Lab`
+    document.title = course === 'home' ? (loc.pathname === '/account' ? 'Account · Practice Lab' : 'Practice Lab') : `CE ${course.slice(2)} Practice Lab`
   }, [course])
   useEffect(() => {
     window.scrollTo({ top: 0 })
@@ -46,7 +49,7 @@ export default function App() {
   }, [loc.pathname, course])
   return (
     <Suspense fallback={<div className="text-mute p-10">Loading…</div>}>
-      {course === 'home' ? <CoursePicker /> : course === 'ce315' ? <RcApp /> : course === 'ce341' ? <SmApp /> : course === 'ce301' ? <PcApp /> : <Ce311App />}
+      {course === 'home' ? loc.pathname === '/account' ? <HomeAccount /> : <CoursePicker /> : course === 'ce315' ? <RcApp /> : course === 'ce341' ? <SmApp /> : course === 'ce301' ? <PcApp /> : <Ce311App />}
     </Suspense>
   )
 }
@@ -79,6 +82,7 @@ function Ce311App() {
               <Route path="/q/:qid" element={<QuestionPage />} />
               <Route path="/formulas" element={<Formulas />} />
               <Route path="/time" element={<ScreenTime />} />
+              {accountRoutes('ce311')}
               <Route path="*" element={<Overview />} />
             </Routes>
           </Suspense>
@@ -102,6 +106,7 @@ export function Ce311Logo({ size = 30 }: { size?: number }) {
 }
 
 function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const accountLinks = useAccountLinks('ce311')
   const qStatus = useStore((s) => s.qStatus)
   const groups: ('B' | 'A' | 'X')[] = ['B', 'A', 'X']
   // ring = share of this topic's term-final questions marked solved
@@ -120,6 +125,7 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
         { to: '/papers', icon: glyph('▤'), label: 'Past papers & mocks', title: 'Past papers & mocks' },
         { to: '/formulas', icon: glyph('∑'), label: 'Formulas & tables', title: 'Formulas & tables' },
         { to: '/time', icon: glyph('⏱'), label: 'Screen time', title: 'Screen time' },
+        ...accountLinks,
       ]}
       groups={groups.map((g) => ({
         label: SECTION_LABEL[g],
@@ -208,7 +214,7 @@ export function SidebarFooter({ course }: { course: 'ce311' | 'ce315' | 'ce341' 
       </>
       )}
       {ARTIFACT && <SyncLine />}
-      {CLOUD && <CloudLine />}
+      {CLOUD && <CloudLine course={course} />}
       <div className="flex gap-2">
         <button className="btn !py-0.5 !px-2 !text-xs flex-1 justify-center" onClick={download}>
           ⤓ Export progress
@@ -230,20 +236,20 @@ const SYNC_TEXT: Record<SyncStatus, [string, string]> = {
   error: ['text-bad', 'Sync failed, saved on this device'],
 }
 
-/** public build: sign in by email link to sync progress across devices; works without an account too */
-function CloudLine() {
+/** public build: who is signed in (and their role) or a Sign in button; both open the Account page */
+function CloudLine({ course }: { course: Course }) {
   const user = useCloudUser()
+  const { admin } = useAccount()
   const [cls, text] = SYNC_TEXT[useSyncStatus()]
-  const [open, setOpen] = useState(false)
-  const [email, setEmail] = useState('')
-  const [msg, setMsg] = useState<string | null>(null)
+  const to = accountPath(course)
   if (user)
     return (
       <div className="space-y-1">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-mute truncate" title={user.email}>
-            {user.email}
-          </span>
+          <Link to={to} className="text-mute hover:text-ink truncate" title={user.email}>
+            👤 <span className="num">{user.email.split('@')[0]}</span>
+            {admin && <span className="text-accent font-semibold"> · admin</span>}
+          </Link>
           <button className="btn !py-0.5 !px-2 !text-xs" onClick={() => void signOut()}>
             Sign out
           </button>
@@ -251,37 +257,13 @@ function CloudLine() {
         <div className={'text-right ' + cls}>{text}</div>
       </div>
     )
-  if (!open)
-    return (
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-faint">Saved on this device</span>
-        <button className="btn !py-0.5 !px-2 !text-xs" onClick={() => setOpen(true)} title="Sync your progress across devices">
-          Sign in
-        </button>
-      </div>
-    )
   return (
-    <form
-      className="space-y-1.5"
-      onSubmit={async (e) => {
-        e.preventDefault()
-        setMsg('Sending…')
-        const err = await sendMagicLink(email.trim())
-        setMsg(err ? `Could not send: ${err}` : 'Check your email for the sign-in link.')
-      }}
-    >
-      <div className="text-mute">Sign in to sync across devices. No password: we email you a link.</div>
-      <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="w-full rounded-md border border-line bg-panel px-2 py-1 text-xs" />
-      <div className="flex gap-2">
-        <button type="submit" className="btn btn-primary !py-0.5 !px-2 !text-xs flex-1 justify-center">
-          Email me a link
-        </button>
-        <button type="button" className="btn !py-0.5 !px-2 !text-xs" onClick={() => (setOpen(false), setMsg(null))}>
-          Cancel
-        </button>
-      </div>
-      {msg && <div className="text-faint">{msg}</div>}
-    </form>
+    <div className="flex items-center justify-between gap-2">
+      <span className="text-faint">Saved on this device</span>
+      <Link to={to} className="btn !py-0.5 !px-2 !text-xs" title="Sign in with your BUET CE mail to sync across devices">
+        Sign in
+      </Link>
+    </div>
   )
 }
 

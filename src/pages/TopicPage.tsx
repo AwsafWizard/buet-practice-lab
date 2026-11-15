@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { TopicThreads } from '../account/TopicThreads'
 import { Boundary, QuestionCard } from '../components/QuestionCard'
 import { Ring, Tabs } from '../components/ui'
 import { pyqForTopic } from '../pyq'
@@ -66,7 +67,12 @@ export default function TopicPage() {
         <div className="text-mute">Loading topic…</div>
       ) : (
         <Boundary label={tab}>
-          {tab === 'overview' && <mod.Overview />}
+          {tab === 'overview' && (
+            <>
+              <TopicThreads topic={id} />
+              <mod.Overview />
+            </>
+          )}
           {tab === 'approach' && <mod.Approach />}
           {tab === 'lab' && <mod.Lab />}
           {tab === 'pyq' && <PYQList topic={id} />}

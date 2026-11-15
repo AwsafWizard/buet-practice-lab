@@ -12,6 +12,9 @@ import { EXAM_DATE } from '../pages/planner/template'
 import { today, useStore } from '../store'
 import { Ring } from './ui'
 import buetLogo from '../assets/buet-logo.svg'
+import { CLOUD, useCloudUser } from '../cloud'
+import { accountPath, COURSE_NAME, coursePath, isNew, useAccount, useThreads, type Course as CourseKey } from '../account/api'
+import { mdPreview } from '../account/preview'
 
 interface Course {
   key: 'ce311' | 'ce315' | 'ce341' | 'ce301'
@@ -169,6 +172,7 @@ export function CoursePicker() {
               <button className="btn !py-1 !px-2.5 !text-xs" onClick={() => setTheme(dark ? 'light' : 'dark')}>
                 {dark ? '☾ Dark' : '☀ Light'}
               </button>
+              <AccountChip />
             </div>
           </div>
 
@@ -178,6 +182,8 @@ export function CoursePicker() {
             <Stat label="Streak" value={`🔥 ${streak.count}`} />
             <Stat label={`Level ${Math.floor(xp / 200) + 1}`} value={`${xp} XP`} />
           </div>
+
+          <LatestThreads fallback={courses[0].key} />
 
           <div className="grid gap-5 [grid-template-columns:repeat(auto-fill,minmax(290px,1fr))]">
             {courses.map((c) => {
@@ -259,6 +265,55 @@ function Stat({ label, value }: { label: string; value: string }) {
     <div className="rounded-xl border border-line bg-panel/70 backdrop-blur-sm px-3 py-1.5">
       <span className="text-mute text-xs mr-1.5">{label}</span>
       <b className="num">{value}</b>
+    </div>
+  )
+}
+
+/** signed in: your ID (and admin star); signed out: Sign in. Opens the Account page in the start page's look. */
+function AccountChip() {
+  const user = useCloudUser()
+  const { admin } = useAccount()
+  return (
+    <Link to={accountPath()} className={'btn !py-1 !px-2.5 !text-xs ' + (user ? '' : 'btn-primary')} title={user ? user.email : 'Sign in with your BUET CE mail'}>
+      {user ? (
+        <>
+          👤 <span className="num">{user.email.split('@')[0]}</span>
+          {admin && <span className="text-accent">★</span>}
+        </>
+      ) : CLOUD ? (
+        'Sign in'
+      ) : (
+        '👤 Account'
+      )}
+    </Link>
+  )
+}
+
+/** newest threads from every course, so announcements are seen from the start page */
+function LatestThreads({ fallback }: { fallback: CourseKey }) {
+  const s = useThreads()
+  if (s.status !== 'ready' || s.threads.length === 0) return null
+  const latest = [...s.threads].sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.updated_at.localeCompare(a.updated_at)).slice(0, 3)
+  return (
+    <div className="mb-8">
+      <div className="text-[11px] uppercase tracking-wider text-faint font-bold mb-2">From the admins</div>
+      <div className="grid gap-2.5 [grid-template-columns:repeat(auto-fill,minmax(290px,1fr))]">
+        {latest.map((t) => {
+          const c = t.course === 'all' ? fallback : t.course
+          const first = s.posts.find((p) => p.thread_id === t.id)
+          return (
+            <Link key={t.id} to={coursePath(c, `threads/${t.id}`)} className="rounded-xl border border-line bg-panel/80 backdrop-blur-sm px-3.5 py-2.5 hover:border-accent transition-colors">
+              <div className="flex items-center gap-2 text-[11px] text-faint">
+                <span>{t.pinned ? '📌' : '💬'}</span>
+                <span className="font-semibold">{COURSE_NAME[t.course]}</span>
+                {isNew(t, s.seen) && <span className="text-accent font-bold">NEW</span>}
+              </div>
+              <div className="font-bold text-sm truncate">{t.title}</div>
+              {first && <div className="text-xs text-mute truncate">{mdPreview(first.body, 120)}</div>}
+            </Link>
+          )
+        })}
+      </div>
     </div>
   )
 }

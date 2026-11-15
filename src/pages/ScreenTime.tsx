@@ -137,7 +137,7 @@ function useWidth<T extends HTMLElement>() {
   return [ref, w] as const
 }
 
-function DayChart({ days, sec, today, goal, avg }: { days: string[]; sec: (d: string) => number; today: string; goal: number; avg: number }) {
+export function DayChart({ days, sec, today, goal, avg }: { days: string[]; sec: (d: string) => number; today: string; goal: number; avg: number }) {
   const [ref, W] = useWidth<HTMLDivElement>()
   const [hover, setHover] = useState<number | null>(null)
   const H = 240
@@ -323,7 +323,7 @@ function AddDay({ onAdd, onCancel, today }: { onAdd: (d: string, s: number) => v
 }
 
 /** time per course (tracked since the course picker was added; manual day edits are not split) */
-function CourseSplit({ day }: { day: string }) {
+export function CourseSplit({ day }: { day: string }) {
   const log = useStore((s) => s.courseLog) ?? {}
   const sum = (course: string, d?: string) =>
     Object.entries(log)

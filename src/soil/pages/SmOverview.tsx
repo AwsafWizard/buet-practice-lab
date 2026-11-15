@@ -9,6 +9,7 @@ import { SM_EXAM_DATE } from '../plan'
 import { SM_ALL } from '../pyq'
 import { SM_SECTION_LABEL, SM_TOPICS } from '../registry'
 import { SM_PAPERS } from '../types'
+import { CourseThreads } from '../../account/TopicThreads'
 import { TotalCell, TotalHead } from '../../components/TotalCell'
 
 export default function SmOverview() {
@@ -27,6 +28,7 @@ export default function SmOverview() {
 
   return (
     <div>
+      <CourseThreads course="ce341" />
       <div className="grid cq-lg:grid-cols-[1.5fr_1fr] gap-5 mb-5">
         <div className="card p-6 relative overflow-hidden">
           <div className="absolute -right-6 -top-8 opacity-[0.08]">

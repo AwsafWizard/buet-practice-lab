@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { TopicThreads } from '../../account/TopicThreads'
 import { Boundary } from '../../components/QuestionCard'
 import { Ring, Tabs } from '../../components/ui'
 import { topicStats, useStore, type RcTopicId } from '../../store'
@@ -69,7 +70,12 @@ export default function RcTopicPage() {
         <div className="text-mute">Loading topic…</div>
       ) : (
         <Boundary label={tab}>
-          {tab === 'overview' && <mod.Overview />}
+          {tab === 'overview' && (
+            <>
+              <TopicThreads topic={id} />
+              <mod.Overview />
+            </>
+          )}
           {tab === 'approach' && <mod.Approach />}
           {tab === 'lab' && <mod.Lab />}
           {tab === 'theory' && <TheoryList items={mod.theory} />}

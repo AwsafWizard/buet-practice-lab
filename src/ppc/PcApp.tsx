@@ -2,6 +2,7 @@
 
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
+import { accountRoutes, useAccountLinks } from '../account/nav'
 import { Header, SidebarFooter } from '../App'
 import { RailSidebar } from '../components/RailSidebar'
 import { Ring } from '../components/ui'
@@ -53,6 +54,7 @@ export default function PcApp() {
               <Route path="/ce301/q/:qid" element={<PcQuestionPage />} />
               <Route path="/ce301/answers" element={<PcAnswerBank />} />
               <Route path="/ce301/time" element={<ScreenTime />} />
+              {accountRoutes('ce301')}
               <Route path="*" element={<PcOverview />} />
             </Routes>
           </Suspense>
@@ -66,6 +68,7 @@ export default function PcApp() {
 }
 
 function PcSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const accountLinks = useAccountLinks('ce301')
   const cards = useStore((s) => s.cards)
   const glyph = (g: string) => <span className="text-center">{g}</span>
   const known = (id: string) => {
@@ -83,6 +86,7 @@ function PcSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
         { to: '/ce301/papers', icon: glyph('▤'), label: 'Past papers & mocks', title: 'Past papers & mocks' },
         { to: '/ce301/answers', icon: glyph('✎'), label: 'Answer bank', title: 'Answer bank — model answers, most-asked first' },
         { to: '/ce301/time', icon: glyph('⏱'), label: 'Screen time', title: 'Screen time' },
+        ...accountLinks,
       ]}
       groups={(['IA', 'OIA', 'AAN'] as PcBlock[]).map((b) => ({
         label: PC_BLOCK_LABEL[b],

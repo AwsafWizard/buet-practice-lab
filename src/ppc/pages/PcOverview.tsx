@@ -12,6 +12,7 @@ import { PC_EXAM_DATE } from '../plan'
 import { PC_ALL } from '../pyq'
 import { PC_BLOCK_LABEL, PC_TOPICS, pcTopicById, type PcBlock } from '../registry'
 import { PC_PAPERS } from '../types'
+import { CourseThreads } from '../../account/TopicThreads'
 import { TotalCell, TotalHead } from '../../components/TotalCell'
 
 export default function PcOverview() {
@@ -31,6 +32,7 @@ export default function PcOverview() {
 
   return (
     <div>
+      <CourseThreads course="ce301" />
       <div className="grid cq-lg:grid-cols-[1.5fr_1fr] gap-5 mb-5">
         <div className="card p-6 relative overflow-hidden">
           <div className="absolute -right-4 -top-6 opacity-[0.09]" aria-hidden>

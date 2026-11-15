@@ -18,6 +18,13 @@ let stop: (() => void) | null = null
 const subs = new Set<() => void>()
 const emit = () => subs.forEach((f) => f())
 
+/** the signed-in user right now, and a listener for changes (used by the account / role code) */
+export const cloudUser = () => user
+export function onCloudUser(f: () => void) {
+  subs.add(f)
+  return () => void subs.delete(f)
+}
+
 export function useCloudUser() {
   return useSyncExternalStore(
     (f) => (subs.add(f), () => subs.delete(f)),
@@ -25,7 +32,7 @@ export function useCloudUser() {
   )
 }
 
-async function getClient() {
+export async function getClient() {
   if (!client) {
     const { createClient } = await import('@supabase/supabase-js')
     client = createClient(URL_!, KEY!, { auth: { flowType: 'pkce', persistSession: true, detectSessionInUrl: true } })
@@ -89,12 +96,37 @@ export async function startCloud() {
   if (new URLSearchParams(location.search).has('code')) history.replaceState(null, '', location.pathname + location.hash)
 }
 
-/** send a sign-in link; it opens the site root (the course picker's Continue buttons remember where you were) */
-export async function sendMagicLink(email: string) {
+/** "2204080" or "2204080@ce.buet.ac.bd" → the institutional address, or null if it is neither */
+export function buetEmail(input: string): string | null {
+  const v = input.trim().toLowerCase()
+  if (/^[0-9]{7}$/.test(v)) return v + '@ce.buet.ac.bd'
+  return /^[0-9]{7}@ce\.buet\.ac\.bd$/.test(v) ? v : null
+}
+
+function friendly(msg: string) {
+  if (/database error saving new user|studentID@ce\.buet/i.test(msg)) return 'Only studentID@ce.buet.ac.bd accounts can sign in.'
+  if (/rate limit|too many|security purposes/i.test(msg)) return 'Too many sign-in emails just now. Wait a few minutes and try again.'
+  if (/expired|invalid/i.test(msg)) return 'That code is wrong or has expired. Ask for a new email.'
+  return msg
+}
+
+/** send a sign-in email (link + 6-digit code); the link opens the site root (the course picker's Continue buttons remember where you were) */
+export async function sendMagicLink(input: string) {
+  const email = buetEmail(input)
+  if (!email) return 'Use your BUET CE mail: studentID@ce.buet.ac.bd'
   const sb = await getClient()
   // no #route in the redirect: Supabase appends ?code=… to the end of it, which must stay before the hash
   const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + location.pathname } })
-  return error?.message ?? null
+  return error ? friendly(error.message) : null
+}
+
+/** sign in with the code from the email (works on any device, unlike the link, which must open in the same browser) */
+export async function verifyCode(input: string, code: string) {
+  const email = buetEmail(input)
+  if (!email) return 'Use your BUET CE mail: studentID@ce.buet.ac.bd'
+  const sb = await getClient()
+  const { error } = await sb.auth.verifyOtp({ email, token: code.replace(/\s/g, ''), type: 'email' })
+  return error ? friendly(error.message) : null
 }
 
 export async function signOut() {

@@ -9,6 +9,7 @@ import { RC_EXAM_DATE } from '../plan'
 import { RC_ALL } from '../pyq'
 import { RC_SECTION_LABEL, RC_TOPICS } from '../registry'
 import { RC_PAPERS } from '../types'
+import { CourseThreads } from '../../account/TopicThreads'
 import { TotalCell, TotalHead } from '../../components/TotalCell'
 
 export default function RcOverview() {
@@ -27,6 +28,7 @@ export default function RcOverview() {
 
   return (
     <div>
+      <CourseThreads course="ce315" />
       <div className="grid cq-lg:grid-cols-[1.5fr_1fr] gap-5 mb-5">
         <div className="card p-6 relative overflow-hidden">
           <div className="absolute -right-6 -top-8 opacity-[0.08]">

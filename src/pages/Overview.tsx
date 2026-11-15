@@ -8,6 +8,7 @@ import { TopicIcon } from '../topics/icons'
 import { SECTION_LABEL, TOPICS } from '../topics/registry'
 import { BlockChip, Planner, usePlanner } from './planner/Planner'
 import { EXAM_DATE, pack } from './planner/template'
+import { CourseThreads } from '../account/TopicThreads'
 import { TotalCell, TotalHead } from '../components/TotalCell'
 
 export default function Overview() {
@@ -26,6 +27,7 @@ export default function Overview() {
 
   return (
     <div>
+      <CourseThreads course="ce311" />
       <div className="grid cq-lg:grid-cols-[1.5fr_1fr] gap-5 mb-5">
         <div className="card p-6 relative overflow-hidden">
           <div className="absolute -right-10 -top-10 opacity-[0.07]">

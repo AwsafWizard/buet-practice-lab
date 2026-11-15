@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useAccount } from '../../account/api'
+import { TopicThreads, useTopicThreads } from '../../account/TopicThreads'
+import { CLOUD } from '../../cloud'
 import { Boundary } from '../../components/QuestionCard'
 import { Ring, Tabs } from '../../components/ui'
 import { useStore } from '../../store'
@@ -11,7 +14,7 @@ import { answersFor, deckFor, listsFor } from '../content'
 import { pcQForTopic } from '../pyq'
 import { PC_BLOCK_LABEL, pcTopicById } from '../registry'
 
-type Tab = 'lab' | 'sheet' | 'answers' | 'pyq'
+type Tab = 'lab' | 'sheet' | 'answers' | 'pyq' | 'threads'
 
 export default function PcTopicPage() {
   const { id = 'pc-law', tab = 'lab' } = useParams()
@@ -22,6 +25,10 @@ export default function PcTopicPage() {
   const pyqs = useMemo(() => pcQForTopic(id), [id])
   const nLists = listsFor(id).length
   const nAns = answersFor(id).length
+  const threads = useTopicThreads(id)
+  const { admin } = useAccount()
+  // CE 301 topics have no Overview tab, so the admins' posts get a tab of their own (when there are any, or for admins)
+  const showThreads = CLOUD && (threads.list.length > 0 || admin)
   if (!meta) return <div>Unknown topic</div>
   const known = deck.filter((c) => (cards[c.id]?.box ?? 0) >= 4).length
   const seen = deck.filter((c) => cards[c.id]).length
@@ -56,6 +63,16 @@ export default function PcTopicPage() {
           value={tab as Tab}
           onChange={setTab}
           items={[
+            // the admins' posts come first, before the Lab
+            ...(showThreads
+              ? [
+                  {
+                    v: 'threads' as Tab,
+                    label: '💬 Threads',
+                    badge: <span className={'chip !py-0 num ' + (threads.fresh ? '!border-accent !text-accent' : '')}>{threads.fresh ? `${threads.fresh} new` : threads.list.length}</span>,
+                  },
+                ]
+              : []),
             { v: 'lab', label: '🧠 Lab' },
             { v: 'sheet', label: 'Keyword sheet', badge: <span className="chip !py-0 num">{nLists}</span> },
             { v: 'answers', label: 'Model answers', badge: <span className="chip !py-0 num">{nAns}</span> },
@@ -63,11 +80,18 @@ export default function PcTopicPage() {
           ]}
         />
       </div>
+      {threads.fresh > 0 && tab !== 'threads' && (
+        <button className="w-full mb-4 card px-4 py-2.5 flex items-center gap-2 text-sm text-left border-accent/60 hover:border-accent" onClick={() => setTab('threads')}>
+          💬 <b>{threads.fresh} new</b> from the admins for this topic
+          <span className="ml-auto text-accent">Open →</span>
+        </button>
+      )}
       <Boundary label={tab}>
         {tab === 'lab' && <TopicLab topic={id} />}
         {tab === 'sheet' && <KeywordSheet topic={id} />}
         {tab === 'answers' && <AnswerList answers={answersFor(id)} />}
         {tab === 'pyq' && <PYQList topic={id} />}
+        {tab === 'threads' && <TopicThreads topic={id} variant="tab" />}
       </Boundary>
     </div>
   )
