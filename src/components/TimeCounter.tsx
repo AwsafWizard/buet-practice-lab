@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
+import { courseOf } from '../App'
+import { coursePath } from '../account/api'
 import { dayRange, fmtClock, fmtShort, setPaused, shiftDay, useTimer } from '../timer'
 
 /** header pill: time on the site today, ticking live; click for session / week / total */
 export function TimeCounter() {
   const t = useTimer()
+  const course = courseOf(useLocation().pathname)
   const [open, setOpen] = useState(false)
   const box = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -74,7 +77,7 @@ export function TimeCounter() {
           </div>
           <div className="flex gap-2 mt-3">
             <PauseButton paused={t.paused} className="flex-1" />
-            <Link to="/time" onClick={() => setOpen(false)} className="btn !text-xs flex-1 justify-center">
+            <Link to={coursePath(course === 'home' ? 'ce311' : course, 'time')} onClick={() => setOpen(false)} className="btn !text-xs flex-1 justify-center">
               Details →
             </Link>
           </div>

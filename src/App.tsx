@@ -8,9 +8,9 @@ import { TimeCounter } from './components/TimeCounter'
 import { Ring } from './components/ui'
 import { ALL_PYQ } from './pyq'
 import { useDrawer } from './reference/drawer'
-import { exportState, useStore } from './store'
+import { useStore } from './store'
 import { ARTIFACT, useSyncStatus, type SyncStatus } from './sync'
-import { CLOUD, signOut, useCloudUser } from './cloud'
+import { CLOUD, useCloudUser } from './cloud'
 import { accountPath, useAccount, type Course } from './account/api'
 import { SECTION_LABEL, TOPICS } from './topics/registry'
 import { TopicIcon } from './topics/icons'
@@ -124,7 +124,6 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
         { to: '/ce311', icon: glyph('◎'), label: 'Overview & plan', title: 'Overview & plan', end: true },
         { to: '/papers', icon: glyph('▤'), label: 'Past papers & mocks', title: 'Past papers & mocks' },
         { to: '/formulas', icon: glyph('∑'), label: 'Formulas & tables', title: 'Formulas & tables' },
-        { to: '/time', icon: glyph('⏱'), label: 'Screen time', title: 'Screen time' },
         ...accountLinks,
       ]}
       groups={groups.map((g) => ({
@@ -153,50 +152,15 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   )
 }
 
-type ArtifactWindow = {
-  claude?: { use(name: 'downloads'): Promise<{ save(r: { filename: string; data: string }): Promise<unknown> } | null> }
-}
-
+/** sidebar footer: CE 311's drawing conventions, and the phone Artifact's sync line. Theme, account and backups live in the header / Account page. */
 export function SidebarFooter({ course }: { course: 'ce311' | 'ce315' | 'ce341' | 'ce301' }) {
-  const theme = useStore((s) => s.theme)
-  const setTheme = useStore((s) => s.setTheme)
   const side = useStore((s) => s.bmdSide)
   const setSide = useStore((s) => s.setBmdSide)
   const rotSign = useStore((s) => s.rotSign)
   const setRotSign = useStore((s) => s.setRotSign)
-  const importState = useStore((s) => s.importState)
-  const download = async () => {
-    const filename = `${course}-progress-${new Date().toISOString().slice(0, 10)}.json`
-    if (ARTIFACT) {
-      // the Artifact viewer blocks plain downloads; its save prompt asks the viewer first
-      const downloads = await (window as unknown as ArtifactWindow).claude?.use('downloads')
-      await downloads?.save({ filename, data: exportState() }).catch(() => {})
-      return
-    }
-    const blob = new Blob([exportState()], { type: 'application/json' })
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
-    a.download = filename
-    a.click()
-  }
-  const upload = () => {
-    const inp = document.createElement('input')
-    inp.type = 'file'
-    inp.accept = 'application/json'
-    inp.onchange = async () => {
-      const f = inp.files?.[0]
-      if (f) importState(await f.text())
-    }
-    inp.click()
-  }
+  if (course !== 'ce311' && !ARTIFACT) return null
   return (
     <div className="border-t border-line p-3 space-y-2 text-xs">
-      <div className="flex items-center justify-between">
-        <span className="text-mute">Theme</span>
-        <button className="btn !py-0.5 !px-2 !text-xs" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
-          {theme === 'dark' ? '☾ Dark' : '☀ Light'}
-        </button>
-      </div>
       {course === 'ce311' && (
       <>
       <div className="flex items-center justify-between">
@@ -214,15 +178,6 @@ export function SidebarFooter({ course }: { course: 'ce311' | 'ce315' | 'ce341' 
       </>
       )}
       {ARTIFACT && <SyncLine />}
-      {CLOUD && <CloudLine course={course} />}
-      <div className="flex gap-2">
-        <button className="btn !py-0.5 !px-2 !text-xs flex-1 justify-center" onClick={download}>
-          ⤓ Export progress
-        </button>
-        <button className="btn !py-0.5 !px-2 !text-xs flex-1 justify-center" onClick={upload}>
-          ⤒ Import
-        </button>
-      </div>
     </div>
   )
 }
@@ -236,37 +191,6 @@ const SYNC_TEXT: Record<SyncStatus, [string, string]> = {
   error: ['text-bad', 'Sync failed, saved on this device'],
 }
 
-/** public build: who is signed in (and their role) or a Sign in button; both open the Account page */
-function CloudLine({ course }: { course: Course }) {
-  const user = useCloudUser()
-  const { admin } = useAccount()
-  const [cls, text] = SYNC_TEXT[useSyncStatus()]
-  const to = accountPath(course)
-  if (user)
-    return (
-      <div className="space-y-1">
-        <div className="flex items-center justify-between gap-2">
-          <Link to={to} className="text-mute hover:text-ink truncate" title={user.email}>
-            👤 <span className="num">{user.email.split('@')[0]}</span>
-            {admin && <span className="text-accent font-semibold"> · admin</span>}
-          </Link>
-          <button className="btn !py-0.5 !px-2 !text-xs" onClick={() => void signOut()}>
-            Sign out
-          </button>
-        </div>
-        <div className={'text-right ' + cls}>{text}</div>
-      </div>
-    )
-  return (
-    <div className="flex items-center justify-between gap-2">
-      <span className="text-faint">Saved on this device</span>
-      <Link to={to} className="btn !py-0.5 !px-2 !text-xs" title="Sign in with your BUET CE mail to sync across devices">
-        Sign in
-      </Link>
-    </div>
-  )
-}
-
 function SyncLine() {
   const [cls, text] = SYNC_TEXT[useSyncStatus()]
   return (
@@ -277,7 +201,61 @@ function SyncLine() {
   )
 }
 
+/** header, top right: light/dark switch */
+export function ThemeToggle() {
+  const theme = useStore((s) => s.theme)
+  const setTheme = useStore((s) => s.setTheme)
+  const dark = theme === 'dark'
+  return (
+    <button
+      className="w-8 h-8 rounded-lg grid place-items-center text-mute hover:text-ink hover:bg-panel2 transition-colors"
+      onClick={() => setTheme(dark ? 'light' : 'dark')}
+      title={dark ? 'Switch to light theme' : 'Switch to dark theme'}
+      aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'}
+    >
+      {dark ? (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round">
+          <path d="M13.5 9.6A5.8 5.8 0 0 1 6.4 2.5a5.8 5.8 0 1 0 7.1 7.1Z" />
+        </svg>
+      ) : (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+          <circle cx="8" cy="8" r="3" />
+          <path d="M8 1.2v1.6M8 13.2v1.6M1.2 8h1.6M13.2 8h1.6M3.2 3.2l1.1 1.1M11.7 11.7l1.1 1.1M3.2 12.8l1.1-1.1M11.7 4.3l1.1-1.1" />
+        </svg>
+      )}
+    </button>
+  )
+}
+
+/** header, top right: who is signed in (or Sign in); opens the Account page */
+function AccountChip({ course }: { course: Course }) {
+  const user = useCloudUser()
+  const { admin } = useAccount()
+  const [, syncText] = SYNC_TEXT[useSyncStatus()]
+  const to = accountPath(course)
+  const active = useLocation().pathname === to
+  const cls = 'flex items-center gap-1.5 rounded-lg px-2 h-8 text-sm transition-colors ' + (active ? 'bg-accent/15 text-ink' : 'text-mute hover:text-ink hover:bg-panel2')
+  if (CLOUD && user) {
+    const id = user.email.split('@')[0]
+    return (
+      <Link to={to} className={cls} title={`${user.email}${admin ? ' · admin' : ''}${syncText ? ` · ${syncText}` : ''}`}>
+        <span className="w-6 h-6 rounded-full bg-accent/15 text-accent grid place-items-center text-[10px] font-bold num shrink-0">{id.slice(-3)}</span>
+        <span className="hidden xl:inline num font-semibold text-ink">{id}</span>
+        {admin && <span className="hidden xl:inline text-accent text-xs font-semibold">admin</span>}
+      </Link>
+    )
+  }
+  return (
+    <Link to={to} className={cls} title={CLOUD ? 'Sign in with your BUET CE mail to sync across devices' : 'Account, screen time and progress backup'}>
+      <span aria-hidden="true">👤</span>
+      <span className="hidden xl:inline whitespace-nowrap">{CLOUD ? 'Sign in' : 'Account'}</span>
+    </Link>
+  )
+}
+
 export function Header({ onMenu, examDate = EXAM_DATE, examLabel = '31 Oct' }: { onMenu: () => void; examDate?: string; examLabel?: string }) {
+  const key = courseOf(useLocation().pathname)
+  const course: Course = key === 'home' ? 'ce311' : key
   const xp = useStore((s) => s.xp)
   const streak = useStore((s) => s.streak)
   const exam = new Date(examDate + 'T09:00:00')
@@ -289,12 +267,12 @@ export function Header({ onMenu, examDate = EXAM_DATE, examLabel = '31 Oct' }: {
         <button className="lg:hidden btn btn-ghost !px-2" onClick={onMenu} aria-label="menu">
           ☰
         </button>
-        <div className="text-sm">
+        <div className="text-sm whitespace-nowrap">
           <span className="font-bold num text-accent">{days}</span> <span className="text-mute">days to go<span className="hidden sm:inline"> · exam {examLabel}</span></span>
         </div>
         <div className="ml-auto flex items-center gap-3 sm:gap-4 text-sm">
           <TimeCounter />
-          <span className="text-mute" title="Daily streak — check at least one answer a day">
+          <span className="text-mute whitespace-nowrap" title="Daily streak — check at least one answer a day">
             🔥 <span className="num text-ink font-semibold">{streak.count}</span>
           </span>
           <span className="hidden sm:flex items-center gap-2" title="XP: 15 for a first-try correct answer, 8 otherwise">
@@ -304,6 +282,10 @@ export function Header({ onMenu, examDate = EXAM_DATE, examLabel = '31 Oct' }: {
               <span className="block h-full bg-accent transition-all" style={{ width: `${((xp % 200) / 200) * 100}%` }} />
             </span>
             <span className="num text-xs text-mute">{xp} XP</span>
+          </span>
+          <span className="flex items-center gap-1 sm:border-l sm:border-line sm:pl-3">
+            <ThemeToggle />
+            <AccountChip course={course} />
           </span>
         </div>
       </div>

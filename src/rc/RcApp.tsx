@@ -93,7 +93,6 @@ function RcSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
         { to: '/ce315', icon: glyph('◎'), label: 'Overview & plan', title: 'Overview & plan', end: true },
         { to: '/ce315/papers', icon: glyph('▤'), label: 'Past papers & mocks', title: 'Past papers & mocks' },
         { to: '/ce315/theory', icon: glyph('✎'), label: 'Theory bank', title: 'Theory bank' },
-        { to: '/ce315/time', icon: glyph('⏱'), label: 'Screen time', title: 'Screen time' },
         ...accountLinks,
       ]}
       groups={(['A', 'B'] as const).map((sec) => ({

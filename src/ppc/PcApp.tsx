@@ -85,7 +85,6 @@ function PcSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
         { to: '/ce301/gym', icon: glyph('🧠'), label: 'Memory gym', title: 'Memory gym — every flashcard and drill' },
         { to: '/ce301/papers', icon: glyph('▤'), label: 'Past papers & mocks', title: 'Past papers & mocks' },
         { to: '/ce301/answers', icon: glyph('✎'), label: 'Answer bank', title: 'Answer bank — model answers, most-asked first' },
-        { to: '/ce301/time', icon: glyph('⏱'), label: 'Screen time', title: 'Screen time' },
         ...accountLinks,
       ]}
       groups={(['IA', 'OIA', 'AAN'] as PcBlock[]).map((b) => ({

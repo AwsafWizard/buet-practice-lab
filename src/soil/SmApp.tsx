@@ -92,7 +92,6 @@ function SmSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
         { to: '/ce341', icon: glyph('◎'), label: 'Overview & plan', title: 'Overview & plan', end: true },
         { to: '/ce341/papers', icon: glyph('▤'), label: 'Past papers & mocks', title: 'Past papers & mocks' },
         { to: '/ce341/theory', icon: glyph('✎'), label: 'Theory bank', title: 'Theory bank' },
-        { to: '/ce341/time', icon: glyph('⏱'), label: 'Screen time', title: 'Screen time' },
         ...accountLinks,
       ]}
       groups={(['A', 'B'] as const).map((sec) => ({

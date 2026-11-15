@@ -1,4 +1,4 @@
-// Account: sign in with BUET CE mail, your role, screen time and study numbers; admins also manage roles here.
+// Account: sign in with BUET CE mail, your role, screen time, study numbers and progress backup; admins also manage roles here.
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { courseOf } from '../App'
@@ -6,8 +6,8 @@ import { CLOUD, buetEmail, sendMagicLink, signOut, useCloudUser, verifyCode } fr
 import { COURSES } from '../components/CoursePicker'
 import { Ring, Section } from '../components/ui'
 import { CourseSplit, DayChart } from '../pages/ScreenTime'
-import { useStore } from '../store'
-import { useSyncStatus, type SyncStatus } from '../sync'
+import { exportState, useStore } from '../store'
+import { ARTIFACT, useSyncStatus, type SyncStatus } from '../sync'
 import { dayRange, fmtShort, shiftDay, useTimer } from '../timer'
 import { addAdmin, coursePath, listAdmins, listMembers, removeAdmin, setDisplayName, useAccount, type Course, type Member } from './api'
 import { ago } from './ThreadsPage'
@@ -36,6 +36,7 @@ export default function AccountPage() {
       )}
       <TimeBlock course={course} />
       <StudyBlock />
+      <BackupBlock course={course} />
       {admin && <AdminPanel me={user?.email ?? ''} />}
     </div>
   )
@@ -304,6 +305,60 @@ function StudyBlock() {
           )
         })}
       </div>
+    </Section>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────── backup
+type ArtifactWindow = {
+  claude?: { use(name: 'downloads'): Promise<{ save(r: { filename: string; data: string }): Promise<unknown> } | null> }
+}
+
+function BackupBlock({ course }: { course: Course | null }) {
+  const importState = useStore((s) => s.importState)
+  const [msg, setMsg] = useState<{ bad: boolean; text: string } | null>(null)
+  const download = async () => {
+    const filename = `${course ?? 'practice-lab'}-progress-${new Date().toISOString().slice(0, 10)}.json`
+    if (ARTIFACT) {
+      // the Artifact viewer blocks plain downloads; its save prompt asks the viewer first
+      const downloads = await (window as unknown as ArtifactWindow).claude?.use('downloads')
+      await downloads?.save({ filename, data: exportState() }).catch(() => {})
+      return
+    }
+    const blob = new Blob([exportState()], { type: 'application/json' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = filename
+    a.click()
+  }
+  const upload = () => {
+    const inp = document.createElement('input')
+    inp.type = 'file'
+    inp.accept = 'application/json'
+    inp.onchange = async () => {
+      const f = inp.files?.[0]
+      if (!f) return
+      try {
+        importState(await f.text())
+        setMsg({ bad: false, text: `✓ Imported ${f.name}` })
+      } catch {
+        setMsg({ bad: true, text: `${f.name} is not a progress file.` })
+      }
+    }
+    inp.click()
+  }
+  return (
+    <Section title="Backup" sub="Save all your progress (every course, planner, screen time) as a file, or load one from another device.">
+      <div className="flex gap-2 flex-wrap items-center">
+        <button className="btn" onClick={() => void download()}>
+          ⤓ Export progress
+        </button>
+        <button className="btn" onClick={upload}>
+          ⤒ Import
+        </button>
+        {msg && <span className={'text-sm ' + (msg.bad ? 'text-bad' : 'text-good')}>{msg.text}</span>}
+      </div>
+      <div className="text-xs text-faint mt-2">Importing replaces what this device has with the file's contents.</div>
     </Section>
   )
 }

@@ -1,4 +1,4 @@
-// Sidebar entries every course shares: Threads (with an unread count) and Account.
+// Sidebar entry every course shares: Threads (with an unread count). Account sits in the header.
 import { lazy } from 'react'
 import { Route } from 'react-router-dom'
 import { CLOUD } from '../cloud'
@@ -31,6 +31,5 @@ export function useAccountLinks(c: Course): RailLink[] {
           },
         ]
       : []),
-    { to: accountPath(c), icon: glyph('👤'), label: 'Account', title: 'Account' },
   ]
 }
