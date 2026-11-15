@@ -28,9 +28,22 @@ drop policy if exists "delete own progress" on public.progress;
 create policy "delete own progress" on public.progress
   for delete using (auth.uid() = user_id);
 
--- live updates from a user's other devices
+-- No Realtime for progress: every change used to send the whole row (up to 140 KB) to each open tab,
+-- and each tab then downloaded every row again (7 GB of egress on 15 Nov 2026). Clients now fetch
+-- on start, on return to the tab and every few minutes, asking only for rows changed since last time.
 do $$
 begin
-  alter publication supabase_realtime add table public.progress;
-exception when duplicate_object then null;
+  if exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'progress') then
+    alter publication supabase_realtime drop table public.progress;
+  end if;
 end $$;
+
+-- the server stamps updated_at, so "changed since" never depends on a device's clock
+create or replace function public.progress_touch() returns trigger language plpgsql as $$
+begin
+  new.updated_at := now();
+  return new;
+end $$;
+drop trigger if exists progress_touch on public.progress;
+create trigger progress_touch before insert or update on public.progress
+  for each row execute function public.progress_touch();

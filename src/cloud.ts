@@ -7,6 +7,7 @@ import { useSyncExternalStore } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { ARTIFACT, runSync, setStatus } from './sync'
 import { device } from './timer'
+import { pack, unpack } from './pack'
 
 const URL_ = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
@@ -40,33 +41,66 @@ export async function getClient() {
   return client
 }
 
+/** how often an open, visible tab checks for other devices' saves */
+const POLL_MS = 5 * 60_000
+/** returning to the tab checks too, but not more often than this */
+const SHOW_GAP_MS = 20_000
+
+/**
+ * The progress table without Realtime (each change used to push the whole row to every open tab, and every
+ * tab then re-read every row: 7 GB in a day). First load reads all of the user's rows; after that only other
+ * devices' rows the server stamped later than the newest one seen, so a check that finds nothing costs bytes.
+ * Rows are gzipped (pack.ts).
+ */
 function backendFor(sb: SupabaseClient, uid: string) {
   return {
     mineId: device,
     async write(state: string) {
-      const { error } = await sb.from('progress').upsert({ user_id: uid, device_id: device, state, updated_at: new Date().toISOString() }, { onConflict: 'user_id,device_id' })
+      const { error } = await sb.from('progress').upsert({ user_id: uid, device_id: device, state: await pack(state) }, { onConflict: 'user_id,device_id' })
       if (error) throw error
     },
     watch(next: (docs: { id: string; state?: string }[]) => void, onError: () => void) {
       let alive = true
+      let since: string | null = null // newest updated_at seen (server time)
+      let busy = false
+      let last = 0
       const load = async () => {
-        const { data, error } = await sb.from('progress').select('device_id,state').eq('user_id', uid)
-        if (!alive) return
-        if (error) return onError()
-        next((data ?? []).map((r) => ({ id: r.device_id as string, state: r.state as string })))
+        if (busy) return
+        busy = true
+        last = Date.now()
+        try {
+          let q = sb.from('progress').select('device_id,state,updated_at').eq('user_id', uid)
+          if (since) q = q.neq('device_id', device).gt('updated_at', since)
+          const { data, error } = await q
+          if (!alive) return
+          if (error) return onError()
+          const first = !since
+          const docs: { id: string; state?: string }[] = []
+          for (const r of data ?? []) {
+            const at = r.updated_at as string
+            if (!since || Date.parse(at) > Date.parse(since)) since = at
+            try {
+              docs.push({ id: r.device_id as string, state: await unpack(r.state as string) })
+            } catch {
+              /* packed by a browser that can, unreadable here: skip it */
+            }
+          }
+          // nothing new is the usual answer, and needs no merge
+          if (alive && (first || docs.length)) next(docs)
+        } catch {
+          if (alive) onError()
+        } finally {
+          busy = false
+        }
       }
       void load()
-      // other devices' saves arrive live; a refetch on return to the tab covers a dropped connection
-      const channel = sb
-        .channel('progress-' + uid)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'progress', filter: `user_id=eq.${uid}` }, () => void load())
-        .subscribe()
-      const onShow = () => document.visibilityState === 'visible' && void load()
+      const onShow = () => document.visibilityState === 'visible' && Date.now() - last > SHOW_GAP_MS && void load()
       document.addEventListener('visibilitychange', onShow)
+      const poll = setInterval(() => document.visibilityState === 'visible' && void load(), POLL_MS)
       return () => {
         alive = false
+        clearInterval(poll)
         document.removeEventListener('visibilitychange', onShow)
-        void sb.removeChannel(channel)
       }
     },
   }

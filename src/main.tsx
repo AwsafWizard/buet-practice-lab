@@ -5,7 +5,7 @@ import { Analytics } from '@vercel/analytics/react'
 import App from './App'
 import { PointTip } from './components/PointTip'
 import './styles.css'
-import { ARTIFACT, startSync } from './sync'
+import { ARTIFACT, linkTabs, startSync } from './sync'
 import { startCloud } from './cloud'
 import { startTimer } from './timer'
 
@@ -73,5 +73,6 @@ createRoot(document.getElementById('root')!).render(
 )
 
 startTimer()
+linkTabs()
 void startSync()
 void startCloud()

@@ -38,10 +38,25 @@ const KEYS = ['attempts', 'revealed', 'xp', 'streak', 'activity', 'planner', 'pl
 export type Progress = Pick<ReturnType<typeof useStore.getState>, (typeof KEYS)[number]>
 
 function progress(): Progress {
-  const s = useStore.getState()
-  return Object.fromEntries(KEYS.map((k) => [k, s[k]])) as Progress
+  return onlyKeys(useStore.getState())
 }
-const payload = () => JSON.stringify(progress())
+/** just the synced fields (a saved copy may carry others, like the theme) */
+const onlyKeys = (s: Partial<Progress>) => Object.fromEntries(KEYS.map((k) => [k, s[k]])) as Progress
+
+/**
+ * JSON with every object's keys sorted, so two copies holding the same progress give the same text
+ * whatever order their entries were added in. (Plain JSON.stringify made two tabs that differed only
+ * in key order rewrite the shared row back and forth forever.)
+ */
+export function canon(v: unknown): string {
+  return JSON.stringify(v, (_k, x) =>
+    x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().map((k) => [k, (x as Record<string, unknown>)[k]])) : x,
+  )
+}
+const payload = () => canon(progress())
+
+/** for a tie: the same answer whichever copy is local, so two copies can't each keep their own forever */
+const tieWinner = <T>(x: T, y: T) => (canon(y) > canon(x) ? y : x)
 
 /** time only ever grows, so the larger count per device per day is the right one */
 function mergeTime(a: TimeLog = {}, b: TimeLog = {}): TimeLog {
@@ -56,7 +71,7 @@ function mergeTime(a: TimeLog = {}, b: TimeLog = {}): TimeLog {
 
 const later = <T extends { at: number }>(x: Record<string, T> = {}, y: Record<string, T> = {}) => {
   const out = { ...x }
-  for (const [k, v] of Object.entries(y)) if (!out[k] || v.at > out[k].at) out[k] = v
+  for (const [k, v] of Object.entries(y)) if (!out[k] || v.at > out[k].at || (v.at === out[k].at && tieWinner(out[k], v) === v)) out[k] = v
   return out
 }
 const maxEach = (x: Record<string, number> = {}, y: Record<string, number> = {}) => {
@@ -70,13 +85,20 @@ const xpOf = (attempts: Record<string, Attempt>) => Object.values(attempts).redu
 
 /**
  * Union of two copies of the progress, keeping the later record wherever they overlap.
- * `a` wins ties, so merging something that adds nothing gives back `a` unchanged.
+ * Symmetric: merge(a, b) and merge(b, a) hold the same progress (ties go the same way on both sides),
+ * so copies that have seen each other agree and stop writing.
  */
 export function merge(a: Progress, b: Progress): Progress {
   const sa = a.stamps ?? {}
   const sb = b.stamps ?? {}
   // a setting or question status: the one changed later (unstamped = before stamps existed)
-  const pick = <T>(key: string, x: T, y: T) => ((sb[key] ?? 0) > (sa[key] ?? 0) && y !== undefined ? y : (x ?? y))
+  const pick = <T>(key: string, x: T, y: T): T => {
+    if (y === undefined || y === null) return x ?? y
+    if (x === undefined || x === null) return y
+    const tx = sa[key] ?? 0
+    const ty = sb[key] ?? 0
+    return ty !== tx ? (ty > tx ? y : x) : tieWinner(x, y)
+  }
   const qStatus = { ...a.qStatus }
   for (const [id, s] of Object.entries(b.qStatus ?? {})) qStatus[id] = pick('q:' + id, qStatus[id], s)
   const attempts = later<Attempt>(a.attempts, b.attempts)
@@ -86,7 +108,7 @@ export function merge(a: Progress, b: Progress): Progress {
     attempts,
     revealed: { ...b.revealed, ...a.revealed },
     xp: Math.max(a.xp ?? 0, b.xp ?? 0, xpOf(attempts)),
-    streak: !sy || sx.last > sy.last || (sx.last === sy.last && sx.count >= sy.count) ? sx : sy,
+    streak: !sy ? sx : !sx ? sy : sx.last !== sy.last ? (sx.last > sy.last ? sx : sy) : sx.count !== sy.count ? (sx.count > sy.count ? sx : sy) : tieWinner(sx, sy),
     activity: maxEach(a.activity, b.activity),
     planner: pick('planner', a.planner, b.planner),
     planner315: pick('planner315', a.planner315, b.planner315),
@@ -152,8 +174,9 @@ export function runSync(backend: SyncBackend): () => void {
     timer = setTimeout(push, 1500)
   }
 
-  const unsubStore = useStore.subscribe(() => {
-    if (!applying && ready && payload() !== written) schedule() // a theme switch changes nothing here
+  const unsubStore = useStore.subscribe((s, prev) => {
+    if (applying || !ready || !KEYS.some((k) => s[k] !== prev[k])) return // a theme switch changes nothing here
+    if (payload() !== written) schedule()
   })
   // phones kill background tabs: flush a pending save when the page is hidden
   const onHide = () => {
@@ -169,17 +192,18 @@ export function runSync(backend: SyncBackend): () => void {
     (docs) => {
       if (stopped) return
       let p = progress()
-      const before = JSON.stringify(p)
+      const before = canon(p)
       for (const d of docs) {
         if (!d.state) continue
-        if (d.id === backend.mineId && !writing) written = d.state
         try {
-          p = merge(p, JSON.parse(d.state) as Progress)
+          const theirs = JSON.parse(d.state) as Progress
+          if (d.id === backend.mineId && !writing) written = canon(onlyKeys(theirs))
+          p = merge(p, theirs)
         } catch {
           /* a damaged document adds nothing */
         }
       }
-      if (JSON.stringify(p) !== before) {
+      if (canon(p) !== before) {
         applying = true
         useStore.setState(p)
         applying = false
@@ -199,6 +223,27 @@ export function runSync(backend: SyncBackend): () => void {
     if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', onHide)
     setStatus('off')
   }
+}
+
+/**
+ * Two tabs of the site in one browser share one saved copy (and one device row): fold in whatever the
+ * other tab saves, so neither tab's progress is lost when the other writes. Works signed in or not.
+ */
+export function linkTabs() {
+  if (typeof window === 'undefined') return
+  const name = useStore.persist.getOptions().name
+  window.addEventListener('storage', (e) => {
+    if (e.key !== name || !e.newValue) return
+    try {
+      const theirs = (JSON.parse(e.newValue) as { state?: Progress }).state
+      if (!theirs) return
+      const mine = progress()
+      const p = merge(mine, theirs)
+      if (canon(p) !== canon(mine)) useStore.setState(p)
+    } catch {
+      /* a damaged copy adds nothing */
+    }
+  })
 }
 
 export async function startSync() {

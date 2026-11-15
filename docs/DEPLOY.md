@@ -7,7 +7,7 @@ The private phone Artifact is separate and keeps working as before.
 ## 1. Supabase (accounts + synced progress) — about 3 minutes
 
 1. Go to supabase.com → **Sign in with GitHub** → **New project** (any name, free plan, pick a region near Dhaka, e.g. Singapore). Save the database password it shows; you won't need it here.
-2. When the project is ready: **SQL Editor** → **New query** → paste the whole of `supabase/schema.sql` → **Run**. It creates the `progress` table, the row rules (each user can only touch their own rows) and live updates.
+2. When the project is ready: **SQL Editor** → **New query** → paste the whole of `supabase/schema.sql` → **Run**. It creates the `progress` table, the row rules (each user can only touch their own rows) and a trigger that stamps `updated_at` with server time. Progress is not on Realtime on purpose (see the comment in the file): clients check on load, on return to the tab and every 5 minutes.
 3. **Authentication → URL Configuration**: set **Site URL** to your Vercel address from step 2 below (e.g. `https://buet-practice-lab.vercel.app`) and add the same address under **Redirect URLs**. (Email sign-in links open this address.)
 4. Copy two values, both safe to publish: the **Project URL** `https://<project-ref>.supabase.co` (the ref is the id in the dashboard address; also under **Connect** or **Settings → Data API**) and the **publishable key** `sb_publishable_…` from **Settings → API Keys** (older projects call it the *anon public* key, `eyJ…`; either works). Never use a secret / service_role key.
 

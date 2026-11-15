@@ -161,18 +161,24 @@ const reloadSoon = () => {
   clearTimeout(reloadTimer)
   reloadTimer = setTimeout(() => void loadThreads(), 300)
 }
+// No Realtime: the free plan allows 200 open connections, and a live channel per open tab wouldn't
+// survive a whole class. New posts show on return to the tab (at most once a minute) and every 10 minutes.
+const THREADS_GAP_MS = 60_000
+const THREADS_POLL_MS = 10 * 60_000
+let thLoaded = 0
 async function startThreads() {
-  const sb = await getClient()
+  thLoaded = Date.now()
   await loadThreads()
-  // new posts arrive live; a refetch on return to the tab covers a dropped connection
-  sb.channel('threads-live')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'threads' }, reloadSoon)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'thread_posts' }, reloadSoon)
-    .subscribe()
-  document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && reloadSoon())
+  const due = () => document.visibilityState === 'visible' && Date.now() - thLoaded > THREADS_GAP_MS
+  const reload = () => {
+    thLoaded = Date.now()
+    reloadSoon()
+  }
+  document.addEventListener('visibilitychange', () => due() && reload())
+  setInterval(() => due() && reload(), THREADS_POLL_MS)
 }
 
-/** every thread and post (all courses), loaded once and kept live */
+/** every thread and post (all courses), loaded once, refreshed on return to the tab */
 export function useThreads() {
   if (CLOUD && !thStarted) {
     thStarted = true
