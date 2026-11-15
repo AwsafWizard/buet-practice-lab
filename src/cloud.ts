@@ -103,10 +103,18 @@ export function buetEmail(input: string): string | null {
   return /^[0-9]{7}@ce\.buet\.ac\.bd$/.test(v) ? v : null
 }
 
-function friendly(msg: string) {
+/** Supabase auth errors in plain words (by error code where Supabase gives one) */
+export function friendly(msg: string, code?: string) {
+  // the site's whole email allowance is used up (Supabase's built-in mailer sends only a few per hour)
+  if (code === 'over_email_send_rate_limit' || /email rate limit exceeded/i.test(msg))
+    return "The site has hit its limit on sign-in emails for this hour (not your fault). If an earlier email reached you, use its link or code; otherwise try again later."
+  // this address asked for an email moments ago
+  if (code === 'over_request_rate_limit' || /security purposes|only request this after/i.test(msg)) {
+    const s = /after (\d+) seconds?/i.exec(msg)?.[1]
+    return `An email was just sent to this address. Check your inbox (and spam), or ask again in ${s ? s + ' seconds' : 'a minute'}.`
+  }
   if (/database error saving new user|studentID@ce\.buet/i.test(msg)) return 'Only studentID@ce.buet.ac.bd accounts can sign in.'
-  if (/rate limit|too many|security purposes/i.test(msg)) return 'Too many sign-in emails just now. Wait a few minutes and try again.'
-  if (/expired|invalid/i.test(msg)) return 'That code is wrong or has expired. Ask for a new email.'
+  if (code === 'otp_expired' || /expired|invalid/i.test(msg)) return 'That code is wrong or has expired. Ask for a new email.'
   return msg
 }
 
@@ -117,7 +125,7 @@ export async function sendMagicLink(input: string) {
   const sb = await getClient()
   // no #route in the redirect: Supabase appends ?code=… to the end of it, which must stay before the hash
   const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + location.pathname } })
-  return error ? friendly(error.message) : null
+  return error ? friendly(error.message, (error as { code?: string }).code) : null
 }
 
 /** sign in with the code from the email (works on any device, unlike the link, which must open in the same browser) */
@@ -126,7 +134,7 @@ export async function verifyCode(input: string, code: string) {
   if (!email) return 'Use your BUET CE mail: studentID@ce.buet.ac.bd'
   const sb = await getClient()
   const { error } = await sb.auth.verifyOtp({ email, token: code.replace(/\s/g, ''), type: 'email' })
-  return error ? friendly(error.message) : null
+  return error ? friendly(error.message, (error as { code?: string }).code) : null
 }
 
 export async function signOut() {

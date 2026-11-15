@@ -39,3 +39,12 @@ describe('BUET CE email', () => {
     expect(buetEmail('220408')).toBeNull()
   })
 })
+
+describe('sign-in errors', () => {
+  it('tells the site-wide email limit apart from a per-address cooldown', async () => {
+    const { friendly } = await import('../cloud')
+    expect(friendly('email rate limit exceeded', 'over_email_send_rate_limit')).toMatch(/limit on sign-in emails for this hour/)
+    expect(friendly('For security purposes, you can only request this after 42 seconds.', 'over_request_rate_limit')).toMatch(/again in 42 seconds/)
+    expect(friendly('Database error saving new user')).toMatch(/studentID@ce\.buet\.ac\.bd/)
+  })
+})
