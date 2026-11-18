@@ -1,4 +1,5 @@
 // Every course's topics as Thread tags: a thread tagged 'pc-law' also shows on the Act vs Regulation page.
+import { EV_BLOCK_LABEL, EV_TOPICS } from '../env/registry'
 import { PC_BLOCK_LABEL, PC_TOPICS } from '../ppc/registry'
 import { RC_SECTION_LABEL, RC_TOPICS } from '../rc/registry'
 import { SM_SECTION_LABEL, SM_TOPICS } from '../soil/registry'
@@ -18,6 +19,7 @@ export interface TagTopic {
 const safe = (c: string) => (c.startsWith('var(') && !c.includes(',') ? c.replace(/\)$/, ', var(--c-accent))') : c)
 
 export const TOPIC_TAGS: TagTopic[] = [
+  ...EV_TOPICS.map((t) => ({ id: t.id, short: t.short, title: t.title, color: safe(t.color), course: 'ce331' as const, group: EV_BLOCK_LABEL[t.block] })),
   ...PC_TOPICS.map((t) => ({ id: t.id, short: t.short, title: t.title, color: safe(t.color), course: 'ce301' as const, group: PC_BLOCK_LABEL[t.block] })),
   ...SM_TOPICS.map((t) => ({ id: t.id, short: t.short, title: t.title, color: t.color, course: 'ce341' as const, group: SM_SECTION_LABEL[t.section] })),
   ...RC_TOPICS.map((t) => ({ id: t.id, short: t.short, title: t.title, color: t.color, course: 'ce315' as const, group: RC_SECTION_LABEL[t.section] })),

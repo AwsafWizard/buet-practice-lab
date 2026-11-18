@@ -140,7 +140,7 @@ revoke execute on function public.add_admin(text), public.remove_admin(text), pu
 -- Anyone can read; only admins write.
 create table if not exists public.threads (
   id          uuid primary key default gen_random_uuid(),
-  course      text not null check (course in ('all', 'ce311', 'ce315', 'ce341', 'ce301')),
+  course      text not null check (course in ('all', 'ce311', 'ce315', 'ce341', 'ce301', 'ce331')),
   title       text not null check (char_length(title) between 1 and 200),
   pinned      boolean not null default false,
   topics      text[] not null default '{}' check (cardinality(topics) <= 60),
@@ -151,6 +151,9 @@ create table if not exists public.threads (
 );
 -- added after the first version of this file
 alter table public.threads add column if not exists topics text[] not null default '{}';
+-- CE 331 added 17 Nov 2026: widen the course check on an existing table (re-runnable)
+alter table public.threads drop constraint if exists threads_course_check;
+alter table public.threads add constraint threads_course_check check (course in ('all', 'ce311', 'ce315', 'ce341', 'ce301', 'ce331'));
 
 create table if not exists public.thread_posts (
   id          uuid primary key default gen_random_uuid(),

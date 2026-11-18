@@ -66,6 +66,33 @@ export type PcTopicId =
   | 'pc-oral'
   | 'pc-ethics'
 
+/** CE 331 (environmental engineering I) topics; the ev- prefix keeps their check ids apart */
+export type EvTopicId =
+  | 'ev-wq'
+  | 'ev-aer'
+  | 'ev-sed'
+  | 'ev-coag'
+  | 'ev-soft'
+  | 'ev-ix'
+  | 'ev-filt'
+  | 'ev-dis'
+  | 'ev-att'
+  | 'ev-fe'
+  | 'ev-eco'
+  | 'ev-climate'
+  | 'ev-bdws'
+  | 'ev-rwh'
+  | 'ev-intake'
+  | 'ev-pump'
+  | 'ev-trans'
+  | 'ev-wsp'
+  | 'ev-ws'
+  | 'ev-demand'
+  | 'ev-pop'
+  | 'ev-gw'
+  | 'ev-well'
+  | 'ev-dist'
+
 /** one flashcard's Leitner state (box 0 = new, 1 = learning … 5 = mastered); syncing keeps the later review */
 export interface CardState {
   box: number
@@ -90,7 +117,7 @@ export interface Attempt {
 
 export interface PlanBlock {
   id: string
-  topic: TopicId | RcTopicId | SmTopicId | PcTopicId | 'mixed' | 'mock' | 'setup'
+  topic: TopicId | RcTopicId | SmTopicId | PcTopicId | EvTopicId | 'mixed' | 'mock' | 'setup'
   title: string
   hours: number
   kind: 'learn' | 'practice' | 'revise' | 'mock'
@@ -131,7 +158,9 @@ interface State {
   planner341: PlannerState | null
   /** CE 301's own study plan */
   planner301: PlannerState | null
-  /** CE 301 flashcards: card id → Leitner state */
+  /** CE 331's own study plan */
+  planner331: PlannerState | null
+  /** flashcards (CE 301 `k:` ids, CE 331 `ev:` ids): card id → Leitner state */
   cards: Record<string, CardState>
   qStatus: Record<string, 'todo' | 'tried' | 'solved' | 'review'>
   mockScores: Record<string, { at: number; secA: number; secB: number; note?: string }>
@@ -140,7 +169,7 @@ interface State {
   courseLog: TimeLog
   timeAdjust: TimeAdjust
   timeGoal: number // hours per day
-  /** when each setting / question status last changed (keys: planner, planner315, planner341, planner301, timeGoal, bmdSide, rotSign, q:<id>), so syncing keeps the later one */
+  /** when each setting / question status last changed (keys: planner, planner315, planner341, planner301, planner331, timeGoal, bmdSide, rotSign, q:<id>), so syncing keeps the later one */
   stamps: Record<string, number>
   setTheme(t: 'dark' | 'light'): void
   setBmdSide(s: 'compression' | 'tension'): void
@@ -151,6 +180,7 @@ interface State {
   setPlanner315(p: PlannerState): void
   setPlanner341(p: PlannerState): void
   setPlanner301(p: PlannerState): void
+  setPlanner331(p: PlannerState): void
   rateCard(id: string, c: CardState): void
   setQStatus(id: string, s: 'todo' | 'tried' | 'solved' | 'review'): void
   saveMock(id: string, secA: number, secB: number, note?: string): void
@@ -182,6 +212,7 @@ const initial = {
   planner315: null as PlannerState | null,
   planner341: null as PlannerState | null,
   planner301: null as PlannerState | null,
+  planner331: null as PlannerState | null,
   cards: {} as Record<string, CardState>,
   qStatus: {},
   mockScores: {},
@@ -230,6 +261,7 @@ export const useStore = create<State>()(
       setPlanner315: (planner315) => set({ planner315, stamps: stamp(get().stamps, 'planner315') }),
       setPlanner341: (planner341) => set({ planner341, stamps: stamp(get().stamps, 'planner341') }),
       setPlanner301: (planner301) => set({ planner301, stamps: stamp(get().stamps, 'planner301') }),
+      setPlanner331: (planner331) => set({ planner331, stamps: stamp(get().stamps, 'planner331') }),
       rateCard(id, c) {
         const t = today()
         set({ cards: { ...get().cards, [id]: c }, activity: { ...get().activity, [t]: (get().activity[t] ?? 0) + 1 } })
@@ -266,8 +298,8 @@ useStore.subscribe((s) => setClockwise(s.rotSign !== 'ccw'))
 
 export function exportState(): string {
   const s = useStore.getState()
-  const { attempts, revealed, xp, streak, activity, planner, planner315, planner341, planner301, cards, qStatus, mockScores, timeLog, courseLog, timeAdjust, timeGoal, stamps, theme, bmdSide, rotSign } = s
-  return JSON.stringify({ attempts, revealed, xp, streak, activity, planner, planner315, planner341, planner301, cards, qStatus, mockScores, timeLog, courseLog, timeAdjust, timeGoal, stamps, theme, bmdSide, rotSign }, null, 1)
+  const { attempts, revealed, xp, streak, activity, planner, planner315, planner341, planner301, planner331, cards, qStatus, mockScores, timeLog, courseLog, timeAdjust, timeGoal, stamps, theme, bmdSide, rotSign } = s
+  return JSON.stringify({ attempts, revealed, xp, streak, activity, planner, planner315, planner341, planner301, planner331, cards, qStatus, mockScores, timeLog, courseLog, timeAdjust, timeGoal, stamps, theme, bmdSide, rotSign }, null, 1)
 }
 
 /** mastery of a topic: correct checks / total checks seen with that topic prefix */

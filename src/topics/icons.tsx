@@ -1,6 +1,31 @@
-import type { PcTopicId, RcTopicId, SmTopicId, TopicId } from '../store'
+import type { EvTopicId, PcTopicId, RcTopicId, SmTopicId, TopicId } from '../store'
 
-const P: Record<TopicId | RcTopicId | SmTopicId | PcTopicId, string> = {
+const P: Record<TopicId | RcTopicId | SmTopicId | PcTopicId | EvTopicId, string> = {
+  // CE 331
+  'ev-wq': 'M9 3 H15 M10 3 V9 L5 19 a1.5 1.5 0 0 0 1.3 2 H17.7 a1.5 1.5 0 0 0 1.3 -2 L14 9 V3 M7.5 15 H16.5',
+  'ev-aer': 'M8 18 a2 2 0 1 0 0.01 0 M14 13 a3 3 0 1 0 0.01 0 M9 7 a1.6 1.6 0 1 0 0.01 0 M16 5 a1.2 1.2 0 1 0 0.01 0 M3 21 H21',
+  'ev-sed': 'M5 3 V21 H19 V3 M8 7 h0.01 M14 9 h0.01 M10 13 h0.01 M7 18 H17',
+  'ev-coag': 'M7 8 a2 2 0 1 0 0.01 0 M17 7 a2 2 0 1 0 0.01 0 M12 15 a4 4 0 1 0 0.01 0 M9 9.5 L10.5 12 M15.5 8.5 L13.5 11.5',
+  'ev-soft': 'M4 6 H20 M4 12 H14 M4 18 H17 M17 9 V15 M20 12 H14',
+  'ev-ix': 'M5 4 H19 V20 H5 Z M8 8 h0.01 M12 8 h0.01 M16 8 h0.01 M8 12 h0.01 M12 12 h0.01 M16 12 h0.01 M8 16 h0.01 M12 16 h0.01 M16 16 h0.01',
+  'ev-filt': 'M4 4 H20 L14 12 V19 L10 21 V12 Z',
+  'ev-dis': 'M12 3 L20 6 V12 C20 17 16 20 12 21 C8 20 4 17 4 12 V6 Z M12 8 V16 M8 12 H16',
+  'ev-att': 'M4 4 V20 M20 4 V20 M12 4 V20 M7 8 h0.01 M7 14 h0.01 M16 10 h0.01 M16 17 h0.01',
+  'ev-fe': 'M12 3 L20 7.5 V16.5 L12 21 L4 16.5 V7.5 Z M9 9 V15 M9 9 H14 M9 12 H13',
+  'ev-eco': 'M12 21 V11 M12 11 C12 6 16 3 20 3 C20 8 17 11 12 11 M12 14 C12 10 8 8 4 8 C4 12 7 14 12 14',
+  'ev-climate': 'M12 3 a4 4 0 0 1 4 4 V14 a5 5 0 1 1 -8 0 V7 a4 4 0 0 1 4 -4 M12 10 V17',
+  'ev-bdws': 'M4 21 V10 L9 6 L14 10 V21 M14 13 H20 V21 M4 21 H20 M8 21 V16 H10 V21',
+  'ev-rwh': 'M3 10 L12 4 L21 10 M6 9 V12 M18 9 V14 M14 14 H21 V21 H14 Z M8 15 l-1 2 M11 15 l-1 2',
+  'ev-intake': 'M3 8 Q6 6 9 8 T15 8 T21 8 M3 13 Q6 11 9 13 T15 13 M15 5 V21 H21 M15 17 H21',
+  'ev-pump': 'M12 12 a6 6 0 1 0 0.01 0 M12 12 L16 8 M12 12 L8 16 M18 12 H22 M12 2 V6',
+  'ev-trans': 'M2 9 H22 M2 15 H22 M6 9 V15 M18 9 V15 M10 12 H14',
+  'ev-wsp': 'M5 3 H19 V21 H5 Z M8 8 L10 10 L13 7 M8 14 L10 16 L13 13 M15 9 H17 M15 15 H17',
+  'ev-ws': 'M12 3 C9 8 7 10.5 7 13.5 A5 5 0 0 0 17 13.5 C17 10.5 15 8 12 3 Z M3 21 H21',
+  'ev-demand': 'M8 3 H16 M12 3 V7 M6 7 H18 V9 H6 Z M12 9 V13 M12 16 a1.8 1.8 0 1 0 0.01 0 M12 20 V21',
+  'ev-pop': 'M8 7 a2.5 2.5 0 1 0 0.01 0 M16 7 a2.5 2.5 0 1 0 0.01 0 M3 20 a5 5 0 0 1 10 0 M11 20 a5 5 0 0 1 10 0',
+  'ev-gw': 'M3 6 H21 M3 6 Q12 18 21 6 M12 3 V14 M3 20 H21',
+  'ev-well': 'M10 2 V22 M14 2 V22 M10 13 H14 M10 15 H14 M10 17 H14 M10 19 H14 M4 7 H20',
+  'ev-dist': 'M4 12 a2 2 0 1 0 0.01 0 M6 12 H12 M12 6 V18 M12 6 H18 M12 18 H18 M18 6 a1.5 1.5 0 1 0 0.01 0 M18 18 a1.5 1.5 0 1 0 0.01 0',
   'pc-law': 'M12 3 V21 M7 21 H17 M4 7 H20 M4 7 L2 13 a2.5 2.5 0 0 0 5 0 Z M20 7 L18 13 a2.5 2.5 0 0 0 5 0 Z',
   'pc-methods': 'M4 5 H20 M4 12 H20 M4 19 H20 M7 3 V7 M15 10 V14 M10 17 V21',
   'pc-process': 'M5 3 H11 V8 H5 Z M13 16 H19 V21 H13 Z M8 8 V12 H16 V16',
@@ -56,7 +81,7 @@ const P: Record<TopicId | RcTopicId | SmTopicId | PcTopicId, string> = {
   'sm-stress': 'M12 3 V7 M10 5 L12 7 L14 5 M4 9 Q12 26 20 9 M7 9 Q12 18 17 9',
 }
 
-export function TopicIcon({ id, color, size = 18 }: { id: TopicId | RcTopicId | SmTopicId | PcTopicId; color?: string; size?: number }) {
+export function TopicIcon({ id, color, size = 18 }: { id: TopicId | RcTopicId | SmTopicId | PcTopicId | EvTopicId; color?: string; size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color ?? 'currentColor'} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
       <path d={P[id]} />

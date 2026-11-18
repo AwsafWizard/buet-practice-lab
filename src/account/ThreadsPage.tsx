@@ -28,7 +28,7 @@ import { clearDraft, loadDraft, MdEditor, MdView } from './MdEditor'
 import { TagPicker, TopicChips } from './TagPicker'
 import { tagsFor, topicTag } from './topics'
 
-const COURSES: ThreadCourse[] = ['all', 'ce301', 'ce341', 'ce315', 'ce311']
+const COURSES: ThreadCourse[] = ['all', 'ce331', 'ce301', 'ce341', 'ce315', 'ce311']
 
 export function ago(iso: string) {
   const s = (Date.now() - new Date(iso).getTime()) / 1000

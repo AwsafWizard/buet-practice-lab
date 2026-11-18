@@ -27,10 +27,11 @@ const HomeAccount = lazy(() => import('./account/HomeAccount'))
 const RcApp = lazy(() => import('./rc/RcApp'))
 const SmApp = lazy(() => import('./soil/SmApp'))
 const PcApp = lazy(() => import('./ppc/PcApp'))
+const EvApp = lazy(() => import('./env/EvApp'))
 
-export type CourseKey = 'home' | 'ce311' | 'ce315' | 'ce341' | 'ce301'
+export type CourseKey = 'home' | 'ce311' | 'ce315' | 'ce341' | 'ce301' | 'ce331'
 export const courseOf = (pathname: string): CourseKey =>
-  pathname === '/' || pathname === '/account' ? 'home' : pathname.startsWith('/ce315') ? 'ce315' : pathname.startsWith('/ce341') ? 'ce341' : pathname.startsWith('/ce301') ? 'ce301' : 'ce311'
+  pathname === '/' || pathname === '/account' ? 'home' : pathname.startsWith('/ce315') ? 'ce315' : pathname.startsWith('/ce341') ? 'ce341' : pathname.startsWith('/ce301') ? 'ce301' : pathname.startsWith('/ce331') ? 'ce331' : 'ce311'
 
 export default function App() {
   const theme = useStore((s) => s.theme)
@@ -49,7 +50,7 @@ export default function App() {
   }, [loc.pathname, course])
   return (
     <Suspense fallback={<div className="text-mute p-10">Loading…</div>}>
-      {course === 'home' ? loc.pathname === '/account' ? <HomeAccount /> : <CoursePicker /> : course === 'ce315' ? <RcApp /> : course === 'ce341' ? <SmApp /> : course === 'ce301' ? <PcApp /> : <Ce311App />}
+      {course === 'home' ? loc.pathname === '/account' ? <HomeAccount /> : <CoursePicker /> : course === 'ce315' ? <RcApp /> : course === 'ce341' ? <SmApp /> : course === 'ce301' ? <PcApp /> : course === 'ce331' ? <EvApp /> : <Ce311App />}
     </Suspense>
   )
 }
@@ -153,7 +154,7 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
 }
 
 /** sidebar footer: CE 311's drawing conventions, and the phone Artifact's sync line. Theme, account and backups live in the header / Account page. */
-export function SidebarFooter({ course }: { course: 'ce311' | 'ce315' | 'ce341' | 'ce301' }) {
+export function SidebarFooter({ course }: { course: 'ce311' | 'ce315' | 'ce341' | 'ce301' | 'ce331' }) {
   const side = useStore((s) => s.bmdSide)
   const setSide = useStore((s) => s.setBmdSide)
   const rotSign = useStore((s) => s.rotSign)

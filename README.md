@@ -1,6 +1,6 @@
 # BUET Practice Lab
 
-Interactive study dashboard for BUET Civil Engineering **L-3/T-1 term finals**. One site, four courses, each with
+Interactive study dashboard for BUET Civil Engineering **L-3/T-1 term finals**. One site, five courses, each with
 its own colour theme, topic tabs, labs, solved past papers, planner and mock-exam mode.
 
 **Live site:** https://tf-practice-dashboard.vercel.app
@@ -11,12 +11,14 @@ its own colour theme, topic tabs, labs, solved past papers, planner and mock-exa
 | **CE 315** · Design of Concrete Structures I | `/ce315` | 10 | 19 term finals (2002-03 → 2023-24), 427 parts |
 | **CE 341** · Principles of Soil Mechanics | `/ce341` | 11 | 13 term finals (2007-08 → 2023-24), 330 parts |
 | **CE 301** · Professional Practice & Communication | `/ce301` | 17 | 12 term finals (2011-12 → 2023-24), 262 parts |
+| **CE 331** · Environmental Engineering I | `/ce331` | 24 | 14 term finals (2007-08 → 2023-24), 317 parts |
 
 ## What's inside
 
 - **Topic tabs** with Overview → Approach (animated walk-through) → Lab (interactive, every input selectable) →
   Past Questions → My Problems. CE 301 is a recall course, so its Lab is built for memorising instead:
-  flashcards (Leitner boxes), keyword recall, ordering drills, cloze and blurt answers.
+  flashcards (Leitner boxes), keyword recall, ordering drills, cloze and blurt answers. CE 331 has both: a Lab on every
+  number topic and a Recall tab, with every drill across the course in the **Memory Well**.
 - **Every past-paper part** with redrawn figures, answer checks and worked solutions. Numbers come from built-in
   solvers, not typed by hand:
   - CE 311: 2D stiffness frame solver, influence lines and moving loads, portal/cantilever methods, BNBC 2020 wind,
@@ -26,6 +28,12 @@ its own colour theme, topic tabs, labs, solved past papers, planner and mock-exa
     stress, consolidation, stress distribution (Boussinesq, Newmark, Fadum), shear strength test bench, Rankine
     earth pressure.
   - CE 301: tender security / TDS and QCBS calculators; answers follow the class slides and notes.
+  - CE 331: water chemistry (carbonate system, Henry's law), Type I / II settling with iso-removal workbench, lime–soda
+    and split-treatment softening with bar diagrams, ion exchange, coagulant alkalinity, breakpoint chlorination,
+    population forecasting, fire demand, well hydraulics with superposed cones, deep tubewell design with well log,
+    branched networks and Hardy Cross, pump and pipeline heads and power, rainwater tank mass curve, water hammer.
+    Every past part says where its answer comes from (this term's slides, class notes, older slides, seniors' notes or a
+    textbook); parts no source can solve are marked.
 - **Code pane** (right) with code tables and calculation steps; the topic sidebar collapses to an icon rail.
 - **Planner, mock exams and progress:** customisable day planner per course, timed mock-exam mode, formula sheets,
   light XP / streak / mastery tracking and a study-time counter.
@@ -80,6 +88,7 @@ src/
   rc/                      CE 315   (ids `rc-`)
   soil/                    CE 341   (ids `sm-`)
   ppc/                     CE 301   (ids `pc-`; content is data in ppc/content/)
+  env/                     CE 331   (ids `ev-`; recall content in env/content/, engines, labs, paper maps per teacher)
 public/scans*/             scanned paper pages (left out of the public build)
 supabase/                  SQL for progress sync and accounts
 docs/                      authoring rules per course + deploy guide
@@ -87,7 +96,7 @@ docs/                      authoring rules per course + deploy guide
 
 Authoring rules for adding topics or papers: [AUTHORING.md](docs/AUTHORING.md) (CE 311 and shared rules),
 [CE315_AUTHORING.md](docs/CE315_AUTHORING.md), [CE341_AUTHORING.md](docs/CE341_AUTHORING.md),
-[CE301_AUTHORING.md](docs/CE301_AUTHORING.md).
+[CE301_AUTHORING.md](docs/CE301_AUTHORING.md), [CE331_AUTHORING.md](docs/CE331_AUTHORING.md) (status: [CE331_HANDOFF.md](docs/CE331_HANDOFF.md)).
 
 ## A note on the content
 

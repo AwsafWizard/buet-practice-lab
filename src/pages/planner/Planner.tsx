@@ -10,8 +10,10 @@ import { smDefaultPlanner } from '../../soil/plan'
 import { smTopicById } from '../../soil/registry'
 import { pcDefaultPlanner } from '../../ppc/plan'
 import { pcTopicById } from '../../ppc/registry'
+import { evDefaultPlanner } from '../../env/plan'
+import { evTopicById } from '../../env/registry'
 
-export type Course = 'ce311' | 'ce315' | 'ce341' | 'ce301'
+export type Course = 'ce311' | 'ce315' | 'ce341' | 'ce301' | 'ce331'
 
 const KIND_COLOR: Record<PlanBlock['kind'], string> = {
   learn: 'var(--c-accent)',
@@ -20,11 +22,11 @@ const KIND_COLOR: Record<PlanBlock['kind'], string> = {
   mock: 'var(--c-bad)',
 }
 
-const fresh = (course: Course) => (course === 'ce315' ? rcDefaultPlanner() : course === 'ce341' ? smDefaultPlanner() : course === 'ce301' ? pcDefaultPlanner() : defaultPlanner())
+const fresh = (course: Course) => (course === 'ce315' ? rcDefaultPlanner() : course === 'ce341' ? smDefaultPlanner() : course === 'ce301' ? pcDefaultPlanner() : course === 'ce331' ? evDefaultPlanner() : defaultPlanner())
 
 export function usePlanner(course: Course = 'ce311'): [PlannerState, (p: PlannerState) => void] {
-  const planner = useStore((s) => (course === 'ce315' ? s.planner315 : course === 'ce341' ? s.planner341 : course === 'ce301' ? s.planner301 : s.planner))
-  const setPlanner = useStore((s) => (course === 'ce315' ? s.setPlanner315 : course === 'ce341' ? s.setPlanner341 : course === 'ce301' ? s.setPlanner301 : s.setPlanner))
+  const planner = useStore((s) => (course === 'ce315' ? s.planner315 : course === 'ce341' ? s.planner341 : course === 'ce301' ? s.planner301 : course === 'ce331' ? s.planner331 : s.planner))
+  const setPlanner = useStore((s) => (course === 'ce315' ? s.setPlanner315 : course === 'ce341' ? s.setPlanner341 : course === 'ce301' ? s.setPlanner301 : course === 'ce331' ? s.setPlanner331 : s.setPlanner))
   const p = useMemo(() => planner ?? fresh(course), [planner, course])
   return [p, setPlanner]
 }
@@ -37,7 +39,7 @@ export function blockLink(b: PlanBlock, course: Course = 'ce311') {
 }
 
 export function BlockChip({ b, onToggle, compact, course = 'ce311' }: { b: PlanBlock; onToggle?: () => void; compact?: boolean; course?: Course }) {
-  const t = course === 'ce315' ? rcTopicById(b.topic) : course === 'ce341' ? smTopicById(b.topic) : course === 'ce301' ? pcTopicById(b.topic) : topicById(b.topic)
+  const t = course === 'ce315' ? rcTopicById(b.topic) : course === 'ce341' ? smTopicById(b.topic) : course === 'ce301' ? pcTopicById(b.topic) : course === 'ce331' ? evTopicById(b.topic) : topicById(b.topic)
   return (
     <div className={'flex items-start gap-2 rounded-lg border border-line bg-panel2/60 px-2.5 py-2 ' + (b.done ? 'opacity-55' : '')} style={{ borderLeft: `3px solid ${KIND_COLOR[b.kind]}` }}>
       {onToggle && <input type="checkbox" checked={!!b.done} onChange={onToggle} className="mt-1 accent-[var(--c-accent)]" />}

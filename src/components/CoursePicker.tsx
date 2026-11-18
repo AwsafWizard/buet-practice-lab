@@ -8,6 +8,8 @@ import { SM_ALL } from '../soil/pyq'
 import { SM_EXAM_DATE } from '../soil/plan'
 import { PC_ALL } from '../ppc/pyq'
 import { PC_EXAM_DATE } from '../ppc/plan'
+import { EV_PART_IDS } from '../env/pyq/ids'
+import { EV_EXAM_DATE } from '../env/plan'
 import { EXAM_DATE } from '../pages/planner/template'
 import { today, useStore } from '../store'
 import { Ring } from './ui'
@@ -17,7 +19,7 @@ import { accountPath, COURSE_NAME, coursePath, isNew, useAccount, useThreads, ty
 import { mdPreview } from '../account/preview'
 
 interface Course {
-  key: 'ce311' | 'ce315' | 'ce341' | 'ce301'
+  key: 'ce311' | 'ce315' | 'ce341' | 'ce301' | 'ce331'
   code: string
   name: string
   exam: string
@@ -34,6 +36,19 @@ interface Course {
 }
 
 export const COURSES: Course[] = [
+  {
+    key: 'ce331',
+    code: 'CE 331',
+    name: 'Environmental Engineering I',
+    sub: 'Water quality & treatment · groundwater & wells · pumps, RWH & WSP',
+    mark: 'M12 3 C9 8 7 10.5 7 13.5 A5 5 0 0 0 17 13.5 C17 10.5 15 8 12 3 Z M3 20.5 Q7.5 18.5 12 20.5 T21 20.5',
+    exam: EV_EXAM_DATE,
+    home: '/ce331',
+    qids: EV_PART_IDS,
+    checkPrefix: (k) => k.startsWith('ev-'),
+    light: { bg: '#fffaf3', ink: '#575279', mute: '#797593', acc: '#286983', line: '#dfdad9' },
+    dark: { bg: '#2a273f', ink: '#e0def4', mute: '#908caa', acc: '#9ccfd8', line: '#44415a' },
+  },
   {
     key: 'ce301',
     code: 'CE 301',

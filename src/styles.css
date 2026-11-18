@@ -256,6 +256,66 @@
   --grid: rgba(189, 147, 249, 0.07);
 }
 
+/* CE 331 (environmental engineering I): Rosé Pine — Moon at night, Dawn by day. Teacher colours:
+   Rowshan ma'am = gold, Snigdha ma'am = pine, Tanvir sir = iris. Contrast checked in src/env/theme.test.ts */
+[data-course='ce331'][data-theme='light'],
+[data-course='ce331']:not([data-theme]) {
+  --c-bg: #faf4ed;
+  --c-panel: #fffaf3;
+  --c-panel2: #f2e9e1;
+  --c-line: #dfdad9;
+  --c-ink: #4a4566;
+  --c-mute: #625d7b;
+  --c-faint: #807b98;
+  --c-accent: #286983;
+  --c-accent2: #974860;
+  --c-load: #875510;
+  --c-good: #3b7451;
+  --c-bad: #b23f5f;
+  --c-tension: #286983;
+  --c-comp: #b23f5f;
+  --c-member: #4a4566;
+  --c-moment: #7a62a0;
+  --c-shear: #2a7480;
+  --c-axial: #875510;
+  --c-steel: #4a4566;
+  --c-conc: #f2e9e1;
+  --c-water: #3d87a0;
+  --c-soil: #d9c3a3;
+  --c-rm: #85550e;
+  --c-sn: #286983;
+  --c-ta: #745b9c;
+  --grid: rgba(40, 105, 131, 0.07);
+}
+[data-course='ce331'][data-theme='dark'] {
+  --c-bg: #232136;
+  --c-panel: #2a273f;
+  --c-panel2: #343049;
+  --c-line: #44415a;
+  --c-ink: #e0def4;
+  --c-mute: #aeaac6;
+  --c-faint: #8b87a6;
+  --c-accent: #9ccfd8;
+  --c-accent2: #ea9a97;
+  --c-load: #f6c177;
+  --c-good: #95d5ad;
+  --c-bad: #f0839f;
+  --c-tension: #9ccfd8;
+  --c-comp: #f0839f;
+  --c-member: #e0def4;
+  --c-moment: #c4a7e7;
+  --c-shear: #9ccfd8;
+  --c-axial: #f6c177;
+  --c-steel: #e0def4;
+  --c-conc: #393552;
+  --c-water: #6fb4d2;
+  --c-soil: #5e4f5d;
+  --c-rm: #f6c177;
+  --c-sn: #6fb4d2;
+  --c-ta: #c4a7e7;
+  --grid: rgba(156, 207, 216, 0.07);
+}
+
 html,
 body,
 #root {
@@ -295,6 +355,11 @@ body {
   background-size: 37px 37px, 53px 53px;
   background-position: 0 0, 19px 27px;
 }
+/* CE 331: faint ripples on water instead of the blueprint grid */
+[data-course='ce331'] body {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280'%3E%3Cg fill='none' stroke='%2356949f' stroke-opacity='0.13' stroke-width='1'%3E%3Ccircle cx='70' cy='80' r='9'/%3E%3Ccircle cx='70' cy='80' r='20'/%3E%3Ccircle cx='70' cy='80' r='33' stroke-opacity='0.07'/%3E%3Ccircle cx='205' cy='200' r='7'/%3E%3Ccircle cx='205' cy='200' r='16'/%3E%3Ccircle cx='205' cy='200' r='27' stroke-opacity='0.07'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 280px 280px;
+}
 /* PDF export: always a white page with dark ink, whichever theme is on screen.
    Tailwind's --color-* are resolved at :root, so they are re-pointed here too. */
 .print-doc {
@@ -323,6 +388,9 @@ body {
   --c-ia: #036a96;
   --c-oia: #9b1349;
   --c-aan: #14710a;
+  --c-rm: #8a5a10;
+  --c-sn: #036a96;
+  --c-ta: #5b3fc4;
   --color-bg: var(--c-bg);
   --color-panel: var(--c-panel);
   --color-panel2: var(--c-panel2);
