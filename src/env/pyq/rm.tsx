@@ -95,7 +95,7 @@ export const RM_MAP: Record<string, EvPartMap> = {
   'ev-2017-18-2a': gwprob('Only the **major obstacles of groundwater supply in Bangladesh** is Rowshan ma’am’s sub-ask; the importance of the hydrologic cycle and the sketch of a surface-water supply system are Snigdha ma’am’s.'),
   'ev-2017-18-6b': m([TRN], ['a-trans-corr-factors', 'a-trans-corr-control'], { notes: ['Corrosion control: the slides give galvanic prevention and stable water; cathodic protection and inhibitors are textbook.'] }),
   'ev-2017-18-7a': m([WSP], ['a-wsp-def-flow', 'a-wsp-steps']),
-  'ev-2017-18-7b': m([WSP], ['a-wsp-risk-example'], { Sol: RiskSol, final: `Risk = ${LIK} × ${IMP} = ${RISK}: ${RISK_BAND}`, notes: ['This is the slide example RM L10 p41, worked in the answer; no engine is needed.'] }),
+  'ev-2017-18-7b': m([WSP], ['a-wsp-risk-example'], { Sol: RiskSol, checks: () => [{ key: 'L', label: 'Likelihood score', value: LIK }, { key: 'I', label: 'Impact (severity) score', value: IMP }, { key: 'R', label: 'Risk score = likelihood × impact', value: RISK }], final: `Risk = ${LIK} × ${IMP} = ${RISK}: ${RISK_BAND}`, notes: ['This is the slide example RM L10 p41, worked in the answer; no engine is needed.'] }),
   'ev-2017-18-8a': m([PMP], ['a-pump-cent-char'], tb(FLAG_CURVES)),
 
   // ---------------- Jan 2021 ----------------

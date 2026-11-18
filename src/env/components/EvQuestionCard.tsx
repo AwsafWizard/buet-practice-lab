@@ -3,7 +3,7 @@
 
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Md } from '../../components/ui'
+import { Answer, Md } from '../../components/ui'
 import { useStore } from '../../store'
 import { answerById } from '../content'
 import { evTopicById } from '../registry'
@@ -33,6 +33,14 @@ export function EvQuestionCard({ q, showPaper = true, open: open0 = false }: { q
   const setStatus = useStore((s) => s.setQStatus)
   const [mode, setMode] = useState<'none' | 'blurt' | 'answer'>(open0 ? 'answer' : 'none')
   const keys = useMemo(() => partKeys(q), [q])
+  const checks = useMemo(() => {
+    try {
+      return q.checks?.() ?? []
+    } catch (e) {
+      console.error(q.id, e)
+      return []
+    }
+  }, [q])
   const model = <PartAnswer q={q} />
   return (
     <article className="card p-4">
@@ -72,6 +80,14 @@ export function EvQuestionCard({ q, showPaper = true, open: open0 = false }: { q
       <div className="text-[15px]">
         <Md>{q.text}</Md>
       </div>
+      {checks.length > 0 && (
+        <div className="rounded-xl border border-line p-3 mt-3">
+          <div className="text-xs font-bold uppercase tracking-wider text-faint mb-1">Try it first — enter your key answers</div>
+          {checks.map((c) => (
+            <Answer key={c.key} id={`${q.topics[0] ?? 'ev'}:${q.id}:${c.key}`} label={<Md>{c.label}</Md>} value={c.value} unit={c.unit} tol={c.tol} abs={c.abs} magnitude={c.magnitude} hint={c.hint} />
+          ))}
+        </div>
+      )}
       <div className="flex flex-wrap gap-2 mt-3">
         <button className={'btn !text-sm ' + (mode === 'blurt' ? '!border-accent text-accent' : '')} onClick={() => setMode(mode === 'blurt' ? 'none' : 'blurt')} disabled={!keys.length}>
           ✍ Blurt it first

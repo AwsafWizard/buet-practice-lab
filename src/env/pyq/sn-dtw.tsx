@@ -33,7 +33,7 @@ import { WellLog } from '../figs/well-log'
 import { LoopFig } from '../figs/net-loop'
 import { PressureProfile } from '../figs/net-profile'
 import { TreeFig, type NodePos } from '../figs/net-tree'
-import type { EvPartMap } from '../types'
+import type { EvCheck, EvPartMap } from '../types'
 
 const n = (v: number, d = 2) => {
   const s = (Math.round(v * 10 ** d) / 10 ** d).toFixed(d)
@@ -508,6 +508,67 @@ const TANK_1617: TankCase = { gal: 200000, gallon: 'US', cF: 500, cW: 750 }
 const TANK_2021: TankCase = { gal: 100000, gallon: 'US', cF: 1200, cW: 1800 }
 const TANK_FLAG = 'Not in this term’s slides: the minimum-cost cylinder is a textbook calculus result (older papers only).'
 
+// ------------------------------------------------------------------ answer checks (same engine results as the Sol)
+const sieveChecks = (c: SieveCase): EvCheck[] => {
+  const d = runSieve(c)
+  const out: EvCheck[] = [
+    { key: 'd10', label: 'Effective size of the sand, $D_{10}$', value: d.stats.d10, unit: 'mm', tol: 0.03 },
+  ]
+  if (!d.screen) out.push({ key: 'cu', label: 'Uniformity coefficient $C_u = D_{60}/D_{10}$', value: d.stats.cu, tol: 0.03 })
+  out.push(
+    { key: 'pd30', label: 'Gravel pack $D_{30}$ (factor × sand $D_{30}$)', value: d.pack.d30, unit: 'mm', tol: 0.03 },
+    { key: 'slot', label: 'Slot number before rounding, $D_{10,\\text{pack}}/25.4 \\times 1000$', value: d.slot.raw, tol: 0.03 },
+  )
+  if (d.screen) out.push({ key: 'L', label: 'Screen length $L$', value: d.screen.Lft, unit: 'ft' })
+  if (d.yield) out.push({ key: 'Q', label: 'Well yield $Q$', value: d.yield.cfs, unit: 'cusec', tol: 0.03 })
+  return out
+}
+const dtwChecks = (d: DtwDesign): EvCheck[] => [
+  { key: 'Lh', label: 'Housing pipe length $L_h$', value: d.housing.length, unit: 'ft' },
+  { key: 'L', label: 'Strainer length $L$', value: d.length, unit: 'ft' },
+  { key: 'pd10', label: 'Gravel pack $D_{10}$', value: d.pack.d10, unit: 'mm', tol: 0.03 },
+  { key: 'slot', label: 'Slot number before rounding', value: d.slot.raw, tol: 0.03 },
+  { key: 'Q', label: 'Well yield $Q$', value: d.yield.cfs, unit: 'cusec', tol: 0.03 },
+]
+const tankChecks = (t: TankCase): EvCheck[] => {
+  const r = tankRun(t)
+  return [
+    { key: 'V', label: 'Volume $V$', value: r.V, unit: 'ft³' },
+    { key: 'D', label: 'Economic diameter $D$', value: r.D, unit: 'ft' },
+    { key: 'H', label: 'Height $H = 4V/\\pi D^2$', value: r.H, unit: 'ft' },
+    { key: 'cost', label: 'Minimum shell cost (floor + wall)', value: r.cost, unit: 'Tk' },
+  ]
+}
+const checks2223_7c = (): EvCheck[] => {
+  const bc = R2223_7c.pipes[0]
+  const cd = R2223_7c.pipes[1]
+  return [
+    { key: 'qc', label: 'Design demand at C, $q_C$', value: BCD_c, unit: 'cusec' },
+    { key: 'qbc', label: 'Flow in BC, $Q_{BC}$', value: bc.Qcfs, unit: 'cusec' },
+    { key: 'dbc', label: 'Calculated diameter of BC, $\\sqrt{4Q/\\pi V}$', value: bc.DcalcIn, unit: 'in' },
+    { key: 'hfbc', label: 'Head loss in BC, $h_f$', value: bc.hfPsi, unit: 'psi', tol: 0.03 },
+    { key: 'pd', label: 'Pressure at D, $P_D$', value: R2223_7c.pressure.D, unit: 'psi', tol: 0.03 },
+  ]
+}
+const checks2324_6a = (): EvCheck[] => {
+  const p01 = R2324_6a.pipes.find((x) => x.id === '0-1')!
+  const term = (node: string) => R2324_6a.terminals.find((t) => t.node === node)!.p
+  return [
+    { key: 'q01', label: 'Flow in pipe 0-1', value: p01.Qlps, unit: 'L/s' },
+    { key: 'd01', label: 'Calculated diameter of 0-1 at 5 fps', value: p01.DcalcIn, unit: 'in' },
+    { key: 'p3', label: 'Pressure at node 3', value: term('3'), unit: 'psi', tol: 0.03 },
+    { key: 'p5', label: 'Pressure at node 5', value: term('5'), unit: 'psi', tol: 0.03 },
+    { key: 'p6', label: 'Pressure at node 6', value: term('6'), unit: 'psi', tol: 0.03 },
+  ]
+}
+const checks1213_2c = (): EvCheck[] => [
+  { key: 'dI', label: 'First correction, loop I, $\\Delta_I$', value: HC_1213.iters[0].loops[0].delta, unit: 'lps', abs: 0.02, magnitude: true },
+  { key: 'dII', label: 'First correction, loop II, $\\Delta_{II}$', value: HC_1213.iters[0].loops[1].delta, unit: 'lps', abs: 0.02, magnitude: true },
+  { key: 'AB', label: 'Flow in AB after two trials', value: HC_1213.flows.AB, unit: 'lps', abs: 0.03, magnitude: true },
+  { key: 'AD', label: 'Flow in AD after two trials', value: HC_1213.flows.AD, unit: 'lps', abs: 0.03, magnitude: true },
+  { key: 'BD', label: 'Flow in BD after two trials', value: HC_1213.flows.BD, unit: 'lps', abs: 0.03, magnitude: true },
+]
+
 // ====================================================================================================
 // the map
 // ====================================================================================================
@@ -517,6 +578,7 @@ export const SN_DTW: Record<string, EvPartMap> = {
     ans: [],
     from: ['ce22'],
     final: finalSieve(C0708),
+    checks: () => sieveChecks(C0708),
     Sol: () => <SieveSol c={C0708} />,
     notes: ['The older sieve-data form is not worked in the CE22 slides; this applies her gravel-pack (D30 × 4–6) and slot-number rules to the sieve table. The aquifer thickness (40 m) and the 10 % open area are as printed. The first half of this question (direct vs reverse rotary drilling) is theory.'],
   },
@@ -525,6 +587,7 @@ export const SN_DTW: Record<string, EvPartMap> = {
     ans: [],
     from: ['ce22'],
     final: finalSieve(C0809),
+    checks: () => sieveChecks(C0809),
     Sol: () => <SieveSol c={C0809} />,
     notes: ['No strainer diameter, open area or aquifer thickness is printed, and only the slot size and gravel pack are asked, so no yield is worked out.'],
   },
@@ -533,6 +596,7 @@ export const SN_DTW: Record<string, EvPartMap> = {
     ans: [],
     from: ['ce22'],
     final: finalSieve(C1112),
+    checks: () => sieveChecks(C1112),
     Sol: () => <SieveSol c={C1112} />,
     notes: ['The aquifer thickness is not printed; 40 m is assumed (it is the value in the 2007-08 version of the same table).'],
   },
@@ -541,6 +605,7 @@ export const SN_DTW: Record<string, EvPartMap> = {
     ans: [],
     from: ['ce22'],
     final: finalSieve(C1213),
+    checks: () => sieveChecks(C1213),
     Sol: () => <SieveSol c={C1213} />,
     notes: ['The aquifer thickness is not printed; 40 m is assumed.'],
   },
@@ -549,6 +614,7 @@ export const SN_DTW: Record<string, EvPartMap> = {
     ans: [],
     from: ['ce22'],
     final: finalSieve(C1516),
+    checks: () => sieveChecks(C1516),
     Sol: () => <SieveSol c={C1516} />,
     notes: ['The aquifer thickness is not printed; 40 m is assumed.'],
   },
@@ -557,6 +623,7 @@ export const SN_DTW: Record<string, EvPartMap> = {
     ans: [],
     from: ['ce22'],
     final: finalSieve(C1213),
+    checks: () => sieveChecks(C1213),
     Sol: () => <SieveSol c={C1213} />,
     notes: ['Same table and data as 2012-13 Q7(c). The aquifer thickness is not printed; 40 m is assumed.'],
   },
@@ -569,6 +636,7 @@ export const SN_DTW: Record<string, EvPartMap> = {
       'The gradation curve of Figure 2 is read by eye from the transcription (D10 ≈ 0.14, D30 ≈ 0.203, D60 ≈ 0.313 mm, Cu ≈ 2.2): ±0.01 mm. The pack factor 5.48 is rounded to 5 as she rounds 5.36 to 5; with 5.5 the slot would be #30, so state the rounding you use.',
       'F_B = 3 (class default when none is given). Housing: 6-in strainer, 14-in housing pipe (bowl 12 in).',
     ],
+    checks: () => dtwChecks(D2223),
     Sol: () => (
       <DtwSol
         d={D2223}
@@ -585,6 +653,7 @@ export const SN_DTW: Record<string, EvPartMap> = {
     from: ['ce22', 'notes'],
     final: finalDtw(D2324),
     notes: ['Follows her typed Chandpur solution (Doubts and M4 step 9): strainer 900–1000 ft with the 100 ft screen centred in the 880–1020 ft layer, pack from 850 ft, F_B = 2.5, uPVC. With the class default F_B = 3 the yield is 0.349 cusec (35,600 L/h).'],
+    checks: () => dtwChecks(D2324),
     Sol: () => (
       <DtwSol
         d={D2324}
@@ -599,6 +668,7 @@ export const SN_DTW: Record<string, EvPartMap> = {
     ans: [],
     from: ['ce22'],
     final: `BC = ${R2223_7c.pipes[0].Din} in, CD = ${R2223_7c.pipes[1].Din} in; P at D = ${n(R2223_7c.pressure.D, 1)} psi (≥ 30)`,
+    checks: () => checks2223_7c(),
     Sol: () => <Sol2223_7c />,
     notes: ['Design velocity 3 fps and f = 0.01 are her class values; the paper does not state them. "10 % loss and wastage" is applied as × 1.10.'],
   },
@@ -607,6 +677,7 @@ export const SN_DTW: Record<string, EvPartMap> = {
     ans: [],
     from: ['ce22'],
     final: final2324_6a,
+    checks: () => checks2324_6a(),
     Sol: () => <Sol2324_6a />,
     notes: ['The table lists "1-2, 2-2 [sic], 4-5, 4-6"; it is read as the demand at nodes 2, 3, 5 and 6. The stub left of node 2 has no length or demand and is ignored. 70 psi is taken at the base of the OH tank.'],
   },
@@ -615,6 +686,7 @@ export const SN_DTW: Record<string, EvPartMap> = {
     ans: [],
     from: ['ce22'],
     final: final1213_2c,
+    checks: () => checks1213_2c(),
     Sol: () => <Sol2012_2c />,
     notes: ['Hardy Cross with the printed head-loss law instead of her k = 1. The figure transcription fixes the external flows; the first-guess directions (CD flows D→C) follow from continuity.'],
   },
@@ -634,6 +706,7 @@ export const SN_DTW: Record<string, EvPartMap> = {
     from: ['textbook'],
     flag: TANK_FLAG,
     final: finalTank(TANK_1112),
+    checks: () => tankChecks(TANK_1112),
     Sol: () => <TankSol t={TANK_1112} />,
     notes: ['No unit costs are printed: equal cost for floor and wall is assumed, which gives D = 2H. The question text is "0.20 million gallons (US)".'],
   },
@@ -643,6 +716,7 @@ export const SN_DTW: Record<string, EvPartMap> = {
     from: ['textbook'],
     flag: TANK_FLAG,
     final: finalTank(TANK_1617),
+    checks: () => tankChecks(TANK_1617),
     Sol: () => <TankSol t={TANK_1617} />,
   },
 

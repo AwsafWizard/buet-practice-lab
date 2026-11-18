@@ -62,7 +62,30 @@ describe('CE 331 content', () => {
   })
 })
 
+describe('CE 331 answer checks', () => {
+  it('every check is a finite number with a unique key, on a part that has a worked solution', () => {
+    const bad: string[] = []
+    for (const q of EV_ALL) {
+      if (!q.checks) continue
+      if (!q.Sol) bad.push(`${q.id}: checks without Sol`)
+      const cs = q.checks()
+      if (!cs.length) bad.push(`${q.id}: empty checks`)
+      const keys = new Set<string>()
+      for (const c of cs) {
+        if (!Number.isFinite(c.value)) bad.push(`${q.id}/${c.key}: value ${c.value}`)
+        if (keys.has(c.key)) bad.push(`${q.id}/${c.key}: duplicate key`)
+        keys.add(c.key)
+        if ((c.label.match(/\$/g) ?? []).length % 2) bad.push(`${q.id}/${c.key}: unpaired $`)
+      }
+    }
+    expect(bad).toEqual([])
+  })
+})
+
 describe.skipIf(!process.env.EV_FULL)('CE 331 completeness (EV_FULL=1)', () => {
+  it('every worked solution has answer checks', () => {
+    expect(EV_ALL.filter((q) => q.Sol && !q.checks).map((q) => q.id)).toEqual([])
+  })
   it('every part with a number task has a worked solution or is marked unsolved', () => {
     const bad = EV_ALL.filter((q) => /math|design/.test(q.kind ?? '') && !q.Sol && q.from?.[0] !== 'none' && !q.extra).map((q) => q.id)
     expect(bad).toEqual([])

@@ -251,7 +251,10 @@ function lsPart(c: Census[], targets: number[], unit: string, label: string) {
       </Sheet>
     )
   }
-  return { final, Sol }
+  const checks = () => [
+    ...targets.map((T) => ({ key: `p${T}`, label: `Forecast population $P_{${T}}$`, value: f.at(T), unit }))
+  ]
+  return { final, Sol, checks }
 }
 const c1213: Census[] = [25, 29, 38, 55, 80].map((p, i) => ({ year: 1970 + 10 * i, pop: p }))
 const ls1213 = lsPart(c1213, [2020, 2030], 'million', 'Fitted to all five censuses.')
@@ -295,7 +298,16 @@ function geomDecrPart(pops: number[], target: number, fireYear?: number) {
       </Sheet>
     )
   }
-  return { final, Sol }
+  const checks = () => [
+    { key: 'r', label: 'Geometric growth rate $r$', value: gm.params.r * 100, unit: '%/yr' },
+    { key: 'pg', label: `Geometric forecast $P_{${target}}$`, value: gm.at(target), unit: 'million' },
+    { key: 'pd', label: `Decreasing-rate forecast $P_{${target}}$`, value: dpop(target), unit: 'million' },
+    ...(fire && fy ? [
+      { key: 'pf', label: `Population in ${fireYear} (geometric)`, value: fy, unit: 'million' },
+      { key: 'fire', label: `Kuichling fire demand ${fireYear}`, value: fire.kuichlingGpm, unit: 'gpm' },
+    ] : []),
+  ]
+  return { final, Sol, checks }
 }
 const p1516 = geomDecrPart([25, 28.5, 39, 54, 75], 2030, 2020)
 const p1617 = geomDecrPart([24, 28, 37.5, 52, 72], 2030)
@@ -349,7 +361,13 @@ function chainPart(p: ChainIn) {
       </div>
     </Sheet>
   )
-  return { final, Sol }
+  const checks = () => [
+    { key: 'K', label: 'Permeability $K$ (from the observation well)', value: c.K, unit: `${p.unit}/m²` },
+    { key: 'R', label: 'Radius of influence $R$', value: c.R, unit: 'm' },
+    { key: 'each', label: 'Yield of each well when both pump', value: c.each, unit: p.unit },
+    { key: 'tot', label: 'Both wells together', value: c.total, unit: p.unit },
+  ]
+  return { final, Sol, checks }
 }
 const ch0708 = chainPart({ id: '2007-08-1b', paper: '2007-08', dia_mm: 200, Q: 1000, unit: 'L/min', D: 50, s: 10, a: 7.5, h: 47, s2: 9.5 })
 const ch0910 = chainPart({ id: '2009-10-5c', paper: '2009-10', dia_mm: 200, Q: 400, unit: 'gpm', D: 67, s: 12, a: 8, h: 61, s2: 12 })
@@ -481,28 +499,74 @@ function Sol2324() {
 // ================================================================ the map
 const FIRE_FLAG = NOTE_FIRE
 export const SN_MATH: Record<string, EvPartMap> = {
-  'ev-2007-08-8c': { topics: ['ev-pop', 'ev-demand'], ans: [], final: final0708, Sol: Sol0708, from: ['ce22', 'seniors', 'textbook'], flag: FIRE_FLAG, notes: ['"Empirical method" is read as the geometric increase method.'] },
-  'ev-2008-09-3': { topics: ['ev-pop', 'ev-demand'], ans: [], final: final0809, Sol: Sol0809, from: ['ce22', 'seniors', 'textbook'], flag: FIRE_FLAG, notes: ['The paper does not name the population method: geometric adopted, arithmetic and incremental shown.', '(iv) adds the fire flow as a rate (gpm) to the average flow.', 'US gallons assumed; the tank has no roof cost.'] },
-  'ev-2010-11-1c': { topics: ['ev-demand'], ans: [], final: final1011, Sol: Sol1011, from: ['seniors', 'textbook'], flag: FIRE_FLAG },
-  'ev-2011-12-7': { topics: ['ev-pop', 'ev-demand'], ans: [], final: final1112, Sol: Sol1112, from: ['seniors', 'textbook'], flag: 'Least-squares parabola and Kuichling are not in the CE22 slides: from the seniors’ notes and the textbook.', notes: ['"Present situation" read as the 2010 census population.'] },
-  'ev-2012-13-5b': { topics: ['ev-pop'], ans: [], final: ls1213.final, Sol: ls1213.Sol, from: ['seniors'], flag: 'Least-squares parabola is not in the CE22 slides: from the seniors’ notes (Delwar sir).' },
-  'ev-2015-16-1b': { topics: ['ev-pop', 'ev-demand'], ans: [], final: p1516.final, Sol: p1516.Sol, from: ['ce22', 'seniors', 'textbook'], flag: FIRE_FLAG, notes: ['"Change in increase rate method" read as the decreasing growth rate method.', 'Fire year 2020 uses the geometric forecast.'] },
-  'ev-2016-17-1b': { topics: ['ev-demand', 'ev-pop'], ans: [], final: p1617.final, Sol: p1617.Sol, from: ['ce22'], notes: ['"Change in increase rate method" read as the decreasing growth rate method.'] },
-  'ev-2017-18-1b': { topics: ['ev-demand', 'ev-pop'], ans: [], final: ls1718.final, Sol: ls1718.Sol, from: ['seniors'], flag: 'Least-squares parabola is not in the CE22 slides: from the seniors’ notes (Delwar sir).' },
-  'ev-jan-2021-5c': { topics: ['ev-pop'], ans: [], final: final21, Sol: SolJan21, from: ['ce22'] },
-  'ev-2020-21-1c': { topics: ['ev-demand', 'ev-pop'], ans: [], final: final2021, Sol: Sol2021, from: ['seniors', 'textbook'], flag: FIRE_FLAG },
-  'ev-2022-23-6b': { topics: ['ev-demand'], ans: [], final: final2223, Sol: Sol2223b, from: ['seniors', 'textbook'], flag: FIRE_FLAG },
-  'ev-2022-23-7a': { topics: ['ev-pop'], ans: [], final: ls2223.final, Sol: ls2223.Sol, from: ['seniors'], flag: 'Least-squares parabola is not in the CE22 slides: from the seniors’ notes (Delwar sir).' },
-  'ev-2007-08-1b': { topics: ['ev-gw'], ans: [], final: ch0708.final, Sol: ch0708.Sol, from: ['ce22'] },
-  'ev-2009-10-5c': { topics: ['ev-gw'], ans: [], final: ch0910.final, Sol: ch0910.Sol, from: ['ce22'], notes: ['Q stays in gpm throughout; K is in gpm/m².'] },
-  'ev-2011-12-1b': { topics: ['ev-gw'], ans: [], final: ch1112.final, Sol: ch1112.Sol, from: ['ce22'] },
-  'ev-2012-13-6b': { topics: ['ev-gw'], ans: [], final: ch1213.final, Sol: ch1213.Sol, from: ['ce22'] },
-  'ev-2017-18-2b': { topics: ['ev-gw'], ans: [], final: ch1718.final, Sol: ch1718.Sol, from: ['ce22'] },
-  'ev-2010-11-7d': { topics: ['ev-gw'], ans: [], final: final1011d, Sol: Sol1011d, from: ['ce22'] },
-  'ev-2021-22-6b': { topics: ['ev-gw'], ans: [], final: final2122, Sol: Sol2122, from: ['ce22'] },
-  'ev-2022-23-5a': { topics: ['ev-gw'], ans: [], final: final2223a2, Sol: Sol2223a, from: ['ce22'], notes: ['6 in = 0.15 m is the diameter, so r = 0.075 m (taking 0.15 as the radius would lower K by about 7 %).'] },
-  'ev-2022-23-5b': { topics: ['ev-gw'], ans: [], final: final2223b, Sol: Sol2223bS, from: ['ce22'] },
-  'ev-2023-24-7b': { topics: ['ev-gw'], ans: [], final: final2324, Sol: Sol2324, from: ['ce22'], notes: ['Figure labels 430/330/100 overlap: read as aquifer top 330 ft and thickness 100 ft below the static level.'] },
+  'ev-2007-08-8c': { topics: ['ev-pop', 'ev-demand'], ans: [], final: final0708, Sol: Sol0708, from: ['ce22', 'seniors', 'textbook'], flag: FIRE_FLAG, notes: ['"Empirical method" is read as the geometric increase method.'], checks: () => [
+    { key: 'r', label: 'Geometric growth rate $r$', value: g0708.params.r * 100, unit: '%/yr' },
+    { key: 'p', label: 'Population in 2015, $P_{2015}$', value: P0708, unit: 'persons' },
+    { key: 'q', label: 'Kuichling fire demand $Q=3182\\sqrt{P}$', value: f0708.kuichlingGpm, unit: 'gpm' },
+    { key: 'n', label: 'Number of fire streams $N$', value: f0708.streams.n },
+  ] },
+  'ev-2008-09-3': { topics: ['ev-pop', 'ev-demand'], ans: [], final: final0809, Sol: Sol0809, from: ['ce22', 'seniors', 'textbook'], flag: FIRE_FLAG, notes: ['The paper does not name the population method: geometric adopted, arithmetic and incremental shown.', '(iv) adds the fire flow as a rate (gpm) to the average flow.', 'US gallons assumed; the tank has no roof cost.'], checks: () => [
+    { key: 'p', label: 'Geometric forecast $P_{2018}$', value: P0809, unit: 'persons' },
+    { key: 'fire', label: 'Kuichling fire demand 2018', value: f0809.kuichlingGpm, unit: 'gpm' },
+    { key: 'tot', label: 'Total requirement (average + fire)', value: totGpm0809, unit: 'gpm' },
+    { key: 'D', label: 'Most economic tank diameter $D$', value: tank0809.D, unit: 'ft' },
+    { key: 'H', label: 'Tank height $H$', value: tank0809.H, unit: 'ft' },
+  ] },
+  'ev-2010-11-1c': { topics: ['ev-demand'], ans: [], final: final1011, Sol: Sol1011, from: ['seniors', 'textbook'], flag: FIRE_FLAG, checks: () => [
+    { key: 'n', label: 'Number of fire streams $N=2.8\\sqrt{P}$', value: f1011.n },
+    { key: 'q', label: 'Kuichling fire flow', value: fireFlowGpm('kuichling', 164), unit: 'gpm' },
+  ] },
+  'ev-2011-12-7': { topics: ['ev-pop', 'ev-demand'], ans: [], final: final1112, Sol: Sol1112, from: ['seniors', 'textbook'], flag: 'Least-squares parabola and Kuichling are not in the CE22 slides: from the seniors’ notes and the textbook.', notes: ['"Present situation" read as the 2010 census population.'], checks: () => [
+    { key: 'p20', label: 'Parabola forecast $P_{2020}$', value: ls1112.at(2020), unit: 'thousand' },
+    { key: 'p13', label: 'Population 2013, $P_{2013}$', value: P2013, unit: 'thousand' },
+    { key: 'q', label: 'Kuichling fire demand 2013', value: fF.kuichlingGpm, unit: 'gpm' },
+    { key: 'n', label: 'Streams now (2010)', value: fN.streams.n },
+  ] },
+  'ev-2012-13-5b': { topics: ['ev-pop'], ans: [], final: ls1213.final, Sol: ls1213.Sol, checks: ls1213.checks, from: ['seniors'], flag: 'Least-squares parabola is not in the CE22 slides: from the seniors’ notes (Delwar sir).' },
+  'ev-2015-16-1b': { topics: ['ev-pop', 'ev-demand'], ans: [], final: p1516.final, Sol: p1516.Sol, checks: p1516.checks, from: ['ce22', 'seniors', 'textbook'], flag: FIRE_FLAG, notes: ['"Change in increase rate method" read as the decreasing growth rate method.', 'Fire year 2020 uses the geometric forecast.'] },
+  'ev-2016-17-1b': { topics: ['ev-demand', 'ev-pop'], ans: [], final: p1617.final, Sol: p1617.Sol, checks: p1617.checks, from: ['ce22'], notes: ['"Change in increase rate method" read as the decreasing growth rate method.'] },
+  'ev-2017-18-1b': { topics: ['ev-demand', 'ev-pop'], ans: [], final: ls1718.final, Sol: ls1718.Sol, checks: ls1718.checks, from: ['seniors'], flag: 'Least-squares parabola is not in the CE22 slides: from the seniors’ notes (Delwar sir).' },
+  'ev-jan-2021-5c': { topics: ['ev-pop'], ans: [], final: final21, Sol: SolJan21, from: ['ce22'], checks: () => [
+    { key: 'r', label: 'Geometric growth rate $r$', value: gr21.geometric * 100, unit: '%/yr' },
+    { key: 'ra', label: 'Simple (arithmetic) rate', value: gr21.arithmetic * 100, unit: '%/yr' },
+    { key: 'K', label: 'Constant-percentage $K=\\ln(P_2/P_1)/n$', value: gr21.continuous * 100, unit: '%/yr' },
+  ] },
+  'ev-2020-21-1c': { topics: ['ev-demand', 'ev-pop'], ans: [], final: final2021, Sol: Sol2021, from: ['seniors', 'textbook'], flag: FIRE_FLAG, checks: () => [
+    { key: 'q', label: 'Kuichling fire demand $Q=3182\\sqrt{P}$', value: f2021.kuichlingGpm, unit: 'gpm' },
+    { key: 'n', label: 'Number of fire streams $N$', value: f2021.streams.n },
+  ] },
+  'ev-2022-23-6b': { topics: ['ev-demand'], ans: [], final: final2223, Sol: Sol2223b, from: ['seniors', 'textbook'], flag: FIRE_FLAG, checks: () => [
+    { key: 'n', label: 'Number of streams $N=2.8\\sqrt{P}$', value: f2223.streams.n },
+    { key: 'q', label: 'Total fire flow $N\\times950$', value: f2223.streamFlowLpm, unit: 'L/min' },
+    { key: 'v', label: 'Storage for 5 h', value: f2223.storageL / 1000, unit: 'm³' },
+  ] },
+  'ev-2022-23-7a': { topics: ['ev-pop'], ans: [], final: ls2223.final, Sol: ls2223.Sol, checks: ls2223.checks, from: ['seniors'], flag: 'Least-squares parabola is not in the CE22 slides: from the seniors’ notes (Delwar sir).' },
+  'ev-2007-08-1b': { topics: ['ev-gw'], ans: [], final: ch0708.final, Sol: ch0708.Sol, checks: ch0708.checks, from: ['ce22'] },
+  'ev-2009-10-5c': { topics: ['ev-gw'], ans: [], final: ch0910.final, Sol: ch0910.Sol, checks: ch0910.checks, from: ['ce22'], notes: ['Q stays in gpm throughout; K is in gpm/m².'] },
+  'ev-2011-12-1b': { topics: ['ev-gw'], ans: [], final: ch1112.final, Sol: ch1112.Sol, checks: ch1112.checks, from: ['ce22'] },
+  'ev-2012-13-6b': { topics: ['ev-gw'], ans: [], final: ch1213.final, Sol: ch1213.Sol, checks: ch1213.checks, from: ['ce22'] },
+  'ev-2017-18-2b': { topics: ['ev-gw'], ans: [], final: ch1718.final, Sol: ch1718.Sol, checks: ch1718.checks, from: ['ce22'] },
+  'ev-2010-11-7d': { topics: ['ev-gw'], ans: [], final: final1011d, Sol: Sol1011d, from: ['ce22'], checks: () => [
+    { key: 'q', label: 'Well discharge $Q$', value: q1011 * 1000, unit: 'L/s' },
+    { key: 'qd', label: 'Discharge per day', value: q1011 * 86400, unit: 'm³/day' },
+  ] },
+  'ev-2021-22-6b': { topics: ['ev-gw'], ans: [], final: final2122, Sol: Sol2122, from: ['ce22'], checks: () => [
+    { key: 'q', label: 'Well discharge $Q$ (Dupuit)', value: q2122, unit: 'm³/day' },
+    { key: 'qs', label: 'Specific capacity $Q/s$', value: q2122 / 20, unit: 'm³/day per m' },
+  ] },
+  'ev-2022-23-5a': { topics: ['ev-gw'], ans: [], final: final2223a2, Sol: Sol2223a, from: ['ce22'], notes: ['6 in = 0.15 m is the diameter, so r = 0.075 m (taking 0.15 as the radius would lower K by about 7 %).'], checks: () => [
+    { key: 'Q', label: 'Discharge $Q$', value: Q2223, unit: 'm³/day' },
+    { key: 'K', label: 'Permeability $K$', value: K2223r, unit: 'm/day' },
+  ] },
+  'ev-2022-23-5b': { topics: ['ev-gw'], ans: [], final: final2223b, Sol: Sol2223bS, from: ['ce22'], checks: () => [
+    { key: 'V', label: 'Volume released $\\Delta V=S_yA\\Delta h$', value: V2223b / 1e6, unit: '×10⁶ m³' },
+  ] },
+  'ev-2023-24-7b': { topics: ['ev-gw'], ans: [], final: final2324, Sol: Sol2324, from: ['ce22'], notes: ['Figure labels 430/330/100 overlap: read as aquifer top 330 ft and thickness 100 ft below the static level.'], checks: () => [
+    { key: 'Q', label: 'Single-well discharge $Q$', value: Q2324, unit: 'ft³/s' },
+    { key: 'Qg', label: 'Same, in gpm', value: Q2324 * 448.831, unit: 'gpm' },
+    { key: 'ds', label: 'Extra drawdown from the second well', value: add2324, unit: 'ft' },
+    { key: 's2', label: 'Total drawdown, both wells pumping', value: 18 + add2324, unit: 'ft' },
+  ] },
 }
 
 // engine pieces re-exported for the labs' own use is unnecessary; keep unused-import guard happy

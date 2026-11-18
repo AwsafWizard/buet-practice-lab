@@ -100,3 +100,28 @@ JSX text: never a bare `<` or `>` (write `{'<'}` or words). Figures use the them
 `npx tsc --noEmit -p .` and `npx vitest run src/env` must pass. The content test checks ids, `seen` labels, keys-in-answer, that mapped parts exist and point at real answers, and that every unsolved part has a flag.
 `EV_FULL=1 npx vitest run src/env` additionally checks that every part is mapped and every number part has a solution.
 Do not start dev servers, do not commit. In your report, list the parts you marked `textbook` or `none`, and anything you need from the shell.
+
+## Answer checks (`checks`) on worked solutions
+Every part with a `Sol` also gets `checks: () => EvCheck[]` (type in `src/env/types.ts`). The question card shows them as
+"Try it first — enter your key answers", with the same input boxes as CE 311 / CE 341, before the worked solution is opened.
+- **2–5 checks per part**: the numbers a marker looks for, in the order the solution reaches them (an intermediate the
+  student must get right, then the final answer(s)). Skip trivial echoes of given data.
+- `value` must come from the **same engine results the `Sol` uses** (the module-level consts such as `L1213`, `rJan`),
+  never a typed-in number. If a value lives only inside the `Sol` component, lift the engine call to a module const
+  and use it in both.
+- `label`: short markdown, `$TeX$` allowed (`$` paired, backslashes doubled inside normal strings). Say which quantity:
+  "Overflow rate $v_0$", "Lime dose (as CaO)". `unit` in the units the solution reports.
+- `key` unique within the part. Values in the same scale the label says (e.g. `R * 100` with unit `%`).
+- Tolerance: default 2 % relative. Use `tol: 0.03–0.05` for anything read off a chart or curve, `tol: 0.01` for
+  pH-like values, and `abs` for values that can be near zero (indices, ΔQ corrections).
+- Yes/no or pick-a-size answers (a pipe size, "scale-forming") stay in `final` only; check the number behind them.
+Example (`pyq/ta-math.tsx`, 'ev-jan-2021-2b'):
+```ts
+checks: () => [
+  { key: 'v0', label: 'Overflow rate $v_0$', value: rJan.v0, unit: 'm/min' },
+  { key: 'x0', label: 'Fraction slower than $v_0$, $x_0$', value: rJan.x0, tol: 0.03 },
+  { key: 'R', label: 'Overall removal $R$', value: rJan.R * 100, unit: '%', tol: 0.03 },
+]
+```
+`EV_FULL=1 npx vitest run src/env` fails until every `Sol` part has checks; the always-on test checks the values are finite,
+keys unique and `$` paired.

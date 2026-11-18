@@ -6,7 +6,7 @@ import { Step } from '../../components/ui'
 import { NumIn } from '../../reference/common'
 import { PumpCurvesTable } from '../figs/pump-curves-work'
 import { LineChart } from '../figs/pump-chart'
-import { PumpWork, Sheet, T, pumpFinal, sg, type PCase } from '../figs/pump-work'
+import { PumpWork, Sheet, T, pumpFinal, sg, solvePump, type PCase } from '../figs/pump-work'
 import { MassFigures, MassTable } from '../figs/rwh-work'
 import { PumpProfile } from '../figs/pump-profile'
 import {
@@ -14,7 +14,7 @@ import {
 } from '../engine/pump'
 import { RAIN_TABLES, catchmentArea, demandSideBnbc, dryMonths, harvest, monthlyFromLpd, scaleRain, supplySide } from '../engine/rwh'
 import { economicTank, galToFt3, tankCost, type GalKind } from '../engine/tank'
-import type { EvPartMap } from '../types'
+import type { EvCheck, EvPartMap } from '../types'
 
 const tx = String.raw
 
@@ -285,7 +285,25 @@ function Jan6Sol() {
   )
 }
 
-const pumpPart = (c: PCase, topics: EvPartMap['topics'] = ['ev-pump'], flag?: string): EvPartMap => ({ topics, ans: [], from: ['ce22'], final: pumpFinal(c), Sol: () => <PumpWork c={c} />, flag })
+/** the numbers a marker looks for in a pumping-main part: Q, the pipe size or velocity, the total head and the power */
+const pumpChecks = (c: PCase, withQ = true): EvCheck[] => {
+  const { des, pw } = solvePump(c)
+  const si = c.sys === 'si'
+  const out: EvCheck[] = []
+  if (withQ) out.push(si ? { key: 'Q', label: 'Discharge $Q$', value: c.Q * 1000, unit: 'L/s' } : { key: 'Q', label: 'Discharge $Q$', value: c.Q, unit: 'ft³/s' })
+  if (c.d != null) out.push({ key: 'v', label: 'Velocity $v$ in the pipe', value: des.pipe.v, unit: si ? 'm/s' : 'ft/s' })
+  else out.push(si ? { key: 'd', label: 'Pipe diameter $d$', value: des.pipe.d * 1000, unit: 'mm' } : { key: 'd', label: 'Pipe diameter $d$', value: des.pipe.d, unit: 'ft' })
+  out.push({ key: 'H', label: 'Total head $H$', value: des.H, unit: si ? 'm' : 'ft' })
+  if (si) {
+    out.push({ key: 'Pw', label: 'Water power', value: pw.waterKW, unit: 'kW' })
+    out.push(pw.motorKW != null ? { key: 'Pm', label: 'Motor input power', value: pw.motorKW, unit: 'kW' } : { key: 'Pin', label: 'Pump input power', value: pw.inputKW, unit: 'kW' })
+  } else {
+    out.push({ key: 'Pw', label: 'Water horsepower', value: pw.waterHp, unit: 'hp' })
+    out.push({ key: 'Pin', label: 'Input horsepower', value: pw.inputHp, unit: 'hp' })
+  }
+  return out
+}
+const pumpPart = (c: PCase, topics: EvPartMap['topics'] = ['ev-pump'], flag?: string): EvPartMap => ({ topics, ans: [], from: ['ce22'], final: pumpFinal(c), Sol: () => <PumpWork c={c} />, checks: () => pumpChecks(c), flag })
 
 // =================================================================== 2012-13 Q3(b): power and NPSH
 const npshCase = (Ls: number) => {
@@ -768,6 +786,15 @@ const tankPart = (k: string): EvPartMap => ({
   flag: 'The economic-dimension method is not in Rowshan ma\'am\'s or Snigdha ma\'am\'s CE22 slides; this is the standard textbook minimisation.',
   final: tankFinal(TANKS[k]),
   Sol: () => <TankWork c={TANKS[k]} />,
+  checks: () => {
+    const { V, t } = tankSol(TANKS[k])
+    return [
+      { key: 'V', label: 'Volume $V$', value: V, unit: 'ft³' },
+      { key: 'D', label: 'Optimum diameter $D$', value: t.D, unit: 'ft' },
+      { key: 'H', label: 'Optimum depth $H$', value: t.H, unit: 'ft' },
+      { key: 'cost', label: 'Minimum cost (floor + wall)', value: t.cost, unit: 'Tk' },
+    ]
+  },
 })
 
 // =================================================================== the map
@@ -776,18 +803,72 @@ export const RM_MATH: Record<string, EvPartMap> = {
   'ev-2008-09-7c': pumpPart(c0809),
   'ev-2009-10-6c': pumpPart(c0910, ['ev-pump', 'ev-trans']),
   'ev-2011-12-2b': pumpPart(c1112),
-  'ev-2012-13-1b': { topics: ['ev-pump'], ans: [], from: ['ce22'], final: curvesFinal(), Sol: CurvesSol },
-  'ev-2012-13-3b': { topics: ['ev-pump'], ans: [], from: ['ce22'], final: npshFinal(), Sol: NpshSol, notes: ['The paper does not say how much of the 30 m of pipe is on the suction side; the NPSH figure depends on that split (adjustable in the solution).'] },
+  'ev-2012-13-1b': { topics: ['ev-pump'], ans: [], from: ['ce22'], final: curvesFinal(), Sol: CurvesSol, checks: () => {
+    const [one, par, ser] = curvesCase().rows
+    return [
+      { key: 'Q1', label: 'One pump, min level: $Q$', value: one.min.Q, unit: 'm³/s', tol: 0.03 },
+      { key: 'H1', label: 'One pump, min level: $H$', value: one.min.H, unit: 'm', tol: 0.03 },
+      { key: 'Qp', label: 'Two in parallel, min level: $Q$', value: par.min.Q, unit: 'm³/s', tol: 0.03 },
+      { key: 'Qs', label: 'Two in series, min level: $Q$', value: ser.min.Q, unit: 'm³/s', tol: 0.03 },
+      { key: 'Hs', label: 'Two in series, min level: $H$', value: ser.min.H, unit: 'm', tol: 0.03 },
+    ]
+  } },
+  'ev-2012-13-3b': { topics: ['ev-pump'], ans: [], from: ['ce22'], final: npshFinal(), Sol: NpshSol, checks: () => {
+    const r = npshCase(5)
+    return [
+      { key: 'v', label: 'Velocity $v$ in the 250 mm pipe', value: r.pipe.v, unit: 'm/s' },
+      { key: 'H', label: 'Total head $H$ (with minor losses)', value: r.h.H, unit: 'm' },
+      { key: 'P', label: 'Power supplied to the flow', value: r.pw.waterKW, unit: 'kW' },
+      { key: 'npsh', label: 'NPSH available (5 m of suction pipe)', value: r.npsh, unit: 'm', tol: 0.03 },
+    ]
+  }, notes: ['The paper does not say how much of the 30 m of pipe is on the suction side; the NPSH figure depends on that split (adjustable in the solution).'] },
   'ev-2016-17-7c': pumpPart(c1617, ['ev-pump', 'ev-trans']),
-  'ev-jan-2021-1b': { topics: ['ev-rwh'], ans: [], from: ['ce22'], final: janFinal(), Sol: JanSol },
-  'ev-jan-2021-6b': { topics: ['ev-pump'], ans: [], from: ['ce22'], final: pumpFinal(jan6(100)) + ' (sample R = 100)', Sol: Jan6Sol, notes: ['R is the last three digits of your student ID; the sample solution uses R = 100.'] },
-  'ev-2020-21-3b': { topics: ['ev-rwh'], ans: [], from: ['ce22'], final: rw2021Final(), Sol: Rw2021Sol },
+  'ev-jan-2021-1b': { topics: ['ev-rwh'], ans: [], from: ['ce22'], final: janFinal(), Sol: JanSol, checks: () => {
+    const r = janRwh(100)
+    return [
+      { key: 'A', label: 'Catchment area, sample $R = 100$', value: r.area, unit: 'm²' },
+      { key: 'Vh', label: 'Annual harvest', value: r.s.annualHarvest, unit: 'm³/yr' },
+      { key: 'dem', label: 'Monthly demand used', value: r.s.demandUsed, unit: 'm³/month' },
+      { key: 'tank', label: 'Tank volume', value: r.s.tank, unit: 'm³', tol: 0.03 },
+    ]
+  } },
+  'ev-jan-2021-6b': { topics: ['ev-pump'], ans: [], from: ['ce22'], final: pumpFinal(jan6(100)) + ' (sample R = 100)', Sol: Jan6Sol, checks: () => pumpChecks(jan6(100), false).map((k) => ({ ...k, label: k.label + ' (R = 100)' })), notes: ['R is the last three digits of your student ID; the sample solution uses R = 100.'] },
+  'ev-2020-21-3b': { topics: ['ev-rwh'], ans: [], from: ['ce22'], final: rw2021Final(), Sol: Rw2021Sol, checks: () => {
+    const r = rw2021()
+    return [
+      { key: 'A', label: 'Effective catchment area', value: r.cat.total, unit: 'm²' },
+      { key: 'dem', label: 'Demand-side tank (BNBC, +10 %)', value: r.bn.designM3, unit: 'm³' },
+      { key: 'Vh', label: 'Annual harvest', value: r.s.annualHarvest, unit: 'm³/yr' },
+      { key: 'tank', label: 'Supply-side tank volume', value: r.s.tank, unit: 'm³', tol: 0.03 },
+    ]
+  } },
   'ev-2020-21-4b': pumpPart(c2021),
   'ev-2021-22-1c': { ...pumpPart(c2122), notes: ['Only the numbers sub-ask is solved here; priming and cavitation are theory.'] },
-  'ev-2021-22-8c': { topics: ['ev-rwh'], ans: [], from: ['ce22'], final: rw2122Final(), Sol: Rw2122Sol, notes: ['Occupancy and the potable / non-potable split are not given in the paper: they are assumed (and editable).'] },
+  'ev-2021-22-8c': { topics: ['ev-rwh'], ans: [], from: ['ce22'], final: rw2122Final(), Sol: Rw2122Sol, checks: () => {
+    const r = rw2122(140, 20, 100, 0.8)
+    return [
+      { key: 'dem', label: 'Demand-side design volume (BNBC, +10 %)', value: r.bn.designM3, unit: 'm³' },
+      { key: 'Vh', label: 'Annual harvest', value: r.s.annualHarvest, unit: 'm³/yr' },
+      { key: 'tank', label: 'Supply-side tank volume', value: r.s.tank, unit: 'm³', tol: 0.03 },
+    ]
+  }, notes: ['Occupancy and the potable / non-potable split are not given in the paper: they are assumed (and editable).'] },
   'ev-2022-23-1b': pumpPart(c2223),
-  'ev-2022-23-2a': { topics: ['ev-rwh'], ans: [], from: ['ce22'], final: rw2223Final(), Sol: Rw2223Sol, flag: 'The paper gives only the annual rainfall and no demand: the monthly pattern and the use of the whole harvest are assumptions.' },
-  'ev-2023-24-3d': { topics: ['ev-rwh'], ans: [], from: ['ce22'], final: rw2324Final(), Sol: Rw2324Sol },
+  'ev-2022-23-2a': { topics: ['ev-rwh'], ans: [], from: ['ce22'], final: rw2223Final(), Sol: Rw2223Sol, checks: () => {
+    const r = rw2223()
+    return [
+      { key: 'A', label: 'Effective catchment area', value: r.cat.total, unit: 'm²' },
+      { key: 'Vh', label: 'Annual harvest', value: r.s.annualHarvest, unit: 'm³/yr' },
+      { key: 'tank', label: 'Tank volume', value: r.s.tank, unit: 'm³', tol: 0.03 },
+    ]
+  }, flag: 'The paper gives only the annual rainfall and no demand: the monthly pattern and the use of the whole harvest are assumptions.' },
+  'ev-2023-24-3d': { topics: ['ev-rwh'], ans: [], from: ['ce22'], final: rw2324Final(), Sol: Rw2324Sol, checks: () => {
+    const r = rw2324()
+    return [
+      { key: 'V', label: 'Demand volume $V = n d q$', value: r.dm.V, unit: 'L' },
+      { key: 'Vd', label: 'Design volume with 10 % freeboard', value: r.dm.design, unit: 'L' },
+      { key: 'Vh', label: 'Annual roof harvest', value: r.harv, unit: 'm³/yr' },
+    ]
+  } },
   'ev-2023-24-8b': { ...pumpPart(c2324), notes: ['Only the design numbers are solved here; priming and cavitation are theory.'] },
   'ev-2020-21-2c': { ...tankPart('2020-21-2c'), notes: [`The paper just says "gallon": Rowshan ma'am's slides take 1 (British) gallon = 0.16 ft³, used here. Read as US gallons (0.1337 ft³) the same method gives D ≈ 37.1 ft, H ≈ 12.4 ft. State which gallon you use.`] },
   'ev-2009-10-1d': { ...tankPart('2009-10-1d'), notes: [`The paper just says "gallon": Rowshan ma'am's slides take 1 (British) gallon = 0.16 ft³, used here. Read as US gallons (0.1337 ft³) the same method gives D ≈ 44.9 ft, H ≈ 16.9 ft. State which gallon you use.`] },

@@ -163,11 +163,29 @@ export interface EvPartMap {
   Sol?: FC
   /** one-line final answer(s), shown under the question for self-checking, e.g. 'Q = 1.23 cusec, 45 hp' */
   final?: string
+  /** the key numbers to try before opening the worked solution, computed by the same engine calls as `Sol` */
+  checks?: () => EvCheck[]
   /** where the answer comes from (first = main source); missing → 'ce22' when it has answers */
   from?: EvSource[]
   /** outside this term's material, or a print problem */
   flag?: string
   notes?: string[]
+}
+
+/** one number the student enters before opening the worked solution (same shape as CE 311's `Check`) */
+export interface EvCheck {
+  /** unique within the part */
+  key: string
+  /** markdown, may use $TeX$ */
+  label: string
+  value: number
+  unit?: string
+  /** relative tolerance (default 0.02); widen it for values read off a chart */
+  tol?: number
+  /** absolute tolerance floor, for values that can be near zero */
+  abs?: number
+  magnitude?: boolean
+  hint?: string
 }
 
 /** a past-paper part with its answer map, as the pages use it */
