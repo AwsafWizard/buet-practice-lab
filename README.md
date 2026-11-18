@@ -18,7 +18,8 @@ its own colour theme, topic tabs, labs, solved past papers, planner and mock-exa
 - **Topic tabs** with Overview → Approach (animated walk-through) → Lab (interactive, every input selectable) →
   Past Questions → My Problems. CE 301 is a recall course, so its Lab is built for memorising instead:
   flashcards (Leitner boxes), keyword recall, ordering drills, cloze and blurt answers. CE 331 has both: a Lab on every
-  number topic and a Recall tab, with every drill across the course in the **Memory Well**.
+  number topic and a Recall tab, with every drill across the course in the **Memory Well**, every model answer in the
+  **Answer bank** and every past calculation, design and derivation in the **Maths bank** (`/ce331/maths`).
 - **Every past-paper part** with redrawn figures, answer checks and worked solutions. Numbers come from built-in
   solvers, not typed by hand:
   - CE 311: 2D stiffness frame solver, influence lines and moving loads, portal/cantilever methods, BNBC 2020 wind,

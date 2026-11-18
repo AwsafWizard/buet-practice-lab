@@ -18,6 +18,7 @@ const EvWell = lazy(() => import('./pages/EvWell'))
 const EvPapers = lazy(() => import('./pages/EvPapers'))
 const EvQuestionPage = lazy(() => import('./pages/EvQuestionPage'))
 const EvAnswerBank = lazy(() => import('./pages/EvAnswerBank'))
+const EvMathsBank = lazy(() => import('./pages/EvMathsBank'))
 const ScreenTime = lazy(() => import('../pages/ScreenTime'))
 
 export function EvLogo({ size = 30 }: { size?: number }) {
@@ -53,6 +54,7 @@ export default function EvApp() {
               <Route path="/ce331/papers/:paper" element={<EvPapers />} />
               <Route path="/ce331/q/:qid" element={<EvQuestionPage />} />
               <Route path="/ce331/answers" element={<EvAnswerBank />} />
+              <Route path="/ce331/maths" element={<EvMathsBank />} />
               <Route path="/ce331/time" element={<ScreenTime />} />
               {accountRoutes('ce331')}
               <Route path="*" element={<EvOverview />} />
@@ -85,6 +87,7 @@ function EvSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
         { to: '/ce331/well', icon: glyph('🪣'), label: 'Memory Well', title: 'Memory Well — every flashcard and recall drill' },
         { to: '/ce331/papers', icon: glyph('▤'), label: 'Past papers & mocks', title: 'Past papers & mocks' },
         { to: '/ce331/answers', icon: glyph('✎'), label: 'Answer bank', title: 'Answer bank — model answers, most-asked first' },
+        { to: '/ce331/maths', icon: glyph('∑'), label: 'Maths bank', title: 'Maths bank — every past calculation, design and derivation with worked solutions' },
         ...accountLinks,
       ]}
       groups={EV_BLOCKS.map((b) => ({

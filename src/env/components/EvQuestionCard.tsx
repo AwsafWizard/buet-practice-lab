@@ -55,7 +55,11 @@ export function EvQuestionCard({ q, showPaper = true, open: open0 = false }: { q
           ) : null
         })}
         <SourceChips q={q} />
-        {q.flag && <span className="chip text-load" title={q.flag}>⚑ {q.flag}</span>}
+        {q.flag && (
+          <span className="chip text-load !whitespace-normal !rounded-lg max-w-full" title={q.flag}>
+            ⚑ {q.flag}
+          </span>
+        )}
         <div className="ml-auto flex gap-0.5" role="group" aria-label="status">
           {ST.map((s) => (
             <button key={s.v} className={'btn !py-0 !px-2 !text-[11px] ' + (status === s.v ? '!border-accent ' + (s.cls || 'text-accent') : 'text-faint')} onClick={() => setStatus(q.id, s.v)}>

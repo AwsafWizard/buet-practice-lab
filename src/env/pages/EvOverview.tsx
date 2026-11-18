@@ -98,6 +98,9 @@ export default function EvOverview() {
 
       <Section title="Labs for the numbers" sub="Play first, then the exam-style problems under each lab. Every number in a worked solution comes from these engines.">
         <LabStrip />
+        <Link to="/ce331/maths" className="btn !text-sm mt-3 inline-flex">
+          ∑ Maths bank: every past calculation with its worked solution →
+        </Link>
       </Section>
 
       <Section title="Asked again and again" sub="Model answers ranked by how many papers asked them. Know these cold.">

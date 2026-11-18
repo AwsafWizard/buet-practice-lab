@@ -57,7 +57,7 @@ Notes from the maths agents:
 
 ## Still to do
 1. ~~Commit + push~~: done 18 Nov 2026 at the user's request (Vercel builds `master`).
-2. **Supabase**: run the `threads_course_check` lines of `supabase/accounts.sql` on the live project (with the user's OK), so admins can post CE 331 threads. Until then a CE 331-only thread insert fails the check. "All courses" threads still work.
+2. ~~Supabase~~: done 18 Nov 2026 with the user's OK. The live `threads_course_check` now allows `ce331`, so admins can post CE 331 threads.
 3. Optional: republish the phone Artifact (`npm run build:artifact`) with `scans331/`.
 4. Optional polish the agents flagged:
    - 2023-24 Q1(c) needs the 85 % iso-removal line extrapolated (≈ 165–175 min).
