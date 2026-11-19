@@ -145,7 +145,7 @@ function Type2Bench() {
           <Slider label="Basin depth Z₀" value={H} min={Math.max(0.5, +(chart.H / 3).toFixed(2))} max={chart.H} step={0.25} onChange={setH} unit=" m" />
         </div>
         <div className="rounded-xl border border-line p-2 bg-bg/40">
-          <IsoChartFig H={chart.H} tMax={chart.tMax} curves={chart.curves} t0={t0} res={H === chart.H ? res : undefined} title={chart.title} />
+          <IsoChartFig H={chart.H} tMax={chart.tMax} curves={chart.curves} t0={t0} res={H === chart.H ? res : undefined} title={chart.title} grid={chart.grid} />
         </div>
         <div className="overflow-x-auto">
           <table className="text-sm w-full">

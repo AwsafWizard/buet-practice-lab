@@ -112,7 +112,7 @@ function ChartSol({ chart, H, times, curves, intro, note }: { chart: IsoChart; H
           <div key={t} className="space-y-2">
             <Doc md={`### Detention time ${t} min\n\n` + isoMd(r)} />
             <Fig cap={`Worked chart for t₀ = ${t} min: the shaded bands are the strips, ΔR written beside the mean depth of each. Attach this with the script.`}>
-              <IsoChartFig H={H} tMax={chart.tMax} curves={cs} t0={t} res={r} />
+              <IsoChartFig H={H} tMax={chart.tMax} curves={cs} t0={t} res={r} grid={H === chart.H ? chart.grid : undefined} />
             </Fig>
           </div>
         )
@@ -135,7 +135,7 @@ const Sol1718 = () => (
       intro={[
         '### Given',
         'Flocculent (Type II) suspension, $C_0 = 300$ mg/L, column and basin depth $Z_0 = 3$ m. Iso-removal lines 40, 45, 50, 60, 70, 80, 90 % from Figure 1. Draw a vertical line at the detention time; $r_0$ is the curve that just reaches the bottom; each strip between two curves removes a fraction $\\Delta R\\cdot Z_i/Z_0$ (Z measured down from the surface to the middle of the strip).',
-        '### Steps (curves read off the figure; reading error about ±0.1 m)',
+        '### Steps (depths read where each curve crosses the vertical; the figure’s printed % at the sampling points fix the curves, ±0.05 m)',
       ].join('\n\n')}
       note={`Check against the printed grid: at 3.0 m the figure reads 45 % at 90 min and 70 % at 180 min, exactly the $r_0$ used. The extra 20 % of the water above the top (90 %) curve is credited with the strip from that curve to the surface (the curve is taken to 100 % at the surface), as in the class example.`}
     />
@@ -542,7 +542,7 @@ export const TA_MATH: Record<string, EvPartMap> = {
       { key: 'r0b', label: 'Curve reaching the bottom, $r_0$ at 180 min', value: r1718b.r0, unit: '%', tol: 0.04 },
       { key: 'sumb', label: '$\\sum \\Delta R\\,Z_i$ at 180 min', value: r1718b.sum, tol: 0.05 },
       { key: 'Rb', label: 'Overall removal $R$ at 180 min', value: r1718b.R, unit: '%', tol: 0.04 },
-    ], from: ['ce22'], final: final1718, Sol: Sol1718, notes: ['Chart read from the transcription’s curve readings (±0.1 m); the printed grid of % removal is consistent with them (45 % at 3 m, 90 min; 70 % at 3 m, 180 min).'] },
+    ], from: ['ce22'], final: final1718, Sol: Sol1718, notes: ['Curves built from the % removal printed at each sampling point (interpolated down each time column), so they pass through the paper’s own data; the depths at 90 min match the dots the paper marks on its 90-min line. The half-hidden value at 1.5 m / 30 min is taken as 30 (the drawn curves need it). Reading the drawn curves by eye gives the same answers within about 1 %.'] },
   'ev-2017-18-4b': { topics: ['ev-soft'], ans: [], checks: () => [
       { key: 'X', label: 'Bypass fraction $X$', value: s1718.X, tol: 0.03 },
       { key: 'lime', label: 'Lime dose on the whole flow', value: s1718.lime, unit: 'mg/L as CaCO₃' },

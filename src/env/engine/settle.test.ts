@@ -68,19 +68,21 @@ describe('settle (TA T05 oracles)', () => {
     expect(t.overflowMh).toBeCloseTo(0.833, 2)
     expect(t.Aunit).toBe(375)
   })
-  it('2017-18 Q3(b) from the curves: t = 90 min → 66.5 %, t = 180 min → 84.2 %', () => {
+  it('2017-18 Q3(b) from the curves: t = 90 min → 65.8 %, t = 180 min → 84.2 %', () => {
     const a = isoFromCurves(CHART_2017.curves, 3, 90)
     expect(a.r0).toBe(45)
-    expect(a.R).toBeCloseTo(66.5, 0)
+    expect(a.R).toBeCloseTo(65.82, 1)
+    // strip mid-depths match the dots the paper marks on its 90-min line (2.6, 2.1, 1.25, 0.8, 0.48, 0.2) within 0.12 m
+    a.strips.forEach((st, i) => expect(Math.abs(st.zMid - [2.6, 2.1, 1.25, 0.8, 0.48, 0.2][i]), `strip ${i}`).toBeLessThan(0.12))
     const b = isoFromCurves(CHART_2017.curves, 3, 180)
     expect(b.r0).toBe(70)
     expect(b.R).toBeCloseTo(84.2, 0)
   })
-  it('2017-18 Q3(b) from the printed grid agrees within 2 points', () => {
+  it('2017-18 Q3(b): the curves are the printed grid, so the grid method gives the same answer', () => {
     const a = isoFromGrid(CHART_2017.grid!, 3, 90)
     const b = isoFromGrid(CHART_2017.grid!, 3, 180)
-    expect(Math.abs(a.R - 66.5)).toBeLessThan(2)
-    expect(Math.abs(b.R - 84.2)).toBeLessThan(2.5)
+    expect(a.R).toBeCloseTo(65.82, 1)
+    expect(b.R).toBeCloseTo(84.17, 1)
   })
   it('2020-21 Q5(a): 3 m, 20 min → r0 20 %, ΔR strips, R ≈ 40 %', () => {
     const r = isoFromCurves(CHART_2021.curves, 3, 20)
@@ -96,8 +98,20 @@ describe('settle (TA T05 oracles)', () => {
     expect(isoFromCurves(CHART_2324.curves, 2.5, t).extrapolated).toBe(true)
     expect(isoFromCurves(CHART_2324.curves, 2.5, 90).extrapolated).toBe(false)
   })
-  it('curveDepthAt interpolates and extends', () => {
-    expect(curveDepthAt({ r: 1, pts: [[0, 0], [10, 1], [20, 3]] }, 15).z).toBe(2)
+  it('curveDepthAt passes through every reading, never overshoots, and extends straight', () => {
+    const c = { r: 1, pts: [[0, 0], [10, 1], [20, 3]] as [number, number][] }
+    expect(curveDepthAt(c, 10).z).toBeCloseTo(1, 12)
+    expect(curveDepthAt(c, 20).z).toBeCloseTo(3, 12)
+    for (const ch of [CHART_2017, CHART_2021, CHART_2324])
+      for (const cv of ch.curves) {
+        for (const [t, z] of cv.pts) expect(curveDepthAt(cv, t).z, `${ch.id} ${cv.r}% at ${t}`).toBeCloseTo(z, 9)
+        let prev = -1
+        for (let t = 0; t <= cv.pts[cv.pts.length - 1][0]; t += 0.5) {
+          const z = curveDepthAt(cv, t).z
+          expect(z, `${ch.id} ${cv.r}% monotone at ${t}`).toBeGreaterThanOrEqual(prev - 1e-9)
+          prev = z
+        }
+      }
     const e = curveDepthAt({ r: 1, pts: [[0, 0], [10, 1], [20, 3]] }, 25)
     expect(e.z).toBe(4)
     expect(e.extrapolated).toBe(true)

@@ -1,10 +1,11 @@
 // The worked iso-removal chart: curves, the detention-time line, and the ΔR strips shaded and labelled.
-import type { IsoChart, IsoCurve, IsoResult } from '../engine/settle'
-import { curveDepthAt } from '../engine/settle'
+import type { IsoChart, IsoCurve, IsoGrid, IsoResult } from '../engine/settle'
+import { curveDepthAt, curveSamples } from '../engine/settle'
 
 const STRIP_FILL = ['var(--c-accent)', 'var(--c-water)', 'var(--c-good)', 'var(--c-load)', 'var(--c-accent2)', 'var(--c-soil)', 'var(--c-sn)']
 
-export function IsoChartFig({ H, tMax, curves, t0, res, title }: { H: number; tMax: number; curves: IsoCurve[]; t0?: number; res?: IsoResult; title?: string }) {
+/** `grid`: the paper's printed % removal at each sampling point, drawn as small numbers so the curves can be checked against the data */
+export function IsoChartFig({ H, tMax, curves, t0, res, title, grid }: { H: number; tMax: number; curves: IsoCurve[]; t0?: number; res?: IsoResult; title?: string; grid?: IsoGrid }) {
   const W = 560
   const Hh = 330
   const ml = 46
@@ -19,7 +20,8 @@ export function IsoChartFig({ H, tMax, curves, t0, res, title }: { H: number; tM
   const dstep = H <= 3 ? 0.5 : 1
   const ys: number[] = []
   for (let z = 0; z <= H + 1e-9; z += dstep) ys.push(z)
-  const cl = curves.map((c) => ({ ...c, pts: c.pts.filter((p) => p[0] <= tMax + 1e-9 && p[1] <= H + 1e-9) }))
+  // smooth monotone curves through the read points (straight chords between readings looked kinked)
+  const cl = curves.map((c) => ({ ...c, pts: curveSamples(c, tMax).filter((p) => p[1] <= H + 1e-6) }))
   return (
     <svg viewBox={`0 0 ${W} ${Hh}`} width="100%" role="img" aria-label={title ?? 'iso-removal chart'} style={{ display: 'block' }}>
       {ys.map((z) => (
@@ -36,6 +38,17 @@ export function IsoChartFig({ H, tMax, curves, t0, res, title }: { H: number; tM
       ))}
       <text x={(ml + W - mr) / 2} y={Hh - 6} textAnchor="middle" fontSize="12" fill="var(--c-mute)">time t (min)</text>
       <text x={12} y={mt + (Hh - mt - mb) / 2} fontSize="12" fill="var(--c-mute)" transform={`rotate(-90 12 ${mt + (Hh - mt - mb) / 2})`} textAnchor="middle">depth (m)</text>
+      {grid &&
+        grid.depths.flatMap((z, i) =>
+          grid.times.map((t, j) =>
+            t <= tMax + 1e-9 && z <= H + 1e-9 ? (
+              <g key={`g${i}-${j}`}>
+                <circle cx={sx(t)} cy={sy(z)} r="2" fill="var(--c-faint)" />
+                <text x={sx(t) + 3} y={sy(z) - 3} fontSize="9" fill="var(--c-mute)">{+grid.R[i][j].toFixed(0)}</text>
+              </g>
+            ) : null,
+          ),
+        )}
       {t0 !== undefined && res && res.strips.map((s, i) => {
         const w = 18
         return (
@@ -50,8 +63,12 @@ export function IsoChartFig({ H, tMax, curves, t0, res, title }: { H: number; tM
         const last = c.pts[c.pts.length - 1]
         return (
           <g key={c.r}>
-            <polyline points={c.pts.map((p) => `${sx(p[0])},${sy(p[1])}`).join(' ')} fill="none" stroke="var(--c-accent)" strokeWidth="1.6" />
-            <text x={Math.min(sx(last[0]) + 3, W - mr - 20)} y={sy(last[1]) + (last[1] >= H - 1e-6 ? -4 : 12)} fontSize="11" fill="var(--c-ink)" fontWeight="600">{c.r}%</text>
+            <polyline points={c.pts.map((p) => `${sx(p[0]).toFixed(1)},${sy(p[1]).toFixed(1)}`).join(' ')} fill="none" stroke="var(--c-accent)" strokeWidth="1.6" strokeLinejoin="round" />
+            {last[1] >= H - 1e-6 ? (
+              <text x={sx(last[0]) + 3} y={sy(last[1]) - 4} fontSize="11" fill="var(--c-ink)" fontWeight="600">{c.r}%</text>
+            ) : (
+              <text x={sx(last[0]) - 3} y={sy(last[1]) - 5} textAnchor="end" fontSize="11" fill="var(--c-ink)" fontWeight="600">{c.r}%</text>
+            )}
           </g>
         )
       })}

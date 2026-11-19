@@ -143,20 +143,71 @@ export interface IsoCurve {
   r: number
   pts: [number, number][]
 }
-/** depth (m) of a curve at time t; beyond the last point the last segment is extended (extrapolated = true) */
+/** slopes for a monotone cubic through the points (Fritsch–Butland): smooth like a hand-drawn curve, never overshooting a reading */
+function hermiteSlopes(p: [number, number][]): number[] {
+  const n = p.length
+  const d = p.slice(1).map(([t, z], i) => (z - p[i][1]) / (t - p[i][0]))
+  const h = p.slice(1).map(([t], i) => t - p[i][0])
+  const m = new Array<number>(n).fill(0)
+  if (n < 2) return m
+  m[0] = d[0]
+  m[n - 1] = d[n - 2]
+  for (let k = 1; k < n - 1; k++) {
+    const a = d[k - 1]
+    const b = d[k]
+    m[k] = a * b <= 0 ? 0 : (3 * (h[k - 1] + h[k])) / ((2 * h[k] + h[k - 1]) / a + (h[k] + 2 * h[k - 1]) / b)
+  }
+  // end slopes: keep them between 0 and 3× the end segment's slope (monotone)
+  if (n > 2) {
+    m[0] = Math.max(0, Math.min((3 * d[0] - m[1]) / 2, 3 * d[0])) || d[0]
+    m[n - 1] = Math.max(0, Math.min((3 * d[n - 2] - m[n - 2]) / 2, 3 * d[n - 2])) || d[n - 2]
+    if (d[0] <= 0) m[0] = d[0]
+    if (d[n - 2] <= 0) m[n - 1] = d[n - 2]
+  }
+  return m
+}
+const slopeCache = new WeakMap<[number, number][], number[]>()
+const slopesOf = (p: [number, number][]) => {
+  let m = slopeCache.get(p)
+  if (!m) slopeCache.set(p, (m = hermiteSlopes(p)))
+  return m
+}
+
+/**
+ * depth (m) of a curve at time t: a smooth monotone cubic through the read points (it passes through every reading,
+ * so answers at a read time are exactly the reading); beyond the last point the last segment is extended straight (extrapolated = true)
+ */
 export function curveDepthAt(c: IsoCurve, t: number): { z: number; extrapolated: boolean } {
   const p = c.pts
   if (t <= p[0][0]) return { z: p[0][1], extrapolated: false }
+  const m = slopesOf(p)
   for (let i = 1; i < p.length; i++) {
     if (t <= p[i][0]) {
       const [ta, za] = p[i - 1]
       const [tb, zb] = p[i]
-      return { z: za + ((t - ta) / (tb - ta)) * (zb - za), extrapolated: false }
+      const h = tb - ta
+      const s = (t - ta) / h
+      const h00 = 2 * s ** 3 - 3 * s ** 2 + 1
+      const h10 = s ** 3 - 2 * s ** 2 + s
+      const h01 = -2 * s ** 3 + 3 * s ** 2
+      const h11 = s ** 3 - s ** 2
+      return { z: h00 * za + h10 * h * m[i - 1] + h01 * zb + h11 * h * m[i], extrapolated: false }
     }
   }
   const [ta, za] = p[p.length - 2]
   const [tb, zb] = p[p.length - 1]
   return { z: zb + ((t - tb) * (zb - za)) / (tb - ta), extrapolated: true }
+}
+
+/** points along a curve for drawing (smooth), from t = 0 to its last reading or tMax */
+export function curveSamples(c: IsoCurve, tMax: number, n = 90): [number, number][] {
+  const end = Math.min(c.pts[c.pts.length - 1][0], tMax)
+  const out: [number, number][] = []
+  for (let i = 0; i <= n; i++) {
+    const t = (end * i) / n
+    out.push([t, curveDepthAt(c, t).z])
+  }
+  return out
 }
 
 /** a curve that reaches the bottom H at time tb with z = H (t/tb)^p  (a convex curve through the origin) */
@@ -365,7 +416,7 @@ export const CHART_2021: IsoChart = {
   title: '2020-21 Q5(a): flocculent suspension, 3 m basin',
   H: 3,
   tMax: 40,
-  note: 'Readings from the transcription (±0.1 m, ±1 min); the curves are drawn through the listed points from the origin.',
+  note: 'Readings from the transcription (±0.1 m, ±1 min); the curves are smooth monotone curves through the listed points from the origin.',
   curves: [
     c(10, [[5, 1.3], [6, 1.5], [7.5, 2.5], [8, 3.0]]),
     c(20, [[8.7, 1.0], [12.5, 1.5], [15, 1.95], [17.8, 2.5], [20, 3.0]]),
@@ -376,33 +427,62 @@ export const CHART_2021: IsoChart = {
   ],
 }
 
+/** 2017-18 Q3(b): the % removal the paper prints at each sampling point (depth × time). The 1.5 m / 30 min value is half hidden
+ *  ("3?"): 30 is the reading the drawn 40/45/50 % curves need (they cross 30 min at 1.33, 1.25, 1.15 m); 39 would put them 0.15 m lower. */
+const GRID_2017: IsoGrid = {
+  depths: [0.5, 1, 1.5, 2, 2.5, 3],
+  times: [30, 60, 90, 120, 150, 180],
+  R: [
+    [60, 76, 85, 89, 92, 93],
+    [58, 62, 70, 80, 83, 87],
+    [30, 53, 63, 73, 80, 83],
+    [28, 47, 56, 65, 70, 80],
+    [23, 37, 48, 60, 66, 76],
+    [20, 35, 45, 56, 62, 70],
+  ],
+}
+
+/**
+ * iso-removal curves from a printed grid, the way they are drawn by hand: at each sampling time the r % line crosses the
+ * column at the depth found by straight-line interpolation (100 % at the surface); once the bottom row reaches r, the
+ * curve meets the bottom at the time interpolated along that row. Drawn smooth through those points (see curveDepthAt).
+ */
+export function curvesFromGrid(g: IsoGrid, H: number, levels: number[]): IsoCurve[] {
+  const D = [0, ...g.depths]
+  const last = g.depths.length - 1
+  return levels.map((r) => {
+    const pts: [number, number][] = [[0, 0]]
+    let prevT = 0
+    let prevBottom = 0
+    for (let j = 0; j < g.times.length; j++) {
+      const t = g.times[j]
+      const col = [100, ...g.R.map((row) => row[j])]
+      const bottom = g.R[last][j]
+      if (bottom >= r) {
+        const tb = prevT + ((r - prevBottom) / (bottom - prevBottom)) * (t - prevT)
+        if (tb > pts[pts.length - 1][0] + 1e-9) pts.push([tb, H])
+        break
+      }
+      for (let i = 0; i < col.length - 1; i++)
+        if (col[i] >= r && col[i + 1] < r) {
+          pts.push([t, D[i] + ((col[i] - r) / (col[i] - col[i + 1])) * (D[i + 1] - D[i])])
+          break
+        }
+      prevT = t
+      prevBottom = bottom
+    }
+    return { r, pts }
+  })
+}
+
 export const CHART_2017: IsoChart = {
   id: '2017-18-3b',
   title: '2017-18 Q3(b): flocculent suspension, 300 mg/L, 3 m column',
   H: 3,
   tMax: 180,
-  note: 'Curves from the transcription’s listed points; the printed grid of % removal is a cross-check (one value, 1.5 m at 30 min, is hidden behind a curve; 2.0 m at 90 min reads 5?).',
-  curves: [
-    c(90, [[30, 0.12], [90, 0.33], [120, 0.45], [150, 0.6], [180, 0.75]]),
-    c(80, [[30, 0.25], [60, 0.45], [90, 0.8], [120, 1.0], [150, 1.5], [180, 2.0]]),
-    c(70, [[30, 0.37], [48, 0.5], [60, 0.7], [90, 1.0], [120, 1.7], [150, 2.0], [180, 3.0]]),
-    c(60, [[30, 0.5], [45, 1.0], [60, 1.1], [90, 1.8], [120, 2.5], [140, 3.0]]),
-    c(50, [[30, 1.15], [55, 1.5], [60, 1.75], [75, 2.0], [90, 2.35], [103, 3.0]]),
-    c(45, [[30, 1.25], [48, 1.5], [60, 2.2], [90, 3.0]]),
-    c(40, [[30, 1.33], [42, 1.5], [48, 2.0], [65, 2.5], [75, 3.0]]),
-  ],
-  grid: {
-    depths: [0.5, 1, 1.5, 2, 2.5, 3],
-    times: [30, 60, 90, 120, 150, 180],
-    R: [
-      [60, 76, 85, 89, 92, 93],
-      [58, 62, 70, 80, 83, 87],
-      [39, 53, 63, 73, 80, 83],
-      [28, 47, 56, 65, 70, 80],
-      [23, 37, 48, 60, 66, 76],
-      [20, 35, 45, 56, 62, 70],
-    ],
-  },
+  note: 'Curves built from the % removal the paper prints at each sampling point (the small numbers): the depth of each level in every time column by straight-line interpolation, and where it meets the bottom along the 3 m row, drawn as smooth curves. They follow the paper’s drawn curves to within the ±0.1 m those can be read to.',
+  curves: curvesFromGrid(GRID_2017, 3, [40, 45, 50, 60, 70, 80, 90]),
+  grid: GRID_2017,
 }
 
 /** T05-C (slide p12): SS (mg/L) at depths × times, C0 = 250 */

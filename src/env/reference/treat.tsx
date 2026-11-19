@@ -168,7 +168,7 @@ $$R = r_0 + \sum \frac{\Delta R\,Z_i}{Z_0}$$`}</Md>
           </button>
         ))}
       </div>
-      <IsoChartFig H={ch.H} tMax={ch.tMax} curves={ch.curves} t0={good ? t0 : undefined} res={res ?? undefined} title={ch.title} />
+      <IsoChartFig H={ch.H} tMax={ch.tMax} curves={ch.curves} t0={good ? t0 : undefined} res={res ?? undefined} title={ch.title} grid={ch.grid} />
       {res && (
         <RT
           head={['ΔR (%)', 'Z_i (m)', 'ΔR·Z_i']}
