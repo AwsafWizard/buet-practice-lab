@@ -7,15 +7,9 @@ import { useStore } from '../../store'
 import { TopicIcon } from '../../topics/icons'
 import { EvQuestionCard } from '../components/EvQuestionCard'
 import { EV_LAB_TITLE, EV_LABS } from '../labs'
-import { EV_ALL } from '../pyq'
+import { EV_MATHS, isNumbers } from '../pyq'
 import { EV_BLOCK_LABEL, EV_BLOCKS, EV_TOPICS, type EvBlock } from '../registry'
 import type { EvQ } from '../types'
-
-/** a part with numbers to work out: it has a worked solution, or the paper marks it as a calculation or design */
-const isNumbers = (q: EvQ) => !!q.Sol || /math|design/.test(q.kind ?? '')
-const isDerivation = (q: EvQ) => /derivation/.test(q.kind ?? '')
-
-export const EV_MATHS: EvQ[] = EV_ALL.filter((q) => isNumbers(q) || isDerivation(q))
 
 type Kind = 'all' | 'num' | 'deriv'
 type Status = 'all' | 'open' | 'review' | 'solved'

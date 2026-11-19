@@ -10,7 +10,9 @@ import { useStore } from '../store'
 import { TopicIcon } from '../topics/icons'
 import { CodePane, useEvPageGroup } from './components/CodePane'
 import { deckFor } from './content'
+import { EV_LABS } from './labs'
 import { EV_EXAM_DATE } from './plan'
+import { EV_MATHS } from './pyq'
 import { paneWidth, usePane } from './reference/pane'
 import { EV_BLOCK_LABEL, EV_BLOCKS, EV_TOPICS } from './registry'
 
@@ -78,6 +80,23 @@ export default function EvApp() {
   )
 }
 
+/** what a topic's maths is: past-paper calculations/derivations (as in the Maths bank) and/or a lab */
+function mathsNote(id: string) {
+  const n = EV_MATHS.filter((q) => q.topics[0] === id).length
+  const lab = id in EV_LABS
+  if (!n && !lab) return null
+  const parts = [n ? `${n} past-paper maths part${n > 1 ? 's' : ''}` : '', lab ? 'a lab' : ''].filter(Boolean)
+  return `Has maths: ${parts.join(' + ')}`
+}
+
+function MathsMark({ note }: { note: string }) {
+  return (
+    <span title={note} aria-label={note} className="text-[10px] font-bold leading-none px-1 py-0.5 rounded bg-accent/15 text-accent">
+      ∑
+    </span>
+  )
+}
+
 function EvSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const accountLinks = useAccountLinks('ce331')
   const cards = useStore((s) => s.cards)
@@ -103,13 +122,15 @@ function EvSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
         label: EV_BLOCK_LABEL[b],
         items: EV_TOPICS.filter((t) => t.block === b).map((t) => {
           const { total, known: k } = known(t.id)
+          const maths = mathsNote(t.id)
           return {
             to: `/ce331/topic/${t.id}`,
             icon: <TopicIcon id={t.id} color={t.color} />,
             label: t.short,
-            title: `${t.title} · ${k}/${total} cards known`,
+            title: `${t.title} · ${k}/${total} cards known${maths ? ' · ∑ ' + maths.toLowerCase() : ''}`,
             right: (
               <>
+                {maths && <MathsMark note={maths} />}
                 <span className="text-[10px] text-faint num">{total}</span>
                 <Ring value={total ? k / total : 0} size={18} stroke={2.6} color={t.color} />
               </>

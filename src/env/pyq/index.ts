@@ -45,3 +45,9 @@ export const EV_ALL: EvQ[] = EV_PARTS.map((p): EvQ => ({ ...(EV_MAP[p.id] ?? { t
 export const evQById = (id: string) => EV_ALL.find((q) => q.id === id)
 export const evQForPaper = (paper: string) => EV_ALL.filter((q) => q.paper === paper)
 export const evQForTopic = (topic: string) => EV_ALL.filter((q) => q.topics.includes(topic as never))
+
+/** a part with numbers to work out: it has a worked solution, or the paper marks it as a calculation or design */
+export const isNumbers = (q: EvQ) => !!q.Sol || /math|design/.test(q.kind ?? '')
+export const isDerivation = (q: EvQ) => /derivation/.test(q.kind ?? '')
+/** every numerical, design and derivation part (the Maths bank) */
+export const EV_MATHS: EvQ[] = EV_ALL.filter((q) => isNumbers(q) || isDerivation(q))
