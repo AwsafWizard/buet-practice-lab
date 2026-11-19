@@ -243,7 +243,7 @@ const cards: EvCard[] = [
   { id: 'c-dem-tf', topic: T, front: 'What is the time factor (TF)?', back: '$TF = 24/\\text{hours of consumption}$, used for non-residential uses supplied less than 24 h straight from the pump or reservoir with no daily storage (industry on two 8-h shifts 1.5; school 4; residential 1). With a service reservoir present, no time factor. Peak flow = ADC/24 × PF × TF.', src: 'SN L5 p9; class note C#13' },
   { id: 'c-dem-capacity', topic: T, front: 'What demand is each component designed for?', back: 'Source, raw water main and treatment plant: peak daily (maximum-day) demand. Distribution system: peak hourly demand. Monthly variation sets the storage-reservoir size; hourly variation sets pump and service-reservoir size.', src: 'SN L5 p8–9' },
   { id: 'c-dem-peak-hours', topic: T, front: 'When are the daily demand peaks?', back: 'Bulk of the day’s use is 6–10 am and 4–8 pm; the two domestic peaks are about 7–9 am and 5–7 pm. Maximum daily consumption (MDC) is the single day of the year with the highest use.', src: 'SN L5 p8' },
-  { id: 'c-dem-fire-streams', topic: T, front: 'Kuichling’s fire formulas.', back: 'Fire flow $Q = 3182\\sqrt{P}$ gpm and number of streams $N = 2.8\\sqrt{P}$, with P in thousands. One stream is taken as 250 gpm (about 950 L/min). Other formulas: Freeman $Q=1021(P/5+10)$ gpm; NBFU $Q=1020\\sqrt P(1-0.01\\sqrt P)$ gpm.', seen: ['2010-11', '2020-21', '2022-23', '2023-24'], src: 'textbook / seniors’ note; not printed in the slides' },
+  { id: 'c-dem-fire-streams', topic: T, front: 'Kuichling’s fire formulas.', back: 'Fire flow $Q = 700\\sqrt{P}$ gpm and number of streams $N = 2.8\\sqrt{P}$, with P in thousands (700 = 2.8 streams × 250 gpm). One stream is taken as 250 gpm (about 950 L/min). Textbooks print Kuichling as $3182\\sqrt P$ **L/min**. Other formulas: Freeman $Q=250(P/5+10)$ gpm; NBFU $Q=1020\\sqrt P(1-0.01\\sqrt P)$ gpm.', seen: ['2010-11', '2020-21', '2022-23', '2023-24'], src: 'textbook / seniors’ note; not printed in the slides' },
   { id: 'c-dem-hydrant', topic: T, front: 'Fire hydrant spacing and pressure.', back: 'At all street intersections and turnings, and every 80 to 120 m on a straight run. Street hydrant systems in Bangladesh work at 100–250 psi (NFPA). Pitot formula $Q = 29.83\\,C\\,d^2\\sqrt{P}$ gpm (C = 0.90, d = 3 in, P in psi): 2,416 gpm at 100 psi, 3,820 gpm at 250 psi.', src: 'SN L5 p9–10' },
   { id: 'c-dem-fire-bnbc', topic: T, front: 'BNBC 2020 fire protection flow (sprinkler, l/min, duration).', back: 'Light hazard I 1000 for 30 min; Light II 1900 for 50 min; Ordinary I 2650, II 3200, III 4800, each for 75 min (standpipe 1000 or 1900). Durations are × 1.25 for buildings 51–102 m high and × 1.5 above 102 m.', src: 'SN L2 p6' },
   { id: 'c-dem-fire-share', topic: T, front: 'Fire demand: small share, large rate.', back: 'A negligible part of the yearly total, but very high during a fire. It is usually a function of the population. Fire storage in this class is a separate ground reservoir, not added to the elevated tank.', seen: ['2023-24'], src: 'SN L2 p6, L5 p10' },
@@ -359,9 +359,10 @@ Bad plumbing, faulty connections, **breakage of pipes**, unauthorised connection
 ### City-scale formulas (P in thousands, Q in gpm)
 | Formula | Fire flow |
 |---|---|
-| **Kuichling** | $Q=3182\sqrt{P}$, streams $N=2.8\sqrt{P}$ |
-| **Freeman** | $Q=1021\left(\tfrac{P}{5}+10\right)$ |
+| **Kuichling** | $Q=700\sqrt{P}$, streams $N=2.8\sqrt{P}$ |
+| **Freeman** | $Q=250\left(\tfrac{P}{5}+10\right)$ |
 | **NBFU** | $Q=1020\sqrt{P}\,(1-0.01\sqrt{P})$ |
+In L/min (textbook): Kuichling $3182\sqrt P$, Freeman $1136.5(P/5+10)$, NBFU $4637\sqrt P(1-0.01\sqrt P)$.
 Storage = streams × stream flow × duration (about 950 L/min per stream).`,
     keys: ['negligible', 'function of population', 'stored', 'fire hydrants', 'Individual occupancy', 'BNBC', 'Kuichling', 'Freeman', 'NBFU', '80–120 m'],
     lists: ['l-dem-fire-uses'],

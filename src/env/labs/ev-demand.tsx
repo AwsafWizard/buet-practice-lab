@@ -57,7 +57,7 @@ export default function DemandLab() {
             ))}
           </div>
           <div className="text-xs text-faint grid gap-0.5">
-            <span>Kuichling Q = 3182 √P gpm · Freeman Q = 1021 (P/5 + 10) gpm · NBFU Q = 1020 √P (1 − 0.01 √P) gpm · Buston Q = 5663 √P L/min. P in thousands.</span>
+            <span>Kuichling Q = 700 √P gpm · Freeman Q = 250 (P/5 + 10) gpm · NBFU Q = 1020 √P (1 − 0.01 √P) gpm · Buston Q = 5663 √P L/min. P in thousands.</span>
             <span>These formulas are not in her slides (only the Pitot hydrant formula and the BNBC table are); the papers ask Kuichling, and its numbers here are from the seniors' notes and the textbook.</span>
           </div>
         </div>
@@ -110,7 +110,7 @@ export default function DemandLab() {
       </div>
 
       <Callout kind="tip" title="Notice that…">
-        Kuichling and Buston are close, Freeman is the lowest for a big city, and NBFU bends over because of its (1 − 0.01√P) term. Raise the population past 200 thousand and watch the streams count climb, then set 'hours of use' to 8 with no reservoir: the time factor 3 triples the peak, which is why office areas are the worst case for a pump with no storage.
+        Buston gives by far the most and Kuichling the least; Freeman grows in a straight line with P, so it overtakes the √P formulas for a big city, and NBFU bends over because of its (1 − 0.01√P) term. Raise the population past 200 thousand and watch the streams count climb, then set 'hours of use' to 8 with no reservoir: the time factor 3 triples the peak, which is why office areas are the worst case for a pump with no storage.
       </Callout>
 
       <Problems />
@@ -143,7 +143,7 @@ function make(seed: number, family?: Fam, level: Level = 'exam'): DP {
     const steps: XStep[] = [
       { key: 'n', group: 'Streams', label: 'N (round up)', value: st, digits: 0, abs: 0.4, tol: 0 },
       { key: 'q', group: 'Total flow', label: 'Total flow', value: Q, unit: 'L/min', digits: 0, tol: 0.005 },
-      { key: 'k', group: 'Kuichling', label: 'Q = 3182√P', value: fireFlowGpm('kuichling', Pp), unit: 'gpm', digits: 0, tol: 0.005 },
+      { key: 'k', group: 'Kuichling', label: 'Q = 700√P', value: fireFlowGpm('kuichling', Pp), unit: 'gpm', digits: 0, tol: 0.005 },
       { key: 'v', group: 'Storage', label: `Storage, ${h} h`, value: (Q * 60 * h) / 1000, unit: 'm³', digits: 0, tol: 0.005 },
     ]
     return {

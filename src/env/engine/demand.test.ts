@@ -33,8 +33,8 @@ describe('demand (SN L2 / L5 oracles)', () => {
     expect(pitotGpm(250)).toBeCloseTo(3820.3, 0)
   })
   it('fire formulas at P = 100 thousand', () => {
-    expect(fireFlowGpm('kuichling', 100)).toBeCloseTo(31820, 6)
-    expect(fireFlowGpm('freeman', 100)).toBeCloseTo(1021 * 30, 6)
+    expect(fireFlowGpm('kuichling', 100)).toBeCloseTo(7000, 6)
+    expect(fireFlowGpm('freeman', 100)).toBeCloseTo(7500, 6)
     expect(fireFlowGpm('nbfu', 100)).toBeCloseTo(1020 * 10 * 0.9, 6)
     expect(fireFlowGpm('buston', 100)).toBeCloseTo(56630 / 3.78541, 3)
   })
@@ -46,6 +46,7 @@ describe('demand (SN L2 / L5 oracles)', () => {
   })
   it('seniors’ Q = 700 √P gpm is N × 250 gpm before rounding N', () => {
     expect(2.8 * Math.sqrt(338) * 250).toBeCloseTo(12869.3, 1)
+    expect(fireFlowGpm('kuichling', 338)).toBeCloseTo(12869.34, 2) // Delwar sir's note p5
   })
   it('2022-23 Q6(b): 65,000 → 23 streams × 950 L/min = 21,850 L/min; 5 h = 6,555 m³', () => {
     const f = fireDemand(65, 5)

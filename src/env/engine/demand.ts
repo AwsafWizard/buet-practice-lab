@@ -72,20 +72,21 @@ export function peakHourly(adc: number, pf: number, tfHours = 24, reservoir = fa
 export type FireFormula = 'kuichling' | 'freeman' | 'nbfu' | 'buston'
 
 export const FIRE_FORMULAS: { id: FireFormula; label: string; tex: string; unit: 'gpm' | 'L/min' }[] = [
-  { id: 'kuichling', label: 'Kuichling', tex: 'Q = 3182\\sqrt{P}', unit: 'gpm' },
-  { id: 'freeman', label: 'Freeman', tex: 'Q = 1021\\left(\\tfrac{P}{5}+10\\right)', unit: 'gpm' },
+  { id: 'kuichling', label: 'Kuichling', tex: 'Q = 700\\sqrt{P}', unit: 'gpm' },
+  { id: 'freeman', label: 'Freeman', tex: 'Q = 250\\left(\\tfrac{P}{5}+10\\right)', unit: 'gpm' },
   { id: 'nbfu', label: 'NBFU', tex: 'Q = 1020\\sqrt{P}\\,(1-0.01\\sqrt{P})', unit: 'gpm' },
   { id: 'buston', label: 'Buston', tex: 'Q = 5663\\sqrt{P}', unit: 'L/min' },
 ]
 
-/** fire flow in gpm for population P (thousands) */
+/** fire flow in gpm for population P (thousands). Kuichling 700√P gpm as in the seniors' note (Delwar sir p5: 700√338 = 12,869.34 gpm) = 2.8√P streams × 250 gpm;
+ *  textbooks print the same formulas in L/min with Imperial gallons: Kuichling 3182√P, Freeman 1136.5(P/5 + 10), NBFU 4637√P(1 − 0.01√P). */
 export function fireFlowGpm(f: FireFormula, P: number): number {
   const r = Math.sqrt(P)
   switch (f) {
     case 'kuichling':
-      return 3182 * r
+      return 700 * r
     case 'freeman':
-      return 1021 * (P / 5 + 10)
+      return 250 * (P / 5 + 10)
     case 'nbfu':
       return 1020 * r * (1 - 0.01 * r)
     case 'buston':

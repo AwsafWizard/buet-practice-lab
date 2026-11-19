@@ -103,10 +103,10 @@ export function fireMd(Pth: number, year: number | string, withFlow = true, stor
   return [
     tx`**Fire demand (Kuichling).** $P$ in thousands: $P=${n(Pth, 2)}$ in ${year}.`,
     withFlow
-      ? tx`- Flow: $Q=3182\sqrt{P}=3182\sqrt{${n(Pth, 2)}}=$ **${n(kui)} gpm** (US gpm) = ${n(gpmToLpm(kui))} L/min = ${n((gpmToLpm(kui) * 1440) / 1000)} m³/day.`
+      ? tx`- Flow: $Q=700\sqrt{P}=700\sqrt{${n(Pth, 2)}}=$ **${n(kui)} gpm** = ${n(gpmToLpm(kui))} L/min = ${n((gpmToLpm(kui) * 1440) / 1000)} m³/day (US gallons, 250 gpm ≈ 950 L/min per stream; textbooks write $3182\sqrt P$ L/min with Imperial gallons = ${n(3182 * Math.sqrt(Pth))} L/min).`
       : '',
     tx`- Streams: $N=2.8\sqrt{P}=2.8\sqrt{${n(Pth, 2)}}=${st.exact.toFixed(2)}$ → **${st.n} streams** (round up).`,
-    withFlow ? tx`- Check, N streams of 250 gpm: ${st.n} × 250 = ${n(st.totalGpm)} gpm (= ${n(st.totalLpm)} L/min at 950 L/min each; $700\sqrt P$ = ${n(700 * Math.sqrt(Pth))} gpm before rounding N).` : '',
+    withFlow ? tx`- Check, N streams of 250 gpm: ${st.n} × 250 = ${n(st.totalGpm)} gpm (= ${n(st.totalLpm)} L/min at 950 L/min each); $700\sqrt P$ is the same thing before N is rounded up.` : '',
     storageH ? tx`- Storage for ${storageH} h: ${n(st.totalLpm)} L/min × 60 × ${storageH} = **${n((st.totalLpm * 60 * storageH) / 1000)} m³**.` : '',
   ]
     .filter(Boolean)
@@ -183,7 +183,7 @@ function Sol1011() {
   )
 }
 const f2021 = fireDemand(10)
-const final2021 = `Q = 3182√10 = ${n(f2021.kuichlingGpm)} gpm (${n(f2021.kuichlingLpm)} L/min); ${f2021.streams.n} streams`
+const final2021 = `Q = 700√10 = ${n(f2021.kuichlingGpm)} gpm (${n(f2021.kuichlingLpm)} L/min); ${f2021.streams.n} streams`
 function Sol2021() {
   return (
     <Sheet final={final2021}>
@@ -201,12 +201,12 @@ function Sol2223b() {
           `### Given`,
           `Population 65,000 → $P=65$ thousand; one stream = 950 L/min; storage for 5 h.`,
           `### Assumptions`,
-          `- Number of streams by Kuichling $N=2.8\\sqrt{P}$, rounded up. Total flow = N × 950 L/min (the paper gives the flow per stream, so it is used rather than 3182√P).`,
+          `- Number of streams by Kuichling $N=2.8\\sqrt{P}$, rounded up. Total flow = N × 950 L/min (the paper gives the flow per stream, so it is used rather than 700√P gpm).`,
           `### Steps`,
           tx`1. $N=2.8\sqrt{65}=${f2223.streams.exact.toFixed(2)}$ → **${f2223.streams.n} streams**.`,
           tx`2. Total flow $=${f2223.streams.n}\times950=$ **${n(f2223.streamFlowLpm)} L/min** (${n(f2223.streamFlowLpm / 60, 1)} L/s).`,
           tx`3. Storage $=Q\,t=${n(f2223.streamFlowLpm)}\times60\times5=${n(f2223.storageL)}$ L $=$ **${n(f2223.storageL / 1000)} m³**.`,
-          `For comparison, Kuichling's own flow 3182√P = ${n(gpmToLpm(fireFlowGpm('kuichling', 65)))} L/min.`,
+          `For comparison, Kuichling's own flow 700√P = ${n(fireFlowGpm('kuichling', 65))} gpm = ${n(gpmToLpm(fireFlowGpm('kuichling', 65)))} L/min.`,
         ].join('\n\n')}
       />
     </Sheet>
@@ -502,7 +502,7 @@ export const SN_MATH: Record<string, EvPartMap> = {
   'ev-2007-08-8c': { topics: ['ev-pop', 'ev-demand'], ans: [], final: final0708, Sol: Sol0708, from: ['ce22', 'seniors', 'textbook'], flag: FIRE_FLAG, notes: ['"Empirical method" is read as the geometric increase method.'], checks: () => [
     { key: 'r', label: 'Geometric growth rate $r$', value: g0708.params.r * 100, unit: '%/yr' },
     { key: 'p', label: 'Population in 2015, $P_{2015}$', value: P0708, unit: 'persons' },
-    { key: 'q', label: 'Kuichling fire demand $Q=3182\\sqrt{P}$', value: f0708.kuichlingGpm, unit: 'gpm' },
+    { key: 'q', label: 'Kuichling fire demand $Q=700\\sqrt{P}$', value: f0708.kuichlingGpm, unit: 'gpm' },
     { key: 'n', label: 'Number of fire streams $N$', value: f0708.streams.n },
   ] },
   'ev-2008-09-3': { topics: ['ev-pop', 'ev-demand'], ans: [], final: final0809, Sol: Sol0809, from: ['ce22', 'seniors', 'textbook'], flag: FIRE_FLAG, notes: ['The paper does not name the population method: geometric adopted, arithmetic and incremental shown.', '(iv) adds the fire flow as a rate (gpm) to the average flow.', 'US gallons assumed; the tank has no roof cost.'], checks: () => [
@@ -532,7 +532,7 @@ export const SN_MATH: Record<string, EvPartMap> = {
     { key: 'K', label: 'Constant-percentage $K=\\ln(P_2/P_1)/n$', value: gr21.continuous * 100, unit: '%/yr' },
   ] },
   'ev-2020-21-1c': { topics: ['ev-demand', 'ev-pop'], ans: [], final: final2021, Sol: Sol2021, from: ['seniors', 'textbook'], flag: FIRE_FLAG, checks: () => [
-    { key: 'q', label: 'Kuichling fire demand $Q=3182\\sqrt{P}$', value: f2021.kuichlingGpm, unit: 'gpm' },
+    { key: 'q', label: 'Kuichling fire demand $Q=700\\sqrt{P}$', value: f2021.kuichlingGpm, unit: 'gpm' },
     { key: 'n', label: 'Number of fire streams $N$', value: f2021.streams.n },
   ] },
   'ev-2022-23-6b': { topics: ['ev-demand'], ans: [], final: final2223, Sol: Sol2223b, from: ['seniors', 'textbook'], flag: FIRE_FLAG, checks: () => [

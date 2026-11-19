@@ -150,7 +150,7 @@ function FireBody() {
       </Chart>
       <Key items={FIRE_FORMULAS.map((f) => ({ c: FIRE_COL[f.id], t: f.label }))} />
       <div className="text-[11px] text-faint mt-1">
-        None of these formulas is on her slides or class notes; they come from the seniors' notes and the textbook (Kuichling written as 3182√P gpm here, matching the past-paper solutions — some books print 3182√P in L/min). Fire storage in her class is a separate ground reservoir.
+        None of these formulas is on her slides or class notes; they come from the seniors' notes and the textbook (Kuichling Q = 700√P gpm as in Delwar sir's note — the same as 2.8√P streams × 250 gpm; textbooks print it as 3182√P L/min with Imperial gallons, and Freeman as 1136.5(P/5 + 10) L/min). Fire storage in her class is a separate ground reservoir.
       </div>
       <Lookup
         result={
