@@ -49,16 +49,28 @@ export function IsoChartFig({ H, tMax, curves, t0, res, title, grid }: { H: numb
             ) : null,
           ),
         )}
-      {t0 !== undefined && res && res.strips.map((s, i) => {
-        const w = 18
-        return (
-          <g key={'s' + i}>
-            <rect x={sx(t0) - w} y={sy(s.z2)} width={2 * w} height={Math.max(sy(s.z1) - sy(s.z2), 0)} fill={STRIP_FILL[i % STRIP_FILL.length]} opacity="0.3" />
-            <line x1={sx(t0)} x2={W - mr + 6} y1={sy(s.zMid)} y2={sy(s.zMid)} stroke={STRIP_FILL[i % STRIP_FILL.length]} strokeDasharray="3 3" />
-            <text x={W - mr + 8} y={sy(s.zMid) + 4} fontSize="11" fill="var(--c-ink)">ΔR {+s.dr.toFixed(1)}</text>
-          </g>
-        )
-      })}
+      {t0 !== undefined && res && (() => {
+        // thin strips near the surface: push their ΔR labels apart so they never overlap (leader lines keep the true depth)
+        const order = res.strips.map((s, i) => ({ i, y: sy(s.zMid) })).sort((a, b) => a.y - b.y)
+        const labY: number[] = []
+        let prev = -Infinity
+        for (const o of order) {
+          prev = Math.max(o.y, prev + 12)
+          labY[o.i] = prev
+        }
+        const over = Math.max(0, prev - (Hh - mb + 4))
+        return res.strips.map((s, i) => {
+          const w = 18
+          const ly = labY[i] - over
+          return (
+            <g key={'s' + i}>
+              <rect x={sx(t0) - w} y={sy(s.z2)} width={2 * w} height={Math.max(sy(s.z1) - sy(s.z2), 0)} fill={STRIP_FILL[i % STRIP_FILL.length]} opacity="0.3" />
+              <polyline points={`${sx(t0)},${sy(s.zMid)} ${W - mr},${sy(s.zMid)} ${W - mr + 6},${ly}`} fill="none" stroke={STRIP_FILL[i % STRIP_FILL.length]} strokeDasharray="3 3" />
+              <text x={W - mr + 8} y={ly + 4} fontSize="11" fill="var(--c-ink)">ΔR {+s.dr.toFixed(1)}</text>
+            </g>
+          )
+        })
+      })()}
       {cl.map((c) => {
         const last = c.pts[c.pts.length - 1]
         return (

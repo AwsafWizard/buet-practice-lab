@@ -6,6 +6,7 @@ import { hashKey } from '../../labs/CheckTable'
 import { pick, randInt, rng, Slider } from '../../labs/common'
 import { ExamProblems, type Level, type XProblem, type XStep } from '../../soil/topics/seep/examShell'
 import { CHART_2017, CHART_2021, CHART_2324, isoFromCurves, minTimeForRemoval, randomChart, tankSize, terminalVelocity, typeIColumn, type IsoChart } from '../engine/settle'
+import { IsoReading, MinTimeWork } from '../figs/iso-work'
 import { IsoChartFig } from '../figs/sed-iso'
 
 const nf = (v: number, d = 0) => v.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d })
@@ -268,13 +269,9 @@ function Solution({ p }: { p: SP }) {
       tx`4. $R=(1-x_0)+\dfrac{\sum\Delta x\,\bar v}{v_0}=${f(tr.full, 3)}+\dfrac{${tr.sum.toFixed(5)}}{${d.v0}}=$ **${f(tr.R * 100, 1)} %**.`,
     ].join('\n\n')
   } else if (p.family === 'type2' && p.chart) {
-    const res = isoFromCurves(p.chart.curves, p.chart.H, d.t0)
-    md = [`Vertical line at $t_0=${d.t0}$ min. The curve that reaches the floor (${p.chart.H} m) by then is $r_0=$ **${+res.r0.toFixed(0)} %**. Strips:`, `| strip | ΔR | depths (m) | Zᵢ | ΔR·Zᵢ |\n|---|---|---|---|---|\n${res.strips.map((s) => `| ${+s.r1.toFixed(0)}–${+s.r2.toFixed(0)} | ${f(s.dr)} | ${f(s.z1, 2)} → ${f(s.z2, 2)} | ${f(s.zMid, 2)} | ${f(s.area)} |`).join('\n')}`, tx`$R=r_0+\dfrac{\sum\Delta R\,Z_i}{Z_0}=${+res.r0.toFixed(0)}+\dfrac{${f(res.sum)}}{${p.chart.H}}=$ **${f(res.R)} %**`].join('\n\n')
+    return <IsoReading ch={p.chart} t0={d.t0} />
   } else if (p.family === 'mint' && p.chart) {
-    const ch = p.chart
-    const tm = minTimeForRemoval((t) => isoFromCurves(ch.curves, ch.H, t).R, d.target, ch.tMax * 3) ?? NaN
-    const ts = [0.5, 0.7, 0.9, 1.1].map((k) => Math.round(tm * k))
-    md = [`Try detention times and sum the strips each time (R = r₀ + ΣΔR·Z/Z₀):`, `| t₀ (min) | r₀ | R (%) |\n|---|---|---|\n${ts.map((t) => { const q = isoFromCurves(ch.curves, ch.H, t); return `| ${t} | ${+q.r0.toFixed(0)} | ${f(q.R)} |` }).join('\n')}`, `R reaches ${d.target} % at $t_0\\approx$ **${nf(tm)} min**.`].join('\n\n')
+    return <MinTimeWork ch={p.chart} target={d.target} />
   } else if (p.family === 'sor') {
     const t = tankSize({ Q: d.Q, v0: d.v0, depth: d.depth, n: d.n, LW: 3 })
     md = [tx`$A=Q/v_0=${nf(d.Q)}/${d.v0}=$ **${nf(t.A)} m²**; each of ${d.n} units $A/${d.n}=$ **${nf(t.Aunit)} m²** (e.g. ${f(t.L, 1)} m × ${f(t.W, 1)} m, L:W = 3:1).`, tx`$V=A\times${d.depth}=$ **${nf(t.V)} m³**; $t=\dfrac{V}{Q}=\dfrac{\text{depth}}{v_0}=$ **${f(t.tHours, 2)} h** (flocculent tanks 4–6 h, discrete 2–4 h); overflow ${f(t.overflowMh, 2)} m/h.`].join('\n\n')

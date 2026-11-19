@@ -3,7 +3,7 @@
 // Langelier/Ryznar and the pH of CO2 water are not in this term's slides: those parts are `textbook`.
 import type { ReactNode } from 'react'
 import { Md } from '../../components/ui'
-import { IsoChartFig } from '../figs/sed-iso'
+import { IsoReading, MinTimeWork } from '../figs/iso-work'
 import { BarDiagram, SplitFlow } from '../figs/soft-bars'
 import { alkalinityFromBicarbonate, hardness, henryWithAir, langelier, phOfCo2Water, toCaCO3 } from '../engine/chem'
 import { alkConsumed } from '../engine/coag'
@@ -110,10 +110,9 @@ function ChartSol({ chart, H, times, curves, intro, note }: { chart: IsoChart; H
         const r = isoFromCurves(cs, H, t)
         return (
           <div key={t} className="space-y-2">
-            <Doc md={`### Detention time ${t} min\n\n` + isoMd(r)} />
-            <Fig cap={`Worked chart for t₀ = ${t} min: the shaded bands are the strips, ΔR written beside the mean depth of each. Attach this with the script.`}>
-              <IsoChartFig H={H} tMax={chart.tMax} curves={cs} t0={t} res={r} grid={H === chart.H ? chart.grid : undefined} />
-            </Fig>
+            <Doc md={`### Detention time ${t} min`} />
+            <IsoReading ch={{ curves: cs, H, tMax: chart.tMax, grid: H === chart.H ? chart.grid : undefined }} t0={t} />
+            <div className="text-[11px] text-faint">R = {f(r.R, 1)} % at t₀ = {t} min. Draw this chart (line, crossings, shaded strips) with the script.</div>
           </div>
         )
       })}
@@ -180,24 +179,10 @@ const Sol2324 = () => (
         md={[
           '### Given',
           'Type II test, 2.5 m column; basin depth 2.5 m; target overall removal 85 %. Iso-removal lines 30–80 % (Figure 1).',
-          '### Method',
-          'The overall removal of a basin of depth $Z_0$ and detention time $t_0$ is $R=r_0+\\sum\\Delta R\\,Z_i/Z_0$. Find $t_0$ by trying times until $R=85$ %:',
-          `| t₀ (min) | r₀ (%) | ΣΔR·Zᵢ/Z₀ | R (%) |\n|---|---|---|---|\n${[60, 90, 120, 150, 165, Math.round(tStar), 180]
-            .filter((t, i, a) => a.indexOf(t) === i)
-            .sort((a, b) => a - b)
-            .map((t) => {
-              const q = R2324(t)
-              return `| ${t}${q.extrapolated ? ' *' : ''} | ${q.r0} | ${f(q.partial, 1)} | ${f(q.R, 1)} |`
-            })
-            .join('\n')}`,
-          '\\* beyond 150 min the figure stops; the 80 % curve (which only reaches 1.45 m at 150 min) is continued with its last slope and the 70 % curve likewise.',
-          `### Result\n\nR reaches 85 % at $t_0\\approx$ **${f(tStar, 0)} min** (about ${f(tStar / 60, 1)} h). Worked chart at that time:`,
-          isoMd(r2324),
         ].join('\n\n')}
       />
-      <Fig cap="Worked chart at the minimum detention time (extended curves drawn dashed in the text only; the figure shows them to the edge of the paper). Attach this with the script.">
-        <IsoChartFig H={2.5} tMax={Math.max(CHART_2324.tMax, Math.ceil(tStar / 15) * 15)} curves={CHART_2324.curves} t0={tStar} res={r2324} />
-      </Fig>
+      <MinTimeWork ch={{ curves: CHART_2324.curves, H: 2.5, tMax: CHART_2324.tMax }} target={85} />
+      <Doc md={`Bisecting finely gives $t_0\\approx$ **${f(tStar, 0)} min** (about ${f(tStar / 60, 1)} h).`} />
       <Doc md="**Why it needs extrapolation:** an 85 % curve is not drawn, and the 80 % line has not even reached the floor by 150 min. So the answer relies on continuing the 80 % curve; the examiner's figure may have a different shape beyond the paper, so quote it as an estimate (about 2.7–3 h)." />
     </div>
   </Sheet>

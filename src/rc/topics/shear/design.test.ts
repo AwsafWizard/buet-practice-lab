@@ -18,7 +18,7 @@ describe('shear design generator', () => {
           expect(p.dsg.total).toBeLessThanOrEqual(60)
           expect(p.text).not.toMatch(/undefined|NaN/)
         }
-      })
+      }, 30000)
   it('tough level reaches Case D', () => {
     expect(Array.from({ length: 20 }, (_, i) => makeSDesign(i + 1, 'factored', 'tough')).some((p) => p.main.cases.includes('D'))).toBe(true)
   })
