@@ -4,6 +4,7 @@
 import type { ReactNode } from 'react'
 import { Md } from '../../components/ui'
 import { IsoReading, MinTimeWork } from '../figs/iso-work'
+import { TypeIWork } from '../figs/typei-work'
 import { BarDiagram, SplitFlow } from '../figs/soft-bars'
 import { alkalinityFromBicarbonate, hardness, henryWithAir, langelier, phOfCo2Water, toCaCO3 } from '../engine/chem'
 import { alkConsumed } from '../engine/coag'
@@ -33,26 +34,6 @@ const Fig = ({ children, cap }: { children: ReactNode; cap?: string }) => (
 )
 
 // ================================================================ shared markdown blocks
-/** Type I: the table, x0 and the strips */
-function typeIMd(r: TypeI, H: number, C0: number, unit = 'm/min', dgt = 4) {
-  const rows = r.rows
-    .slice()
-    .sort((a, b) => a.t - b.t)
-    .map((q) => `| ${q.t} | ${q.C} | ${f(q.x, 3)} | ${g(q.v, 4)} |`)
-    .join('\n')
-  const s = r.strips
-  const hi = r.rows.slice().sort((a, b) => a.x - b.x).find((q) => q.v >= r.v0)
-  const lo = r.rows.slice().sort((a, b) => b.x - a.x).find((q) => q.v < r.v0)
-  const interp = hi && lo ? tx`$x_0 = ${f(lo.x, 3)} + \dfrac{${g(r.v0, 4)}-${g(lo.v, 4)}}{${g(hi.v, 4)}-${g(lo.v, 4)}}(${f(hi.x, 3)}-${f(lo.x, 3)}) = ${f(r.x0, 3)}$` : tx`$x_0 = ${f(r.x0, 3)}$`
-  return [
-    `| t (min) | C (mg/L) | x = C/C₀ | v = H/t (${unit}) |\n|---|---|---|---|\n${rows}`,
-    tx`$C_0=${C0}$ mg/L, $H=${H}$ m. $x$ is the fraction of particles that settle **slower** than $v$ (still in suspension at that time).`,
-    tx`**Overflow rate** $v_0 = ${g(r.v0, 4)}$ ${unit}. Read $x_0$ at $v=v_0$ by interpolation: ${interp} — so a fraction $1-x_0 = ${f(r.full, 3)}$ settles faster than $v_0$ and is removed completely.`,
-    `**Partial removal**: particles slower than $v_0$ are removed in the ratio $v/v_0$. $\\dfrac{1}{v_0}\\int_0^{x_0}v\\,dx$ by strips (Δx × mean v):\n\n| strip | Δx | mean v (${unit}) | Δx·v |\n|---|---|---|---|\n${s.map((q, i) => `| ${i + 1} | ${f(q.dx, 3)} | ${g(q.vMean, dgt)} | ${g(q.area, 3)} |`).join('\n')}\n| Σ | ${f(r.x0, 3)} | | **${g(r.sum, 4)}** |`,
-    tx`$R=(1-x_0)+\dfrac{1}{v_0}\sum \Delta x\,\bar v = ${f(r.full, 3)} + \dfrac{${g(r.sum, 4)}}{${g(r.v0, 4)}} = ${f(r.full, 3)}+${f(r.partial, 3)} =$ **${f(r.R * 100, 1)} %**`,
-  ].join('\n\n')
-}
-
 /** Type II: the strip table and R */
 function isoMd(r: IsoResult, labelOf?: (i: number) => string) {
   const rows = r.strips
@@ -192,7 +173,9 @@ const Sol2324 = () => (
 function TypeISheet({ r, H, C0, extra }: { r: TypeI; H: number; C0: number; extra?: string }) {
   return (
     <Sheet final={`x₀ = ${f(r.x0, 3)}; overall removal R = ${f(r.R * 100, 1)} %`}>
-      <Doc md={['### Given', `Type I (discrete) suspension: column $H=${H}$ m, $C_0=${C0}$ mg/L, loading (overflow) rate $v_0=${g(r.v0, 4)}$ m/min.`, '### Steps', typeIMd(r, H, C0), extra ?? ''].join('\n\n')} />
+      <Doc md={['### Given', `Type I (discrete) suspension: column $H=${H}$ m, $C_0=${C0}$ mg/L, loading (overflow) rate $v_0=${g(r.v0, 4)}$ m/min.`, '### Steps'].join('\n\n')} />
+      <TypeIWork r={r} H={H} C0={C0} />
+      {extra && <Doc md={extra} />}
     </Sheet>
   )
 }

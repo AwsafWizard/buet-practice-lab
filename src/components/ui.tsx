@@ -94,9 +94,10 @@ function parseBlocks(src: string): ReactNode[] {
     }
     if (/^\s*\d+[.)]\s+/.test(line)) {
       const items: string[] = []
+      const start = parseInt(/^\s*(\d+)/.exec(line)![1], 10)
       while (i < lines.length && /^\s*\d+[.)]\s+/.test(lines[i])) items.push(lines[i++].replace(/^\s*\d+[.)]\s+/, ''))
       out.push(
-        <ol key={key++}>
+        <ol key={key++} start={start !== 1 ? start : undefined}>
           {items.map((t, k) => (
             <li key={k}>{inline(t)}</li>
           ))}

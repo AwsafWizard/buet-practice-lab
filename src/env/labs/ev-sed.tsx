@@ -7,6 +7,7 @@ import { pick, randInt, rng, Slider } from '../../labs/common'
 import { ExamProblems, type Level, type XProblem, type XStep } from '../../soil/topics/seep/examShell'
 import { CHART_2017, CHART_2021, CHART_2324, isoFromCurves, minTimeForRemoval, randomChart, tankSize, terminalVelocity, typeIColumn, type IsoChart } from '../engine/settle'
 import { IsoReading, MinTimeWork } from '../figs/iso-work'
+import { TypeIWork } from '../figs/typei-work'
 import { IsoChartFig } from '../figs/sed-iso'
 
 const nf = (v: number, d = 0) => v.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d })
@@ -261,13 +262,7 @@ function Solution({ p }: { p: SP }) {
   const d = p.d
   let md = ''
   if (p.family === 'type1' && p.col) {
-    const tr = typeIColumn({ H: d.H, C0: d.C0, data: p.col, v0: d.v0 })
-    md = [
-      `1. $x=C/C_0$ and $v=H/t$ for each reading: ${tr.rows.slice().sort((a, b) => a.t - b.t).map((q) => `(t ${q.t}: x ${f(q.x, 3)}, v ${(q.v * 100).toFixed(2)}×10⁻²)`).join('; ')}.`,
-      tx`2. Interpolate $x_0$ at $v_0=${d.v0}$: $x_0=$ **${f(tr.x0, 3)}**; fully removed $1-x_0=$ **${f(tr.full, 3)}**.`,
-      `3. Strips (Δx × mean v): ${tr.strips.map((s) => `${f(s.dx, 3)}×${(s.vMean * 100).toFixed(2)}×10⁻²`).join(' + ')} → Σ = **${(tr.sum * 100).toFixed(3)}×10⁻² m/min**.`,
-      tx`4. $R=(1-x_0)+\dfrac{\sum\Delta x\,\bar v}{v_0}=${f(tr.full, 3)}+\dfrac{${tr.sum.toFixed(5)}}{${d.v0}}=$ **${f(tr.R * 100, 1)} %**.`,
-    ].join('\n\n')
+    return <TypeIWork r={typeIColumn({ H: d.H, C0: d.C0, data: p.col, v0: d.v0 })} H={d.H} C0={d.C0} />
   } else if (p.family === 'type2' && p.chart) {
     return <IsoReading ch={p.chart} t0={d.t0} />
   } else if (p.family === 'mint' && p.chart) {
