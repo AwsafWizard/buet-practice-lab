@@ -8,8 +8,10 @@ import { RailSidebar } from '../components/RailSidebar'
 import { Ring } from '../components/ui'
 import { useStore } from '../store'
 import { TopicIcon } from '../topics/icons'
+import { CodePane, useEvPageGroup } from './components/CodePane'
 import { deckFor } from './content'
 import { EV_EXAM_DATE } from './plan'
+import { paneWidth, usePane } from './reference/pane'
 import { EV_BLOCK_LABEL, EV_BLOCKS, EV_TOPICS } from './registry'
 
 const EvOverview = lazy(() => import('./pages/EvOverview'))
@@ -36,11 +38,17 @@ export function EvLogo({ size = 30 }: { size?: number }) {
 export default function EvApp() {
   const [open, setOpen] = useState(false)
   const loc = useLocation()
+  const pageGroup = useEvPageGroup()
+  const pane = usePane()
   useEffect(() => setOpen(false), [loc.pathname])
   return (
     <div className="min-h-full flex">
       <EvSidebar open={open} onClose={() => setOpen(false)} />
-      <div className="flex-1 min-w-0 flex flex-col">
+      {/* from lg up the open chart pane sits beside the page (side by side), never on top of it */}
+      <div
+        className={'flex-1 min-w-0 flex flex-col transition-[padding] duration-200 ' + (pane.open ? 'lg:pr-[var(--pw)]' : '')}
+        style={{ '--pw': `${paneWidth(pane.width)}px` } as React.CSSProperties}
+      >
         <Header onMenu={() => setOpen(true)} examDate={EV_EXAM_DATE} examLabel="23 Nov" />
         <main className="@container/page flex-1 px-4 md:px-8 py-6 max-w-[1180px] w-full mx-auto">
           <Suspense fallback={<div className="text-mute p-10">Loading…</div>}>
@@ -65,6 +73,7 @@ export default function EvApp() {
           CE 331 Practice Lab · answers follow this term’s (CE22) slides of Tanvir sir, Rowshan ma’am and Snigdha ma’am and the class notes; every past question says where its answer comes from. Numbers are computed by built-in solvers. Check anything odd against your notes.
         </footer>
       </div>
+      <CodePane pageGroup={pageGroup} />
     </div>
   )
 }

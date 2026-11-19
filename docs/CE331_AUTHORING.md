@@ -125,3 +125,10 @@ checks: () => [
 ```
 `EV_FULL=1 npx vitest run src/env` fails until every `Sol` part has checks; the always-on test checks the values are finite,
 keys unique and `$` paired.
+
+## Chart & method pane (`reference/`)
+The right-hand pane (button on the right edge, key **T**) is `components/CodePane.tsx` + `components/RefPanel.tsx`, state in `reference/pane.ts` (per device, localStorage `ce331-chart-pane`).
+Items live in one file per group, id prefix = group: `chem.tsx` (`c-`, water chemistry), `treat.tsx` (`t-`, treatment units), `rm.tsx` (`r-`, Rowshan ma'am), `sn.tsx` (`s-`, Snigdha ma'am), `steps.tsx` (`m-`, step-by-step methods).
+`EV_TOPIC_GROUP` picks the group a topic or past question opens on; other pages open on Methods.
+Each chart item: the formula as taught, a chart drawn from the engine (soil `Chart` kit or a fig from `figs/`), a table, and a small `Lookup` with the class example as its default inputs. Each method: numbered steps, the class example with its answer, traps, and `see` buttons to the chart items (the test checks those ids exist).
+`reference/reference.test.tsx` renders every item (no NaN / undefined / Infinity / KaTeX errors).
