@@ -2,12 +2,14 @@
 // Every solution calls the engines in ../engine; `final` is computed by the same call (see docs/CE331_AUTHORING.md).
 import { useState } from 'react'
 import { fmt } from '../../components/DiagramView'
-import { Step } from '../../components/ui'
+import { Md, Step } from '../../components/ui'
 import { NumIn } from '../../reference/common'
 import { PumpCurvesTable } from '../figs/pump-curves-work'
+import { OpDutyWork } from '../figs/rm-oppoint'
 import { LineChart } from '../figs/pump-chart'
-import { PumpWork, Sheet, T, pumpFinal, sg, solvePump, type PCase } from '../figs/pump-work'
-import { MassFigures, MassTable } from '../figs/rwh-work'
+import { PumpWork, Sheet, T, npshBudget, pumpFinal, sg, solvePump, type PCase } from '../figs/pump-work'
+import { MassFigures } from '../figs/rwh-work'
+import { MassWork } from '../figs/rm-mass-work'
 import { PumpProfile } from '../figs/pump-profile'
 import {
   headFromKPa, interp, npshAvailable, operatingPoint, parallel, pipeFromDiameter, powerSI, series, staticHead, totalHead, G_SI, frictionHead, velocityHead,
@@ -372,6 +374,8 @@ function NpshSol() {
         <T>{tx`H_{abs} = \frac{101.3 \times 10^{3}}{9982} = ${sg(r.Habs, 4)}\text{ m},\qquad H_{vp} = \frac{2.3 \times 10^{3}}{9982} = ${sg(r.Hvp, 3)}\text{ m}`}</T>
         <T>{tx`h_L = h_{f,suction} + K_{bell}\frac{v^2}{2g} = 0.022 \times \frac{${sg(Ls, 3)}}{0.25} \times ${sg(r.hv, 4)} + 0.04 \times ${sg(r.hv, 4)} = ${sg(r.hLs, 4)}\text{ m}`}</T>
         <T>{tx`NPSH_{av} = H_{abs} + H_S - h_L - H_{vp} = ${sg(r.Habs, 4)} - 2 - ${sg(r.hLs, 3)} - ${sg(r.Hvp, 3)} = ${sg(r.npsh, 4)}\text{ m}`}</T>
+        <div className="text-xs text-mute">Why: NPSH is the pressure head left at the pump inlet above the pressure at which the water would boil. Start with the atmosphere pushing on the wet well and take off what the suction side uses up.</div>
+        <Md>{npshBudget({ Habs: r.Habs, Hs: -2, hL: r.hLs, Hvp: r.Hvp, npsh: r.npsh })}</Md>
       </Step>
     </Sheet>
   )
@@ -401,6 +405,14 @@ function CurvesSol() {
   const grid = Array.from({ length: 41 }, (_, i) => i * 0.005)
   const cols = ['var(--c-accent)', 'var(--c-accent2)', 'var(--c-good)']
   const mkPts = (f: (Q: number) => number, hi: number) => grid.filter((q) => q <= hi + 1e-9).map((q) => [q, f(q)] as [number, number])
+  const k1 = PUMP_PTS.map(([q]) => q)
+  const kPar = [...SYS_PTS.map(([q]) => q), ...PUMP_PTS.map(([q]) => 2 * q), 0.12, 0.14, 0.16, 0.18, 0.2]
+  const lines = (i: number) => [
+    { sys: smin, op: rows[i].min, name: 'Min level', color: 'var(--c-ink)' },
+    { sys: smax, op: rows[i].max, name: 'Max level', color: 'var(--c-bad)' },
+  ]
+  const tA = `| Q (m³/s) | one pump H₁ (m) | two in series 2H₁ (m) | system, min level (m) | system, max level = min + 2 (m) |\n|---|---|---|---|---|\n${PUMP_PTS.map(([q, h], i) => `| ${q} | ${h} | 2 × ${h} = **${2 * h}** | ${SYS_PTS[i][1]} | ${SYS_PTS[i][1]} + 2 = **${SYS_PTS[i][1] + 2}** |`).join('\n')}`
+  const tB = `| one pump: Q₁ (m³/s) | H (m) | two in parallel: Q = 2Q₁ (m³/s) |\n|---|---|---|\n${PUMP_PTS.map(([q, h]) => `| ${q} | ${h} | 2 × ${q} = **${+(2 * q).toFixed(2)}** |`).join('\n')}`
   return (
     <Sheet
       given={['Pump head–capacity data and system head–capacity data at the minimum reservoir level (table in the question)', 'Maximum minus minimum reservoir level = 2 m']}
@@ -408,6 +420,7 @@ function CurvesSol() {
       answer={<>{curvesFinal()}</>}
       after={
         <div className="space-y-3 mb-3">
+          <div className="text-xs font-bold uppercase tracking-wider text-faint">All the curves together</div>
           <div className="rounded-xl border border-line p-2">
             <LineChart
               series={[
@@ -431,18 +444,21 @@ function CurvesSol() {
         </div>
       }
     >
-      <Step n={1} title="Draw the pump curve and the two system curves">
-        <T>{tx`H_{sys,max}(Q) = H_{sys,min}(Q) + 2`}</T>
+      <Step n={1} title="Build every curve you need from the tables">
+        <Md>{`**Series** (same flow passes through both pumps, each adds its head): double the head at each Q. **Maximum level**: the reservoir is 2 m higher, so every system head is 2 m more.`}</Md>
+        <Md>{tA}</Md>
+        <Md>{`**Parallel** (the flow splits between the pumps, each gives the same head): double the discharge at each head.`}</Md>
+        <Md>{tB}</Md>
       </Step>
-      <Step n={2} title="One pump: where H_pump = H_system">
-        <T>{tx`\text{minimum level: } Q = ${sg(rows[0].min.Q, 3)}\text{ m}^3/\text{s},\; H = ${sg(rows[0].min.H, 3)}\text{ m};\qquad \text{maximum level: } Q = ${sg(rows[0].max.Q, 3)},\; H = ${sg(rows[0].max.H, 3)}`}</T>
+      <Step n={2} title="One pump: where the pump curve meets each system curve">
+        <OpDutyWork duty={p} dutyName="One pump" dutyColor={cols[0]} lines={lines(0)} knots={k1} qMax={0.12} hMax={50} why="The pump settles where the head it gives equals the head the system needs. Look down the table for the first Q at which the pump head drops below the system head: the crossing is between that Q and the one before it." />
       </Step>
-      <Step n={3} title="Two pumps in parallel: add the capacities at each head">
-        <T>{tx`\text{minimum level: } Q = ${sg(rows[1].min.Q, 3)},\; H = ${sg(rows[1].min.H, 3)};\qquad \text{maximum level: } Q = ${sg(rows[1].max.Q, 3)},\; H = ${sg(rows[1].max.H, 3)}`}</T>
+      <Step n={3} title="Two pumps in parallel">
+        <OpDutyWork duty={parallel(p)} dutyName="Two in parallel" dutyColor={cols[1]} lines={lines(1)} knots={kPar} qMax={0.2} hMax={50} why="Use the parallel curve from step 1. At a system table discharge between its own points (Q = 0.06, say) read the parallel curve halfway: at 0.06 it is halfway between (0.04, 39) and (0.08, 36), i.e. 37.5 m." />
         <div className="text-xs text-mute">The capacity is less than twice the single-pump value ({sg(2 * rows[0].min.Q, 3)}) because the larger flow loses more head in the pipes.</div>
       </Step>
-      <Step n={4} title="Two pumps in series: add the heads at each capacity">
-        <T>{tx`\text{minimum level: } Q = ${sg(rows[2].min.Q, 3)},\; H = ${sg(rows[2].min.H, 3)};\qquad \text{maximum level: } Q = ${sg(rows[2].max.Q, 3)},\; H = ${sg(rows[2].max.H, 3)}`}</T>
+      <Step n={4} title="Two pumps in series">
+        <OpDutyWork duty={series(p)} dutyName="Two in series" dutyColor={cols[2]} lines={lines(2)} knots={k1} qMax={0.12} hMax={80} why="Use the 2H₁ column from step 1 against the same two system columns." />
       </Step>
     </Sheet>
   )
@@ -462,13 +478,12 @@ const janFinal = () => {
   const r = janRwh(100)
   return `Tank ≈ ${sg(r.s.tank, 4)} m³ (sample R = 100: A = ${r.area} m², harvest ${sg(r.s.annualHarvest, 4)} m³/yr; ${r.s.supplyGoverns ? 'supply governs, demand cut to ' + sg(r.s.demandUsed, 4) + ' m³/month' : 'demand met in full'}; largest gap in ${r.s.maxDiffMonth})`
 }
-function SupplySteps({ s, from, area, C }: { s: ReturnType<typeof supplySide>; from: number; area: number; C: number }) {
-  void area
-  void C
+function SupplySteps({ s, from, area, C, lpd }: { s: ReturnType<typeof supplySide>; from: number; area: number; C: number; lpd?: number }) {
   return (
     <>
       <Step n={from} title="Annual harvest against annual demand">
         <T>{tx`V_{harvest} = A \times R \times C = ${sg(area, 5)} \times ${sg(s.rows.reduce((a, r) => a + r.rain, 0) / 1000, 4)} \times ${C} = ${sg(s.annualHarvest, 5)}\text{ m}^3/\text{yr}`}</T>
+        {lpd != null && <T>{tx`\text{Demand} = ${sg(lpd, 6)}\text{ L/day} \times \frac{365}{12} \div 1000 = ${sg(s.demandAsked, 4)}\text{ m}^3\text{ per mean month}`}</T>}
         <T>{tx`\text{Demand asked} = ${sg(s.demandAsked, 4)}\text{ m}^3/\text{month} \times 12 = ${sg(s.demandAsked * 12, 5)}\text{ m}^3/\text{yr}`}</T>
         {s.supplyGoverns ? (
           <div className="text-sm">
@@ -479,12 +494,11 @@ function SupplySteps({ s, from, area, C }: { s: ReturnType<typeof supplySide>; f
         )}
       </Step>
       <Step n={from + 1} title={`Mass-curve table, starting in ${s.rows[0].month} (the tank is empty at the start)`}>
-        <MassTable s={s} />
-        <div className="text-xs text-mute mt-1">harvest = A × rain × C; difference = cumulative harvest − cumulative demand.</div>
+        <MassWork s={s} area={area} C={C} />
       </Step>
-      <Step n={from + 2} title="Storage = the largest value of the difference column">
-        <T>{tx`V_{tank} = \max(\text{difference}) = ${sg(s.maxDiff, 4)}\text{ m}^3\quad(\text{${s.maxDiffMonth}})`}</T>
-        {Math.abs(s.tank - s.maxDiff) > 0.01 && <div className="text-xs text-mute">The roof is plentiful, so the largest dry-spell shortfall (running deficit) is what the tank must hold: {sg(s.tank, 4)} m³.</div>}
+      <Step n={from + 2} title="Storage needed">
+        <T>{tx`V_{tank} = ${Math.abs(s.tank - s.maxDiff) > 0.01 ? tx`\max(\text{running shortfall})` : tx`\max(\text{difference})`} = ${sg(s.tank, 4)}\text{ m}^3${Math.abs(s.tank - s.maxDiff) > 0.01 ? '' : tx`\quad(\text{${s.maxDiffMonth}})`}`}</T>
+        <div className="text-xs text-mute">On the mass curve below this is the widest vertical gap between the cumulative-harvest and cumulative-demand lines.</div>
       </Step>
     </>
   )
@@ -511,7 +525,8 @@ function JanSol() {
       answer={<>Tank ≈ {sg(r.s.tank, 4)} m³ (R = {R}: A = {r.area} m², harvest {sg(r.s.annualHarvest, 4)} m³/yr)</>}
     >
       <Step n={1} title="Demand">
-        <T>{tx`7 \times 45 + 40 \times 10 = ${lpd715}\text{ L/day} = ${sg(monthlyFromLpd(lpd715), 4)}\text{ m}^3\text{ per mean month}`}</T>
+        <T>{tx`7 \times 45 + 40 \times 10 = ${lpd715}\text{ L/day}`}</T>
+        <T>{tx`\text{per mean month: } ${lpd715} \times \frac{365}{12} = ${sg((lpd715 * 365) / 12, 6)}\text{ L} = ${sg(monthlyFromLpd(lpd715), 4)}\text{ m}^3`}</T>
       </Step>
       <Step n={2} title="Roof area">
         <T>{tx`A = ${R} + 150 = ${r.area}\text{ m}^2`}</T>
@@ -557,13 +572,13 @@ function Rw2021Sol() {
         <T>{tx`A = 22 \times 15 + 22 \times 6 + 0.5 \times (8 \times 22) = 330 + 132 + 88 = ${sg(r.cat.total, 4)}\text{ m}^2`}</T>
       </Step>
       <Step n={2} title="Demand-side approach: V = n d q">
-        <T>{tx`V = n(d_p q_p + d_o q_o) = 36(90 \times 20 + 210 \times 100) = ${sg(r.bn.V, 6)}\text{ L}`}</T>
+        <T>{tx`V = n(d_p q_p + d_o q_o) = 36(90 \times 20 + 210 \times 100) = 36(${sg(r.bn.potable / 36, 6)} + ${sg(r.bn.other / 36, 6)}) = ${sg(r.bn.V, 6)}\text{ L}`}</T>
         <T>{tx`V_{design} = 1.10 \times ${sg(r.bn.V / 1000, 5)} = ${sg(r.bn.designM3, 5)}\text{ m}^3\;(10\%\text{ freeboard})`}</T>
         <div className="text-sm">
           Check against what the roof can fill: the whole year's harvest is only {sg(r.s.annualHarvest, 5)} m³, and a tank of {sg(r.bn.designM3, 4)} m³ would have to catch {sg((r.bn.designM3 / r.s.annualHarvest) * 100, 3)} % of it.
         </div>
       </Step>
-      <SupplySteps s={r.s} from={3} area={r.cat.total} C={r.C} />
+      <SupplySteps s={r.s} from={3} area={r.cat.total} C={r.C} lpd={r.lpd} />
       <Step n={6} title="Which approach to adopt?">
         <div className="text-sm">
           The annual demand ({sg((r.lpd * 365) / 1000, 5)} m³) is more than the roof can supply ({sg(r.s.annualHarvest, 5)} m³), so the supply side governs. The supply-side tank ({sg(r.s.tank, 4)} m³) is the economical one: it is
@@ -611,7 +626,8 @@ function Rw2122Sol() {
       answer={<>Tank ≈ {sg(r.s.tank, 4)} m³ ({r.s.supplyGoverns ? 'supply side governs' : 'demand side governs'}; demand-side check {sg(r.bn.designM3, 4)} m³)</>}
     >
       <Step n={1} title="Demand">
-        <T>{tx`${n} \times (${qp} + ${qo}) = ${sg(r.lpd, 6)}\text{ L/day} = ${sg(monthlyFromLpd(r.lpd), 4)}\text{ m}^3\text{ per mean month}`}</T>
+        <T>{tx`${n} \times (${qp} + ${qo}) = ${sg(r.lpd, 6)}\text{ L/day}`}</T>
+        <T>{tx`\text{per mean month: } ${sg(r.lpd, 6)} \times \frac{365}{12} = ${sg((r.lpd * 365) / 12, 6)}\text{ L} = ${sg(monthlyFromLpd(r.lpd), 4)}\text{ m}^3`}</T>
       </Step>
       <SupplySteps s={r.s} from={2} area={r.area} C={r.C} />
       <Step n={5} title="Demand-side check (BNBC 90 / 210 days)">
@@ -659,10 +675,13 @@ function Rw2223Sol() {
       <Step n={2} title="Annual harvest">
         <T>{tx`V = A R C = ${sg(r.cat.total, 4)} \times 1.100 \times 0.8 = ${sg(r.s.annualHarvest, 4)}\text{ m}^3/\text{yr}`}</T>
       </Step>
-      <Step n={3} title="Monthly harvest and mass curve">
-        <MassTable s={r.s} />
+      <Step n={3} title="Monthly rainfall (pattern scaled to 1100 mm) and demand">
+        <T>{tx`\text{scale} = \frac{1100}{1032} = ${sg(1100 / 1032, 4)}\;\text{(each Jan 2021 month × this)};\qquad D = \frac{${sg(r.s.annualHarvest, 4)}}{12} = ${sg(r.s.demandUsed, 4)}\text{ m}^3/\text{month}`}</T>
       </Step>
-      <Step n={4} title="Storage">
+      <Step n={4} title={`Mass-curve table, starting in ${r.s.rows[0].month}`}>
+        <MassWork s={r.s} area={r.cat.total} C={r.C} />
+      </Step>
+      <Step n={5} title="Storage">
         <T>{tx`V_{tank} = \max(\text{difference}) = ${sg(r.s.maxDiff, 3)}\text{ m}^3\quad(\text{${r.s.maxDiffMonth}})`}</T>
       </Step>
     </Sheet>

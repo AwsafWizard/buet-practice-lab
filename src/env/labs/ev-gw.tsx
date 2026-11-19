@@ -1,6 +1,6 @@
 // Cone of depression: confined / unconfined section drawn live from the wells engine, a second well with superposed cones,
 // then exam-style problems (find Q, find K, observation wells, interference, storage volume).
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Callout, Md, Section, Seg } from '../../components/ui'
 import { hashKey } from '../../labs/CheckTable'
 import { pick, randInt, rng, Slider } from '../../labs/common'
@@ -8,6 +8,8 @@ import { ExamProblems, type Level, type XProblem, type XStep } from '../../soil/
 import { drawdownAt, drawdownCurve, dupuitK, dupuitQ, interferenceConfinedQ, interferenceUnconfinedQ, kObsUnconfined, qObsConfined, storageVolume, thiemK, thiemQ, unconfinedInterferenceChain, yieldFor, type Aquifer } from '../engine/wells'
 import { GwSection } from '../figs/gw-section'
 import { LineChart } from '../figs/pop-chart'
+import { WellSketch } from '../figs/sn-well-sketch'
+import { chainMd } from '../pyq/sn-math'
 
 const nf = (v: number, d = 0) => v.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d })
 const tx = String.raw
@@ -235,30 +237,70 @@ function make(seed: number, family?: Fam, level: Level = 'exam'): GP {
 function Solution({ p }: { p: GP }) {
   const d = p.d
   let md = ''
+  const dia = `${nf(d.rw * 2000)} mm`
+  const radius = tx`**Radius.** The paper gives the diameter: $r = ${dia} \div 2 = ${d.rw}$ m.`
+  let sketch: ReactNode = null
   if (p.family === 'q') {
     const Q = p.conf ? thiemQ({ K: d.K, b: d.thick, s: d.s, rw: d.rw, R: d.R }) : dupuitQ({ K: d.K, D: d.thick, s: d.s, rw: d.rw, R: d.R })
-    md = p.conf
-      ? tx`$Q=\dfrac{2\pi Kb\,s}{\ln(R/r)}=\dfrac{2\pi(${d.K})(${d.thick})(${d.s})}{\ln(${d.R}/${d.rw})}=\dfrac{${nf(2 * Math.PI * d.K * d.thick * d.s, 1)}}{${Math.log(d.R / d.rw).toFixed(3)}}=$ **${nf(Q)} m³/day**. Specific capacity $=Q/s=${nf(Q / d.s)}$ m³/day per m.`
-      : tx`$d=D-s=${d.thick - d.s}$ m. $Q=\dfrac{\pi K(D^2-d^2)}{\ln(R/r)}=\dfrac{\pi(${d.K})(${d.thick}^2-${d.thick - d.s}^2)}{\ln(${d.R}/${d.rw})}=\dfrac{${nf(Math.PI * d.K * (d.thick ** 2 - (d.thick - d.s) ** 2), 1)}}{${Math.log(d.R / d.rw).toFixed(3)}}=$ **${nf(Q)} m³/day**. Specific capacity $=Q/s=${nf(Q / d.s)}$ m³/day per m.`
+    const ln = Math.log(d.R / d.rw)
+    const dd = d.thick - d.s
+    md = (
+      p.conf
+        ? [
+            `1. ${radius}`,
+            tx`2. **Thiem (confined):** $Q=\dfrac{2\pi Kb\,s}{\ln(R/r)}$. Only the drawdown $s$ enters; the aquifer stays full, so its thickness $b$ is the flow depth everywhere.`,
+            tx`3. $\ln(R/r)=\ln(${d.R}/${d.rw})=\ln ${nf(d.R / d.rw, 1)}=${ln.toFixed(3)}$`,
+            tx`4. $Q=\dfrac{2\pi(${d.K})(${d.thick})(${d.s})}{${ln.toFixed(3)}}=\dfrac{${nf(2 * Math.PI * d.K * d.thick * d.s, 1)}}{${ln.toFixed(3)}}=$ **${nf(Q)} m³/day** (K in m/day and lengths in m, so Q is in m³/day)`,
+            tx`5. Specific capacity $=Q/s=${nf(Q)}/${d.s}=$ **${nf(Q / d.s)}** m³/day per m of drawdown.`,
+          ]
+        : [
+            `1. ${radius}`,
+            tx`2. **Dupuit (unconfined):** $Q=\dfrac{\pi K(D^2-d^2)}{\ln(R/r)}$. Here the flow depth itself falls towards the well, which is why the heights enter squared. $D$ = static depth of water = ${d.thick} m; $d$ = depth left in the well $=D-s=${d.thick}-${d.s}=${dd}$ m.`,
+            tx`3. $D^2-d^2=${d.thick}^2-${dd}^2=${nf(d.thick ** 2)}-${nf(dd ** 2, 2)}=${nf(d.thick ** 2 - dd ** 2, 2)}$ m²; $\ln(R/r)=\ln(${d.R}/${d.rw})=${ln.toFixed(3)}$`,
+            tx`4. $Q=\dfrac{\pi(${d.K})(${nf(d.thick ** 2 - dd ** 2, 2)})}{${ln.toFixed(3)}}=\dfrac{${nf(Math.PI * d.K * (d.thick ** 2 - dd ** 2), 1)}}{${ln.toFixed(3)}}=$ **${nf(Q)} m³/day**`,
+            tx`5. Specific capacity $=Q/s=${nf(Q)}/${d.s}=$ **${nf(Q / d.s)}** m³/day per m of drawdown.`,
+          ]
+    ).join('\n\n')
+    sketch = p.conf ? <WellSketch kind="confined" unit="m" rw={d.rw} R={d.R} b={d.thick} s={d.s} /> : <WellSketch kind="unconfined" unit="m" rw={d.rw} R={d.R} D={d.thick} d={dd} s={d.s} />
   } else if (p.family === 'k') {
     const Q = d.Q * 1.44
     const K = p.conf ? thiemK({ Q, b: d.thick, s: d.s, rw: d.rw, R: d.R }) : dupuitK({ Q, D: d.thick, s: d.s, rw: d.rw, R: d.R })
-    md = tx`$Q=${d.Q}\times1.44=${nf(Q, 1)}$ m³/day (1 L/min = 1.44 m³/day). ${p.conf ? tx`$K=\dfrac{Q\ln(R/r)}{2\pi b\,s}=\dfrac{${nf(Q, 1)}\ln(${d.R}/${d.rw})}{2\pi(${d.thick})(${d.s})}$` : tx`$K=\dfrac{Q\ln(R/r)}{\pi(D^2-d^2)}=\dfrac{${nf(Q, 1)}\ln(${d.R}/${d.rw})}{\pi(${d.thick}^2-${d.thick - d.s}^2)}$`} = **${K.toFixed(2)} m/day**.`
+    const ln = Math.log(d.R / d.rw)
+    const dd = d.thick - d.s
+    const den = p.conf ? 2 * Math.PI * d.thick * d.s : Math.PI * (d.thick ** 2 - dd ** 2)
+    md = [
+      tx`1. **Units first.** K is wanted in m/day, so Q must be in m³/day: $1$ L/min $=\dfrac{1440\ \text{min/day}}{1000\ \text{L/m}^3}=1.44$ m³/day, so $Q=${d.Q}\times1.44=${nf(Q, 1)}$ m³/day.`,
+      `2. ${radius}`,
+      p.conf
+        ? tx`3. **Thiem rearranged for K:** $Q=\dfrac{2\pi Kb\,s}{\ln(R/r)}\ \Rightarrow\ K=\dfrac{Q\ln(R/r)}{2\pi b\,s}$`
+        : tx`3. **Dupuit rearranged for K:** $Q=\dfrac{\pi K(D^2-d^2)}{\ln(R/r)}\ \Rightarrow\ K=\dfrac{Q\ln(R/r)}{\pi(D^2-d^2)}$, with $d=D-s=${d.thick}-${d.s}=${dd}$ m.`,
+      tx`4. $\ln(R/r)=\ln(${d.R}/${d.rw})=${ln.toFixed(3)}$; denominator ${p.conf ? tx`$2\pi(${d.thick})(${d.s})=${nf(den, 1)}$` : tx`$\pi(${d.thick}^2-${dd}^2)=${nf(den, 1)}$`}`,
+      tx`5. $K=\dfrac{${nf(Q, 1)}\times${ln.toFixed(3)}}{${nf(den, 1)}}=$ **${K.toFixed(2)} m/day**`,
+    ].join('\n\n')
+    sketch = p.conf ? <WellSketch kind="confined" unit="m" rw={d.rw} R={d.R} b={d.thick} s={d.s} /> : <WellSketch kind="unconfined" unit="m" rw={d.rw} R={d.R} D={d.thick} d={dd} s={d.s} />
   } else if (p.family === 'obs') {
     const Q = qObsConfined({ K: d.K, b: d.b, r1: d.r1, s1: d.s1, r2: d.r2, s2: d.s2 })
-    md = tx`Thiem between the two observation wells: $Q=\dfrac{2\pi Kb(s_1-s_2)}{\ln(r_2/r_1)}=\dfrac{2\pi(${d.K})(${d.b})(${d.s1}-${d.s2})}{\ln(${d.r2}/${d.r1})}=$ **${(Q * 1000).toFixed(2)} L/s** (${Q.toFixed(5)} m³/s). The well diameter is not needed.`
+    const ln = Math.log(d.r2 / d.r1)
+    md = [
+      tx`1. **Why the well itself is not needed.** Thiem holds between *any* two points on the cone, not only between the well and $R$. The two observation wells give two points: $(r_1, s_1)=(${d.r1}, ${d.s1})$ and $(r_2, s_2)=(${d.r2}, ${d.s2})$. The piezometric head rises by $s_1-s_2$ from $r_1$ to $r_2$:`,
+      tx`$$s_1-s_2=\dfrac{Q}{2\pi Kb}\ln\dfrac{r_2}{r_1}\ \Rightarrow\ Q=\dfrac{2\pi Kb(s_1-s_2)}{\ln(r_2/r_1)}$$`,
+      tx`2. $s_1-s_2=${d.s1}-${d.s2}=${nf(d.s1 - d.s2, 2)}$ m; $\ln(r_2/r_1)=\ln(${d.r2}/${d.r1})=${ln.toFixed(4)}$`,
+      tx`3. $Q=\dfrac{2\pi(${d.K})(${d.b})(${nf(d.s1 - d.s2, 2)})}{${ln.toFixed(4)}}=${Q.toFixed(5)}$ m³/s (K in m/s, so Q in m³/s) $=${Q.toFixed(5)}\times1000=$ **${(Q * 1000).toFixed(2)} L/s**`,
+    ].join('\n\n')
+    sketch = <WellSketch kind="confined" unit="m" rw={d.rw ?? 0.1} b={d.b} obs={[{ r: d.r1, s: d.s1 }, { r: d.r2, s: d.s2 }]} />
   } else if (p.family === 'vol') {
-    md = tx`$V=S_y\,A\,\Delta h=${d.Sy}\times${d.A}\times10^6\times${d.dh}=$ **${(storageVolume(d.Sy, d.A * 1e6, d.dh) / 1e6).toFixed(3)}$\times10^6$ m³**.`
+    md = [
+      tx`1. **Area in m²:** $A=${d.A}$ km² $=${d.A}\times10^6$ m² (1 km² = 1000 m × 1000 m).`,
+      tx`2. **Volume drained:** the specific yield is the volume of water a unit volume of aquifer gives up when the table falls, so $V=S_y\,A\,\Delta h=${d.Sy}\times${d.A}\times10^6\times${d.dh}=$ **${(storageVolume(d.Sy, d.A * 1e6, d.dh) / 1e6).toFixed(3)}$\times10^6$ m³**.`,
+    ].join('\n\n')
   } else {
     const c = unconfinedInterferenceChain({ Q: d.Q, D: d.D, s: d.s, rw: d.rw, a: d.a, h: d.h, s2: d.s2 })
-    md = [
-      tx`1. $d=${d.D}-${d.s}=${c.d}$ m. $K=\dfrac{Q\ln(r_2/r_1)}{\pi(h_2^2-h_1^2)}=\dfrac{${d.Q}\ln(${d.a}/${d.rw})}{\pi(${d.h}^2-${c.d}^2)}=$ **${c.K.toFixed(3)}** L/min per m².`,
-      tx`2. $\ln(R/r)=\pi K(D^2-d^2)/Q=${c.lnRr.toFixed(3)}$ → $R=$ **${nf(c.R)} m**.`,
-      tx`3. $Q_1=Q_2=\dfrac{\pi K(D^2-d_2^2)}{\ln(R^2/ra)}=\dfrac{${nf(c.num, 1)}}{${c.lnTerm.toFixed(3)}}=$ **${nf(c.each, 1)} L/min**, both together **${nf(c.total, 1)} L/min**.`,
-    ].join('\n\n')
+    md = `${radius}\n\n${chainMd({ Q: d.Q, D: d.D, s: d.s, rw: d.rw, a: d.a, h: d.h, s2: d.s2 }, 'L/min')}`
+    sketch = <WellSketch kind="unconfined" unit="m" rw={d.rw} R={c.R} D={d.D} d={c.d} s={d.s} obs={[{ r: d.a, h: d.h }]} />
   }
   return (
     <div className="space-y-2">
+      {sketch && <div className="rounded-xl border border-line bg-panel2/40 p-2">{sketch}</div>}
       <Md className="text-sm">{md}</Md>
       {p.family === 'interf' && <InterfFig d={p.d} />}
     </div>

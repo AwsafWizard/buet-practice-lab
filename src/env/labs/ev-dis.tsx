@@ -6,6 +6,7 @@ import { pick, randInt, rng, Slider } from '../../labs/common'
 import { ExamProblems, type Level, type XProblem, type XStep } from '../../soil/topics/seep/examShell'
 import { breakpointModel, chickWatson, chlorineDose, residualAt, timeAtOtherC, timeForLogKill, type Zone } from '../engine/chlorine'
 import { LineChart } from '../figs/pop-chart'
+import { ChickWatsonWork } from '../figs/ta-cw'
 
 const f = (v: number, d = 1) => v.toFixed(d)
 const tx = String.raw
@@ -145,12 +146,15 @@ function Solution({ p }: { p: DP }) {
   const d = p.d
   let md: string
   if (p.family === 'cw' && p.data) {
-    const cw = chickWatson({ C: d.C, data: p.data })
-    md = [`| t (s) | N | ln(N/N₀) | C·t |\n|---|---|---|---|\n${cw.pts.map((q) => `| ${q.t} | ${q.N} | ${f(q.lnR, 3)} | ${f(q.ct, 1)} |`).join('\n')}`, tx`Plot $-\ln(N/N_0)$ against $C\,t$; the slope through the origin is $k_{cw}=\dfrac{\sum(-\ln)\,Ct}{\sum (Ct)^2}=$ **${f(cw.k, 3)} L/mg·s**.`].join('\n\n')
+    return <ChickWatsonWork C={d.C} data={p.data} />
   } else if (p.family === 'dose') {
-    md = tx`Dose $=$ demand $+$ residual $=${d.demand}+${d.res}=$ **${f(d.demand + d.res, 2)} mg/L**. Mass $=${f(d.demand + d.res, 2)}\ \text{g/m}^3\times${d.Q.toLocaleString('en-US')}\ \text{m}^3\text{/d}=$ **${f(((d.demand + d.res) * d.Q) / 1000, 1)} kg/d**.`
+    md = tx`**Why:** the demand is the chlorine used up by reducing matter (Fe²⁺, Mn²⁺, H₂S, organics) and ammonia; only what is added on top of the demand is left as residual.
+
+Dose $=$ demand $+$ residual $=${d.demand}+${d.res}=$ **${f(d.demand + d.res, 2)} mg/L**. Mass $=${f(d.demand + d.res, 2)}\ \text{g/m}^3\times${d.Q.toLocaleString('en-US').replace(/,/g, '{,}')}\ \text{m}^3\text{/d}=$ **${f(((d.demand + d.res) * d.Q) / 1000, 1)} kg/d**.`
   } else {
-    md = tx`$Ct=${d.C1}\times${d.t1}=${f(d.C1 * d.t1, 1)}$ mg·min/L; $t=\dfrac{Ct}{${d.C2}}=$ **${f((d.C1 * d.t1) / d.C2, 1)} min**.`
+    md = tx`**Why:** with $n = 1$ the kill depends only on the product $C\,t$, so the same kill needs the same $C\,t$ at any concentration.
+
+$Ct=${d.C1}\times${d.t1}=${f(d.C1 * d.t1, 1)}$ mg·min/L; $t=\dfrac{Ct}{${d.C2}}=$ **${f((d.C1 * d.t1) / d.C2, 1)} min**.`
   }
   return <Md className="text-sm">{md}</Md>
 }
@@ -164,3 +168,6 @@ export default function DisLab() {
     </div>
   )
 }
+
+/** for the render tests (src/env/figs/ta-work.test.tsx) */
+export { FAMS, make, Solution }

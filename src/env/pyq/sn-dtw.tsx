@@ -5,6 +5,7 @@ import { Md, Step, Steps } from '../../components/ui'
 import {
   curveOf,
   dAt,
+  FM_SIEVES,
   designDtw,
   designFromSieve,
   gradationStats,
@@ -23,6 +24,7 @@ import {
   hardyCross,
   IMP_GAL_FT3,
   US_GAL_FT3,
+  type HcLaw,
   type HcLoop,
   type HcPipe,
   type TreePipe,
@@ -33,6 +35,8 @@ import { WellLog } from '../figs/well-log'
 import { LoopFig } from '../figs/net-loop'
 import { PressureProfile } from '../figs/net-profile'
 import { TreeFig, type NodePos } from '../figs/net-tree'
+import { HcWork } from '../figs/sn-hc-work'
+import { TreeWork } from '../figs/sn-tree-work'
 import type { EvCheck, EvPartMap } from '../types'
 
 const n = (v: number, d = 2) => {
@@ -86,16 +90,40 @@ const interpTex = (pts: CurvePoint[], p: number, name: string) => {
   return `${name} = ${n(r.lo.size, 3)}\\left(\\frac{${n(r.hi.size, 3)}}{${n(r.lo.size, 3)}}\\right)^{\\frac{${p}-${n(r.lo.finer, 1)}}{${n(r.hi.finer, 1)}-${n(r.lo.finer, 1)}}} = ${n(r.d, 3)}\\ \\text{mm}`
 }
 
+/** the bracket table for reading D10 / D30 / D60: the sieve on each side of the target % finer */
+export const bracketMd = (pts: CurvePoint[], reads: number[] = [10, 30, 60]) => {
+  const rows = reads.map((p) => {
+    const r = dAt(pts, p)
+    return `| D${p} | ${n(r.lo.size, 3)} mm at ${n(r.lo.finer, 1)} % | **${p} %** | ${n(r.hi.size, 3)} mm at ${n(r.hi.finer, 1)} % | **${n(r.d, 3)} mm**${r.extrapolated ? ' (beyond the last sieve: curve extended)' : ''} |`
+  })
+  return `| Read | sieve below (finer) | target | sieve above (coarser) | D |\n|---|---|---|---|---|\n${rows.join('\n')}`
+}
+
+/** sand → pack: every size × the factor (D60 capped at 2.5 D10 if the sand is wider than that) */
+const packMd = (sand: { d10: number; d30: number; d60: number }, pack: { d10: number; d30: number; d60: number }, f: number) => {
+  const row = (k: 'd10' | 'd30' | 'd60', lbl: string) => {
+    const raw = f * sand[k]
+    const capped = Math.abs(raw - pack[k]) > 1e-9
+    return `| ${lbl} | ${n(sand[k], 3)} | ${n(sand[k], 3)} × ${f} = ${n(raw, 3)}${capped ? ` → capped at 2.5 × D10 = ${n(pack[k], 3)}` : ''} | **${n(pack[k], 3)}** |`
+  }
+  return `| | sand (mm) | × factor | pack (mm) |\n|---|---|---|---|\n${row('d10', 'D10')}\n${row('d30', 'D30')}\n${row('d60', 'D60')}`
+}
+
+/** the % of the aquifer that may be screened, with the band it falls in */
+const shareWhy = (ft: number, share: number) => `${n(ft, 1)} ft ${ft < 25 ? '(under 25 ft)' : ft <= 50 ? '(25–50 ft)' : '(over 50 ft)'}, so ${n(share * 100, 0)} % may be screened`
+
 export function SieveSol({ c }: { c: SieveCase }) {
   const d = runSieve(c)
   const pts = d.tab.points
   const st = d.stats
   const packPts = pts.map((p) => ({ size: p.size * d.factor, finer: p.finer }))
+  const T = n(d.tab.total, 2)
+  const hundred = Math.abs(d.tab.total - 100) < 1e-6
   const rowsMd = [
     '| Sieve | Size (mm) | Retained (g) | % retained | Cum. % retained | % finer |',
     '|---|---|---|---|---|---|',
-    ...d.tab.rows.map((r) => `| #${r.no} | ${r.size} | ${r.retained} | ${n(r.pct, 1)} | ${n(r.cumRetained, 1)} | ${n(r.finer, 1)} |`),
-    `| Pan | – | ${c.pan} | ${n(d.tab.panPct, 1)} | 100 | 0 |`,
+    ...d.tab.rows.map((r, i) => `| #${r.no} | ${r.size} | ${r.retained} | ${hundred ? n(r.pct, 2) : `${r.retained} ÷ ${T} × 100 = ${n(r.pct, 2)}`} | ${i ? `${n(d.tab.rows[i - 1].cumRetained, 2)} + ${n(r.pct, 2)} = ` : ''}${n(r.cumRetained, 2)} | 100 − ${n(r.cumRetained, 2)} = **${n(r.finer, 2)}** |`),
+    `| Pan | – | ${c.pan} | ${n(d.tab.panPct, 2)} | 100 | 0 |`,
   ].join('\n')
   const y = d.yield
   const sc = d.screen
@@ -105,36 +133,41 @@ export function SieveSol({ c }: { c: SieveCase }) {
       <Md>{`**Assumed.** ${c.assumed.join('; ')}. Sizes are rounded down to a standard slot (#20, #30, #40).`}</Md>
       <Steps>
         <Step n={1} title="Percent finer for every sieve">
+          <Md>{`Total weight $= ${c.rows.map((r) => r.retained).join(' + ')} + ${c.pan}\\ (\\text{pan}) = ${T}$ g. Percent retained = weight ÷ total × 100${hundred ? ' (the total is 100 g, so the % equals the grams)' : ''}; add them down the column (cumulative); % finer = 100 − cumulative % retained.`}</Md>
           <Md>{rowsMd}</Md>
         </Step>
         <Step n={2} title="Gradation curve: D10, D30, D60 and Cu">
-          <Md>{`Read the sizes at 10, 30 and 60 % finer (log interpolation between the two sieves that enclose the percentage):
+          <Md>{`Plot % finer against sieve size on a **log** size axis (graph below) and join the points. $D_{10}$ is the size that 10 % of the sand is finer than, and so on. For each one, find the two sieves whose % finer sits either side of the target:`}</Md>
+          <Md>{bracketMd(pts)}</Md>
+          <Md>{`Between those two sieves the curve is a straight line on the log axis, so interpolate on $\\log D$: $D_x = D_1\\left(\\dfrac{D_2}{D_1}\\right)^{(x-P_1)/(P_2-P_1)}$, with $(D_1, P_1)$ the finer sieve and $(D_2, P_2)$ the coarser:
 
 $$${interpTex(pts, 10, 'D_{10}')}$$
 $$${interpTex(pts, 30, 'D_{30}')}$$
 $$${interpTex(pts, 60, 'D_{60}')}$$
 $$C_u = \\frac{D_{60}}{D_{10}} = \\frac{${n(st.d60, 3)}}{${n(st.d10, 3)}} = ${n(st.cu, 2)}$$
 
-Effective size ${n(st.d10, 3)} mm; ${d.mit} on the MIT scale; ${st.cu <= 2.5 ? 'C_u ≤ 2.5, so the sand is uniform enough to use as the design sample' : 'C_u > 2.5: the sand is graded wide, so the pack curve is flattened to C_u ≤ 2.5'}.`}</Md>
-        </Step>
-        <Step n={3} title="Gravel pack from the finest sand">
-          <Md>{`Multiplying factor on $D_{30}$ (4 for $C_u \\le 1.5$, 6 for $C_u \\ge 2.5$, straight line between):
-$$f = 4 + 2(C_u - 1.5) = 4 + 2(${n(st.cu, 2)} - 1.5) = ${n(d.factorExact, 2)} \\approx ${d.factor}$$
-$$D_{30,\\text{pack}} = ${d.factor} \\times ${n(st.d30, 3)} = ${n(d.pack.d30, 3)}\\ \\text{mm}$$
-Draw the pack curve through that point parallel to the sand curve, so $D_{10,\\text{pack}} = ${d.factor} \\times ${n(st.d10, 3)} = ${n(d.pack.d10, 3)}$ mm and $D_{60,\\text{pack}} = ${n(d.pack.d60, 3)}$ mm, $C_u$(pack) $= ${n(d.pack.cu, 2)} \\le 2.5$ ✓. Pack thickness 3–8 in (8 in is usual); it runs about 40 ft above the screen.`}</Md>
-          <Figure cap="Aquifer curve (solid, from the sieves) and the gravel-pack curve drawn parallel to it through D30 × factor.">
+Effective size ${n(st.d10, 3)} mm; ${d.mit} on the MIT scale; ${st.cu <= 2.5 ? '$C_u \\le 2.5$, so the sand is uniform enough to use as the design sample' : '$C_u > 2.5$: the sand is graded wide, so the pack curve is flattened to $C_u \\le 2.5$'}.`}</Md>
+          <Figure cap="Aquifer curve (solid, the sieve points) with the D10, D30, D60 readings dashed: across from the % axis to the curve, then down to the size axis. The gravel-pack curve (dashed, step 3) is the same curve shifted right by the factor; its D10 sets the slot.">
             <GradChart
               curves={[
                 { label: 'aquifer sand', pts },
                 { label: 'gravel pack', pts: packPts, dashed: true, color: 'var(--c-load)' },
               ]}
               mark={[
-                { size: st.d10, finer: 10, label: `D10 ${n(st.d10, 2)}` },
-                { size: st.d30, finer: 30, label: `D30 ${n(st.d30, 2)}` },
-                { size: st.d60, finer: 60, label: `D60 ${n(st.d60, 2)}` },
+                { size: st.d10, finer: 10, label: `D10 ${n(st.d10, 3)}` },
+                { size: st.d30, finer: 30, label: `D30 ${n(st.d30, 3)}` },
+                { size: st.d60, finer: 60, label: `D60 ${n(st.d60, 3)}` },
+                { size: d.pack.d10, finer: 10, label: `pack D10 ${n(d.pack.d10, 2)}` },
               ]}
             />
           </Figure>
+        </Step>
+        <Step n={3} title="Gravel pack from the finest sand">
+          <Md>{`Multiplying factor on $D_{30}$ (4 for $C_u \\le 1.5$, 6 for $C_u \\ge 2.5$, straight line between):
+$$f = 4 + 2(C_u - 1.5) = 4 + 2(${n(st.cu, 2)} - 1.5) = ${n(d.factorExact, 2)} \\approx ${d.factor}$$
+$D_{30}$ of the pack $= f \\times D_{30}$ of the sand, and the pack curve is drawn **parallel** to the sand curve through that point (on a log axis, parallel means every size × the same factor):`}</Md>
+          <Md>{packMd(st, d.pack, d.factor)}</Md>
+          <Md>{`$C_u$(pack) $= ${n(d.pack.d60, 3)} / ${n(d.pack.d10, 3)} = ${n(d.pack.cu, 2)} \\le 2.5$ ✓. Pack thickness 3–8 in (8 in is usual); it runs about 40 ft above the screen.`}</Md>
         </Step>
         <Step n={4} title="Slot size">
           <Md>{`The slot must hold back about 90 % of the pack, so use $D_{10}$ of the pack:
@@ -143,12 +176,16 @@ Round **down** to a standard slot: **#${d.slot.slot}** (opening ${n(d.slot.width
         </Step>
         {sc && (
           <Step n={5} title="Screen length">
-            <Md>{`Aquifer thickness $${n(c.thicknessM ?? 0, 0)}$ m $= ${n(sc.thicknessFt, 1)}$ ft ($> 50$ ft), so up to **80 %** can be screened: $0.8 \\times ${n(sc.thicknessFt, 1)} = ${n(sc.lenByShare, 1)}$ ft. A longer screen than **100 ft** is hard to keep vertical, so adopt **L = ${n(sc.Lft, 0)} ft** (${n(sc.Lm, 1)} m).`}</Md>
+            <Md>{`1. Thickness in feet: $${n(c.thicknessM ?? 0, 0)}$ m $\\times 3.281 = ${n(sc.thicknessFt, 1)}$ ft.
+
+2. The share that may be screened depends on the thickness (70 % under 25 ft, 75 % for 25–50 ft, 80 % over 50 ft): ${shareWhy(sc.thicknessFt, sc.share)}: $${n(sc.share, 2)} \\times ${n(sc.thicknessFt, 1)} = ${n(sc.lenByShare, 1)}$ ft.
+
+3. ${sc.lenByShare > sc.maxScreen ? `A screen longer than **${sc.maxScreen} ft** is hard to keep vertical, so adopt` : `That is within the ${sc.maxScreen} ft limit, so adopt`} **L = ${n(sc.Lft, 0)} ft** (${n(sc.Lm, 1)} m).`}</Md>
           </Step>
         )}
         {y && (
           <Step n={6} title="Open area and yield">
-            <Md>{`Opening ${n(y.eta * 100, 0)} % (given), $D = ${n(c.strainerMm ?? 0, 0)}$ mm $= ${n(y.dFt, 3)}$ ft, entrance velocity $V_c = 0.1$ ft/s, blockage factor $F_B = ${y.fb}$:
+            <Md>{`Opening ${n(y.eta * 100, 0)} % (given), $D = ${n(c.strainerMm ?? 0, 0)}$ mm $= ${n(c.strainerMm ?? 0, 0)} \\div 304.8 = ${n(y.dFt, 3)}$ ft (the formula is in ft and ft/s, so Q comes out in cusec), entrance velocity $V_c = 0.1$ ft/s, blockage factor $F_B = ${y.fb}$:
 $$Q = \\frac{\\eta\\,\\pi D L\\,V_c}{F_B} = \\frac{${n(y.eta, 2)} \\times \\pi \\times ${n(y.dFt, 3)} \\times ${n(y.L, 0)} \\times 0.1}{${y.fb}} = ${n(y.cfs, 3)}\\ \\text{cusec}$$
 $$Q = ${n(y.cfs, 3)} \\times 28.317 \\times 3600 = ${comma(y.lph)}\\ \\text{L/h} = ${n(y.m3h, 1)}\\ \\text{m}^3\\text{/h}$$`}</Md>
           </Step>
@@ -172,7 +209,22 @@ const finalSieve = (c: SieveCase) => {
 // ====================================================================================================
 // B. Deep tubewell from a borehole log (2022-23 Q6(c), 2023-24 Q5(b))
 // ====================================================================================================
-export function DtwSol({ d, given, assumed, curve, extra }: { d: DtwDesign; given: string[]; assumed: string[]; curve?: { pts: CurvePoint[]; label: string }; extra?: string }) {
+/** fineness modulus read off a gradation curve: cumulative % retained on the six FM sieves, added, ÷ 100 */
+const FM_NAMES = ['#4', '#8', '#16', '#30', '#50', '#100']
+function fmMd(pts: CurvePoint[]) {
+  const st = gradationStats(pts)
+  const rows = FM_SIEVES.map((s, i) => `| ${FM_NAMES[i]} | ${s} | ${n(100 - st.fmTerms[i], 1)} | 100 − ${n(100 - st.fmTerms[i], 1)} = ${n(st.fmTerms[i], 1)} |`).join('\n')
+  return `**Fineness modulus of the layer, from its curve.** Read the % finer at each FM sieve off the curve (beyond its coarse end, its last value); cumulative % retained = 100 − % finer; FM = their sum ÷ 100.
+
+| Sieve | Size (mm) | % finer (curve) | cum. % retained |
+|---|---|---|---|
+${rows}
+| | | **Σ** | **${n(st.fmTerms.reduce((a, b) => a + b, 0), 1)}** |
+
+$FM = ${n(st.fmTerms.reduce((a, b) => a + b, 0), 1)} / 100 = ${n(st.fm, 2)}$ (${st.fm >= 1 ? '≥ 1, so coarse enough to screen' : 'below 1: too fine to screen'}).`
+}
+
+export function DtwSol({ d, given, assumed, curve, extra, fm }: { d: DtwDesign; given: string[]; assumed: string[]; curve?: { pts: CurvePoint[]; label: string }; extra?: string; fm?: boolean }) {
   const h = d.housing
   const y = d.yield
   const layerMd = [
@@ -193,19 +245,28 @@ $$L_h = ${h.swl} + ${h.decline} \\times ${h.years} + ${h.drawdown} + ${h.safety}
 The pump stays below water for the whole life; the strainer must start below ${n(h.length, 0)} ft.${d.input.housing.bowlOD ? ` Housing ID ${h.id} in (pump bowl ${d.input.housing.bowlOD} in + 2 in).` : ''}`}</Md>
         </Step>
         <Step n={2} title="Choose the water-bearing zone (FM ≥ 1, Cu < 2.5, no clay)">
+          {curve && fm && <Md>{fmMd(curve.pts)}</Md>}
           <Md>{layerMd}</Md>
           <Md>{`Zone chosen: **${z.top}–${z.bot} ft** (${n(d.avail, 0)} ft of usable aquifer${z.topIsInterface ? '' : ', cut by the bottom of the housing pipe'}).`}</Md>
         </Step>
         <Step n={3} title="Strainer length and position">
-          <Md>{`Thickness ${n(d.avail, 0)} ft $> 50$ ft → ${n(d.share * 100, 0)} % may be screened: $${n(d.share, 2)} \\times ${n(d.avail, 0)} = ${n(d.lenByShare, 0)}$ ft. A screen is hard to keep vertical beyond 100 ft, so **L = ${n(d.length, 0)} ft** (maximum allowable). ${d.input.placement === 'centre' ? `The 100 ft screen is centred in the layer (${n((d.avail - d.length) / 2, 0)} ft clear above and below)` : z.topIsInterface ? `Keep ${d.clearance} ft clear of the layer boundary (finer soil above)` : 'Start 20 ft under the housing pipe so the blind pipe and pack fit'}, so the strainer lies **${d.strainer.top}–${d.strainer.bot} ft**. Sand trap ${d.input.sandTrap ?? 10} ft below: ${d.trap.top}–${d.trap.bot} ft. Blind pipe ${d.blind.top}–${d.blind.bot} ft.`}</Md>
+          <Md>{`1. **Length.** Usable thickness ${z.bot} − ${z.top} = ${shareWhy(d.avail, d.share)}: $${n(d.share, 2)} \\times ${n(d.avail, 0)} = ${n(d.lenByShare, 0)}$ ft. ${d.lenByShare > d.maxScreen ? `A screen is hard to keep vertical beyond ${d.maxScreen} ft, so **L = ${n(d.length, 0)} ft** (maximum allowable).` : `That is within the ${d.maxScreen} ft limit: **L = ${n(d.length, 0)} ft**.`}
+
+2. **Position.** ${d.input.placement === 'centre' ? `Centre the screen in the layer: $(${n(d.avail, 0)} - ${n(d.length, 0)})/2 = ${n((d.avail - d.length) / 2, 0)}$ ft clear above and below` : z.topIsInterface ? `Keep ${d.clearance} ft clear of the layer boundary (finer soil above): top $= ${z.top} + ${d.clearance}$` : 'Start about 20 ft under the housing pipe so the blind pipe and pack fit'}, so the strainer lies **${d.strainer.top}–${d.strainer.bot} ft** (${d.strainer.top} + ${n(d.length, 0)} = ${d.strainer.bot}).
+
+3. **Below and above it.** Sand trap ${d.input.sandTrap ?? 10} ft below: ${d.trap.top}–${d.trap.bot} ft. Blind pipe from the housing pipe down to the strainer: ${d.blind.top}–${d.blind.bot} ft.`}</Md>
         </Step>
         <Step n={4} title="Gravel pack">
           <Md>
             {d.pack.how === 'given'
               ? `The pack gradation is given: $D_{60} = ${d.pack.d60}$, $D_{30} = ${d.pack.d30}$, $D_{10} = ${d.pack.d10}$ mm, $C_u = ${n(d.pack.cu, 2)} \\le 2.5$ ✓.`
               : `Finest sand in the screened depth (lowest FM): the layer with $D_{10} = ${n(d.finest!.d10 ?? 0, 3)}$, $D_{30} = ${n(d.finest!.d30, 3)}$, $D_{60} = ${n(d.finest!.d60 ?? 0, 3)}$ mm, $C_u = ${n(d.finest!.cu, 2)}$.
-$$f = 4 + 2(C_u - 1.5) = ${n(d.factorExact, 2)} \\approx ${d.factor}, \\qquad D_{30,\\text{pack}} = ${d.factor} \\times ${n(d.finest!.d30, 3)} = ${n(d.pack.d30, 3)}\\ \\text{mm}$$
-Pack curve drawn parallel to the sand curve: $D_{10,\\text{pack}} = ${n(d.pack.d10, 3)}$, $D_{60,\\text{pack}} = ${n(d.pack.d60, 3)}$ mm, $C_u = ${n(d.pack.cu, 2)} \\le 2.5$ ✓.`}
+$$f = 4 + 2(C_u - 1.5) = 4 + 2(${n(d.finest!.cu, 2)} - 1.5) = ${n(d.factorExact, 2)} \\approx ${d.factor}$$
+$D_{30}$ of the pack $= f \\times D_{30}$ of the sand, and the pack curve is drawn **parallel** to the sand curve (every size × the same factor on the log axis):
+
+${packMd({ d10: d.finest!.d10 ?? NaN, d30: d.finest!.d30, d60: d.finest!.d60 ?? NaN }, d.pack, d.factor)}
+
+$C_u$(pack) $= ${n(d.pack.d60, 3)} / ${n(d.pack.d10, 3)} = ${n(d.pack.cu, 2)} \\le 2.5$ ✓.`}
           </Md>
           {curve && (
             <Figure cap={`${curve.label} (read by eye from the printed chart) and the gravel-pack curve through D30 × ${d.factor}.`}>
@@ -382,19 +443,9 @@ function Sol2324_6a() {
     <Block>
       <Md>{`**Given.** Dead-end network from the OH tank (node 0): pipe lengths 0-1 = 290 m, 1-2 = 140 m, 2-3 = 125 m, 1-4 = 205 m, 4-5 = 210 m, 4-6 = 165 m; tank pressure 70 psi; minimum 30 psi at the end of every branch; $V = 5$ fps; $f = 0.01$.`}</Md>
       <Md>{`**Assumed.** The table's "supply" is the demand drawn off at the end node of each listed pipe (2, 3, 5, 6); nodes 1 and 4 draw nothing. The unlabelled stub at node 2 has no length or demand, so it is ignored. Flat ground; BNBC smallest distribution main 4 in; commercial sizes 2, 3, 4, 6, 8…; $h_f = 4fLv^2/2gD$ with the velocity in the adopted pipe.`}</Md>
-      <Steps>
-        <Step n={1} title="Flow in each pipe (accumulate from the ends)">
-          <Md>{`$Q_{2\\text{-}3} = 195.5$; $Q_{1\\text{-}2} = 275 + 195.5 = 470.5$; $Q_{4\\text{-}5} = 135.5$; $Q_{4\\text{-}6} = 205$; $Q_{1\\text{-}4} = 135.5 + 205 = 340.5$; $Q_{0\\text{-}1} = 470.5 + 340.5 = 811$ m³/d (${n(p('0-1').Qlps, 2)} L/s).`}</Md>
-        </Step>
-        <Step n={2} title="Diameter at V = 5 fps (1.524 m/s), then the size checks">
-          <Md>{`$$D = \\sqrt{\\frac{4Q}{\\pi V}}, \\qquad \\text{e.g. } D_{0\\text{-}1} = \\sqrt{\\frac{4 \\times ${n(p('0-1').Q, 5)}}{\\pi \\times 1.524}} = ${n(p('0-1').Dcalc * 1000, 1)}\\ \\text{mm} = ${n(p('0-1').DcalcIn, 2)}\\ \\text{in}$$
-Check 1: calculated size below the 4 in minimum → adopt 4 in. Check 2 (velocity): with the adopted pipe v is below 5 fps in every pipe.`}</Md>
-        </Step>
-        <Step n={3} title="Head loss and pressure down each branch; pressure check">
-          <TreeTables res={r} />
-          <Md>{`Pressure at a node = pressure at the tank − Σ h_f along the path. Every terminal ends above 30 psi, so **no pipe needs enlarging**.`}</Md>
-        </Step>
-      </Steps>
+      <Md>{`**Units.** Demands are in m³/day; for $D=\\sqrt{4Q/\\pi V}$ in metres, $Q$ must be in m³/s (÷ 86,400) and $V = 5$ fps $= 5 \\times 0.3048 = 1.524$ m/s. E.g. pipe 0-1: $811 \\div 86{,}400 = ${n(p('0-1').Q, 5)}$ m³/s $= ${n(p('0-1').Qlps, 2)}$ L/s.`}</Md>
+      <TreeWork res={r} unit="m3d" V={fpsToMs(5)} f={0.01} />
+      <Md>{`**Velocity check:** the fastest water in step 3 is ${n(Math.max(...r.pipes.map((x) => x.vfps)), 2)} fps, below the 5 fps design velocity${r.pipes.every((x) => x.rule === 'min') ? ', because every pipe came out under the 4 in minimum and was enlarged to it' : ' (rounding a size up always slows the water)'}.`}</Md>
       <Figure cap="Sizes and the pressure at each node (green = meets 30 psi).">
         <TreeFig res={r} pos={POS_2324} root="0" flowUnit="lps" />
       </Figure>
@@ -421,33 +472,20 @@ const HC_LOOPS_1213: HcLoop[] = [
   { id: 'I', pipes: [{ id: 'AB', dir: 1 }, { id: 'BD', dir: 1 }, { id: 'AD', dir: -1 }] },
   { id: 'II', pipes: [{ id: 'BC', dir: 1 }, { id: 'DC', dir: -1 }, { id: 'BD', dir: -1 }] },
 ]
-const HC_1213 = hardyCross(HC_PIPES_1213, HC_LOOPS_1213, { kind: 'hw-lps-mm', coef: 1.59e6 }, { iterations: 2, tol: 0 })
+const HC_LAW_1213: HcLaw = { kind: 'hw-lps-mm', coef: 1.59e6 }
+const HC_1213 = hardyCross(HC_PIPES_1213, HC_LOOPS_1213, HC_LAW_1213, { iterations: 2, tol: 0 })
 const POS_1213: NodePos = { A: [90, 60], B: [380, 60], C: [380, 230], D: [90, 230] }
 
 function Sol2012_2c() {
   const r = HC_1213
-  const lbl: Record<string, string> = { AB: 'A→B', BD: 'B→D', AD: 'D→A', BC: 'B→C', DC: 'C→D' }
   return (
     <Block>
       <Md>{`**Given.** Inflow 5 lps at A, outflow 2 lps at D and 3 lps at C; pipes AB 400 m / 200 mm, BC 300 / 100, CD 400 / 200, DA 300 / 100, BD 500 / 150; first guesses AB 2, BC 1.2, CD 1.8, DA 3, BD 0.8 lps; $h_L = 1.59\\times10^{6}\\,Q^{1.85}D^{-4.87}$ (Q in lps, D in mm, $h_L$ in m/m).`}</Md>
       <Md>{`**Assumed.** The first guesses must satisfy continuity: A sends 2 to B and 3 to D; B sends 1.2 to C and 0.8 to D; D passes 1.8 on to C (so CD flows D→C). Loop I = A-B-D-A and loop II = B-C-D-B, both clockwise (+); both loops are corrected together each trial; BD is common (it gets $\\Delta_I - \\Delta_{II}$ with its sign by direction).`}</Md>
-      <Md>{`For a pipe, $H = k\\,Q^{1.85}$ with $k = 1.59\\times10^{6}\\,L\\,D^{-4.87}$ (H in m). Then $\\Delta = -\\dfrac{\\sum H}{1.85\\sum |H/Q|}$ for each loop.`}</Md>
-      <Steps>
-        {r.iters.map((it) => (
-          <Step key={it.n} n={it.n} title={`Trial ${it.n}`}>
-            {it.loops.map((l) => (
-              <Md key={l.id}>{`**Loop ${l.id}** (clockwise)
-
-| Pipe | Q (lps) | H = kQ^1.85 (m) | H/Q |
-|---|---|---|---|
-${l.rows.map((x) => `| ${lbl[x.pipe] ?? x.pipe} | ${n(x.q, 3)} | ${n(x.H, 3)} | ${n(x.Hq, 3)} |`).join('\n')}
-
-$\\sum H = ${n(l.sumH, 3)}$ m, $\\sum |H/Q| = ${n(l.sumHq, 3)}$, $\\ \\Delta_{${l.id}} = -\\dfrac{${n(l.sumH, 3)}}{1.85 \\times ${n(l.sumHq, 3)}} = \\mathbf{${n(l.delta, 4)}}$ lps`}</Md>
-            ))}
-            <Md>{`New flows (lps): ${Object.entries(it.end).map(([id, q]) => `${id} = ${n(q, 3)}`).join(', ')}. BD, common to both loops, gets $\\Delta_I - \\Delta_{II} = ${n(it.pipeDelta.BD, 4)}$ lps in the B→D sense.`}</Md>
-          </Step>
-        ))}
-      </Steps>
+      <Figure cap="First guess (lps), with the loop senses. Every node balances: in = out.">
+        <LoopFig pipes={HC_PIPES_1213} pos={POS_1213} flows={Object.fromEntries(HC_PIPES_1213.map((p) => [p.id, p.Q0]))} ext={{ A: 5, D: -2, C: -3 }} loops={HC_LOOPS_1213} loopAt={{ I: [190, 120], II: [290, 180] }} viewBox={[480, 290]} />
+      </Figure>
+      <HcWork pipes={HC_PIPES_1213} loops={HC_LOOPS_1213} law={HC_LAW_1213} res={r} />
       <Figure cap="Flows after two trials (lps). Arrows show the direction; AB 400 m, BC 300 m, CD 400 m, DA 300 m, BD 500 m.">
         <LoopFig pipes={HC_PIPES_1213} pos={POS_1213} flows={r.flows} ext={{ A: 5, D: -2, C: -3 }} loops={HC_LOOPS_1213} loopAt={{ I: [190, 120], II: [290, 180] }} viewBox={[480, 290]} />
       </Figure>
@@ -641,6 +679,7 @@ export const SN_DTW: Record<string, EvPartMap> = {
       <DtwSol
         d={D2223}
         curve={{ pts: CURVE_2223, label: 'finest sand (Fig. 2)' }}
+        fm
         given={['static water level 150 ft', 'water-bearing strata 180–350 ft, drinking-quality water', 'gradation curve of the finest sand from Fig. 2 (D10 ≈ 0.14, D30 ≈ 0.203, D60 ≈ 0.313 mm)', '6 in strainer, 14 in housing pipe', 'open area 20 / 15 / 10 % for 40 / 30 / 20-slot']}
         assumed={['water-level decline 2 ft/yr over 20 yr', 'drawdown 15 ft and safety margin 15 ft', 'entrance velocity 0.1 ft/s, blockage factor F_B = 3', 'steel strainer; sand trap 10 ft; pack thickness 6 in', 'FM of the layer read from the curve (≈ 1.4); no clay inside 180–350 ft']}
         extra={`(With the class's other tip F_B = 2.5 the yield is ${n(designDtw({ layers: D2223.input.layers, housing: D2223.input.housing, strainerDia: 6, packThickness: 6, fb: 2.5 }).yield.cfs, 3)} cusec.)`}

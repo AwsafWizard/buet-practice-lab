@@ -230,7 +230,13 @@ function Solution({ p }: { p: DP }) {
     md = `1. ADC $=P\\,q=${nf(d.pop)}\\times${d.q}=${nf(d.pop * d.q)}$ L/day.\n\n2. ADC/24 $=${nf(pk.avgHour)}$ L/h.\n\n3. $TF=24/${d.hrs}=${+pk.tf.toFixed(2)}$ (a reservoir would make it 1).\n\n4. Peak $=\\dfrac{ADC}{24}\\times PF\\times TF=${nf(pk.avgHour)}\\times${d.pf}\\times${+pk.tf.toFixed(2)}=$ **${nf(pk.peak)} L/h** $=${(pk.peak / 3600).toFixed(2)}$ L/s.`
   } else if (p.family === 'mix') {
     const wd = weightedDemand(d.P, p.mix!)
-    md = `$q=\\sum(\\text{share}\\times\\text{lpcd})$:\n\n| Row | share × lpcd |\n|---|---|\n${wd.rows.map((r) => `| ${r.label} | ${r.frac.toFixed(2)} × ${r.lpcd} = ${r.lpcdShare.toFixed(2)} |`).join('\n')}\n\n$q=${wd.lpcd.toFixed(2)}$ lpcd; $Q=${nf(d.P)}\\times${wd.lpcd.toFixed(2)}=${nf(wd.netLpd)}$ L/day = **${wd.MLD.toFixed(2)} MLD**. High-income share $=${wd.share((m) => m.label.startsWith('A')).toFixed(1)}$ %.`
+    const hiRows = wd.rows.filter((r) => r.label.startsWith('A'))
+    md = [
+      `1. **Weighted lpcd.** Each group uses its own lpcd, so the town's average is the population-weighted mean, $q=\\sum(\\text{share}\\times\\text{lpcd})$:`,
+      `| Group | share × lpcd |\n|---|---|\n${wd.rows.map((r) => `| ${r.label} | ${r.frac.toFixed(2)} × ${r.lpcd} = ${r.lpcdShare.toFixed(2)} |`).join('\n')}\n| **Σ** | **${wd.lpcd.toFixed(2)} lpcd** |`,
+      `2. **Daily demand:** $Q=P\\,q=${nf(d.P)}\\times${wd.lpcd.toFixed(2)}=${nf(wd.netLpd)}$ L/day $=${nf(wd.netLpd)}\\div10^6=$ **${wd.MLD.toFixed(2)} MLD** (1 ML = 10⁶ L).`,
+      `3. **High-income share** of the demand (not of the people): $\\dfrac{${hiRows.map((r) => r.lpcdShare.toFixed(2)).join(' + ')}}{${wd.lpcd.toFixed(2)}}\\times100=$ **${wd.share((m) => m.label.startsWith('A')).toFixed(1)} %**, although they are only ${(hiRows.reduce((s, r) => s + r.frac, 0) * 100).toFixed(0)} % of the people.`,
+    ].join('\n\n')
   } else {
     const t = economicTank(d.V, d.cf, d.cw)
     md = `$C=c_f\\dfrac{\\pi D^2}{4}+c_w\\pi DH$ with $H=\\dfrac{4V}{\\pi D^2}$ → $C=c_f\\dfrac{\\pi D^2}{4}+\\dfrac{4c_wV}{D}$.\n\n$\\dfrac{dC}{dD}=0\\Rightarrow D^3=\\dfrac{8c_wV}{\\pi c_f}=\\dfrac{8(${d.cw})(${d.V})}{\\pi(${d.cf})}$, so **D = ${t.D.toFixed(2)} m**, $H=\\dfrac{4V}{\\pi D^2}=$ **${t.H.toFixed(2)} m** ($H/D=c_f/2c_w=${t.ratioHD.toFixed(3)}$).`

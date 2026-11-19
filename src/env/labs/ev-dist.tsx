@@ -27,6 +27,8 @@ import {
 import { LoopFig } from '../figs/net-loop'
 import { PressureProfile } from '../figs/net-profile'
 import { TreeFig, type NodePos } from '../figs/net-tree'
+import { HcWork } from '../figs/sn-hc-work'
+import { TreeWork } from '../figs/sn-tree-work'
 import { TankSol, TreeTables, type TankCase } from '../pyq/sn-dtw'
 
 const n = (v: number, d = 2) => {
@@ -170,7 +172,7 @@ const EX3_PIPES = (q: number[]): HcPipe[] => [
   { id: '4-5', from: '4', to: '5', L: 335, Q0: q[5] },
   { id: '5-6', from: '5', to: '6', L: 165, Q0: q[6] },
 ]
-const EX3_LOOPS: HcLoop[] = [
+export const EX3_LOOPS: HcLoop[] = [
   { id: 'I', pipes: [{ id: '1-2', dir: 1 }, { id: '2-3', dir: 1 }, { id: '3-6', dir: 1 }, { id: '6-1', dir: 1 }] },
   { id: 'II', pipes: [{ id: '3-6', dir: -1 }, { id: '3-4', dir: 1 }, { id: '4-5', dir: 1 }, { id: '5-6', dir: 1 }] },
 ]
@@ -429,6 +431,7 @@ function makeCusec(seed: number, level: Level): PP {
     pos,
     flowUnit: 'cfs',
     steps,
+    lines: names.slice(1).map((nm, i) => `$q_{${nm}} = ${avg[i]} \\times ${pf} \\times ${n(1 + loss, 2)} = ${n(designDemand(avg[i], pf, loss), 3)}$ cusec`),
     text: `A branch line ${names.join('–')} supplies a residential area. Average demands: ${names.slice(1).map((nm, i) => `**${avg[i]} cusec at ${nm}**`).join(', ')}. Peak factor **${pf}**, losses and wastage **${n(loss * 100, 0)} %**. Pressure at ${names[0]} is **${Pb} psi** and the terminal pressure required is **${Pmin} psi**. Lengths: ${pipes.map((p, i) => `${p.id} = ${Ls[i]} ft`).join(', ')}. Design the branch lines. *(Use $h_f = 4fLv^2/2gD$, f = 0.01, V = 3 fps, smallest main 4 in, flat ground.)*`,
   }
 }
@@ -552,17 +555,21 @@ export function make(seed: number, family?: Fam, level: Level = 'exam'): PP {
 
 function TreeSolution({ p }: { p: PP }) {
   const t = p.tree!
-  const a = t.pipes[0]
   const sixty = p.flowUnit === 'cfs'
+  const startFt = (t.startPsi * 144) / 62.4
   return (
     <div className="space-y-3 text-sm">
-      <Md>{`**Steps.** Accumulate the design flows from the tail; $D = \\sqrt{4Q/\\pi V}$ and round **up** (smallest main 4 in); $h_f = 4fLv^2/2gD$ with $v = Q/A$ in the adopted pipe; convert $h_f\\,[\\text{psi}] = h_f\\,[\\text{ft}]\\times 62.4/144$; terminal pressure = start − Σ$h_f$ along the path.
-
-Example, pipe ${a.id}: $Q = ${sixty ? n(a.Qcfs, 3) + '$ cusec' : comma(a.Qlph) + '$ lph'}, calculated D = ${n(a.DcalcIn, 2)} in → **${a.Din} in**; $v = ${n(a.vfps, 2)}$ fps; $h_f = ${n(a.hfFt, 2)}$ ft $= ${n(a.hfPsi, 3)}$ psi.`}</Md>
-      <TreeTables res={t} />
-      {t.enlarged.length > 0 && <Md>{`Some ends fell below ${t.minPsi} psi, so the pipe losing most on those paths was enlarged: ${t.enlarged.map((e) => `${e.id} ${e.from} → ${e.to} in`).join(', ')}.`}</Md>}
+      {sixty ? (
+        <Md>{`**Design demand at each node** $= \\text{average} \\times \\text{peak factor} \\times (1 + \\text{losses})$:${p.lines?.length ? `\n\n${p.lines.map((l) => `- ${l}`).join('\n')}` : ''}`}</Md>
+      ) : (
+        <Md>{`**Pressure at the reservoir:** a water column of ${n(startFt, 1)} ft gives $${n(startFt, 1)} \\times 62.4/144 = ${n(t.startPsi, 2)}$ psi (1 ft of water = 0.433 psi).`}</Md>
+      )}
       <div className="rounded-xl border border-line p-2 bg-panel">
         <TreeFig res={t} pos={p.pos!} root={t.pipes[0].from} flowUnit={p.flowUnit} viewBox={sixty ? [520, 290] : [520, 300]} />
+      </div>
+      <TreeWork res={t} unit={sixty ? 'cfs' : 'lph'} V={sixty ? fpsToMs(3) : 1} f={0.01} />
+      <div className="rounded-xl border border-line p-2 bg-panel">
+        <PressureProfile res={t} />
       </div>
     </div>
   )
@@ -572,21 +579,8 @@ function HcSolution({ p }: { p: PP }) {
   const { pipes, ext, res } = p.hc!
   return (
     <div className="space-y-3 text-sm">
-      {res.iters.map((it) => (
-        <div key={it.n} className="space-y-2">
-          <div className="font-bold">Trial {it.n}</div>
-          {it.loops.map((l) => (
-            <Md key={l.id}>{`**Loop ${l.id}**
-
-| Pipe | Q (lps) | H = Q^1.85 | H/Q |
-|---|---|---|---|
-${l.rows.map((x) => `| ${x.pipe} | ${n(x.q, 3)} | ${n(x.H, 3)} | ${n(x.Hq, 3)} |`).join('\n')}
-
-$\\sum H = ${n(l.sumH, 3)}$, $\\sum|H/Q| = ${n(l.sumHq, 3)}$, $\\Delta_{${l.id}} = -\\dfrac{${n(l.sumH, 3)}}{1.85\\times ${n(l.sumHq, 3)}} = \\mathbf{${n(l.delta, 4)}}$ lps`}</Md>
-          ))}
-          <Md>{`Common pipe 3-6 (clockwise in I, anticlockwise in II): $\\Delta_I - \\Delta_{II} = ${n(it.pipeDelta['3-6'], 4)}$ lps. New flows: ${Object.entries(it.end).map(([id, q]) => `${id} = ${n(q, 3)}`).join(', ')}.`}</Md>
-        </div>
-      ))}
+      <HcWork pipes={pipes} loops={EX3_LOOPS} law={{ kind: 'k' }} res={res} />
+      <div className="font-bold">Flows after {res.iters.length} trials</div>
       <LoopFig pipes={pipes} pos={EX3_POS} flows={res.flows} ext={ext} loops={EX3_LOOPS} loopAt={{ I: [260, 110], II: [260, 205] }} unit="lps" viewBox={[520, 300]} />
     </div>
   )

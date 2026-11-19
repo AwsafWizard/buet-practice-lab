@@ -5,8 +5,9 @@ import { hashKey } from '../../labs/CheckTable'
 import { pick, randInt, rng, Slider } from '../../labs/common'
 import { NumIn } from '../../reference/common'
 import { ExamProblems, type Level, type XProblem, type XStep } from '../../soil/topics/seep/examShell'
-import { ALL_METHODS, annualGrowth, decreasing, geometric, growthRates, polyFit, runAll, SUITS, type Census, type MethodId } from '../engine/population'
+import { ALL_METHODS, annualGrowth, arithmetic, decreasing, geometric, growthRates, polyFit, runAll, SUITS, type Census, type MethodId } from '../engine/population'
 import { Legend, LineChart, SERIES_COLORS, type Series } from '../figs/pop-chart'
+import { PopWorkChart, type PopCurve } from '../figs/sn-pop-work'
 import { censusTable, decrMd, geomMd, lsMd } from '../pyq/sn-math'
 
 const COLOR: Record<MethodId, string> = { arith: SERIES_COLORS[0], expo: SERIES_COLORS[1], geom: SERIES_COLORS[2], decr: SERIES_COLORS[3], incr: SERIES_COLORS[4], line: SERIES_COLORS[5], parab: SERIES_COLORS[6], logi: SERIES_COLORS[7] }
@@ -271,18 +272,32 @@ function make(seed: number, family?: Fam, level: Level = 'exam'): PP {
 function Solution({ p }: { p: PP }) {
   const unit = /million/.test(p.text) ? 'million' : 'thousand'
   let md = ''
+  let curves: PopCurve[] = []
   if (p.family === 'geom') {
     const a = geomMd(p.c, p.targets, unit, 1)
     const K = (p.c[4].pop - p.c[0].pop) / (p.c[4].year - p.c[0].year)
-    md = a.md + `\n\n**Arithmetic:** $K=\\dfrac{P_{${p.c[4].year}}-P_{${p.c[0].year}}}{${p.c[4].year - p.c[0].year}}=${K.toFixed(3)}$ ${unit}/yr (the mean of the four decade rates), $P_{${p.targets[1]}}=${p.c[4].pop}+${K.toFixed(3)}\\times${p.targets[1] - p.c[4].year}=${(p.c[4].pop + K * (p.targets[1] - p.c[4].year)).toFixed(1)}$ ${unit}.`
-  } else if (p.family === 'ls') md = lsMd(p.c, p.targets, unit, 1).md
-  else if (p.family === 'decr') md = decrMd(p.c, p.targets, unit, 1).md
-  else {
+    md = a.md + `\n\n**Arithmetic:** $K=\\dfrac{P_{${p.c[4].year}}-P_{${p.c[0].year}}}{${p.c[4].year - p.c[0].year}}=\\dfrac{${p.c[4].pop}-${p.c[0].pop}}{${p.c[4].year - p.c[0].year}}=${K.toFixed(3)}$ ${unit}/yr (the same as the mean of the four decade increases ÷ 10), $P_{${p.targets[1]}}=${p.c[4].pop}+${K.toFixed(3)}\\times${p.targets[1] - p.c[4].year}=${(p.c[4].pop + K * (p.targets[1] - p.c[4].year)).toFixed(1)}$ ${unit}.`
+    curves = [{ label: 'geometric', at: a.m.at }, { label: 'arithmetic', at: arithmetic(p.c).at, dash: true }]
+  } else if (p.family === 'ls') {
+    const l = lsMd(p.c, p.targets, unit, 1)
+    md = l.md
+    curves = [{ label: 'least-squares parabola', at: l.f.at }]
+  } else if (p.family === 'decr') {
+    const dm = decrMd(p.c, p.targets, unit, 1)
+    md = dm.md
+    curves = [{ label: 'decreasing rate of growth', at: dm.m.at }]
+  } else {
     const [a, b] = p.c
     const gr = annualGrowth(a.pop, a.year, b.pop, b.year)
-    md = `$r=\\left(\\dfrac{${b.pop}}{${a.pop}}\\right)^{1/${gr.n}}-1=${gr.geometric.toFixed(5)}$ → **${(gr.geometric * 100).toFixed(3)} %** per year.\n\n$P_{${p.targets[0]}}=${b.pop}(1+${gr.geometric.toFixed(5)})^{20}=${(b.pop * Math.pow(1 + gr.geometric, 20)).toFixed(1)}$ ${unit}.`
+    md = `1. $${b.pop}=${a.pop}(1+r)^{${gr.n}}$, so $r=\\left(\\dfrac{${b.pop}}{${a.pop}}\\right)^{1/${gr.n}}-1=${(b.pop / a.pop).toFixed(4)}^{${(1 / gr.n).toFixed(3)}}-1=${gr.geometric.toFixed(5)}$ → **${(gr.geometric * 100).toFixed(3)} %** per year.\n\n2. ${p.targets[0]} is ${p.targets[0] - b.year} years after ${b.year}: $P_{${p.targets[0]}}=${b.pop}(1+${gr.geometric.toFixed(5)})^{${p.targets[0] - b.year}}=$ **${(b.pop * Math.pow(1 + gr.geometric, 20)).toFixed(1)}** ${unit}.`
+    curves = [{ label: 'geometric, (1 + r)ⁿ', at: geometric(p.c, 'end').at }]
   }
-  return <Md className="text-sm">{md}</Md>
+  return (
+    <div className="space-y-2">
+      <Md className="text-sm">{md}</Md>
+      {curves.length > 0 && <PopWorkChart c={p.c} curves={curves} targets={p.targets} unit={unit} />}
+    </div>
+  )
 }
 
 function Problems() {

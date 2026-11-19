@@ -6,6 +6,9 @@ import { Md } from '../../components/ui'
 import { IsoReading, MinTimeWork } from '../figs/iso-work'
 import { TypeIWork } from '../figs/typei-work'
 import { BarDiagram, SplitFlow } from '../figs/soft-bars'
+import { alkSpeciesMd } from '../figs/ta-chem'
+import { BypassFig } from '../figs/ta-ix'
+import { doseTableMd, FAC, hardnessTableMd, ionTableMd, massTableMd } from '../figs/ta-soft'
 import { alkalinityFromBicarbonate, hardness, henryWithAir, langelier, phOfCo2Water, toCaCO3 } from '../engine/chem'
 import { alkConsumed } from '../engine/coag'
 import { fixedBed, homeSoftener } from '../engine/ix'
@@ -47,16 +50,14 @@ function isoMd(r: IsoResult, labelOf?: (i: number) => string) {
 }
 
 /** composition table, ions → mg/L as CaCO3 */
+const EQW: Partial<Record<Parameters<typeof toCaCO3>[0], string>> = { co2: '22', ca: '20', mg: '12.15', na: '23', cl: '35.45', so4: '48', hco3: '61' }
 function convMd(rows: { name: string; mgL: number; ion: Parameters<typeof toCaCO3>[0]; fac: number }[]) {
-  return `| Constituent | mg/L | × factor (50/eq. wt) | mg/L as CaCO₃ |\n|---|---|---|---|\n${rows.map((r) => `| ${r.name} | ${g(r.mgL, 4)} | ${r.fac} | ${f(toCaCO3(r.ion, r.mgL), 1)} |`).join('\n')}`
+  return ionTableMd(rows.map((r) => ({ name: r.name, mgL: r.mgL, fac: r.fac, eqw: EQW[r.ion], cc: toCaCO3(r.ion, r.mgL) })))
 }
-const FAC = { ca: 2.5, mg: 4.12, na: 2.174, cl: 1.41, so4: 1.042, co2: 2.27, hco3: 0.82 }
 
+/** TH, CH, NCH (and the Ca / Mg parts of the NCH) with the rule used in each row */
 function hardMd(w: Water) {
-  const h = hardness(w)
-  return [
-    tx`$TH = Ca + Mg = ${f(w.ca)}+${f(w.mg)} = ${f(h.th)}$; alkalinity $= ${f(w.alk)}$ → ${h.th > w.alk ? tx`$CH=${f(h.ch)}$, $NCH = TH-\text{alk} = ${f(h.nch)}$ (Ca part ${f(h.caNch)}, Mg part ${f(h.mgNch)})` : tx`TH ≤ alkalinity: all hardness is carbonate (CH = ${f(h.th)}, NCH = 0)`}`,
-  ].join('\n')
+  return hardnessTableMd(hardness(w))
 }
 
 // ================================================================ 2012-13 Q1(c) Langelier / Ryznar
@@ -189,23 +190,31 @@ const stripNote = 'Strips are trapezoids between neighbouring readings (mean vel
 
 // ================================================================ softening
 function softIntro(rows: string, w: Water, extra = '') {
-  return [`### Given and conversion to mg/L as CaCO₃`, rows, hardMd(w), extra].filter(Boolean).join('\n\n')
+  return [`### Given and conversion to mg/L as CaCO₃`, rows, '**Hardness** (mg/L as CaCO₃):', hardMd(w), extra].filter(Boolean).join('\n\n')
 }
+/** one treatment, its lime and soda term by term */
 function treatMd(t: Treat, label: string) {
-  return t.mode === 'selective'
-    ? tx`**${label}** (selective Ca removal): $\text{Lime}=CO_2+\text{HCO}_3^-=${f(t.limeParts.co2)}+${f(t.limeParts.alk)}${t.excess ? `+${t.excess}\\ (\\text{excess})` : ''} =$ **${f(t.lime)}** mg/L as CaCO₃; soda ash $=${f(t.soda)}$${t.soda ? '' : ' (the Ca non-carbonate hardness is left alone)'}.`
-    : tx`**${label}** (to the practical limits Ca 30, Mg 10): $\text{Lime}=CO_2+\text{alk}+Mg=${f(t.limeParts.co2)}+${f(t.limeParts.alk)}+${f(t.limeParts.mg)}${t.excess ? `+${t.excess}\\ (\\text{excess})` : ''}=$ **${f(t.lime)}**; $\text{Soda}=NCH=TH-\text{alk}=$ **${f(t.soda)}** mg/L as CaCO₃; finished hardness $30+10=40$.`
+  return [`**${label}** (${t.mode === 'selective' ? 'selective Ca removal: lime only, Mg left alone' : 'to the practical limits Ca 30, Mg 10'}), mg/L as CaCO₃:`, doseTableMd([{ label: 'mg/L as CaCO₃', t }])].join('\n\n')
 }
 function splitMd(s: Split, o: { mgFinal?: number; thMax: number; pu?: [number, number]; thMin?: number }) {
-  const m = masses(s.lime, s.soda, o.pu?.[0] ?? 1, o.pu?.[1] ?? 1)
   return [
-    treatMd(s.first, 'First stage (complete)'),
-    treatMd(s.second, 'Second stage (selective, only if needed)'),
-    o.mgFinal !== undefined ? tx`**Bypass** $X=\dfrac{Mg_f-Mg_i}{Mg_r-Mg_i}=\dfrac{${o.mgFinal}-10}{${f(s.first.h.mgH, 1)}-10}=${f(s.X, 3)}$ → treated fraction $1-X=${f(s.treated, 3)}$.` : tx`**Bypass** $X=${f(s.X, 3)}$, treated $1-X=${f(s.treated, 3)}$.`,
-    tx`**Check the blend**: $TH=X(TH_{raw})+(1-X)(40)=${f(s.X, 3)}(${f(s.rawTH)})+${f(s.treated, 3)}(40)=$ **${f(s.blended)}** mg/L as CaCO₃ ${s.blended > o.thMax ? tx`$>${o.thMax}$ → a second stage (selective Ca removal of the bypassed part) is needed; the finished hardness drops to **${f(s.finalTH)}**.` : s.blended < (o.thMin ?? 0) ? tx`(below ${o.thMin}: over-softened, a little more bypass is allowed).` : tx`$\le${o.thMax}$ → **no second stage** is needed.`}`,
-    tx`**Doses on the whole flow**: $\text{Lime}=(1-X)\,L_1${s.secondNeeded ? tx`+X\,L_2` : ''}=${f(s.treated, 3)}(${f(s.first.lime)})${s.secondNeeded ? tx`+${f(s.X, 3)}(${f(s.second.lime)})` : ''}=$ **${f(s.lime, 1)}**; $\text{Soda}=(1-X)\,S_1=${f(s.treated, 3)}(${f(s.first.soda)})=$ **${f(s.soda, 1)}** mg/L as CaCO₃.`,
-    `As chemicals${o.pu ? ` (quicklime ${o.pu[0] * 100} % pure, soda ash ${o.pu[1] * 100} % pure)` : ' (100 % pure)'}: CaO = ${f(s.lime, 1)} × 56/100${o.pu ? ' ÷ ' + o.pu[0] : ''} = **${f(m.CaO, 1)} mg/L**; Ca(OH)₂ = ${f(m.CaOH2, 1)} mg/L; Na₂CO₃ = ${f(s.soda, 1)} × 106/100${o.pu ? ' ÷ ' + o.pu[1] : ''} = **${f(m.Na2CO3, 1)} mg/L**.`,
-  ].join('\n\n')
+    o.mgFinal !== undefined
+      ? tx`1. **Bypass.** **Why:** the first stage takes Mg down to the practical limit $\text{Mg}_i = 10$; the raw water sent round it keeps $\text{Mg}_r = ${f(s.first.h.mgH, 1)}$. Mix them so the blend has the allowed $\text{Mg}_f = ${o.mgFinal}$: $X\,\text{Mg}_r+(1-X)\,\text{Mg}_i=\text{Mg}_f$, so`
+      : tx`1. **Bypass** $X=${f(s.X, 3)}$, treated $1-X=${f(s.treated, 3)}$.`,
+    o.mgFinal !== undefined ? tx`$$X=\frac{\text{Mg}_f-\text{Mg}_i}{\text{Mg}_r-\text{Mg}_i}=\frac{${o.mgFinal}-10}{${f(s.first.h.mgH, 1)}-10}=${f(s.X, 3)}$$` : '',
+    o.mgFinal !== undefined ? `${f(s.X * 100, 1)} % of the flow bypasses; the treated fraction is $1-X=${f(s.treated, 3)}$.` : '',
+    `2. **Dose of each stage**, per litre of the water that stage treats (the second stage is used only if the blend is too hard):`,
+    doseTableMd([
+      { label: '1st stage: complete', t: s.first },
+      { label: '2nd stage: selective Ca', t: s.second },
+    ]),
+    tx`3. **Check the blend**: $TH=X\,TH_{raw}+(1-X)(40)=${f(s.X, 3)}(${f(s.rawTH)})+${f(s.treated, 3)}(40)=$ **${f(s.blended)}** mg/L as CaCO₃ ${s.blended > o.thMax ? tx`$>${o.thMax}$ → a second stage (selective Ca removal of the bypassed part) is needed; the finished hardness drops to **${f(s.finalTH)}**.` : s.blended < (o.thMin ?? 0) ? tx`(below ${o.thMin}: over-softened, a little more bypass is allowed).` : tx`$\le${o.thMax}$ → **no second stage** is needed.`}`,
+    tx`4. **Doses on the whole flow** (each stage dose × the share of the flow it treats): $\text{Lime}=(1-X)\,L_1${s.secondNeeded ? tx`+X\,L_2` : ''}=${f(s.treated, 3)}(${f(s.first.lime)})${s.secondNeeded ? tx`+${f(s.X, 3)}(${f(s.second.lime)})` : ''}=$ **${f(s.lime, 1)}**; $\text{Soda}=(1-X)\,S_1=${f(s.treated, 3)}(${f(s.first.soda)})=$ **${f(s.soda, 1)}** mg/L as CaCO₃.`,
+    `5. **As chemicals**${o.pu ? ` (quicklime ${o.pu[0] * 100} % pure, soda ash ${o.pu[1] * 100} % pure)` : ' (100 % pure)'}:`,
+    massTableMd(s.lime, s.soda, o.pu),
+  ]
+    .filter(Boolean)
+    .join('\n\n')
 }
 const splitFinal = (s: Split, pu?: [number, number]) => {
   const m = masses(s.lime, s.soda, pu?.[0] ?? 1, pu?.[1] ?? 1)
@@ -239,6 +248,9 @@ const Sol1718b = () => (
           splitMd(s1718, { mgFinal: 40, thMax: 120 }),
         ].join('\n\n')}
       />
+      <Fig cap="Raw water bar diagram (mg/L as CaCO₃): the hardness left of the alkalinity line is carbonate hardness, the rest non-carbonate.">
+        <BarDiagram bars={bars(w1718)} title="Raw water (mg/L as CaCO₃)" mark={[{ label: `alk ${f(w1718.alk, 0)}`, at: w1718.alk }]} />
+      </Fig>
       <Fig cap="Flow sheet: the blend is already inside 80–120 mg/L, so the second stage is not built.">
         <SplitFlow X={s1718.X} second={s1718.secondNeeded} />
       </Fig>
@@ -271,6 +283,9 @@ const Sol2223s = () => (
           splitMd(s2223, { mgFinal: 30, thMax: 120 }),
         ].join('\n\n')}
       />
+      <Fig cap="Raw water bar diagram (mg/L as CaCO₃): the hardness left of the alkalinity line is carbonate hardness, the rest non-carbonate.">
+        <BarDiagram bars={bars(w2223)} title="Raw water (mg/L as CaCO₃)" mark={[{ label: `alk ${f(w2223.alk, 0)}`, at: w2223.alk }]} />
+      </Fig>
       <Fig>
         <SplitFlow X={s2223.X} second={s2223.secondNeeded} />
       </Fig>
@@ -327,10 +342,13 @@ const Sol2021b = () => (
         hardMd(w2021),
         tx`Mg is above 40 mg/L as CaCO₃, so it has to be removed to reach 60 mg/L (selective Ca removal alone leaves $30+70=100$).`,
         '### Steps',
-        treatMd(full2021, 'Complete softening of all the water'),
-        tx`That gives a finished hardness of 40, lower than the 60 asked. Cheaper: **bypass** part of the raw water and blend: $X(295)+(1-X)(40)=60$ → $X=\dfrac{60-40}{295-40}=${f(X2021, 4)}$ (${f(X2021 * 100, 1)} %).`,
-        tx`Lime $=(1-X)(${f(full2021.lime)})=${f(sp2021.lime, 1)}$ mg/L as CaCO₃; soda $=(1-X)(${f(full2021.soda)})=${f(sp2021.soda, 1)}$ mg/L as CaCO₃.`,
-        `As chemicals (100 % pure): all water treated: CaO = ${f(full2021.lime * 0.56, 0)} mg/L, Na₂CO₃ = ${f(full2021.soda * 1.06, 0)} mg/L; with the bypass: CaO = ${f(sp2021.lime * 0.56, 0)}, Na₂CO₃ = ${f(sp2021.soda * 1.06, 0)} mg/L. Excess lime (20–40 mg/L) is not added in Tanvir sir's own worked method; if the examiner wants it, add 40 (Mg > 40) to the lime of the treated stream.`,
+        `1. ${treatMd(full2021, 'Complete softening of all the water')}`,
+        tx`2. **Bypass.** That leaves 40, softer than the 60 asked, so part of the raw water (TH ${f(w2021.ca + w2021.mg, 0)}) can skip treatment. Hardness balance on the blend: $X(${f(w2021.ca + w2021.mg, 0)})+(1-X)(40)=60$, so`,
+        tx`$$X=\frac{60-40}{${f(w2021.ca + w2021.mg, 0)}-40}=${f(X2021, 4)}\quad(${f(X2021 * 100, 1)}\ \%)$$`,
+        tx`3. **Doses on the whole flow** (only $1-X=${f(1 - X2021, 4)}$ of it is treated): lime $=(1-X)(${f(full2021.lime)})=$ **${f(sp2021.lime, 1)}**; soda $=(1-X)(${f(full2021.soda)})=$ **${f(sp2021.soda, 1)}** mg/L as CaCO₃.`,
+        `4. **As chemicals** (100 % pure, × 56/100 for CaO, × 106/100 for Na₂CO₃):`,
+        `| chemical | all water treated | with the bypass |\n|---|---|---|\n| CaO (mg/L) | ${f(full2021.lime, 1)} × 0.56 = **${f(masses(full2021.lime, full2021.soda).CaO, 0)}** | ${f(sp2021.lime, 1)} × 0.56 = **${f(masses(sp2021.lime, sp2021.soda).CaO, 0)}** |\n| Na₂CO₃ (mg/L) | ${f(full2021.soda, 1)} × 1.06 = **${f(masses(full2021.lime, full2021.soda).Na2CO3, 0)}** | ${f(sp2021.soda, 1)} × 1.06 = **${f(masses(sp2021.lime, sp2021.soda).Na2CO3, 0)}** |`,
+        `Excess lime (20–40 mg/L) is not added in Tanvir sir's own worked method; if the examiner wants it, add 40 (Mg > 40) to the lime of the treated stream.`,
       ].join('\n\n')}
     />
   </Sheet>
@@ -350,21 +368,21 @@ const Sol2122b = () => (
           'All in mg/L as CaCO₃ (as printed). Cations Ca + Mg = 280.1, anions HCO₃ + SO₄ = 280.1: balanced (no Na, no Cl).',
           hardMd(w2122),
           '### (a) Selective calcium removal',
-          treatMd(sel2122, 'Lime'),
+          treatMd(sel2122, 'Selective calcium removal'),
           tx`Ca non-carbonate hardness is only $257.9-248=9.9$, below the practical Ca limit of 30, so no soda ash. Finished water: Ca falls to $9.9+30=${f(sel2122.final.ca, 1)}$ (carbonate part to the 30 solubility limit), Mg stays 22.2: TH ≈ ${f(sel2122.final.th, 1)}; the 30 left as CO₃²⁻ alkalinity balances the cations.`,
           '### (b) To the practical solubility limits',
-          treatMd(cmp2122, 'Lime and soda'),
+          treatMd(cmp2122, 'Lime and soda ash'),
           `Finished water: Ca 30, Mg 10, Na ${f(cmp2122.final.na, 1)} (from the soda), SO₄ 32.1, alkalinity left ${f(cmp2122.final.alk, 1)} (CO₃²⁻ of the 30 + 10 residual hardness). Adding excess lime (20 mg/L for Mg 20–40) would raise the lime to ${f(cmp2122.lime + 20, 1)}, to be removed by recarbonation.`,
         ].join('\n\n')}
       />
+      <Fig cap="The raw water: HCO₃⁻ (248) covers nearly all the Ca (257.9), so almost all the hardness is carbonate.">
+        <BarDiagram bars={bars(w2122)} max={290} title="Raw water (mg/L as CaCO₃)" mark={[{ label: 'alk 248', at: w2122.alk }]} />
+      </Fig>
       <Fig cap="(a) selective Ca removal, finished water (before recarbonation)">
         <BarDiagram bars={bars(sel2122.final)} max={290} title="(a) finished water, selective Ca removal" />
       </Fig>
       <Fig cap="(b) practical limits: hardness 30 + 10 = 40; the Na bar is the sodium added by the soda ash">
         <BarDiagram bars={bars(cmp2122.final)} max={290} title="(b) finished water, practical solubility limits" />
-      </Fig>
-      <Fig cap="For comparison: the raw water">
-        <BarDiagram bars={bars(w2122)} max={290} title="Raw water (mg/L as CaCO₃)" />
       </Fig>
     </div>
   </Sheet>
@@ -381,11 +399,19 @@ function HomeSol({ p, V, cap, Q, Hr, Hd }: { p: ReturnType<typeof homeSoftener>;
           '### Given',
           `Resin ${V} m³, capacity ${cap} kg/m³; use ${Q} L/d; hardness ${Hr} → ${Hd} mg/L as CaCO₃. Assumption: the exchanger delivers water of zero hardness.`,
           '### Steps',
+          `**Why a bypass:** the resin takes out all the hardness, so to get ${Hd} mg/L at the tap some raw water is sent round the bed and mixed back in. The hardness balance on the mix, $X\cdot${Hr}+(1-X)\cdot0=${Hd}$, gives the bypass fraction.`,
+        ].join('\n\n')}
+      />
+      <Fig>
+        <BypassFig Hraw={Hr} Hdes={Hd} X={p.bypass} Q={Q} qUnit="L/d" />
+      </Fig>
+      <Doc
+        md={[
           tx`1. Bypass: $X=\dfrac{H_{des}}{H_{raw}}=\dfrac{${Hd}}{${Hr}}=${f(p.bypass, 4)}$ → **${f(p.bypass * 100, 1)} %** of the flow is bypassed; ${f(p.treated * 100, 1)} % goes through the resin.`,
           tx`2. Flow through the resin: $${Q}\times${f(p.treated, 4)} = ${f(p.treatedLpd, 0)}$ L/d.`,
-          tx`3. Hardness load on the resin: $${f(p.treatedLpd, 0)}\ \text{L/d}\times${Hr}\ \text{mg/L}=${g(p.treatedLpd * Hr, 5)}$ mg/d $=${f(p.loadKgD, 4)}$ kg/d.`,
+          tx`3. Hardness load on the resin (only the treated stream loads it): $${f(p.treatedLpd, 0)}\ \text{L/d}\times${Hr}\ \text{mg/L}=${g(p.treatedLpd * Hr, 5)}$ mg/d $=${f(p.loadKgD, 4)}$ kg/d.`,
           tx`4. Capacity of the bed: $${V}\times${cap}=${f(p.capKg, 2)}$ kg as CaCO₃.`,
-          tx`5. Time between regenerations: $t=\dfrac{${f(p.capKg, 2)}}{${f(p.loadKgD, 4)}}=$ **${f(p.days, 1)} days**.`,
+          tx`5. Time between regenerations: $t=\dfrac{\text{capacity}}{\text{load}}=\dfrac{${f(p.capKg, 2)}}{${f(p.loadKgD, 4)}}=$ **${f(p.days, 1)} days**.`,
           `(Class way: if the bypass is rounded to ${Math.round(p.bypass * 100)} %, the load becomes ${f((Q * (1 - Math.round(p.bypass * 100) / 100) * Hr) / 1e6, 4)} kg/d and the time ${f(p.capKg / ((Q * (1 - Math.round(p.bypass * 100) / 100) * Hr) / 1e6), 1)} days.)`,
         ].join('\n\n')}
       />
@@ -406,11 +432,18 @@ const Sol4c = () => (
         '### Assumptions',
         '- The resin removes all hardness (zero-hardness effluent), the rest is made up by bypass.\n- Bed depth **1.5 m** (not given; typical 1–2 m: the run length is proportional to depth).\n- Continuous operation: **two** identical beds, each able to take the full flow, so one runs while the other is regenerated (backwash, brine, rinse).\n- 10 % brine ≈ 1 kg/L.',
         '### (i) Bypass',
-        tx`$X=\dfrac{120}{${f(H4c, 1)}}=${f(fb4c.bypass, 4)}$ → **${f(fb4c.bypass * 100, 1)} %** = ${f(25000 * fb4c.bypass, 0)} m³/d bypasses; **${f(fb4c.Qtreated, 0)} m³/d** (${f(fb4c.QtreatedMin, 2)} m³/min) goes through the resin.`,
+        tx`Hardness balance on the blend (resin effluent 0): $X\cdot${f(H4c, 1)}+(1-X)\cdot0=120$, so $X=\dfrac{120}{${f(H4c, 1)}}=${f(fb4c.bypass, 4)}$ → **${f(fb4c.bypass * 100, 1)} %** = ${f(25000 * fb4c.bypass, 0)} m³/d bypasses; **${f(fb4c.Qtreated, 0)} m³/d** (${f(fb4c.QtreatedMin, 2)} m³/min) goes through the resin.`,
+      ].join('\n\n')}
+    />
+    <Fig>
+      <BypassFig Hraw={H4c} Hdes={120} X={fb4c.bypass} Q={25000} qUnit="m³/d" />
+    </Fig>
+    <Doc
+      md={[
         '### (ii) and (iii) Medium and tank',
-        tx`Bed area $A=\dfrac{Q}{\text{loading}}=\dfrac{${f(fb4c.QtreatedMin, 2)}}{0.35}=${f(fb4c.A, 1)}$ m² → circular tank $D=\sqrt{4A/\pi}=${f(Math.sqrt((4 * fb4c.A) / Math.PI), 2)}$ m. Volume of medium per bed $V=A\times1.5=${f(fb4c.V, 1)}$ m³ (a total of ${f(2 * fb4c.V, 1)} m³ for two beds). Tank height about 1.5 m of resin + about 0.75 m for backwash expansion + freeboard ≈ 2.8–3 m.`,
+        tx`**Why area first:** the loading rate is the flow per m² of bed, so the bed area is $A=\dfrac{Q_{resin}}{\text{loading}}=\dfrac{${f(fb4c.QtreatedMin, 2)}}{0.35}=${f(fb4c.A, 1)}$ m² → circular tank $D=\sqrt{4A/\pi}=${f(Math.sqrt((4 * fb4c.A) / Math.PI), 2)}$ m. Volume of medium per bed $V=A\times1.5=${f(fb4c.V, 1)}$ m³ (a total of ${f(2 * fb4c.V, 1)} m³ for two beds). Tank height about 1.5 m of resin + about 0.75 m for backwash expansion + freeboard ≈ 2.8–3 m.`,
         '### (iv) Regeneration',
-        tx`Hardness applied $=0.35\times${f(H4c / 1000, 4)}=${f(fb4c.loadPerM2, 4)}$ kg/min per m². Capacity per m² $=95\times1.5=142.5$ kg → run time $=\dfrac{142.5}{${f(fb4c.loadPerM2, 4)}}=${f(fb4c.runMin, 0)}$ min = **${f(fb4c.runH, 1)} h** between regenerations (${f(fb4c.cyclesPerDay, 2)} cycles/day).`,
+        tx`**Why:** the bed is exhausted when the hardness it has taken in equals its capacity, so compare the two per m² of bed. Hardness applied $=0.35\ \text{m}^3\text{/min}\times${f(H4c / 1000, 4)}\ \text{kg/m}^3=${f(fb4c.loadPerM2, 4)}$ kg/min per m². Capacity per m² $=95\times1.5=142.5$ kg → run time $=\dfrac{142.5}{${f(fb4c.loadPerM2, 4)}}=${f(fb4c.runMin, 0)}$ min = **${f(fb4c.runH, 1)} h** between regenerations (${f(fb4c.cyclesPerDay, 2)} cycles/day).`,
         tx`Salt per regeneration $=150\times${f(fb4c.V, 1)}=$ **${f(fb4c.saltKg, 0)} kg NaCl**; brine $=\dfrac{${f(fb4c.saltKg, 0)}}{0.10}=${f(fb4c.brineM3 * 1000, 0)}$ kg ≈ **${f(fb4c.brineM3, 1)} m³** of 10 % solution. Per day ${f(fb4c.saltKgPerDay / 1000, 1)} t NaCl.`,
       ].join('\n\n')}
     />
@@ -430,8 +463,9 @@ const Sol2021c = () => (
         tx`1. $[HCO_3^-]=\dfrac{105}{61\,000}=${g(a2021.hcoM, 4)}$ mol/L.`,
         tx`2. From $K_2=\dfrac{[H^+][CO_3^{2-}]}{[HCO_3^-]}$: $[CO_3^{2-}]=[HCO_3^-]\dfrac{K_2}{[H^+]}=${g(a2021.hcoM, 4)}\times\dfrac{10^{-10.3}}{10^{-10.3}}=${g(a2021.coM, 4)}$ mol/L (at pH = pK₂ the two are equal).`,
         tx`3. $[OH^-]=\dfrac{K_w}{[H^+]}=10^{-3.7}=${g(a2021.ohM, 3)}$ mol/L; $[H^+]=10^{-10.3}$ is negligible.`,
-        tx`4. Alkalinity (eq/L) $=[HCO_3^-]+2[CO_3^{2-}]+[OH^-]-[H^+]=${g(a2021.hcoM, 4)}+2(${g(a2021.coM, 4)})+${g(a2021.ohM, 3)}=${g(a2021.hcoM + 2 * a2021.coM + a2021.ohM, 4)}$ eq/L.`,
-        tx`5. As CaCO₃ (× 50 000 mg/eq): HCO₃⁻ ${f(a2021.hco3, 1)} + CO₃²⁻ ${f(a2021.co3, 1)} + OH⁻ ${f(a2021.oh, 1)} = **${f(a2021.total, 1)} mg/L as CaCO₃** (total alkalinity).`,
+        tx`4. **Why:** alkalinity is what can neutralise acid, in equivalents: $[HCO_3^-]+2[CO_3^{2-}]+[OH^-]-[H^+]$ (each CO₃²⁻ takes two H⁺). One row per species, × 50 000 mg/eq to get mg/L as CaCO₃:`,
+        alkSpeciesMd(a2021, 105, 10.3),
+        tx`5. Total alkalinity $=$ **${f(a2021.total, 1)} mg/L as CaCO₃**.`,
         tx`6. TH = 310 > alkalinity → **carbonate hardness = alkalinity = ${f(a2021.ch, 1)}**, **non-carbonate hardness** $=310-${f(a2021.total, 1)}=${f(a2021.nch, 1)}$ mg/L as CaCO₃.`,
       ].join('\n\n')}
     />

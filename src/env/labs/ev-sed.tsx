@@ -12,6 +12,8 @@ import { IsoChartFig } from '../figs/sed-iso'
 
 const nf = (v: number, d = 0) => v.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d })
 const tx = String.raw
+/** thousands separator that KaTeX does not space out */
+const nft = (v: number, d = 0) => nf(v, d).replace(/,/g, '{,}')
 const f = (v: number, d = 1) => v.toFixed(d)
 
 // ================================================================ 1. the animated basin
@@ -269,10 +271,36 @@ function Solution({ p }: { p: SP }) {
     return <MinTimeWork ch={p.chart} target={d.target} />
   } else if (p.family === 'sor') {
     const t = tankSize({ Q: d.Q, v0: d.v0, depth: d.depth, n: d.n, LW: 3 })
-    md = [tx`$A=Q/v_0=${nf(d.Q)}/${d.v0}=$ **${nf(t.A)} m²**; each of ${d.n} units $A/${d.n}=$ **${nf(t.Aunit)} m²** (e.g. ${f(t.L, 1)} m × ${f(t.W, 1)} m, L:W = 3:1).`, tx`$V=A\times${d.depth}=$ **${nf(t.V)} m³**; $t=\dfrac{V}{Q}=\dfrac{\text{depth}}{v_0}=$ **${f(t.tHours, 2)} h** (flocculent tanks 4–6 h, discrete 2–4 h); overflow ${f(t.overflowMh, 2)} m/h.`].join('\n\n')
+    md = [
+      `**Why:** a particle is removed if it settles faster than the overflow rate $v_0 = Q/A$ (the ideal-basin result), so the column test fixes the **surface area**; the depth then sets the volume and the detention time.`,
+      tx`1. Surface area: $A=\dfrac{Q}{v_0}=\dfrac{${nft(d.Q)}\ \text{m}^3\text{/d}}{${d.v0}\ \text{m/d}}=$ **${nf(t.A)} m²**.`,
+      tx`2. Volume: $V=A\times\text{depth}=${nft(t.A)}\times${d.depth}=$ **${nf(t.V)} m³**.`,
+      tx`3. Detention time: $t=\dfrac{V}{Q}=\dfrac{${nft(t.V)}}{${nft(d.Q)}}\ \text{d}\times24=$ **${f(t.tHours, 2)} h** (the same as depth/$v_0$; typical 2–4 h for discrete, 4–6 h for flocculent settling).`,
+      tx`4. Each of ${d.n} units: $A/${d.n}=${nft(t.A)}/${d.n}=$ **${nf(t.Aunit)} m²**. With L:W = 3:1, $W=\sqrt{${nft(t.Aunit)}/3}=${f(t.W, 1)}$ m and $L=3W=${f(t.L, 1)}$ m.`,
+    ].join('\n\n')
   } else {
     const tt = terminalVelocity({ d: d.d / 1000, sg: d.sg })
-    md = [tx`Stokes: $v=\dfrac{g(\rho_s-\rho_w)d^2}{18\mu}=${(tt.vStokes * 100).toFixed(3)}$ cm/s; $Re=\dfrac{\rho vd}{\mu}=${f(tt.reStokes, 2)}$.`, tt.stokesValid ? `$Re\\le1$: Stokes holds, **v = ${(tt.v * 100).toFixed(3)} cm/s**.` : `$Re>1$: Stokes does not hold. Iterate $v=\\sqrt{4g(\\rho_s-\\rho_w)d/(3C_D\\rho_w)}$: ${tt.iterations.slice(0, 5).map((q) => `v ${(q.v * 100).toFixed(2)} cm/s (Re ${f(q.Re, 1)}, C_D ${f(q.CD, 2)})`).join(' → ')} … converges to **v = ${(tt.v * 100).toFixed(3)} cm/s**, Re = ${f(tt.Re, 1)} (${tt.regime}).`].join('\n\n')
+    const rs = d.sg * 1000
+    const stokes = [
+      `**Why:** Stokes' law assumes laminar flow round the particle ($Re \\le 1$). Work it out first, then check $Re$; if $Re$ is larger the drag coefficient depends on $Re$, so $v$ has to be found by trial.`,
+      tx`1. Stokes: $v=\dfrac{g(\rho_s-\rho_w)d^2}{18\mu}=\dfrac{9.81\times(${rs}-998.2)\times(${d.d}\times10^{-3})^2}{18\times1.002\times10^{-3}}=${(tt.vStokes * 100).toFixed(4)}$ cm/s.`,
+      tx`2. Check: $Re=\dfrac{\rho_w v d}{\mu}=\dfrac{998.2\times${tt.vStokes.toPrecision(4)}\times${d.d}\times10^{-3}}{1.002\times10^{-3}}=${f(tt.reStokes, 3)}$.`,
+    ]
+    if (tt.stokesValid) {
+      md = [...stokes, `3. $Re\\le1$: Stokes holds, so **v = ${(tt.v * 100).toFixed(3)} cm/s**.`].join('\n\n')
+    } else {
+      const shown = tt.iterations.slice(0, 8)
+      const rows = shown.map((q, i) => {
+        const reUsed = i === 0 ? tt.reStokes : tt.iterations[i - 1].Re
+        return `| ${i + 1} | ${f(reUsed, 2)} | ${f(q.CD, 3)} | ${(q.v * 100).toFixed(3)} | ${f(q.Re, 2)} |`
+      })
+      md = [
+        ...stokes,
+        tx`3. $Re>1$: Stokes does not hold. Use $v=\sqrt{\dfrac{4g(\rho_s-\rho_w)d}{3C_D\,\rho_w}}$ with $C_D=\dfrac{24}{Re}+\dfrac{3}{\sqrt{Re}}+0.34$. Start from the Stokes $Re$, work $C_D$, then $v$, then the new $Re$, and repeat until $v$ stops changing:`,
+        `| trial | Re used | C_D | v (cm/s) | new Re |\n|---|---|---|---|---|\n${rows.join('\n')}${tt.iterations.length > shown.length ? `\n| … | | | | |\n| ${tt.iterations.length} | | ${f(tt.CD, 3)} | **${(tt.v * 100).toFixed(3)}** | ${f(tt.Re, 2)} |` : ''}`,
+        `4. Terminal velocity **v = ${(tt.v * 100).toFixed(3)} cm/s** at Re = ${f(tt.Re, 1)} (${tt.regime}).`,
+      ].join('\n\n')
+    }
   }
   return <Md className="text-sm">{md}</Md>
 }
@@ -295,3 +323,6 @@ export default function SedLab() {
   )
 }
 void randInt
+
+/** for the render tests (src/env/figs/ta-work.test.tsx) */
+export { FAMS, make, Solution }

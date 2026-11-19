@@ -10,6 +10,8 @@ import { alkalinityFromBicarbonate, alkalinityTitration, carbonateFractions, har
 import { bars } from '../engine/soften'
 import { LineChart } from '../figs/pop-chart'
 import { BarDiagram } from '../figs/soft-bars'
+import { alkSpeciesMd, TitrationFig, titrationMd } from '../figs/ta-chem'
+import { FAC, hardnessTableMd, ionTableMd } from '../figs/ta-soft'
 
 const f = (v: number, d = 1) => v.toFixed(d)
 const tx = String.raw
@@ -231,22 +233,88 @@ function Solution({ p }: { p: WP }) {
   let md: string
   if (p.family === 'alk') {
     const a = alkalinityFromBicarbonate({ hco3mgL: d.hco, pH: d.pH, pK2: 10.3, th: d.th })
-    md = [tx`$[HCO_3^-]=${d.hco}/61000=${g(a.hcoM)}$ mol/L; $[CO_3^{2-}]/[HCO_3^-]=K_2/[H^+]=10^{${f(d.pH - 10.3, 1)}}=${g(a.ratio)}$ → $[CO_3^{2-}]=${g(a.coM)}$; $[OH^-]=10^{${f(d.pH - 14, 1)}}=${g(a.ohM)}$.`, tx`Alkalinity $=${g(a.hcoM)}+2(${g(a.coM)})+${g(a.ohM)}=${g(a.hcoM + 2 * a.coM + a.ohM)}$ eq/L → **${f(a.total, 0)} mg/L as CaCO₃**.`, tx`TH $=${d.th}$ ${d.th > a.total ? '>' : '≤'} alkalinity → CH $=$ **${f(a.ch, 0)}**, NCH $=$ **${f(a.nch, 0)}**.`].join('\n\n')
+    md = [
+      tx`**Why:** alkalinity is everything in the water that can neutralise acid: $\text{Alk (eq/L)}=[HCO_3^-]+2[CO_3^{2-}]+[OH^-]-[H^+]$. CO₃²⁻ counts twice because each ion takes two H⁺. Only HCO₃⁻ is given, so the other species come from the pH.`,
+      tx`1. $[H^+]=10^{-${d.pH}}$. From $K_2=\dfrac{[H^+][CO_3^{2-}]}{[HCO_3^-]}$: $\dfrac{[CO_3^{2-}]}{[HCO_3^-]}=\dfrac{K_2}{[H^+]}=\dfrac{10^{-10.3}}{10^{-${d.pH}}}=10^{${f(d.pH - 10.3, 1)}}=$ **${g(a.ratio)}**.`,
+      tx`2. $[OH^-]=\dfrac{K_w}{[H^+]}=\dfrac{10^{-14}}{10^{-${d.pH}}}=10^{${f(d.pH - 14, 1)}}$ mol/L.`,
+      `3. One row per species (× 50 000 mg/eq turns eq/L into mg/L as CaCO₃):`,
+      alkSpeciesMd(a, d.hco, d.pH),
+      tx`4. Total alkalinity $=$ **${f(a.total, 0)} mg/L as CaCO₃**.`,
+      d.th > a.total
+        ? tx`5. Hardness split: TH $=${d.th}$ is more than the alkalinity ${f(a.total, 0)}, so carbonate hardness = alkalinity = **${f(a.ch, 0)}** and non-carbonate hardness $=${d.th}-${f(a.total, 0)}=$ **${f(a.nch, 0)}** mg/L as CaCO₃.`
+        : tx`5. Hardness split: TH $=${d.th}$ is not more than the alkalinity ${f(a.total, 0)}, so all hardness is carbonate: CH = TH = **${f(a.ch, 0)}**, NCH = **0**.`,
+    ].join('\n\n')
   } else if (p.family === 'titr') {
     const a = alkalinityTitration({ vol: d.vol, M: d.M, P: d.P, pH: d.pH })
-    md = [tx`Total $=M\times1000/${d.vol}=$ **${f(a.total, 0)}**. $[OH^-]=10^{${f(d.pH - 14, 1)}}$ mol/L × 17 g/mol = ${f(Math.pow(10, d.pH - 14) * 17000, 2)} mg/L = **${f(a.oh, 1)}** as CaCO₃ = ${f(a.mlOH, 2)} mL of acid.`, `$P=${d.P}$ = OH + ½CO₃ → CO₃ uses $2(${d.P}-${f(a.mlOH, 2)})=${f(a.mlCO3, 2)}$ mL → **${f(a.co3, 0)}** mg/L; HCO₃ = rest = ${f(a.mlHCO3, 2)} mL → **${f(a.hco3, 0)}** mg/L.`].join('\n\n')
+    const ohMgL = Math.pow(10, d.pH - 14) * 17000
+    return (
+      <div className="space-y-2 text-sm">
+        <Md>
+          {[
+            `**Why:** the acid neutralises OH⁻ first, then turns CO₃²⁻ into HCO₃⁻ (pH 8.3, the phenolphthalein end point P), then turns all the HCO₃⁻ (the original and the half made from CO₃²⁻) into H₂CO₃ (pH 4.5, the methyl-orange end point M). With 0.02 N acid, 1 mL neutralises 1 mg as CaCO₃.`,
+            tx`1. Total alkalinity $=\dfrac{M\times1000}{V}=\dfrac{${d.M}\times1000}{${d.vol}}=$ **${f(a.total, 0)} mg/L as CaCO₃**.`,
+            tx`2. OH⁻ from the pH: $[OH^-]=10^{${f(d.pH - 14, 1)}}$ mol/L $\times17\,000$ mg/mol $=${f(ohMgL, 2)}$ mg/L, $\times\dfrac{50}{17}=$ **${f(a.oh, 1)} mg/L as CaCO₃**. That used $${f(a.oh, 1)}\times${d.vol}/1000=${f(a.mlOH, 2)}$ mL of the acid.`,
+            tx`3. Up to P the acid took the OH⁻ and **half** of the CO₃²⁻, so CO₃²⁻ $=2(P-\text{OH})=2(${d.P}-${f(a.mlOH, 2)})=${f(a.mlCO3, 2)}$ mL. The rest of M is HCO₃⁻. On the acid bar:`,
+          ].join('\n\n')}
+        </Md>
+        <div className="rounded-xl border border-line bg-panel2/40 p-2">
+          <TitrationFig M={d.M} P={d.P} mlOH={a.mlOH} mlCO3={a.mlCO3} mlHCO3={a.mlHCO3} />
+        </div>
+        <Md>{[`4. Each species in mg/L as CaCO₃:`, titrationMd(a, d.vol, d.M), `(Slide rule check: ${a.rule}.)`].join('\n\n')}</Md>
+      </div>
+    )
   } else if (p.family === 'hard') {
     const h = hardness({ ca: toCaCO3('ca', d.ca), mg: toCaCO3('mg', d.mg), alk: d.alk })
-    md = [tx`Ca $=${d.ca}\times2.5=${f(h.caH)}$; Mg $=${d.mg}\times4.12=${f(h.mgH)}$; $TH=$ **${f(h.th)}**.`, `TH ${h.th > d.alk ? '>' : '≤'} alkalinity ${d.alk}: CH = **${f(h.ch)}**, NCH = **${f(h.nch)}**${h.th > d.alk ? '' : ` (the extra ${f(h.excessAlk)} of alkalinity is Na₂CO₃-type, not hardness)`}.`].join('\n\n')
+    md = [
+      `1. Convert to mg/L as CaCO₃ (× 50/eq. wt):`,
+      ionTableMd([
+        { name: 'Ca²⁺', mgL: d.ca, fac: FAC.ca, eqw: '20', cc: h.caH },
+        { name: 'Mg²⁺', mgL: d.mg, fac: FAC.mg, eqw: '12.15', cc: h.mgH },
+      ]),
+      `2. Split the hardness against the alkalinity (${d.alk} mg/L as CaCO₃). **Why:** the hardness that HCO₃⁻ can pair with is carbonate hardness (removed by boiling or lime); whatever is left pairs with Cl⁻ / SO₄²⁻ and is non-carbonate.`,
+      hardnessTableMd(h),
+      h.th > d.alk ? '' : `The extra ${f(h.excessAlk)} mg/L of alkalinity is Na₂CO₃-type alkalinity, not hardness.`,
+    ]
+      .filter(Boolean)
+      .join('\n\n')
+    return (
+      <div className="space-y-2 text-sm">
+        <Md>{md}</Md>
+        <div className="rounded-xl border border-line bg-panel2/40 p-2">
+          <BarDiagram bars={bars({ ca: h.caH, mg: h.mgH, na: 0, cl: Math.max(h.th - d.alk, 0), so4: 0, alk: d.alk, co2: 0 })} title="Bar diagram (mg/L as CaCO₃)" mark={[{ label: `alk ${d.alk}`, at: d.alk }]} />
+          <div className="text-xs text-faint mt-1">Left of the red line the hardness sits on HCO₃⁻: carbonate hardness. Right of it (on the Cl/SO₄ bar): non-carbonate.</div>
+        </div>
+      </div>
+    )
   } else if (p.family === 'henry') {
     const h = henryWithAir({ x: d.x8 * 1e-8, H: d.H, nAir: d.n, mw: 131.4 })
-    md = [tx`(a) $${d.x8}\times10^{-8}\times55.6\times131.4=$ **${f(h.ugL0, 0)} µg/L**.`, tx`(b) $H=\dfrac{X/${d.n}}{x-X}$ → $X=\dfrac{Hx}{1/${d.n}+H}=${g(h.X * 1e8)}\times10^{-8}$ mol/mol; left $=${g(h.xLeft * 1e8)}\times10^{-8}$ → **${f(h.ugLLeft, 1)} µg/L**.`].join('\n\n')
+    md = [
+      `**(a) Concentration in water**`,
+      tx`1. 1 L of water $=1000/18=55.6$ mol, so TCE $=${d.x8}\times10^{-8}\times55.6=${g(d.x8 * 1e-8 * 55.6)}$ mol/L.`,
+      tx`2. $\times131.4$ g/mol $=${g(d.x8 * 1e-8 * 55.6 * 131.4)}$ g/L $=$ **${f(h.ugL0, 0)} µg/L**.`,
+      `**(b) With ${d.n} mol of air** (per mole of water)`,
+      tx`3. **Why:** some TCE (X mol) leaves the water for the air until the two sides are in Henry's-law equilibrium, $P = H\,C$, with $P = X/${d.n}$ (mol TCE per mol air) and $C = x - X$ (mol per mol water).`,
+      tx`4. $\dfrac{X}{${d.n}}=${d.H}\,(${d.x8}\times10^{-8}-X)$ → $X=\dfrac{H\,x}{1/n_{air}+H}=\dfrac{${d.H}\times${d.x8}\times10^{-8}}{${g(1 / d.n)}+${d.H}}=${g(h.X * 1e8)}\times10^{-8}$ mol.`,
+      tx`5. Left in the water: $x-X=(${d.x8}-${g(h.X * 1e8)})\times10^{-8}=${g(h.xLeft * 1e8)}\times10^{-8}$ mol/mol → $\times55.6\times131.4\times10^6=$ **${f(h.ugLLeft, 1)} µg/L** (${f(h.fractionLeft * 100, 1)} % of it stays).`,
+    ].join('\n\n')
   } else if (p.family === 'co2') {
     const c = phOfCo2Water({ KH: d.KH, P: d.P })
-    md = tx`$[H_2CO_3^*]=K_HP=${d.KH}\times${d.P}=${g(c.h2co3)}$ mol/L; $[H^+]=\sqrt{K_1[H_2CO_3^*]}=${g(Math.sqrt(10 ** -6.3 * c.h2co3))}$; $pH=$ **${f(c.approxPH, 2)}**.`
+    md = [
+      tx`1. Henry's law: $[H_2CO_3^*]=K_H\,P=${d.KH}\times${d.P}=$ **${g(c.h2co3, 4)} mol/L**.`,
+      tx`2. **Why:** dissolved CO₂ is a weak acid, $H_2CO_3^*\rightleftharpoons H^++HCO_3^-$. Each one that splits gives one H⁺ and one HCO₃⁻, so $[H^+]=[HCO_3^-]$ and $K_1=\dfrac{[H^+]^2}{[H_2CO_3^*]}$.`,
+      tx`3. $[H^+]=\sqrt{K_1[H_2CO_3^*]}=\sqrt{10^{-6.3}\times${g(c.h2co3, 4)}}=${g(Math.sqrt(10 ** -6.3 * c.h2co3))}$ mol/L.`,
+      tx`4. $pH=-\log[H^+]=$ **${f(c.approxPH, 2)}**.`,
+    ].join('\n\n')
   } else {
     const l = langelier({ pH: d.pH, pK2minusPKs: 2.54, caMgL: d.ca, alkCaCO3: d.alk })
-    md = [tx`$pCa=-\log(${d.ca}/40.08/1000)=${f(l.pCa, 3)}$; $pAlk=-\log(${d.alk}/50/1000)=${f(l.pAlk, 3)}$; $pH_s=2.54+${f(l.pCa, 3)}+${f(l.pAlk, 3)}=$ **${f(l.pHs, 2)}**.`, tx`$LSI=pH-pH_s=$ **${f(l.lsi, 2)}** (${l.lsiVerdict}); $RSI=2pH_s-pH=$ **${f(l.rsi, 2)}** (${l.rsiVerdict}).`].join('\n\n')
+    md = [
+      `**Why:** $pH_s$ is the pH at which this water would be exactly saturated with CaCO₃. Above it the water deposits scale; below it, it dissolves scale (corrosive).`,
+      tx`1. $[Ca^{2+}]=${d.ca}/40.08/1000=${g(d.ca / 40.08 / 1000)}$ mol/L → $pCa=-\log(${g(d.ca / 40.08 / 1000)})=${f(l.pCa, 3)}$.`,
+      tx`2. Alkalinity $=${d.alk}/50/1000=${g(d.alk / 50 / 1000)}$ eq/L → $pAlk=${f(l.pAlk, 3)}$.`,
+      tx`3. $pH_s=(pK_2-pK_s)+pCa+pAlk=2.54+${f(l.pCa, 3)}+${f(l.pAlk, 3)}=$ **${f(l.pHs, 2)}**.`,
+      tx`4. $LSI=pH-pH_s=${d.pH}-${f(l.pHs, 2)}=$ **${f(l.lsi, 2)}**: ${l.lsiVerdict}.`,
+      tx`5. $RSI=2\,pH_s-pH=2(${f(l.pHs, 2)})-${d.pH}=$ **${f(l.rsi, 2)}**: ${l.rsiVerdict} (below 6.8 scale-forming, 6.8–7 balanced, above 7 corrosive).`,
+    ].join('\n\n')
   }
   return <Md className="text-sm">{md}</Md>
 }
@@ -263,3 +331,6 @@ export default function WqLab() {
     </div>
   )
 }
+
+/** for the render tests (src/env/figs/ta-work.test.tsx) */
+export { FAMS, make, Solution }

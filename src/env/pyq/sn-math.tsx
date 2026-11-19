@@ -4,6 +4,8 @@
 import type { ReactNode } from 'react'
 import { Md } from '../../components/ui'
 import { GwSection } from '../figs/gw-section'
+import { PopWorkChart } from '../figs/sn-pop-work'
+import { WellSketch } from '../figs/sn-well-sketch'
 import { annualGrowth, arithmetic, decreasing, geometric, growthRates, incremental, polyFit, type Census } from '../engine/population'
 import { economicTank, fireDemand, fireFlowGpm, fireStreams, GAL_FT3, gpmToLpm, STREAM_GPM, STREAM_LPM } from '../engine/demand'
 import { dAtWell, dupuitK, dupuitQ, kObsUnconfined, qObsConfined, storageVolume, thiemK, thiemQ, unconfinedInterferenceChain, wellEffect, type Aquifer } from '../engine/wells'
@@ -33,34 +35,52 @@ export function geomMd(c: Census[], targets: number[], u: string, d = 0, mode: '
   const z = c[c.length - 1]
   const nn = z.year - a.year
   const r = m.params.r
-  const lines = targets.map((T) => tx`   $P_{${T}} = ${g(z.pop, 6)}(1+${r.toFixed(5)})^{${T - z.year}} =$ **${n(m.at(T), d)}** ${u}`)
+  const rows = targets.map((T) => `| ${T} | ${T} − ${z.year} = ${T - z.year} | $${g(z.pop, 6)}\\times(1+${r.toFixed(5)})^{${T - z.year}}$ | **${n(m.at(T), d)}** |`).join('\n')
   return {
     m,
     md: [
-      tx`**Geometric increase** (her slide: geometric *mean* increase, first and last census, "skip the middle data"): $P_f = P_p(1+r)^n$`,
-      tx`1. Rate: $r=\sqrt[n]{P_{${z.year}}/P_{${a.year}}}-1=\left(\dfrac{${g(z.pop, 6)}}{${g(a.pop, 6)}}\right)^{1/${nn}}-1 = ${r.toFixed(5)}$ (${(r * 100).toFixed(3)} % per year)`,
-      tx`2. Project from the latest census (${z.year}):`,
-      ...lines,
-    ].join('\n'),
+      tx`**Geometric increase** (her slide: geometric *mean* increase, ${mode === 'end' ? 'first and last census, "skip the middle data"' : 'last two censuses'}): $P_f = P_p(1+r)^n$, where $r$ is the constant yearly rate and $n$ the number of years.`,
+      tx`1. Rate from ${a.year} to ${z.year} ($n=${z.year}-${a.year}=${nn}$ years): $${g(z.pop, 6)}=${g(a.pop, 6)}(1+r)^{${nn}}$, so $r=\left(\dfrac{${g(z.pop, 6)}}{${g(a.pop, 6)}}\right)^{1/${nn}}-1=${r.toFixed(5)}$ (${(r * 100).toFixed(3)} % per year)`,
+      tx`2. Project from the latest census (${z.year}); $n$ = years after ${z.year}:`,
+      `| Year | n | $P_{${z.year}}(1+r)^n$ | P (${u}) |\n|---|---|---|---|\n${rows}`,
+    ].join('\n\n'),
   }
 }
+
+const neg = (v: number, dp: number) => (v < 0 ? `(${v.toFixed(dp)})` : v.toFixed(dp))
 
 export function decrMd(c: Census[], targets: number[], u: string, d = 0) {
   const gr = growthRates(c)
   const m = decreasing(c)
   const z = c[c.length - 1]
-  const rows = gr.rates.map((r, i) => `| ${c[i].year}–${c[i + 1].year} | ${r.toFixed(2)} % | ${i < gr.dec.length ? gr.dec[i].toFixed(2) : '–'} |`).join('\n')
+  const rows = gr.rates
+    .map((r, i) => {
+      const inc = c[i + 1].pop - c[i].pop
+      return `| ${c[i].year}–${c[i + 1].year} | ${g(c[i + 1].pop, 6)} − ${g(c[i].pop, 6)} = ${g(inc, 5)} | ${g(inc, 5)} ÷ ${g(c[i].pop, 6)} × 100 = **${r.toFixed(2)} %** | ${i ? `${gr.rates[i - 1].toFixed(2)} − ${r.toFixed(2)} = ${gr.dec[i - 1].toFixed(2)}` : '–'} |`
+    })
+    .join('\n')
   const last = Math.max(...targets)
   const st = m.steps(last)
-  const stepRows = st.map((s) => `| ${s.year} | ${s.r.toFixed(3)} % | ${n(s.pop, d)} |`).join('\n')
+  let prevR = gr.rates[gr.rates.length - 1]
+  let prevP = z.pop
+  const stepRows = st
+    .map((s) => {
+      const row = `| ${s.year} | ${prevR.toFixed(3)} − ${neg(gr.s, 3)} = **${s.r.toFixed(3)} %** | ${n(prevP, d)} + ${s.r.toFixed(3)}/100 × ${n(prevP, d)} = **${n(s.pop, d)}** |`
+      prevR = s.r
+      prevP = s.pop
+      return row
+    })
+    .join('\n')
   return {
     m,
     st,
     md: [
-      tx`**Decreasing rate of growth** (her formula): $P_n = P_{n-1} + \dfrac{r_{n-1}-s}{100}P_{n-1}$, where $s$ = average decrease in the growth rate (decrease taken positive; if the rate has been rising, $s$ is negative).`,
-      `| Decade | Growth rate r | Decrease (r − next r) |\n|---|---|---|\n${rows}`,
-      tx`$s=\dfrac{${gr.dec.map((v) => v.toFixed(2)).join('+')}}{${gr.dec.length}} = ${gr.s.toFixed(3)}$ % per decade`,
-      `Project decade by decade from ${z.year} (${n(z.pop, d)} ${u}), the rate falling by s each time:\n\n| Year | Rate used (r − s) | Population (${u}) |\n|---|---|---|\n${stepRows}`,
+      tx`**Decreasing rate of growth** (her formula): $P_n = P_{n-1} + \dfrac{r_{n-1}-s}{100}P_{n-1}$, where $s$ = average decrease in the growth rate (decrease taken positive; if the rate has been rising, $s$ is negative). The idea: the town's growth rate keeps slowing by about the same amount every decade, so each future decade's rate is the previous one minus $s$.`,
+      tx`1. Growth rate of each decade, $r=\dfrac{\text{increase}}{\text{population at the start}}\times100$, and how much it fell from the decade before:`,
+      `| Decade | Increase | Growth rate r | Decrease (previous r − this r) |\n|---|---|---|---|\n${rows}`,
+      tx`2. Average decrease: $s=\dfrac{${gr.dec.map((v) => neg(v, 2)).join('+')}}{${gr.dec.length}} = ${gr.s.toFixed(3)}$ % per decade`,
+      tx`3. Project decade by decade from ${z.year} (${n(z.pop, d)} ${u}), starting from the last decade's rate ${gr.rates[gr.rates.length - 1].toFixed(2)} % and taking $s$ off each time:`,
+      `| Year | Rate used = previous r − s | P = P(prev) + r/100 × P(prev) (${u}) |\n|---|---|---|\n${stepRows}`,
     ].join('\n\n'),
     pop: (T: number) => st.find((s) => s.year === T)?.pop ?? m.at(T),
   }
@@ -72,26 +92,41 @@ export function lsMd(c: Census[], targets: number[], u: string, d = 1) {
   const xs = c.map((p) => (p.year - f.x0) / f.h)
   const sx = (k: number) => xs.reduce((s, x) => s + x ** k, 0)
   const sxy = (k: number) => xs.reduce((s, x, i) => s + x ** k * c[i].pop, 0)
-  const row = (p: Census, i: number) => `| ${p.year} | ${g(p.pop, 6)} | ${+xs[i].toFixed(2)} | ${+(xs[i] ** 2).toFixed(2)} | ${+(xs[i] ** 4).toFixed(2)} | ${+(xs[i] * p.pop).toFixed(2)} | ${+(xs[i] ** 2 * p.pop).toFixed(2)} |`
+  const q = (v: number) => +v.toFixed(2)
+  const row = (p: Census, i: number) => `| ${p.year} | ${g(p.pop, 6)} | ${q(xs[i])} | ${q(xs[i] ** 2)} | ${q(xs[i] ** 4)} | ${q(xs[i])} × ${g(p.pop, 6)} = ${q(xs[i] * p.pop)} | ${q(xs[i] ** 2)} × ${g(p.pop, 6)} = ${q(xs[i] ** 2 * p.pop)} |`
   const N = c.length
   const [a, b, cc] = f.coef
-  const sym = Math.abs(sx(1)) < 1e-9
+  const sym = Math.abs(sx(1)) < 1e-9 && Math.abs(sx(3)) < 1e-9
+  const SY = c.reduce((s, p) => s + p.pop, 0)
+  const solve = sym
+    ? [
+        tx`4. Solve. The middle equation has $b$ alone: $b=\dfrac{\Sigma xY}{\Sigma x^2}=\dfrac{${q(sxy(1))}}{${q(sx(2))}}=${b.toFixed(3)}$`,
+        tx`5. The first and third hold $a$ and $c$. Multiply the first by $\Sigma x^2$, the third by $N$, and subtract, so $a$ drops out:`,
+        tx`$$c=\dfrac{N\,\Sigma x^2Y-\Sigma x^2\,\Sigma Y}{N\,\Sigma x^4-(\Sigma x^2)^2}=\dfrac{${N}(${q(sxy(2))})-${q(sx(2))}(${g(SY, 6)})}{${N}(${q(sx(4))})-${q(sx(2))}^2}=\dfrac{${q(N * sxy(2) - sx(2) * SY)}}{${q(N * sx(4) - sx(2) ** 2)}}=${cc.toFixed(3)}$$`,
+        tx`6. Back in the first: $a=\dfrac{\Sigma Y-c\,\Sigma x^2}{N}=\dfrac{${g(SY, 6)}-${cc.toFixed(3)}\times${q(sx(2))}}{${N}}=${a.toFixed(3)}$`,
+      ]
+    : [tx`4. Solving the three equations together: $a=${a.toFixed(3)},\ b=${b.toFixed(3)},\ c=${cc.toFixed(3)}$`]
+  const fRows = targets
+    .map((T) => {
+      const x = q((T - f.x0) / f.h)
+      return `| ${T} | (${T} − ${f.x0}) ÷ ${f.h} = ${x} | $${a.toFixed(3)}+${b.toFixed(3)}(${x})+${cc.toFixed(3)}(${x})^2$ | **${n(f.at(T), d)}** |`
+    })
+    .join('\n')
   return {
     f,
     md: [
-      tx`**Least-squares parabola** $Y=a+bx+cx^2$, with the year coded $x=(\text{year}-${f.x0})/${f.h}$ so that $\Sigma x=\Sigma x^3=0$:`,
-      `| Year | Y | x | x² | x⁴ | xY | x²Y |\n|---|---|---|---|---|---|---|\n${c.map(row).join('\n')}\n| **Σ** | **${g(c.reduce((s, p) => s + p.pop, 0), 6)}** | **${+sx(1).toFixed(2)}** | **${+sx(2).toFixed(2)}** | **${+sx(4).toFixed(2)}** | **${+sxy(1).toFixed(2)}** | **${+sxy(2).toFixed(2)}** |`,
-      tx`Normal equations (N = ${N}): ${
+      tx`**Least-squares parabola** $Y=a+bx+cx^2$: the parabola that passes closest to all the census points (smallest sum of squared misses). Code the year as $x=(\text{year}-${f.x0})/${f.h}$ about the middle census, so that $\Sigma x=\Sigma x^3=0$ and the hand work halves.`,
+      tx`1. Tabulate $x$, $x^2$, $x^4$, $xY$, $x^2Y$ for every census and add each column:`,
+      `| Year | Y | x | x² | x⁴ | xY | x²Y |\n|---|---|---|---|---|---|---|\n${c.map(row).join('\n')}\n| **Σ** | **${g(SY, 6)}** | **${q(sx(1))}** | **${q(sx(2))}** | **${q(sx(4))}** | **${q(sxy(1))}** | **${q(sxy(2))}** |`,
+      tx`2. Normal equations (N = ${N}): ${
         sym
           ? tx`$\Sigma Y = Na + c\Sigma x^2$, $\ \Sigma xY = b\Sigma x^2$, $\ \Sigma x^2Y = a\Sigma x^2 + c\Sigma x^4$`
           : tx`$\Sigma Y=Na+b\Sigma x+c\Sigma x^2$, $\Sigma xY=a\Sigma x+b\Sigma x^2+c\Sigma x^3$, $\Sigma x^2Y=a\Sigma x^2+b\Sigma x^3+c\Sigma x^4$`
       }`,
-      tx`$${g(c.reduce((s, p) => s + p.pop, 0), 6)} = ${N}a + ${+sx(2).toFixed(2)}c,\quad ${+sxy(1).toFixed(2)} = ${+sx(2).toFixed(2)}b,\quad ${+sxy(2).toFixed(2)} = ${+sx(2).toFixed(2)}a + ${+sx(4).toFixed(2)}c$`,
-      tx`$a=${a.toFixed(3)},\ b=${b.toFixed(3)},\ c=${cc.toFixed(3)}$ so $Y=${a.toFixed(3)}+${b.toFixed(3)}x+${cc.toFixed(3)}x^2$`,
-      ...targets.map((T) => {
-        const x = (T - f.x0) / f.h
-        return tx`${T}: $x=(${T}-${f.x0})/${f.h}=${+x.toFixed(2)}$ → $Y=${a.toFixed(3)}+${b.toFixed(3)}(${+x.toFixed(2)})+${cc.toFixed(3)}(${+x.toFixed(2)})^2=$ **${n(f.at(T), d)}** ${u}`
-      }),
+      tx`3. With the column sums: $${g(SY, 6)} = ${N}a + ${q(sx(2))}c,\quad ${q(sxy(1))} = ${q(sx(2))}b,\quad ${q(sxy(2))} = ${q(sx(2))}a + ${q(sx(4))}c$`,
+      ...solve,
+      tx`So $Y=${a.toFixed(3)}+${b.toFixed(3)}x+${cc.toFixed(3)}x^2$. To forecast, put each year's $x$ in:`,
+      `| Year | x | a + bx + cx² | P (${u}) |\n|---|---|---|---|\n${fRows}`,
     ].join('\n\n'),
   }
 }
@@ -126,7 +161,9 @@ function Sol0708() {
   const gm = geomMd(c0708, [2015], 'persons')
   return (
     <Sheet final={final0708}>
-      <Doc md={[`### Given`, censusTable(c0708, 'persons'), `### Assumptions`, `- "Empirical method" = the geometric increase method (Hardenberg's empirical method, her "most widely used" one). Two censuses, so end-to-end = last two.\n- Fire demand by Kuichling for the population of 2015; streams N = 2.8√P.`, `### Steps`, gm.md, `### Fire demand 2015`, fireMd(P0708 / 1000, 2015)].join('\n\n')} />
+      <Doc md={[`### Given`, censusTable(c0708, 'persons'), `### Assumptions`, `- "Empirical method" = the geometric increase method (Hardenberg's empirical method, her "most widely used" one). Two censuses, so end-to-end = last two.\n- Fire demand by Kuichling for the population of 2015; streams N = 2.8√P.`, `### Steps`, gm.md].join('\n\n')} />
+      <PopWorkChart c={c0708} curves={[{ label: 'geometric', at: g0708.at }]} targets={[2015]} unit="persons" />
+      <Doc md={[`### Fire demand 2015`, fireMd(P0708 / 1000, 2015)].join('\n\n')} />
     </Sheet>
   )
 }
@@ -137,6 +174,9 @@ const g0809 = geometric(c0809, 'end')
 const P0809 = g0809.at(2018)
 const ar0809 = arithmetic(c0809).at(2018)
 const inc0809 = incremental(c0809).at(2018)
+const arK0809 = arithmetic(c0809).params.K
+const incP0809 = incremental(c0809).params
+const inc0809d = c0809.slice(1).map((p, i) => p.pop - c0809[i].pop)
 const f0809 = fireDemand(P0809 / 1000)
 const avg0809 = 40 * P0809 // gal/day
 const avgGpm0809 = avg0809 / 1440
@@ -157,7 +197,15 @@ function Sol0809() {
           `- The paper does not name the method. Geometric is her most-used method for a Bangladesh town over a short interval, so it is adopted; the others are shown to compare.\n- Gallons are US gallons (the same unit as the Kuichling gpm). The tank has no roof cost.\n- "Including fire demand": the fire flow is a *rate* needed on top of the average flow, so the two are added in gpm.`,
           `### (i) Population 2018`,
           gm.md,
+          `For comparison, the two other short-term methods on the same data:`,
+          tx`- Arithmetic: $K=\dfrac{180{,}000-90{,}000}{2010-1980}=${n(arK0809)}$ per year, $P_{2018}=180{,}000+${n(arK0809)}\times8=${n(ar0809)}$`,
+          tx`- Incremental increase: increases per decade ${inc0809d.map((v) => n(v)).join(', ')} → mean $X=${n(incP0809.X)}$; their changes ${inc0809d.slice(1).map((v, i) => n(v - inc0809d[i])).join(', ')} → mean $Y=${n(incP0809.Y)}$; $n=8/10=0.8$ decade: $P=180{,}000+0.8(${n(incP0809.X)})+\dfrac{0.8(1.8)}{2}(${n(incP0809.Y)})=${n(inc0809)}$`,
           `| Method | P 2018 |\n|---|---|\n| Arithmetic | ${n(ar0809)} |\n| **Geometric (adopted)** | **${n(P0809)}** |\n| Incremental increase | ${n(inc0809)} |`,
+        ].join('\n\n')}
+      />
+      <PopWorkChart c={c0809} curves={[{ label: 'geometric (adopted)', at: g0809.at }, { label: 'arithmetic', at: arithmetic(c0809).at, dash: true }, { label: 'incremental increase', at: incremental(c0809).at, dash: true }]} targets={[2018]} unit="persons" />
+      <Doc
+        md={[
           `### (ii) Fire demand 2018`,
           fireMd(P0809 / 1000, 2018),
           `### (iv) Total requirement`,
@@ -232,6 +280,11 @@ function Sol1112() {
           `- Parabola fitted to all five censuses. 2013 is read off the same parabola.\n- "Present situation": the latest census, 2010, P = 110.2 thousand.`,
           `### Steps`,
           ls.md,
+        ].join('\n\n')}
+      />
+      <PopWorkChart c={c1112} curves={[{ label: 'least-squares parabola', at: ls1112.at }]} targets={[2013, 2020]} unit="thousand" />
+      <Doc
+        md={[
           `### Fire demand for 2013 and the streams now`,
           fireMd(P2013, 2013, true),
           tx`Present (2010): $N=2.8\sqrt{110.2}=${fN.streams.exact.toFixed(2)}$ → **${fN.streams.n} streams**.`,
@@ -248,6 +301,7 @@ function lsPart(c: Census[], targets: number[], unit: string, label: string) {
     return (
       <Sheet final={final}>
         <Doc md={[`### Given`, censusTable(c, unit), `### Assumptions`, `- ${label}\n- Year coded about the middle census, so the sums of odd powers vanish and the three equations solve by hand.`, `### Steps`, ls.md].join('\n\n')} />
+        <PopWorkChart c={c} curves={[{ label: 'least-squares parabola', at: f.at }]} targets={targets} unit={unit} />
       </Sheet>
     )
   }
@@ -292,9 +346,10 @@ function geomDecrPart(pops: number[], target: number, fireYear?: number) {
             g1.md,
             `### (b) Decreasing rate of growth`,
             d1.md,
-            ...(fire ? [`### Fire demand ${fireYear}`, tx`Population ${fireYear} (geometric): ${tx`$${g(c[c.length - 1].pop, 4)}(1+${gm.params.r.toFixed(5)})^{${fireYear! - 2010}}=${n(fy!, 2)}$`} million → $P=${n(fy! * 1000)}$ thousand.`, fireMd(fy! * 1000, fireYear!)] : []),
           ].join('\n\n')}
         />
+        <PopWorkChart c={c} curves={[{ label: 'geometric', at: gm.at }, { label: 'decreasing rate of growth', at: dm.at }]} targets={[target]} unit="million" />
+        {fire && <Doc md={[`### Fire demand ${fireYear}`, tx`Population ${fireYear} (geometric): ${tx`$${g(c[c.length - 1].pop, 4)}(1+${gm.params.r.toFixed(5)})^{${fireYear! - 2010}}=${n(fy!, 2)}$`} million → $P=${n(fy! * 1000)}$ thousand.`, fireMd(fy! * 1000, fireYear!)].join('\n\n')} />}
       </Sheet>
     )
   }
@@ -335,6 +390,21 @@ function SolJan21() {
 
 // ================================================================ parts: groundwater
 // ---- unconfined interference chain (five papers + the slide's Ex-3)
+/** the worked steps of the chain (K from the unpumped well → R → both wells pumping), shared with the groundwater lab */
+export function chainMd(p: { Q: number; D: number; s: number; rw: number; a: number; h: number; s2: number }, unit: string) {
+  const c = unconfinedInterferenceChain(p)
+  const { rw } = p
+  return [
+    `1. **Two points on the drawdown curve while one well pumps.** The pumped well's own water level is one point (at its wall, $r_1=r$); the unpumped well is an observation well that shows the curve's height at $r_2=a$. Heights are measured up from the impermeable base.`,
+    `| point | distance from the pumped well | water depth above the base |\n|---|---|---|\n| pumped well | $r_1 = r = ${rw}$ m | $h_1 = d = D - s = ${p.D} - ${p.s} = ${c.d}$ m |\n| unpumped well | $r_2 = a = ${p.a}$ m | $h_2 = h = ${p.h}$ m |`,
+    tx`2. **K from these two points** (Dupuit between $r_1$ and $r_2$): $K=\dfrac{Q\ln(r_2/r_1)}{\pi(h_2^2-h_1^2)}=\dfrac{${n(p.Q)}\ln(${p.a}/${rw})}{\pi(${p.h}^2-${c.d}^2)}=\dfrac{${n(p.Q)}\times${Math.log(p.a / rw).toFixed(4)}}{\pi\times${n(p.h * p.h - c.d * c.d, 2)}}=\dfrac{${n(p.Q * Math.log(p.a / rw), 1)}}{${n(Math.PI * (p.h * p.h - c.d * c.d), 2)}}=$ **${c.K.toFixed(3)}** ${unit} per m²`,
+    tx`3. **Radius of influence** from the single-well test $Q=\dfrac{\pi K(D^2-d^2)}{\ln(R/r)}$, rearranged for $\ln(R/r)$: $\ln\dfrac{R}{r}=\dfrac{\pi K(D^2-d^2)}{Q}=\dfrac{\pi(${c.K.toFixed(3)})(${p.D}^2-${c.d}^2)}{${n(p.Q)}}=\dfrac{\pi(${c.K.toFixed(3)})(${n(p.D * p.D - c.d * c.d, 2)})}{${n(p.Q)}}=${c.lnRr.toFixed(3)}$ → $R=r\,e^{${c.lnRr.toFixed(3)}}=${rw}\times${n(Math.exp(c.lnRr), 1)}=$ **${n(c.R, 1)} m**`,
+    tx`4. **Both wells pumped, drawdown ${p.s2} m in each.** Water depth in each well $d_2=D-s_2=${p.D}-${p.s2}=${c.d2}$ m. Each well now also sits in the other's cone ($a$ away), which is why $\ln(R/r)$ becomes $\ln\!\big(R^2/(r\,a)\big)$:`,
+    tx`$$Q_1=Q_2=\dfrac{\pi K(D^2-d_2^2)}{\ln\!\big(R^2/(r\,a)\big)}=\dfrac{\pi(${c.K.toFixed(3)})(${p.D}^2-${c.d2}^2)}{\ln\!\big(${n(c.R, 1)}^2/(${rw}\times${p.a})\big)}=\dfrac{${n(c.num, 1)}}{${c.lnTerm.toFixed(3)}}=${n(c.each, 1)}\ \text{${unit}}$$`,
+    tx`5. Together: $2\times${n(c.each, 1)}=$ **${n(c.total, 1)} ${unit}**. (One well alone at the same drawdown would give ${n(c.single, 1)} ${unit}; interference costs each well ${n((1 - c.each / c.single) * 100, 0)} % of its yield.)`,
+  ].join('\n\n')
+}
+
 interface ChainIn { id: string; paper: string; dia_mm: number; Q: number; unit: string; D: number; s: number; a: number; h: number; s2: number }
 function chainPart(p: ChainIn) {
   const rw = p.dia_mm / 2000
@@ -349,13 +419,13 @@ function chainPart(p: ChainIn) {
           `Well diameter ${p.dia_mm} mm → $r=${rw}$ m (water-table = unconfined aquifer). Pumped alone: $Q=${n(p.Q)}$ ${p.unit}, drawdown ${p.s} m, static depth $D=${p.D}$ m, so the water depth in the pumped well is $d=${p.D}-${p.s}=${c.d}$ m. A similar well ${p.a} m away, not pumped, has water depth ${p.h} m. Both wells pumped together with drawdown ${p.s2} m each.`,
           `### Assumptions`,
           `- Dupuit (horizontal radial) flow; the unpumped well is an observation well at $r_2=a=${p.a}$ m; the two wells are identical and the pumping drawdowns add (superposition), so both yield the same $Q_1=Q_2$.\n- Interference formula as in her class notes: $\\pi K(D^2-d^2)/\\ln(R^2/ra)$ (the slide's printed 2π is a typo; her own Ex-3 answer needs π).\n- Q is kept in ${p.unit}, so K comes out in ${p.unit} per m².`,
-          `### Steps`,
-          tx`1. **K from the observation well:** $K=\dfrac{Q\ln(r_2/r_1)}{\pi(h_2^2-h_1^2)}=\dfrac{${n(p.Q)}\ln(${p.a}/${rw})}{\pi(${p.h}^2-${c.d}^2)}=\dfrac{${n(p.Q * Math.log(p.a / rw), 1)}}{${n(Math.PI * (p.h * p.h - c.d * c.d), 2)}}=$ **${c.K.toFixed(3)}**`,
-          tx`2. **Radius of influence** from the single-well test $Q=\dfrac{\pi K(D^2-d^2)}{\ln(R/r)}$: $\ln\dfrac{R}{r}=\dfrac{\pi(${c.K.toFixed(3)})(${p.D}^2-${c.d}^2)}{${n(p.Q)}}=${c.lnRr.toFixed(3)}$ → $R=${rw}\,e^{${c.lnRr.toFixed(3)}}=$ **${n(c.R, 1)} m**`,
-          tx`3. **Both wells pumped, drawdown ${p.s2} m each** ($d_2=${p.D}-${p.s2}=${c.d2}$ m): $Q_1=Q_2=\dfrac{\pi K(D^2-d_2^2)}{\ln\!\big(R^2/(r\,a)\big)}=\dfrac{\pi(${c.K.toFixed(3)})(${p.D}^2-${c.d2}^2)}{\ln\!\big(${n(c.R, 1)}^2/(${rw}\times${p.a})\big)}=\dfrac{${n(c.num, 1)}}{${c.lnTerm.toFixed(3)}}=$ **${n(c.each, 1)} ${p.unit}**`,
-          tx`4. Together: $2\times${n(c.each, 1)}=$ **${n(c.total, 1)} ${p.unit}**. (One well alone at the same drawdown would give ${n(c.single, 1)} ${p.unit}; interference costs each well ${n((1 - c.each / c.single) * 100, 0)} % of its yield.)`,
+          `### Sketch: one well pumping, the other watched`,
         ].join('\n\n')}
       />
+      <div className="rounded-xl border border-line bg-panel2/40 p-2">
+        <WellSketch kind="unconfined" unit="m" rw={rw} R={c.R} D={p.D} d={c.d} s={p.s} obs={[{ r: p.a, h: p.h }]} />
+      </div>
+      <Doc md={[`### Steps`, chainMd({ Q: p.Q, D: p.D, s: p.s, rw, a: p.a, h: p.h, s2: p.s2 }, p.unit), `Both wells pumping (drawn from the engine; the dashed cones are each well alone, the solid line their sum):`].join('\n\n')} />
       <div className="rounded-xl border border-line bg-panel2/40 p-2">
         <GwSection aq={{ ...aq, K: c.K }} wells={[{ x: 0, Q: c.each }, { x: p.a, Q: c.each }]} xr={[-Math.min(c.R, 6 * p.a), p.a + Math.min(c.R, 6 * p.a)]} />
       </div>
@@ -389,10 +459,11 @@ function Sol1011d() {
           `- Thiem (steady, fully penetrating, confined). The well diameter is not needed: both drawdowns are measured away from the well.`,
           `### Steps`,
           tx`1. Thiem between the two observation points: $s_1-s_2=\dfrac{Q}{2\pi Kb}\ln\dfrac{r_2}{r_1}$ (the piezometric head difference $h_2-h_1=s_1-s_2$).`,
-          tx`2. $Q=\dfrac{2\pi Kb(s_1-s_2)}{\ln(r_2/r_1)}=\dfrac{2\pi(10^{-3})(2.5)(2.5-0.6)}{\ln(50/8)}=\dfrac{${(2 * Math.PI * 1e-3 * 2.5 * 1.9).toFixed(5)}}{${Math.log(50 / 8).toFixed(4)}}=$ **${q1011.toFixed(5)} m³/s**`,
-          `3. $T=Kb=2.5\\times10^{-3}$ m²/s. $Q=${(q1011 * 1000).toFixed(2)}$ L/s $=${n(q1011 * 86400)}$ m³/day.`,
+          tx`2. $Q=\dfrac{2\pi Kb(s_1-s_2)}{\ln(r_2/r_1)}=\dfrac{2\pi(10^{-3})(2.5)(2.5-0.6)}{\ln(50/8)}=\dfrac{${(2 * Math.PI * 1e-3 * 2.5 * 1.9).toFixed(5)}}{${Math.log(50 / 8).toFixed(4)}}=$ **${q1011.toFixed(5)} m³/s** (K in m/s and lengths in m, so Q comes out in m³/s)`,
+          tx`3. $T=Kb=2.5\times10^{-3}$ m²/s. $Q=${q1011.toFixed(5)}\times1000=${(q1011 * 1000).toFixed(2)}$ L/s $=${q1011.toFixed(5)}\times86{,}400=${n(q1011 * 86400)}$ m³/day.`,
         ].join('\n\n')}
       />
+      <WellSketch kind="confined" unit="m" rw={0.2} b={2.5} obs={[{ r: 8, s: 2.5 }, { r: 50, s: 0.6 }]} />
     </Sheet>
   )
 }
@@ -416,6 +487,7 @@ function Sol2122() {
           `4. Specific capacity $=Q/s=${n(q2122 / 20)}$ m³/day per metre of drawdown.`,
         ].join('\n\n')}
       />
+      <WellSketch kind="unconfined" unit="m" rw={0.15} R={1000} D={100} d={80} s={20} />
     </Sheet>
   )
 }
@@ -442,6 +514,7 @@ function Sol2223a() {
           `5. Check on the reading: if 0.15 m were wrongly used as the radius, $K$ would be ${K2223wrong.toFixed(2)} m/day (about ${((1 - K2223wrong / K2223r) * 100).toFixed(0)} % lower), so say which you used.`,
         ].join('\n\n')}
       />
+      <WellSketch kind="confined" unit="m" rw={0.075} R={950} b={35} s={7.5} />
     </Sheet>
   )
 }

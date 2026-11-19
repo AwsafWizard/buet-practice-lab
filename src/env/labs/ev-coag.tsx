@@ -6,6 +6,7 @@ import { pick, randInt, rng, Slider } from '../../labs/common'
 import { NumIn } from '../../reference/common'
 import { ExamProblems, type Level, type XProblem, type XStep } from '../../soil/topics/seep/examShell'
 import { alkConsumed, alkShortfall, alumNoAlkalinity, COAGULANTS, type Coagulant } from '../engine/coag'
+import { AlkBudgetFig } from '../figs/ta-coag'
 
 const f = (v: number, d = 1) => v.toFixed(d)
 const tx = String.raw
@@ -172,16 +173,50 @@ function Solution({ p }: { p: CP }) {
   const dose = p.d.dose as number
   const c = COAGULANTS[id]
   const u = alkConsumed(id, dose)
-  let md: string
-  if (p.family === 'use') md = [tx`$${dose}/${f(c.mw, 1)}=${u.mmol.toFixed(4)}$ mmol/L; each mmol uses ${c.hco3} meq of HCO₃⁻: $${u.mmol.toFixed(4)}\times${c.hco3}\times50=$ **${f(u.alk)} mg/L as CaCO₃**.`].join('\n\n')
-  else if (p.family === 'short') {
-    const s = alkShortfall({ id, dose, alk: p.d.alk as number })
-    md = [tx`Consumed $=${f(u.alk)}$ mg/L as CaCO₃ (${f(u.perMg, 3)} per mg).`, tx`Short by $${f(u.alk)}-${p.d.alk}=$ **${f(s.short)}** mg/L as CaCO₃ → Ca(OH)₂ $=${f(s.short)}\times37/50=$ **${f(s.lime)} mg/L** (or Na₂CO₃ ${f(s.soda)} mg/L).`].join('\n\n')
-  } else {
-    const a = alumNoAlkalinity({ dose })
-    md = [tx`${dose}/594 = ${a.mmol.toFixed(4)} mmol/L alum → 3 mol H₂SO₄ per mol = ${a.acidMmol.toFixed(4)} mmol/L → $[H^+]=2\times${a.acidMmol.toFixed(4)}\times10^{-3}=${(a.H).toExponential(2)}$ → pH **${f(a.pH, 2)}**.`, tx`NaOH: 2 mol per mol H₂SO₄ → $${(2 * a.acidMmol).toFixed(4)}$ mmol/L × 40 = **${f(a.naohMgL)} mg/L**.`].join('\n\n')
+  const mwLine =
+    id === 'fecl3'
+      ? tx`1. Molar mass: $\text{FeCl}_3=55.85+3(35.45)=${f(c.mw, 1)}$ g/mol, so the dose is $\dfrac{${dose}\ \text{mg/L}}{${f(c.mw, 1)}\ \text{mg/mmol}}=${u.mmol.toFixed(4)}$ mmol/L.`
+      : tx`1. Molar mass: alum = ${f(c.mw, 0)} g/mol, so the dose is $\dfrac{${dose}\ \text{mg/L}}{${f(c.mw, 0)}\ \text{mg/mmol}}=${u.mmol.toFixed(4)}$ mmol/L.`
+  const use = [
+    `**Why:** the metal hydroxide floc is made by taking OH⁻ from the water's HCO₃⁻; the balanced equation says how many HCO₃⁻ each mole of coagulant uses (${c.hco3} here). One mole of HCO₃⁻ is one equivalent of alkalinity, and 1 meq = 50 mg as CaCO₃.`,
+    mwLine,
+    tx`2. HCO₃⁻ used: $${c.hco3}\times${u.mmol.toFixed(4)}=${(u.mmol * c.hco3).toFixed(4)}$ mmol/L $=${(u.mmol * c.hco3).toFixed(4)}$ meq/L.`,
+    tx`3. As CaCO₃: $${(u.mmol * c.hco3).toFixed(4)}\ \text{meq/L}\times50\ \text{mg/meq}=$ **${f(u.alk)} mg/L as CaCO₃** (that is ${f(u.perMg, 3)} mg per mg of coagulant; as HCO₃⁻ it is $\times61$: ${f(u.hco3)} mg/L).`,
+  ]
+  if (p.family === 'use') return <Md className="text-sm">{use.join('\n\n')}</Md>
+  if (p.family === 'short') {
+    const have = p.d.alk as number
+    const s = alkShortfall({ id, dose, alk: have })
+    return (
+      <div className="space-y-2 text-sm">
+        <Md>{use.join('\n\n')}</Md>
+        <div className="rounded-xl border border-line bg-panel2/40 p-2">
+          <AlkBudgetFig have={have} use={u.alk} />
+        </div>
+        <Md>
+          {[
+            s.short > 0
+              ? tx`4. The water has only ${have}, so it is short by $${f(u.alk)}-${have}=$ **${f(s.short)} mg/L as CaCO₃**. Without it the pH falls below the range where the floc forms.`
+              : tx`4. The water has ${have}, which covers the ${f(u.alk)} used: **nothing needs adding** (${f(have - u.alk)} mg/L is left over).`,
+            tx`5. As hydrated lime: Ca(OH)₂ has eq. wt 37, CaCO₃ 50, so $${f(s.short)}\times\dfrac{37}{50}=$ **${f(s.lime)} mg/L Ca(OH)₂** (or soda ash: $\times\dfrac{53}{50}=$ ${f(s.soda)} mg/L Na₂CO₃).`,
+          ].join('\n\n')}
+        </Md>
+      </div>
+    )
   }
-  return <Md className="text-sm">{md}</Md>
+  const a = alumNoAlkalinity({ dose })
+  return (
+    <Md className="text-sm">
+      {[
+        `**Why:** with no HCO₃⁻ to take up the acid, the alum's sulfate ends up as sulfuric acid in the water, and that acid sets the pH.`,
+        tx`1. Alum: $\dfrac{${dose}}{594}=${a.mmol.toFixed(4)}$ mmol/L.`,
+        tx`2. Each mole makes 3 mol H₂SO₄: $3\times${a.mmol.toFixed(4)}=${a.acidMmol.toFixed(4)}$ mmol/L of H₂SO₄.`,
+        tx`3. Each H₂SO₄ gives 2 H⁺ (strong acid, fully split): $[H^+]=2\times${a.acidMmol.toFixed(4)}\times10^{-3}=${a.H.toExponential(3).replace(/e([+-]\d+)/, (_, e) => `\\times10^{${Number(e)}}`)}$ mol/L.`,
+        tx`4. $pH=-\log[H^+]=$ **${f(a.pH, 2)}**.`,
+        tx`5. To bring it back to about pH 7 all that acid must be neutralised: $H_2SO_4+2NaOH\to Na_2SO_4+2H_2O$, so NaOH $=2\times${a.acidMmol.toFixed(4)}=${a.naohMmol.toFixed(4)}$ mmol/L $\times40$ mg/mmol $=$ **${f(a.naohMgL)} mg/L**.`,
+      ].join('\n\n')}
+    </Md>
+  )
 }
 
 export default function CoagLab() {
@@ -193,3 +228,6 @@ export default function CoagLab() {
     </div>
   )
 }
+
+/** for the render tests (src/env/figs/ta-work.test.tsx) */
+export { FAMS, make, Solution }

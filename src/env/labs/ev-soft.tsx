@@ -1,6 +1,6 @@
 // Softening bench: the bar diagram of a water analysis, stepped through lime, soda ash and recarbonation, the doses tallied,
 // a split-treatment bypass slider with the blended hardness, then exam-style problems.
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Callout, Md, Section, Seg } from '../../components/ui'
 import { hashKey } from '../../labs/CheckTable'
 import { pick, randInt, rng, Slider } from '../../labs/common'
@@ -9,6 +9,7 @@ import { ExamProblems, type Level, type XProblem, type XStep } from '../../soil/
 import { toCaCO3 } from '../engine/chem'
 import { analyse, bars, masses, slideExcess, splitAt, splitTreatment, treat, waterFromIons, type Water } from '../engine/soften'
 import { BarDiagram, SplitFlow } from '../figs/soft-bars'
+import { doseTableMd, FAC, hardnessTableMd, ionTableMd, massTableMd } from '../figs/ta-soft'
 
 const f = (v: number, d = 1) => v.toFixed(d)
 const tx = String.raw
@@ -181,20 +182,76 @@ function Solution({ p }: { p: SP }) {
   const w = toW(p.ions)
   const h = analyse(w)
   const i = p.ions
-  const conv = tx`1. As CaCO₃: Ca $=${i.ca}\times2.5=${f(w.ca)}$; Mg $=${i.mg}\times4.12=${f(w.mg)}$; CO₂ $=${i.co2}\times2.27=${f(w.co2)}$; alkalinity ${f(w.alk, 0)}. $TH=${f(h.th)}$; $NCH=TH-\text{alk}=${f(h.nch)}$ (Ca-NCH ${f(h.caNch)}, Mg ${f(h.mgNch)}).`
-  let md: string
+  const conv = [
+    `1. Convert every ion to mg/L as CaCO₃ (so they can be added and compared):`,
+    ionTableMd(
+      [
+        { name: 'CO₂', mgL: i.co2, fac: FAC.co2, eqw: '22', cc: w.co2 },
+        { name: 'Ca²⁺', mgL: i.ca, fac: FAC.ca, eqw: '20', cc: w.ca },
+        { name: 'Mg²⁺', mgL: i.mg, fac: FAC.mg, eqw: '12.15', cc: w.mg },
+        { name: 'Na⁺', mgL: i.na, fac: FAC.na, eqw: '23', cc: w.na },
+        { name: 'Cl⁻', mgL: i.cl, fac: FAC.cl, eqw: '35.45', cc: w.cl },
+        { name: 'SO₄²⁻', mgL: i.so4, fac: FAC.so4, eqw: '48', cc: w.so4 },
+      ],
+      `| HCO₃⁻ alkalinity | given as CaCO₃ | | **${f(w.alk)}** |`,
+    ),
+    `2. Hardness:`,
+    hardnessTableMd(h),
+    `3. Bar diagram of the raw water (below): the hardness to the left of the alkalinity line is carbonate, the rest non-carbonate.`,
+  ].join('\n\n')
+  const raw = (
+    <div className="rounded-xl border border-line bg-panel2/40 p-2">
+      <BarDiagram bars={bars(w)} title="Raw water (mg/L as CaCO₃)" mark={[{ label: `alk ${f(w.alk, 0)}`, at: w.alk }]} />
+    </div>
+  )
+  let rest: string
+  let flow: ReactNode = null
   if (p.family === 'selective') {
     const t = treat(w, { mode: 'selective' })
-    md = [conv, tx`2. Selective Ca removal: $\text{Lime}=CO_2+\text{alk}=${f(w.co2)}+${f(w.alk, 0)}=$ **${f(t.lime)} mg/L as CaCO₃** (Mg left alone; add 20 for excess lime if asked).`, tx`3. CaO $=${f(t.lime)}\times0.56/0.90=$ **${f(masses(t.lime, 0, 0.9).CaO)} mg/L**.`].join('\n\n')
+    const m = masses(t.lime, 0, 0.9)
+    rest = [
+      `4. **Selective Ca removal**: lime only, Mg is left alone (it is below 40 mg/L as CaCO₃, so it is not worth removing). Lime term by term:`,
+      doseTableMd([{ label: 'mg/L as CaCO₃', t }]),
+      tx`5. Quicklime at 90 % purity: $\text{CaO}=${f(t.lime)}\times\dfrac{56}{100}\div0.90=$ **${f(m.CaO)} mg/L** (add 20 mg/L as CaCO₃ excess lime only if the question asks for it).`,
+    ].join('\n\n')
   } else if (p.family === 'complete' || p.family === 'chem') {
     const t = treat(w, { mode: 'complete' })
-    const m = masses(t.lime, t.soda, p.pu?.[0] ?? 1, p.pu?.[1] ?? 1)
-    md = [conv, tx`2. $\text{Lime}=CO_2+\text{alk}+Mg=${f(w.co2)}+${f(w.alk, 0)}+${f(w.mg)}=$ **${f(t.lime)}**; $\text{Soda}=NCH=$ **${f(t.soda)}** mg/L as CaCO₃.`, p.family === 'chem' ? tx`3. CaO $=${f(t.lime)}\times0.56/${p.pu![0]}=$ **${f(m.CaO)}**; Na₂CO₃ $=${f(t.soda)}\times1.06/${p.pu![1]}=$ **${f(m.Na2CO3)} mg/L**.` : ''].join('\n\n')
+    rest = [
+      `4. **Softening to the practical limits** (Ca 30, Mg 10): lime for CO₂, the carbonate hardness and the Mg; soda ash for the non-carbonate hardness. Term by term:`,
+      doseTableMd([{ label: 'mg/L as CaCO₃', t }]),
+      p.family === 'chem' ? `5. From mg/L as CaCO₃ to mg/L of each chemical (× molar mass/100, ÷ purity):` : '',
+      p.family === 'chem' ? massTableMd(t.lime, t.soda, p.pu) : '',
+    ]
+      .filter(Boolean)
+      .join('\n\n')
   } else {
     const s = splitTreatment(w, { mgFinal: p.mgFinal, thMax: 120 })
-    md = [conv, tx`2. $X=\dfrac{Mg_f-Mg_i}{Mg_r-Mg_i}=\dfrac{${p.mgFinal}-10}{${f(w.mg)}-10}=$ **${f(s.X, 3)}**; treated ${f(s.treated, 3)}.`, tx`3. First stage (complete): $L_1=${f(s.first.lime)}$, $S_1=${f(s.first.soda)}$; second stage (selective): $L_2=${f(s.second.lime)}$.`, tx`4. Blend: $X(${f(s.rawTH)})+(1-X)(40)=$ **${f(s.blended)}** ${s.secondNeeded ? '> 120: second stage needed' : 'inside 80–120: no second stage'}.`, tx`5. Doses: lime $=${f(s.treated, 3)}L_1${s.secondNeeded ? tx`+${f(s.X, 3)}L_2` : ''}=$ **${f(s.lime)}**; soda $=${f(s.treated, 3)}S_1=$ **${f(s.soda)}** mg/L as CaCO₃.`].join('\n\n')
+    rest = [
+      tx`4. **Bypass.** **Why:** the first stage takes Mg down to 10; the raw bypass keeps its Mg ${f(w.mg)}. Blend them so the Mg comes out at ${p.mgFinal}: $X\,\text{Mg}_r+(1-X)\,\text{Mg}_i=\text{Mg}_f$, so`,
+      tx`$$X=\frac{\text{Mg}_f-\text{Mg}_i}{\text{Mg}_r-\text{Mg}_i}=\frac{${p.mgFinal}-10}{${f(w.mg)}-10}=${f(s.X, 3)}$$`,
+      `so ${f(s.X * 100, 1)} % bypasses and ${f(s.treated * 100, 1)} % is treated.`,
+      `5. **Doses of each stage**, per litre of the water that stage treats:`,
+      doseTableMd([
+        { label: '1st stage: complete', t: s.first },
+        { label: '2nd stage: selective Ca', t: s.second },
+      ]),
+      tx`6. **Blend check:** $TH=X\,TH_{raw}+(1-X)\,40=${f(s.X, 3)}(${f(s.rawTH)})+${f(s.treated, 3)}(40)=$ **${f(s.blended)}** mg/L as CaCO₃: ${s.secondNeeded ? `more than 120, so a **second stage** (selective Ca removal of the bypassed water) is needed; finished hardness ${f(s.finalTH)}.` : 'inside 80–120, so **no second stage**.'}`,
+      tx`7. **Doses on the whole flow** (each stage dose × the share of the flow it treats): lime $=(1-X)L_1${s.secondNeeded ? '+X\\,L_2' : ''}=${f(s.treated, 3)}(${f(s.first.lime)})${s.secondNeeded ? `+${f(s.X, 3)}(${f(s.second.lime)})` : ''}=$ **${f(s.lime)}**; soda $=(1-X)S_1=${f(s.treated, 3)}(${f(s.first.soda)})=$ **${f(s.soda)}** mg/L as CaCO₃.`,
+    ].join('\n\n')
+    flow = (
+      <div className="rounded-xl border border-line bg-panel2/40 p-2">
+        <SplitFlow X={s.X} second={s.secondNeeded} />
+      </div>
+    )
   }
-  return <Md className="text-sm">{md}</Md>
+  return (
+    <div className="space-y-2 text-sm">
+      <Md>{conv}</Md>
+      {raw}
+      <Md>{rest}</Md>
+      {flow}
+    </div>
+  )
 }
 
 export default function SoftLab() {
@@ -205,3 +262,6 @@ export default function SoftLab() {
     </div>
   )
 }
+
+/** for the render tests (src/env/figs/ta-work.test.tsx) */
+export { FAMS, make, Solution }

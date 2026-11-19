@@ -7,6 +7,7 @@ import { pick, randInt, rng, Slider } from '../../labs/common'
 import { ExamProblems, type Level, type XProblem, type XStep } from '../../soil/topics/seep/examShell'
 import { breakthrough, fixedBed, homeSoftener } from '../engine/ix'
 import { LineChart } from '../figs/pop-chart'
+import { BypassFig } from '../figs/ta-ix'
 
 const f = (v: number, d = 1) => v.toFixed(d)
 const tx = String.raw
@@ -195,17 +196,47 @@ function make(seed: number, family?: Fam, level: Level = 'exam'): IP {
   return { family: fam, level, title: 'Fixed-bed ion exchange softener', text: `An ion exchange softener of capacity ${cap} kg/m³ treats ${nfl(Q)} m³/d of water of hardness ${Hraw} mg/L as CaCO₃, to be softened to ${Hdes} mg/L. The unit runs at ${loading} m³/min·m² with a bed depth of ${depth} m. Regeneration needs 150 kg NaCl per m³ of resin as a 10 % solution. Find the bypass fraction, bed area, volume of resin, the time between regenerations and the salt per regeneration.`, hash: hashKey(JSON.stringify([fam, Q, Hraw, Hdes, cap, loading, depth])), steps, d: { Q, Hraw, Hdes, cap, loading, depth } }
 }
 const nfl = (v: number) => v.toLocaleString('en-US')
+/** thousands separator that KaTeX does not space out */
+const nflt = (v: number) => nfl(v).replace(/,/g, '{,}')
 function Solution({ p }: { p: IP }) {
   const d = p.d
-  let md: string
   if (p.family === 'home') {
     const e = homeSoftener({ V: d.V, cap: d.cap, Qlpd: d.Q, Hraw: d.Hraw, Hdes: d.Hdes })
-    md = [tx`1. Bypass $X=H_{des}/H_{raw}=${d.Hdes}/${d.Hraw}=$ **${f(e.bypass * 100, 1)} %**; ${f(e.treated * 100, 1)} % goes through the resin: ${f(e.treatedLpd, 0)} L/d.`, tx`2. Load $=${f(e.treatedLpd, 0)}\times${d.Hraw}\times10^{-6}=$ **${f(e.loadKgD, 4)} kg/d**.`, tx`3. Capacity $=${d.V}\times${d.cap}=$ **${f(e.capKg, 2)} kg**.`, tx`4. $t=\dfrac{${f(e.capKg, 2)}}{${f(e.loadKgD, 4)}}=$ **${f(e.days, 1)} days**.`].join('\n\n')
-  } else {
-    const b = fixedBed({ Q: d.Q, Hraw: d.Hraw, Hdes: d.Hdes, cap: d.cap, loading: d.loading, depth: d.depth, regen: 150, strength: 0.1 })
-    md = [tx`1. $X=${d.Hdes}/${d.Hraw}=$ **${f(b.bypass * 100, 1)} %**; through the resin $${nfl(d.Q)}\times${f(1 - b.bypass, 3)}=${f(b.Qtreated, 0)}$ m³/d $=${f(b.QtreatedMin, 2)}$ m³/min.`, tx`2. $A=\dfrac{${f(b.QtreatedMin, 2)}}{${d.loading}}=$ **${f(b.A, 1)} m²**; $V=A\times${d.depth}=$ **${f(b.V, 1)} m³** (use at least two beds so one can be regenerated).`, tx`3. Hardness applied $=${d.loading}\times${f(d.Hraw / 1000, 3)}=${f(b.loadPerM2, 4)}$ kg/min·m²; capacity per m² $=${d.cap}\times${d.depth}=${f(d.cap * d.depth, 1)}$ kg → run **${f(b.runMin, 0)} min = ${f(b.runH, 1)} h**.`, tx`4. Salt $=150\times${f(b.V, 1)}=$ **${f(b.saltKg, 0)} kg** per regeneration = ${f(b.brineM3, 1)} m³ of 10 % brine.`].join('\n\n')
+    return (
+      <div className="space-y-2 text-sm">
+        <Md>{tx`**Why the bypass:** the resin takes out all the hardness, so to get ${d.Hdes} mg/L at the tap some raw water is sent round the bed and mixed back. The hardness balance on the mix gives the bypass fraction:`}</Md>
+        <div className="rounded-xl border border-line bg-panel2/40 p-2">
+          <BypassFig Hraw={d.Hraw} Hdes={d.Hdes} X={e.bypass} Q={d.Q} qUnit="L/d" />
+        </div>
+        <Md>
+          {[
+            tx`1. Bypass: $X\cdot${d.Hraw}+(1-X)\cdot0=${d.Hdes}$ → $X=\dfrac{H_{des}}{H_{raw}}=\dfrac{${d.Hdes}}{${d.Hraw}}=$ **${f(e.bypass * 100, 1)} %**.`,
+            tx`2. Through the resin: $(1-X)\,Q=${f(e.treated, 4)}\times${nflt(d.Q)}=${f(e.treatedLpd, 0)}$ L/d.`,
+            tx`3. Hardness the resin must hold back each day: $${f(e.treatedLpd, 0)}\ \text{L/d}\times${d.Hraw}\ \text{mg/L}=${nflt(Math.round(e.treatedLpd * d.Hraw))}$ mg/d $=$ **${f(e.loadKgD, 4)} kg/d** (only the treated stream loads the resin).`,
+            tx`4. What the bed can hold: $V\times\text{capacity}=${d.V}\times${d.cap}=$ **${f(e.capKg, 2)} kg** as CaCO₃.`,
+            tx`5. Time between regenerations: $t=\dfrac{\text{capacity}}{\text{load}}=\dfrac{${f(e.capKg, 2)}}{${f(e.loadKgD, 4)}}=$ **${f(e.days, 1)} days**.`,
+          ].join('\n\n')}
+        </Md>
+      </div>
+    )
   }
-  return <Md className="text-sm">{md}</Md>
+  const b = fixedBed({ Q: d.Q, Hraw: d.Hraw, Hdes: d.Hdes, cap: d.cap, loading: d.loading, depth: d.depth, regen: 150, strength: 0.1 })
+  return (
+    <div className="space-y-2 text-sm">
+      <div className="rounded-xl border border-line bg-panel2/40 p-2">
+        <BypassFig Hraw={d.Hraw} Hdes={d.Hdes} X={b.bypass} Q={d.Q} qUnit="m³/d" />
+      </div>
+      <Md>
+        {[
+          tx`1. Bypass (hardness balance, resin effluent taken as 0): $X=\dfrac{${d.Hdes}}{${d.Hraw}}=$ **${f(b.bypass * 100, 1)} %**; through the resin $${nflt(d.Q)}\times${f(1 - b.bypass, 3)}=${f(b.Qtreated, 0)}$ m³/d $\div1440=${f(b.QtreatedMin, 2)}$ m³/min.`,
+          tx`2. **Why area first:** the loading rate is the flow per m² of bed, so $A=\dfrac{Q_{resin}}{\text{loading}}=\dfrac{${f(b.QtreatedMin, 2)}}{${d.loading}}=$ **${f(b.A, 1)} m²**.`,
+          tx`3. Resin volume: $V=A\times\text{depth}=${f(b.A, 1)}\times${d.depth}=$ **${f(b.V, 1)} m³** per bed (build at least two, so one runs while the other is regenerated).`,
+          tx`4. Run time. Per m² of bed: hardness arriving $=${d.loading}\ \text{m}^3\text{/min}\times${f(d.Hraw / 1000, 3)}\ \text{kg/m}^3=${f(b.loadPerM2, 4)}$ kg/min, and the resin under it holds $${d.cap}\times${d.depth}=${f(d.cap * d.depth, 1)}$ kg. So $t=\dfrac{${f(d.cap * d.depth, 1)}}{${f(b.loadPerM2, 4)}}=${f(b.runMin, 0)}$ min $=$ **${f(b.runH, 1)} h**.`,
+          tx`5. Salt: $150\ \text{kg/m}^3\times${f(b.V, 1)}\ \text{m}^3=$ **${f(b.saltKg, 0)} kg NaCl** per regeneration; as 10 % brine $${f(b.saltKg, 0)}/0.10=${f(b.saltKg * 10, 0)}$ kg ≈ ${f(b.brineM3, 1)} m³.`,
+        ].join('\n\n')}
+      </Md>
+    </div>
+  )
 }
 
 export default function IxLab() {
@@ -217,3 +248,6 @@ export default function IxLab() {
     </div>
   )
 }
+
+/** for the render tests (src/env/figs/ta-work.test.tsx) */
+export { FAMS, make, Solution }

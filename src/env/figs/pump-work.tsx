@@ -120,6 +120,37 @@ export function pumpFinal(c: PCase): string {
   return parts.join('; ')
 }
 
+/** the total head as a small table: each part, what it pays for, its size and share */
+export function headBudget(des: DesignOut, len: string, withVh: boolean, withHm: boolean) {
+  const row = (name: string, what: string, v: number) => `| ${name} | ${what} | ${sg(v, 4)} | ${des.H > 0 ? Math.round((v / des.H) * 100) : 0} % |`
+  return [
+    `| part | what it pays for | head (${len}) | share |`,
+    '|---|---|---|---|',
+    row('$h_s$', 'lifting the water, source level to delivery level', des.hs),
+    row('$h_f$', 'friction along the whole pipe', des.hf),
+    withVh ? row('$h_v$', 'the speed the water leaves with', des.hv) : '',
+    withHm ? row('$h_m$', 'fittings (valves, bends, entrance)', des.hm) : '',
+    `| **H** | | **${sg(des.H, 4)}** | 100 % |`,
+  ]
+    .filter(Boolean)
+    .join('\n')
+}
+
+/** NPSH available as a running budget: start from the atmosphere, take off what the suction side uses up */
+export function npshBudget(o: { Habs: number; Hs: number; hL: number; Hvp: number; npsh: number }, len = 'm') {
+  const r = (v: number) => sg(v, 4)
+  return [
+    `| | head (${len}) | running total (${len}) |`,
+    '|---|---|---|',
+    `| atmospheric pressure on the wet-well surface, $+H_{abs}$ | +${r(o.Habs)} | ${r(o.Habs)} |`,
+    o.Hs >= 0
+      ? `| water stands above the pump (flooded), $+H_S$ | +${r(o.Hs)} | ${r(o.Habs + o.Hs)} |`
+      : `| pump sits above the water (lift), $H_S$ | −${r(-o.Hs)} | ${r(o.Habs + o.Hs)} |`,
+    `| suction pipe and entrance losses, $-h_L$ | −${r(o.hL)} | ${r(o.Habs + o.Hs - o.hL)} |`,
+    `| vapour pressure of the water, $-H_{vp}$ | −${r(o.Hvp)} | **${r(o.npsh)}** |`,
+  ].join('\n')
+}
+
 export function PumpWork({ c, extra }: { c: PCase; extra?: ReactNode }) {
   const { des, pw } = solvePump(c)
   const si = c.sys === 'si'
@@ -199,23 +230,27 @@ export function PumpWork({ c, extra }: { c: PCase; extra?: ReactNode }) {
       </Step>
       <Step n={S()} title="Total head the pump must give">
         <T>{String.raw`H = h_s + h_f${withVh ? ' + h_v' : ''}${c.sumK ? ' + h_m' : ''} = ${sg(des.hs, 4)} + ${sg(des.hf, 4)}${withVh ? ` + ${sg(des.hv, 4)}` : ''}${c.sumK ? ` + ${sg(des.hm, 4)}` : ''} = ${sg(des.H, 4)}${uText(u.len)}`}</T>
+        <Md>{headBudget(des, u.len, withVh, !!c.sumK)}</Md>
       </Step>
       <Step n={S()} title="Water power and input power">
         {c.power === 'si' && (
           <>
-            <T>{String.raw`P_w = \gamma Q H = ${c.gamma ?? 9.81} \times ${sg(c.Q, 4)} \times ${sg(des.H, 4)} = ${sg(pw.waterKW, 4)}\text{ kW} = ${sg(pw.waterHp, 4)}\text{ hp}`}</T>
-            <T>{String.raw`P_{in} = \frac{P_w}{\eta} = \frac{${sg(pw.waterKW, 4)}}{${sg(c.eta, 3)}} = ${sg(pw.inputKW, 4)}\text{ kW} = ${sg(pw.inputHp, 4)}\text{ hp}`}</T>
+            <T>{String.raw`P_w = \gamma Q H = ${c.gamma ?? 9.81}\text{ kN/m}^3 \times ${sg(c.Q, 4)}\text{ m}^3/\text{s} \times ${sg(des.H, 4)}\text{ m} = ${sg(pw.waterKW, 4)}\text{ kW}`}</T>
+            <T>{String.raw`P_{in} = \frac{P_w}{\eta} = \frac{${sg(pw.waterKW, 4)}}{${sg(c.eta, 3)}} = ${sg(pw.inputKW, 4)}\text{ kW}`}</T>
+            <T>{String.raw`\text{in hp } (1\text{ hp} = 0.7457\text{ kW}):\quad P_w = \frac{${sg(pw.waterKW, 4)}}{0.7457} = ${sg(pw.waterHp, 4)}\text{ hp},\qquad P_{in} = \frac{${sg(pw.inputKW, 4)}}{0.7457} = ${sg(pw.inputHp, 4)}\text{ hp}`}</T>
           </>
         )}
         {c.power === 'fps' && (
           <>
             <T>{String.raw`P_w = \frac{\gamma Q H}{550} = \frac{62.4 \times ${sg(c.Q, 4)} \times ${sg(des.H, 4)}}{550} = ${sg(pw.waterHp, 4)}\text{ hp}`}</T>
+            <div className="text-xs text-mute">γ = 62.4 lb/ft³, Q in ft³/s and H in ft give ft·lb/s; 1 hp = 550 ft·lb/s.</div>
             <T>{String.raw`P_{in} = \frac{P_w}{\eta} = \frac{${sg(pw.waterHp, 4)}}{${sg(c.eta, 3)}} = ${sg(pw.inputHp, 4)}\text{ hp}`}</T>
           </>
         )}
         {c.power === 'gpm' && (
           <>
             <T>{String.raw`P_w = \frac{H Q_{gpm}}{3960} = \frac{${sg(des.H, 4)} \times ${sg(c.gpm ?? 0, 5)}}{3960} = ${sg(pw.waterHp, 4)}\text{ hp}`}</T>
+            <div className="text-xs text-mute">Her slide formula: H in ft, Q in gallons per minute, 3960 as printed (it turns gal/min × ft into hp).</div>
             <T>{String.raw`BHP = \frac{P_w}{\eta} = \frac{${sg(pw.waterHp, 4)}}{${sg(c.eta, 3)}} = ${sg(pw.inputHp, 4)}\text{ hp}`}</T>
           </>
         )}

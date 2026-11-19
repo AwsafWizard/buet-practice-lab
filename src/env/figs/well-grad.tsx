@@ -60,16 +60,20 @@ export function GradChart({ curves, reads = [10, 30, 60], xmin = 0.01, xmax = 10
           </g>
         )
       })}
-      {mark?.map((m, mi) => (
-        <g key={m.label}>
-          <line x1={L} y1={Y(m.finer)} x2={X(m.size)} y2={Y(m.finer)} stroke="var(--c-ink)" strokeDasharray="3 3" strokeWidth="1" />
-          <line x1={X(m.size)} y1={Y(m.finer)} x2={X(m.size)} y2={H - B} stroke="var(--c-ink)" strokeDasharray="3 3" strokeWidth="1" />
-          <circle cx={X(m.size)} cy={Y(m.finer)} r="3.5" fill="var(--c-bad)" />
-          <text x={X(m.size) + 5} y={H - B - 5 - (mi % 3) * 13} fontSize="11" fill="var(--c-ink)">
-            {m.label}
-          </text>
-        </g>
-      ))}
+      {mark?.map((m) => {
+        // label sits on its own reading line, just left of the point (falls back to the right if there is no room)
+        const room = X(m.size) - L > 7 * m.label.length + 10
+        return (
+          <g key={m.label}>
+            <line x1={L} y1={Y(m.finer)} x2={X(m.size)} y2={Y(m.finer)} stroke="var(--c-ink)" strokeDasharray="3 3" strokeWidth="1" />
+            <line x1={X(m.size)} y1={Y(m.finer)} x2={X(m.size)} y2={H - B} stroke="var(--c-ink)" strokeDasharray="3 3" strokeWidth="1" />
+            <circle cx={X(m.size)} cy={Y(m.finer)} r="3.5" fill="var(--c-bad)" />
+            <text x={room ? X(m.size) - 6 : X(m.size) + 6} y={Y(m.finer) - 5} textAnchor={room ? 'end' : 'start'} fontSize="11" fill="var(--c-ink)">
+              {m.label}
+            </text>
+          </g>
+        )
+      })}
     </svg>
   )
 }

@@ -11,7 +11,7 @@ import {
 } from '../engine/pump'
 import { LineChart } from '../figs/pump-chart'
 import { PumpProfile } from '../figs/pump-profile'
-import { PumpWork, Sheet, T, sg, solvePump, type PCase } from '../figs/pump-work'
+import { PumpWork, Sheet, T, npshBudget, sg, solvePump, type PCase } from '../figs/pump-work'
 
 const tx = String.raw
 
@@ -485,16 +485,25 @@ function NpshWork({ p }: { p: Parameters<typeof npshData>[0] }) {
       given={[`Q = ${p.Q} m³/s, d = ${p.d * 100} cm, levels ${p.wet} / ${p.pump} / ${p.disch} m, L = ${p.L} m (suction ${p.Ls} m), f = ${p.f}, ΣK = ${p.sumK}`, `Hvp = ${p.vp} kPa, Habs = 101.3 kPa, γ = 9.81 kN/m³, NPSHreq = ${p.npshR} m`]}
       answer={<>H = {sg(d.h.H, 4)} m; power {sg(d.pw.waterKW, 4)} kW; NPSH available {sg(d.npsh, 3)} m, so the margin over NPSHreq is {sg(d.margin, 3)} m: {d.margin >= 1 ? 'safe' : d.margin >= 0 ? 'too close (less than the 1 m asked for)' : 'the pump will cavitate'}</>}
     >
-      <Step n={1} title="Velocity">
-        <T>{tx`v = \frac{Q}{A} = ${sg(d.pipe.v, 4)}\text{ m/s},\qquad \frac{v^2}{2g} = ${sg(d.hv, 4)}\text{ m}`}</T>
+      <Step n={1} title="Velocity and velocity head">
+        <T>{tx`A = \frac{\pi d^2}{4} = \frac{\pi (${p.d})^2}{4} = ${sg(d.pipe.A, 4)}\text{ m}^2,\qquad v = \frac{Q}{A} = \frac{${p.Q}}{${sg(d.pipe.A, 4)}} = ${sg(d.pipe.v, 4)}\text{ m/s}`}</T>
+        <T>{tx`\frac{v^2}{2g} = \frac{${sg(d.pipe.v, 4)}^2}{2 \times 9.81} = ${sg(d.hv, 4)}\text{ m}`}</T>
       </Step>
       <Step n={2} title="Total head and power">
-        <T>{tx`H = (${p.disch} - ${p.wet}) + \frac{v^2}{2g} + f\frac{L}{d}\frac{v^2}{2g} + \sum K\frac{v^2}{2g} = ${sg(d.h.H, 4)}\text{ m}`}</T>
+        <T>{tx`h_s = ${p.disch} - ${p.wet} = ${p.disch - p.wet}\text{ m}`}</T>
+        <T>{tx`h_f = f\frac{L}{d}\frac{v^2}{2g} = ${p.f} \times \frac{${p.L}}{${p.d}} \times ${sg(d.hv, 4)} = ${sg(d.h.hf, 4)}\text{ m},\qquad h_m = \sum K\frac{v^2}{2g} = ${p.sumK} \times ${sg(d.hv, 4)} = ${sg(d.h.hm, 4)}\text{ m}`}</T>
+        <T>{tx`H = h_s + \frac{v^2}{2g} + h_f + h_m = ${p.disch - p.wet} + ${sg(d.hv, 4)} + ${sg(d.h.hf, 4)} + ${sg(d.h.hm, 4)} = ${sg(d.h.H, 4)}\text{ m}`}</T>
         <T>{tx`P = \gamma Q H = 9.81 \times ${p.Q} \times ${sg(d.h.H, 4)} = ${sg(d.pw.waterKW, 4)}\text{ kW}`}</T>
       </Step>
       <Step n={3} title="Suction loss and NPSH available">
-        <T>{tx`h_L = f\frac{L_s}{d}\frac{v^2}{2g} + K\frac{v^2}{2g} = ${sg(d.hLs, 4)}\text{ m},\quad H_S = ${p.wet} - ${p.pump} = ${sg(d.Hs, 3)}\text{ m}`}</T>
+        <T>{tx`H_{abs} = \frac{101.3}{9.81} = ${sg(d.Habs, 4)}\text{ m},\qquad H_{vp} = \frac{${p.vp}}{9.81} = ${sg(d.Hvp, 3)}\text{ m},\qquad H_S = ${p.wet} - ${p.pump} = ${sg(d.Hs, 3)}\text{ m}`}</T>
+        <T>{tx`h_L = f\frac{L_s}{d}\frac{v^2}{2g} + K\frac{v^2}{2g} = ${p.f} \times \frac{${p.Ls}}{${p.d}} \times ${sg(d.hv, 4)} + ${p.Ksuc} \times ${sg(d.hv, 4)} = ${sg(d.hLs, 4)}\text{ m}`}</T>
         <T>{tx`NPSH_{av} = H_{abs} + H_S - h_L - H_{vp} = ${sg(d.Habs, 4)} ${d.Hs < 0 ? '-' : '+'} ${sg(Math.abs(d.Hs), 3)} - ${sg(d.hLs, 3)} - ${sg(d.Hvp, 3)} = ${sg(d.npsh, 4)}\text{ m}`}</T>
+        <Md>{npshBudget({ Habs: d.Habs, Hs: d.Hs, hL: d.hLs, Hvp: d.Hvp, npsh: d.npsh })}</Md>
+      </Step>
+      <Step n={4} title="Safe or not?">
+        <T>{tx`\text{margin} = NPSH_{av} - NPSH_{req} = ${sg(d.npsh, 4)} - ${p.npshR} = ${sg(d.margin, 3)}\text{ m}`}</T>
+        <div className="text-xs text-mute">Her slide wants NPSH available at least 1 m above what the pump needs; below 0 the water boils at the impeller eye and the pump cavitates.</div>
       </Step>
     </Sheet>
   )
