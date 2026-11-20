@@ -12,7 +12,7 @@ import { doseTableMd, FAC, hardnessTableMd, ionTableMd, massTableMd } from '../f
 import { alkalinityFromBicarbonate, hardness, henryWithAir, langelier, phOfCo2Water, toCaCO3 } from '../engine/chem'
 import { alkConsumed } from '../engine/coag'
 import { fixedBed, homeSoftener } from '../engine/ix'
-import { CHART_2017, CHART_2021, CHART_2324, isoFromCurves, minTimeForRemoval, typeIColumn, type IsoChart, type IsoResult, type TypeI } from '../engine/settle'
+import { CHART_2017, CHART_2021, CHART_2122, CHART_2324, isoFromCurves, minTimeForRemoval, typeIColumn, type IsoChart, type IsoResult, type TypeI } from '../engine/settle'
 import { bars, bypassForHardness, masses, slideExcess, splitAt, splitTreatment, treat, waterFromIons, type Split, type Treat, type Water } from '../engine/soften'
 import type { EvPartMap } from '../types'
 
@@ -133,7 +133,7 @@ const Sol2021 = () => (
 )
 
 // ---- 2021-22 Q2(b): the same drawing as 2023-24, no values printed; the bottom edge read as the 3 m floor
-const chart2122: IsoChart = { ...CHART_2324, id: '2021-22-2b', H: 3, curves: CHART_2324.curves.map((c) => ({ r: c.r, pts: c.pts.map(([t, z]) => [t, (z * 3) / 2.5] as [number, number]) })) }
+const chart2122 = CHART_2122
 const r2122a = isoFromCurves(chart2122.curves, 3, 60)
 const r2122b = isoFromCurves(chart2122.curves, 3, 105)
 const final2122 = `t = 60 min: R ≈ ${f(r2122a.R, 0)} %; t = 105 min: R ≈ ${f(r2122b.R, 0)} %`

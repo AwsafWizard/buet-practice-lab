@@ -13,6 +13,37 @@ import { exportPdf, KebabMenu, pdfName, QuestionDoc } from './ExportPdf'
 
 export const scan331 = (pg: number) => `scans331/p-${String(pg).padStart(3, '0')}.jpg`
 
+export const FIG_RE = /\*?\[FIG[\s\S]*?\]\*?/
+
+/** a part's text with its figure: the paper's figure redrawn where the transcriber's [FIG …] note stood (or after the
+ *  text when the part only refers to it), with that note folded away underneath */
+export function QuestionText({ q, pdf }: { q: EvQ; pdf?: boolean }) {
+  const f = q.qfig
+  if (!f) return <Md>{q.text}</Md>
+  const m = FIG_RE.exec(q.text)
+  const before = (m ? q.text.slice(0, m.index) : q.text).trim()
+  const after = m ? q.text.slice(m.index + m[0].length).trim() : ''
+  const note = m ? m[0].replace(/^\*?\[FIG\s*/, '').replace(/\]\*?$/, '').trim() : ''
+  return (
+    <div>
+      {before && <Md>{before}</Md>}
+      <figure className="my-3 rounded-xl border border-line bg-panel p-3" style={pdf ? { breakInside: 'avoid' } : undefined}>
+        <f.Fig />
+        <figcaption className="text-xs text-mute mt-2">{f.cap}</figcaption>
+        {note && !pdf && (
+          <details className="text-xs text-faint mt-1">
+            <summary className="cursor-pointer hover:text-accent">How the printed figure was read</summary>
+            <div className="mt-1">
+              <Md>{note}</Md>
+            </div>
+          </details>
+        )}
+      </figure>
+      {after && <Md>{after}</Md>}
+    </div>
+  )
+}
+
 type St = 'todo' | 'tried' | 'solved' | 'review'
 const ST: { v: St; label: string; cls: string }[] = [
   { v: 'todo', label: 'To do', cls: '' },
@@ -78,7 +109,7 @@ export function EvQuestionCard({ q, showPaper = true, open: open0 = false }: { q
         <QuestionMenu q={q} />
       </div>
       <div className="text-[15px]">
-        <Md>{q.text}</Md>
+        <QuestionText q={q} />
       </div>
       {checks.length > 0 && (
         <div className="rounded-xl border border-line p-3 mt-3">

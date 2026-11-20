@@ -411,6 +411,15 @@ export const CHART_2324: IsoChart = {
   ],
 }
 
+/** 2021-22 Q2(b): the same drawing as 2023-24 Q1(c) with no values printed; its bottom edge is read as the 3 m floor */
+export const CHART_2122: IsoChart = {
+  ...CHART_2324,
+  id: '2021-22-2b',
+  title: '2021-22 Q2(b): flocculating suspension, 250 mg/L, 3 m column',
+  H: 3,
+  curves: CHART_2324.curves.map((c) => ({ r: c.r, pts: c.pts.map(([t, z]) => [t, (z * 3) / 2.5] as [number, number]) })),
+}
+
 export const CHART_2021: IsoChart = {
   id: '2020-21-5a',
   title: '2020-21 Q5(a): flocculent suspension, 3 m basin',

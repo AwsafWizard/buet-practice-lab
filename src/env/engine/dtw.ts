@@ -593,3 +593,10 @@ export function dtwChecks(d: DtwDesign, pumpCfs?: number): DtwCheck[] {
   if (!out.length) out.push({ level: 'ok', text: 'every rule is met' })
   return out
 }
+
+// 2022-23 Q6(c): finest-sand curve read from Figure 2 (transcription's readings)
+export const CURVE_2223: CurvePoint[] = curveOf([
+  { size: 0.076, finer: 2 }, { size: 0.1, finer: 5 }, { size: 0.132, finer: 8 }, { size: 0.14, finer: 10 }, { size: 0.177, finer: 20 },
+  { size: 0.203, finer: 30 }, { size: 0.231, finer: 40 }, { size: 0.275, finer: 50 }, { size: 0.313, finer: 60 }, { size: 0.357, finer: 70 },
+  { size: 0.389, finer: 80 }, { size: 0.47, finer: 90 }, { size: 0.56, finer: 95 }, { size: 0.8, finer: 98 },
+])

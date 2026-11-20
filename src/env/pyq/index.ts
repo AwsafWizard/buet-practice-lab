@@ -1,5 +1,6 @@
 // Past-paper parts joined with the teacher maps (ta / rm / sn) that say how each one is answered.
 import { EV_PAPERS, type EvPartMap, type EvQ } from '../types'
+import { EV_QFIGS } from '../figs/q-figs'
 import { EV_PARTS } from './parts'
 
 // Theory and number maps live in separate files per teacher (ta.tsx + ta-math.tsx …) so two authors never
@@ -38,7 +39,7 @@ const numKey = (no: string) => {
   return m ? +m[1] * 100 + (m[2] ? m[2].charCodeAt(0) - 96 : 0) : 0
 }
 
-export const EV_ALL: EvQ[] = EV_PARTS.map((p): EvQ => ({ ...(EV_MAP[p.id] ?? { topics: p.tags ?? [], ans: [] }), ...p })).sort(
+export const EV_ALL: EvQ[] = EV_PARTS.map((p): EvQ => ({ ...(EV_MAP[p.id] ?? { topics: p.tags ?? [], ans: [] }), ...p, qfig: EV_QFIGS[p.id] })).sort(
   (a, b) => order.indexOf(a.paper) - order.indexOf(b.paper) || numKey(a.no) - numKey(b.no),
 )
 

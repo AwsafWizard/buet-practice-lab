@@ -189,4 +189,7 @@ export interface EvCheck {
 }
 
 /** a past-paper part with its answer map, as the pages use it */
-export interface EvQ extends EvPart, EvPartMap {}
+export interface EvQ extends EvPart, EvPartMap {
+  /** the paper's own figure, redrawn (figs/q-figs.tsx); shown in place of the transcriber's [FIG …] description */
+  qfig?: { Fig: FC; cap: string }
+}

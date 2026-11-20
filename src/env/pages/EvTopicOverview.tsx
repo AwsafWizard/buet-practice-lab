@@ -8,6 +8,7 @@ import { mdPreview } from '../../account/preview'
 import { TopicThreads } from '../../account/TopicThreads'
 import { Ring } from '../../components/ui'
 import { useStore } from '../../store'
+import { FIG_RE } from '../components/EvQuestionCard'
 import { BoxBar } from '../components/Flashcards'
 import { answersFor, cardsFor, deckFor, listsFor } from '../content'
 import { boxCounts } from '../engine/leitner'
@@ -177,7 +178,7 @@ export function EvTopicOverview({ topic, go }: { topic: string; go: (tab: 'lab' 
                     {q.sec} · {q.no} · <span className="num">{q.marks}</span>
                   </span>
                 </span>
-                <span className="flex-1 min-w-0 text-mute line-clamp-2">{mdPreview(q.text, 220)}</span>
+                <span className="flex-1 min-w-0 text-mute line-clamp-2">{mdPreview(q.text.replace(FIG_RE, ''), 220)}</span>
                 {qStatus[q.id] === 'solved' && <span className="text-good text-xs shrink-0">✓</span>}
               </button>
             ))}

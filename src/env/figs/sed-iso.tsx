@@ -5,7 +5,8 @@ import { curveDepthAt, curveSamples } from '../engine/settle'
 const STRIP_FILL = ['var(--c-accent)', 'var(--c-water)', 'var(--c-good)', 'var(--c-load)', 'var(--c-accent2)', 'var(--c-soil)', 'var(--c-sn)']
 
 /** `grid`: the paper's printed % removal at each sampling point, drawn as small numbers so the curves can be checked against the data */
-export function IsoChartFig({ H, tMax, curves, t0, res, title, grid }: { H: number; tMax: number; curves: IsoCurve[]; t0?: number; res?: IsoResult; title?: string; grid?: IsoGrid }) {
+/** `ports`: sampling points drawn as plain dots (the paper marks them without values) */
+export function IsoChartFig({ H, tMax, curves, t0, res, title, grid, ports }: { H: number; tMax: number; curves: IsoCurve[]; t0?: number; res?: IsoResult; title?: string; grid?: IsoGrid; ports?: { depths: number[]; times: number[] } }) {
   const W = 560
   const Hh = 330
   const ml = 46
@@ -49,6 +50,7 @@ export function IsoChartFig({ H, tMax, curves, t0, res, title, grid }: { H: numb
             ) : null,
           ),
         )}
+      {ports && ports.depths.flatMap((z) => ports.times.map((t) => <circle key={`p${z}-${t}`} cx={sx(t)} cy={sy(z)} r="2.6" fill="var(--c-ink)" opacity="0.75" />))}
       {t0 !== undefined && res && (() => {
         // thin strips near the surface: push their ΔR labels apart so they never overlap (leader lines keep the true depth)
         const order = res.strips.map((s, i) => ({ i, y: sy(s.zMid) })).sort((a, b) => a.y - b.y)

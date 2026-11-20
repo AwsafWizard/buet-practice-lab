@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { SHOW_SCANS } from '../../components/QuestionCard'
 import { Md, Section } from '../../components/ui'
 import { useStore } from '../../store'
-import { partKeys, PartAnswer, EvQuestionCard, scan331, sourcesOf } from '../components/EvQuestionCard'
+import { partKeys, PartAnswer, EvQuestionCard, QuestionText, scan331, sourcesOf } from '../components/EvQuestionCard'
 import { EV_ALL, evQForPaper } from '../pyq'
 import { evTopicById } from '../registry'
 import { evPaperById, EV_PAPERS, EV_SOURCE_LABEL, type EvQ, type EvSource } from '../types'
@@ -223,7 +223,7 @@ function Mock({ paperId, qs }: { paperId: string; qs: EvQ[] }) {
                       <span className="font-bold">Q{q.no}</span>
                       <span className="chip num">{q.marks}</span>
                     </div>
-                    <Md>{q.text}</Md>
+                    <QuestionText q={q} />
                     {done && (
                       <div className="mt-3 rounded-xl bg-panel2 border border-line p-3 space-y-2">
                         {keys.length > 0 && (

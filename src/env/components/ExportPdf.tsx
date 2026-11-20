@@ -8,7 +8,7 @@ import { answerById, listById } from '../content'
 import { evTopicById } from '../registry'
 import { evPaperById, evPaperLabel, type EvAnswer, type EvQ } from '../types'
 import { AnswerBody } from './Blurt'
-import { PartAnswer, partKeys } from './EvQuestionCard'
+import { PartAnswer, partKeys, QuestionText } from './EvQuestionCard'
 
 export { KebabMenu, pdfName }
 
@@ -72,7 +72,7 @@ export function QuestionDoc({ q }: { q: EvQ }) {
       />
       <Label>Question</Label>
       <div style={{ fontSize: 15 }}>
-        <Md>{q.text}</Md>
+        <QuestionText q={q} pdf />
       </div>
       {seen.length > 1 && (
         <div style={{ fontSize: 12, color: 'var(--c-mute)', marginTop: 6 }}>Also asked in: {seen.filter((s) => s !== evPaperLabel(q.paper)).join(', ')}</div>

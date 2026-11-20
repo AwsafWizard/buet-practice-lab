@@ -552,9 +552,10 @@ function Sol2324() {
       <Doc
         md={[
           `### Given`,
-          `Confined aquifer between two aquitards, thickness $b=100$ ft (430 − 330). Wells 12 in dia → $r=0.5$ ft, 30 ft apart. Single well: drawdown $s=18$ ft, diameter of influence 160 ft → $R=80$ ft. $K=0.001$ ft³/s·ft² (= ft/s).`,
+          `Confined aquifer between two aquitards (figure): static level 430 ft above the aquifer bottom, aquifer 330 ft thick, each well screened for the top 100 ft of it. Wells 12 in dia → $r=0.5$ ft, 30 ft apart. Single well: drawdown $s=18$ ft, diameter of influence 160 ft → $R=80$ ft. $K=0.001$ ft³/s·ft² (= ft/s).`,
           `### Assumptions`,
-          `- Reading of the figure: static (piezometric) level 330 ft above the aquifer top, the aquifer 100 ft thick, so the piezometric surface is 430 ft above the aquifer bottom (the 430/330/100 labels are drawn on top of each other). Thickness enters only through $b=100$.\n- Both wells pump the same $Q$ as the single well did; drawdowns superpose; $R=80$ ft applies to each cone.`,
+          tx`- The wells only partly penetrate the aquifer: water enters through the 100 ft screens, so $b=100$ ft (the screened length) goes in the Thiem equation. Using the full 330 ft instead gives $Q=\dfrac{2\pi(0.001)(330)(18)}{\ln 160}=${thiemQ({ ...p2324, b: 330 }).toFixed(2)}$ ft³/s; say which one you use.
+- Both wells pump the same $Q$ as the single well did; drawdowns superpose; $R=80$ ft applies to each cone. Part (ii) does not depend on $b$: $\Delta s = s\,\ln(R/a)/\ln(R/r)$.`,
           `### (i) Flow of one well`,
           tx`$Q=\dfrac{2\pi Kb\,s}{\ln(R/r)}=\dfrac{2\pi(0.001)(100)(18)}{\ln(80/0.5)}=\dfrac{${(2 * Math.PI * 0.001 * 100 * 18).toFixed(3)}}{${Math.log(160).toFixed(3)}}=$ **${Q2324.toFixed(3)} ft³/s** ($\approx$ ${n(Q2324 * 448.831)} gpm)`,
           `### (ii) Both wells operating`,
@@ -634,7 +635,7 @@ export const SN_MATH: Record<string, EvPartMap> = {
   'ev-2022-23-5b': { topics: ['ev-gw'], ans: [], final: final2223b, Sol: Sol2223bS, from: ['ce22'], checks: () => [
     { key: 'V', label: 'Volume released $\\Delta V=S_yA\\Delta h$', value: V2223b / 1e6, unit: '×10⁶ m³' },
   ] },
-  'ev-2023-24-7b': { topics: ['ev-gw'], ans: [], final: final2324, Sol: Sol2324, from: ['ce22'], notes: ['Figure labels 430/330/100 overlap: read as aquifer top 330 ft and thickness 100 ft below the static level.'], checks: () => [
+  'ev-2023-24-7b': { topics: ['ev-gw'], ans: [], final: final2324, Sol: Sol2324, from: ['ce22'], notes: ['Figure (read at 300 dpi): 430 ft static level to aquifer bottom, 330 ft aquifer thickness, 100 ft from the aquifer top to the screen bottom. b = 100 ft (screened length) is used; with b = 330 ft, Q is 3.3 times larger and (ii) is unchanged.'], checks: () => [
     { key: 'Q', label: 'Single-well discharge $Q$', value: Q2324, unit: 'ft³/s' },
     { key: 'Qg', label: 'Same, in gpm', value: Q2324 * 448.831, unit: 'gpm' },
     { key: 'ds', label: 'Extra drawdown from the second well', value: add2324, unit: 'ft' },

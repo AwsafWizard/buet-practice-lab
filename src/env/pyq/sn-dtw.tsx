@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import { Md, Step, Steps } from '../../components/ui'
 import {
   curveOf,
+  CURVE_2223,
   dAt,
   FM_SIEVES,
   designDtw,
@@ -306,12 +307,6 @@ $$Q = ${n(y.cfs, 4)} \\times 28.317 \\times 3600 = ${comma(y.lph)}\\ \\text{L/h}
 }
 const finalDtw = (d: DtwDesign) => `Housing ${n(d.housing.length, 0)} ft; strainer ${d.strainer.top}–${d.strainer.bot} ft (${d.slot.slot}-slot, ${d.input.strainerDia} in); pack ${d.packRange.top}–${d.packRange.bot} ft; Q = ${n(d.yield.cfs, 3)} cusec (${comma(d.yield.lph)} L/h)`
 
-// 2022-23 Q6(c): finest-sand curve read from Figure 2 (transcription's readings)
-const CURVE_2223: CurvePoint[] = curveOf([
-  { size: 0.076, finer: 2 }, { size: 0.1, finer: 5 }, { size: 0.132, finer: 8 }, { size: 0.14, finer: 10 }, { size: 0.177, finer: 20 },
-  { size: 0.203, finer: 30 }, { size: 0.231, finer: 40 }, { size: 0.275, finer: 50 }, { size: 0.313, finer: 60 }, { size: 0.357, finer: 70 },
-  { size: 0.389, finer: 80 }, { size: 0.47, finer: 90 }, { size: 0.56, finer: 95 }, { size: 0.8, finer: 98 },
-])
 const st2223 = gradationStats(CURVE_2223)
 const D2223 = designDtw({
   layers: [{ top: 180, bot: 350, label: 'water-bearing strata', fm: Math.round(st2223.fm * 100) / 100, d10: st2223.d10, d30: st2223.d30, d60: st2223.d60 }],
@@ -733,8 +728,8 @@ export const SN_DTW: Record<string, EvPartMap> = {
     topics: ['ev-dist'],
     ans: [],
     from: ['none'],
-    flag: 'The network figure cannot be read: the pipe topology is hidden by a watermark, the inflow (6 cfs) and outflows (3 × 1 cfs) do not balance, and the head loss must be read off a printed Hazen–Williams nomograph (C = 100). Method: assume flows that satisfy continuity, take h_f per 1000 ft from the nomograph, ΣH/1.85Σ|H/Q| per loop, repeat (see the Hardy Cross lab).',
-    notes: ['Pipe sizes as read: 8 in and 4 in, lengths 2500–5000 ft.'],
+    flag: 'Not solved: the redrawn figure has two pipe lengths and the 3 cfs draw-off at the bottom-right corner hidden by the watermark (inferred, not printed legibly), and the head loss must be read off a printed Hazen–Williams nomograph (C = 100). Method: assume flows that satisfy continuity, take h_f per 1000 ft from the nomograph, ΣH/1.85Σ|H/Q| per loop, repeat (see the Hardy Cross lab).',
+    notes: ['Read at 300 dpi: a 3 × 3 grid of nodes with the middle-right one missing, so three loops. Pipe sizes 8 in and 4 in, lengths 2500–5000 ft.'],
   },
 
 
