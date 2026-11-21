@@ -1,7 +1,8 @@
 // Every topic file in this folder, gathered: lists, flashcards and model answers for the whole course.
 import type { EvAnswer, EvCard, EvList, EvTopicContent, EvTopicId } from '../types'
+import { EV_ANSWER_HOOKS } from './answer-hooks'
 
-const files = import.meta.glob<{ default: EvTopicContent }>(['./*.ts', './*.tsx', '!./index.ts', '!./*.test.*'], { eager: true })
+const files = import.meta.glob<{ default: EvTopicContent }>(['./*.ts', './*.tsx', '!./index.ts', '!./answer-hooks.ts', '!./*.test.*'], { eager: true })
 
 export const EV_LISTS: EvList[] = []
 export const EV_CARDS: EvCard[] = []
@@ -10,7 +11,7 @@ for (const m of Object.values(files)) {
   if (!m.default) continue
   EV_LISTS.push(...m.default.lists)
   EV_CARDS.push(...m.default.cards)
-  EV_ANSWERS.push(...m.default.answers)
+  EV_ANSWERS.push(...m.default.answers.map((a) => (EV_ANSWER_HOOKS[a.id] ? { ...a, hook: EV_ANSWER_HOOKS[a.id] } : a)))
 }
 
 const answerMap = new Map(EV_ANSWERS.map((a) => [a.id, a]))

@@ -209,10 +209,11 @@ export function AnswerBody({ a }: { a: EvAnswer }) {
 function AnswerHooks({ a }: { a: EvAnswer }) {
   const print = useContext(PrintMode)
   const lists = (a.lists ?? []).map(listById).filter((l): l is EvList => !!l?.hook)
-  if (print || !lists.length) return null
+  if (print || (!lists.length && !a.hook)) return null
   return (
     <div className="mt-3 rounded-xl border border-accent2/40 bg-accent2/5 px-3 py-2 text-sm space-y-1">
-      <div className="text-[11px] font-bold uppercase tracking-wider text-accent2">💡 Memory hook{lists.length > 1 ? 's' : ''}</div>
+      <div className="text-[11px] font-bold uppercase tracking-wider text-accent2">💡 Memory hook{lists.length + (a.hook ? 1 : 0) > 1 ? 's' : ''}</div>
+      {a.hook && <div className="text-accent2">{inline(a.hook)}</div>}
       {lists.map((l) => (
         <div key={l.id}>
           <span className="text-mute">

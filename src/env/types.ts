@@ -103,6 +103,8 @@ export interface EvAnswer {
   src: string
   /** optional sketch (flow chart, triangle, diagram) drawn with theme tokens */
   Fig?: FC
+  /** memory hook for the whole answer (set from content/answer-hooks.ts); shown with the hooks of its lists */
+  hook?: string
 }
 
 /** everything one topic file exports */

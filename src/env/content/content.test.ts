@@ -3,6 +3,7 @@ import { EV_ALL, EV_MAP } from '../pyq'
 import { EV_PARTS } from '../pyq/parts'
 import { EV_TOPICS } from '../registry'
 import { EV_PAPERS } from '../types'
+import { EV_ANSWER_HOOKS } from './answer-hooks'
 import { EV_ANSWERS, EV_CARDS, EV_LISTS } from './index'
 
 const LABELS = new Set(EV_PAPERS.map((p) => p.label))
@@ -93,6 +94,14 @@ describe.skipIf(!process.env.EV_FULL)('CE 331 completeness (EV_FULL=1)', () => {
   it('every past-paper part is mapped', () => {
     const missing = EV_ALL.filter((q) => !EV_MAP[q.id]).map((q) => q.id)
     expect(missing).toEqual([])
+  })
+  it('every model answer shows a memory hook (its own or one of its lists)', () => {
+    const lists = new Map(EV_LISTS.map((l) => [l.id, l]))
+    const ids = new Set(EV_ANSWERS.map((a) => a.id))
+    const stray = Object.keys(EV_ANSWER_HOOKS).filter((id) => !ids.has(id))
+    const bare = EV_ANSWERS.filter((a) => !a.hook && !(a.lists ?? []).some((id) => lists.get(id)?.hook)).map((a) => a.id)
+    expect(stray).toEqual([])
+    expect(bare).toEqual([])
   })
   it('every topic has lists, cards and answers', () => {
     const bad: string[] = []

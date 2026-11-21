@@ -94,6 +94,7 @@ export function AnswerDoc({ a }: { a: EvAnswer }) {
       <Keys keys={a.keys} />
       <Label>Model answer</Label>
       <AnswerBody a={a} />
+      {a.hook && <div style={{ fontSize: 12, color: 'var(--c-accent2)', marginTop: 8 }}>Memory hook: {a.hook.replace(/\*\*/g, '')}</div>}
       <ListsUsed ids={a.lists ?? []} />
       <div style={{ fontSize: 11, color: 'var(--c-faint)', marginTop: 20 }}>Exported {today()} from CE 331 Practice Lab.</div>
     </div>
