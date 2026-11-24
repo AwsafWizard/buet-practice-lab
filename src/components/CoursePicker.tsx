@@ -10,6 +10,8 @@ import { PC_ALL } from '../ppc/pyq'
 import { PC_EXAM_DATE } from '../ppc/plan'
 import { EV_PART_IDS } from '../env/pyq/ids'
 import { EV_EXAM_DATE } from '../env/plan'
+import { SV_EXAM_DATE } from '../sv/plan'
+import { SV_QUESTION_IDS } from '../sv/content/ids'
 import { EXAM_DATE } from '../pages/planner/template'
 import { today, useStore } from '../store'
 import { Ring } from './ui'
@@ -19,13 +21,17 @@ import { accountPath, COURSE_NAME, coursePath, isNew, useAccount, useThreads, ty
 import { mdPreview } from '../account/preview'
 
 interface Course {
-  key: 'ce311' | 'ce315' | 'ce341' | 'ce301' | 'ce331'
+  key: 'ce311' | 'ce315' | 'ce341' | 'ce301' | 'ce331' | 'ce104'
   code: string
   name: string
   exam: string
   home: string
   qids: string[]
   checkPrefix: (k: string) => boolean
+  /** progress ring from the attempts instead of question statuses (CE 104 has no past papers, only a question bank) */
+  fromAttempts?: { label: string }
+  /** label of the exam date (default: the exam) */
+  examWord?: string
   /** one line on what the course covers */
   sub: string
   /** 24×24 SVG path for the course mark (same drawing as the course's own logo) */
@@ -36,6 +42,21 @@ interface Course {
 }
 
 export const COURSES: Course[] = [
+  {
+    key: 'ce104',
+    code: 'CE 104',
+    name: 'Practical Surveying',
+    sub: 'Instruments quiz · field books & calculators · final quiz & viva',
+    mark: 'M12 3 V6 M8.5 6 H15.5 V9.5 H8.5 Z M12 9.5 V12 M12 12 L6 21 M12 12 V21 M12 12 L18 21',
+    exam: SV_EXAM_DATE,
+    examWord: 'final quiz & viva',
+    home: '/ce104',
+    qids: SV_QUESTION_IDS,
+    checkPrefix: (k) => k.startsWith('sv-'),
+    fromAttempts: { label: 'bank questions right' },
+    light: { bg: '#fbf1c7', ink: '#282828', mute: '#504945', acc: '#af3a03', line: '#d5c4a1' },
+    dark: { bg: '#282828', ink: '#ebdbb2', mute: '#bdae93', acc: '#fe8019', line: '#504945' },
+  },
   {
     key: 'ce331',
     code: 'CE 331',
@@ -204,8 +225,9 @@ export function CoursePicker() {
             {courses.map((c) => {
               const col = dark ? c.dark : c.light
               const total = c.qids.length
-              const solved = c.qids.filter((id) => qStatus[id] === 'solved').length
               const checks = Object.entries(attempts).filter(([k]) => c.checkPrefix(k))
+              const right = c.fromAttempts ? new Set(checks.filter(([, a]) => a.correct).map(([k]) => k.slice(k.lastIndexOf(':') + 1))) : null
+              const solved = right ? c.qids.filter((id) => right.has(id)).length : c.qids.filter((id) => qStatus[id] === 'solved').length
               const ok = checks.filter(([, a]) => a.correct).length
               const days = Math.ceil((examTime(c) - now) / 86400000)
               const over = days < 0
@@ -242,7 +264,7 @@ export function CoursePicker() {
                           {days}
                         </span>
                         <span className="text-sm text-mute">
-                          day{days === 1 ? '' : 's'} to the exam · {new Date(c.exam + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })}
+                          day{days === 1 ? '' : 's'} to the {c.examWord ?? 'exam'} · {new Date(c.exam + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })}
                         </span>
                       </>
                     )}
@@ -252,7 +274,7 @@ export function CoursePicker() {
                       <div className="num text-base font-bold text-ink">
                         {solved}/{total}
                       </div>
-                      past questions solved
+                      {c.fromAttempts?.label ?? 'past questions solved'}
                     </div>
                     <div>
                       <div className="num text-base font-bold text-ink">

@@ -34,7 +34,7 @@ export function useSyncStatus() {
 }
 
 // everything except the theme, which stays per device
-const KEYS = ['attempts', 'revealed', 'xp', 'streak', 'activity', 'planner', 'planner315', 'planner341', 'planner301', 'planner331', 'cards', 'qStatus', 'mockScores', 'timeLog', 'courseLog', 'timeAdjust', 'timeGoal', 'stamps', 'bmdSide', 'rotSign'] as const
+const KEYS = ['attempts', 'revealed', 'xp', 'streak', 'activity', 'planner', 'planner315', 'planner341', 'planner301', 'planner331', 'cards', 'qStatus', 'fieldbook', 'mockScores', 'timeLog', 'courseLog', 'timeAdjust', 'timeGoal', 'stamps', 'bmdSide', 'rotSign'] as const
 export type Progress = Pick<ReturnType<typeof useStore.getState>, (typeof KEYS)[number]>
 
 function progress(): Progress {
@@ -117,6 +117,7 @@ export function merge(a: Progress, b: Progress): Progress {
     planner331: pick('planner331', a.planner331 ?? null, b.planner331 ?? null),
     cards: later(a.cards, b.cards),
     qStatus,
+    fieldbook: later(a.fieldbook, b.fieldbook),
     mockScores: later(a.mockScores, b.mockScores),
     timeLog: mergeTime(a.timeLog, b.timeLog),
     courseLog: mergeTime(a.courseLog, b.courseLog),

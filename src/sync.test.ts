@@ -14,6 +14,7 @@ const base = (over: Partial<Progress> = {}): Progress => ({
   planner331: null,
   cards: {},
   qStatus: {},
+  fieldbook: {},
   mockScores: {},
   timeLog: {},
   courseLog: {},
@@ -77,5 +78,18 @@ describe('progress merge', () => {
   it('xp never drops below what the attempts earned', () => {
     expect(merge(old, fresh).xp).toBe(15)
     expect(merge(base({ attempts: { x: { tries: 2, correct: true, firstTry: false, at: 1 } } }), old).xp).toBe(23)
+  })
+})
+
+describe('CE 104 field book', () => {
+  it('keeps the later edit of each sheet and the tombstone of a deleted one', () => {
+    const sheet = (id: string, at: number, title: string, deleted?: boolean) => ({ id, kind: 'level', title, at, made: 1, data: {}, deleted })
+    const a = base({ fieldbook: { s1: sheet('s1', 10, 'old'), s2: sheet('s2', 50, 'gone', true) } })
+    const b = base({ fieldbook: { s1: sheet('s1', 20, 'new'), s2: sheet('s2', 40, 'alive') } })
+    const m = merge(a, b)
+    expect(m.fieldbook.s1.title).toBe('new')
+    expect(m.fieldbook.s2.deleted).toBe(true)
+    const old = merge(a, { ...b, fieldbook: undefined as never })
+    expect(old.fieldbook.s1.title).toBe('old')
   })
 })

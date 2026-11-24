@@ -316,6 +316,70 @@
   --grid: rgba(156, 207, 216, 0.07);
 }
 
+[data-course='ce104'][data-theme='light'],
+[data-course='ce104']:not([data-theme]) {
+  /* Gruvbox light (hard): field-book paper, ranging-rod orange */
+  --c-bg: #f9f5d7;
+  --c-panel: #fbf1c7;
+  --c-panel2: #f2e5bc;
+  --c-line: #d5c4a1;
+  --c-ink: #282828;
+  --c-mute: #504945;
+  --c-faint: #7c6f64;
+  --c-accent: #af3a03;
+  --c-accent2: #3b6e4f;
+  --c-load: #8a5a0b;
+  --c-good: #5f5b0b;
+  --c-bad: #9d0006;
+  --c-tension: #076678;
+  --c-comp: #9d0006;
+  --c-member: #282828;
+  --c-moment: #8f3f71;
+  --c-shear: #3b6e4f;
+  --c-axial: #8a5a0b;
+  --c-steel: #282828;
+  --c-conc: #f2e5bc;
+  --c-water: #076678;
+  --c-soil: #d5c4a1;
+  --c-g-tape: #3b6e4f;
+  --c-g-level: #8a5a0b;
+  --c-g-theo: #076678;
+  --c-g-set: #8f3f71;
+  --c-g-inst: #af3a03;
+  --grid: rgba(175, 58, 3, 0.06);
+}
+[data-course='ce104'][data-theme='dark'] {
+  /* Gruvbox dark (hard) */
+  --c-bg: #1d2021;
+  --c-panel: #282828;
+  --c-panel2: #32302f;
+  --c-line: #504945;
+  --c-ink: #ebdbb2;
+  --c-mute: #bdae93;
+  --c-faint: #a89984;
+  --c-accent: #fe8019;
+  --c-accent2: #8ec07c;
+  --c-load: #fabd2f;
+  --c-good: #b8bb26;
+  --c-bad: #fe6f5e;
+  --c-tension: #83a598;
+  --c-comp: #fe6f5e;
+  --c-member: #ebdbb2;
+  --c-moment: #d3869b;
+  --c-shear: #8ec07c;
+  --c-axial: #fabd2f;
+  --c-steel: #ebdbb2;
+  --c-conc: #3c3836;
+  --c-water: #83a598;
+  --c-soil: #504945;
+  --c-g-tape: #8ec07c;
+  --c-g-level: #fabd2f;
+  --c-g-theo: #83a598;
+  --c-g-set: #d3869b;
+  --c-g-inst: #fe8019;
+  --grid: rgba(254, 128, 25, 0.05);
+}
+
 html,
 body,
 #root {
@@ -359,6 +423,11 @@ body {
 [data-course='ce331'] body {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280'%3E%3Cg fill='none' stroke='%2356949f' stroke-opacity='0.13' stroke-width='1'%3E%3Ccircle cx='70' cy='80' r='9'/%3E%3Ccircle cx='70' cy='80' r='20'/%3E%3Ccircle cx='70' cy='80' r='33' stroke-opacity='0.07'/%3E%3Ccircle cx='205' cy='200' r='7'/%3E%3Ccircle cx='205' cy='200' r='16'/%3E%3Ccircle cx='205' cy='200' r='27' stroke-opacity='0.07'/%3E%3C/g%3E%3C/svg%3E");
   background-size: 280px 280px;
+}
+[data-course='ce104'] body {
+  /* faint contour lines, like the map you will draw */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='360'%3E%3Cg fill='none' stroke='%23d65d0e' stroke-opacity='0.10' stroke-width='1'%3E%3Cpath d='M-10 60 C60 20 120 100 190 60 S300 20 370 70'/%3E%3Cpath d='M-10 100 C60 60 130 140 200 100 S300 60 370 110'/%3E%3Cpath d='M-10 140 C70 100 140 180 210 140 S300 100 370 150' stroke-opacity='0.06'/%3E%3Cellipse cx='250' cy='265' rx='34' ry='20'/%3E%3Cellipse cx='250' cy='265' rx='62' ry='40'/%3E%3Cellipse cx='250' cy='265' rx='92' ry='62' stroke-opacity='0.06'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 360px 360px;
 }
 /* PDF export: always a white page with dark ink, whichever theme is on screen.
    Tailwind's --color-* are resolved at :root, so they are re-pointed here too. */
@@ -922,4 +991,65 @@ svg [data-tip-hot] {
 .md-body .md-math {
   overflow-x: auto;
   overflow-y: hidden;
+}
+
+/* CE 104 field-book grid (src/sv/field/Grid.tsx) */
+.sv-grid th {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--c-mute);
+  text-align: left;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--c-line);
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+.sv-grid th.out {
+  color: var(--c-accent);
+}
+.sv-grid td {
+  border-bottom: 1px solid color-mix(in oklab, var(--c-line) 55%, transparent);
+  padding: 1px 2px;
+}
+.sv-grid td.out {
+  background: color-mix(in oklab, var(--c-accent) 7%, transparent);
+  padding: 2px 8px;
+  text-align: right;
+  white-space: nowrap;
+}
+.sv-cell {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--c-ink);
+  outline: none;
+  min-width: 3.2rem;
+}
+.sv-cell:hover {
+  border-color: var(--c-line);
+}
+.sv-cell:focus {
+  border-color: var(--c-accent);
+  background: var(--c-bg);
+}
+.sv-cell::placeholder {
+  color: var(--c-faint);
+  opacity: 0.6;
+}
+.sv-rowbtn {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  color: var(--c-faint);
+  font-weight: 700;
+}
+.sv-rowbtn:hover:not(:disabled) {
+  color: var(--c-accent);
+  background: var(--c-panel2);
+}
+.sv-rowbtn:disabled {
+  opacity: 0.3;
 }

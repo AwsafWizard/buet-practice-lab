@@ -330,6 +330,7 @@ export function CourseSplit({ day }: { day: string }) {
       .filter(([k]) => k.endsWith('|' + course))
       .reduce((a, [, days]) => a + (d ? (days[d] ?? 0) : Object.values(days).reduce((x, y) => x + y, 0)), 0)
   const rows = [
+    { c: 'ce104', label: 'CE 104', color: '#d65d0e' },
     { c: 'ce331', label: 'CE 331', color: '#3e8fb0' },
     { c: 'ce301', label: 'CE 301', color: '#9b72e8' },
     { c: 'ce341', label: 'CE 341', color: '#65a30d' },

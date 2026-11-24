@@ -93,6 +93,36 @@ export type EvTopicId =
   | 'ev-well'
   | 'ev-dist'
 
+/** CE 104 (practical surveying) topics = the field works; the sv- prefix keeps their check ids apart */
+export type SvTopicId =
+  | 'sv-inst'
+  | 'sv-chain'
+  | 'sv-compass'
+  | 'sv-traverse'
+  | 'sv-level'
+  | 'sv-contour'
+  | 'sv-stadia'
+  | 'sv-height'
+  | 'sv-house'
+  | 'sv-curve'
+  | 'sv-route'
+  | 'sv-modern'
+
+/** one CE 104 field-book sheet (level book, traverse sheet …); synced per sheet, the later edit wins */
+export interface FieldSheet {
+  id: string
+  kind: string
+  title: string
+  /** last edit (ms) */
+  at: number
+  /** created (ms) */
+  made: number
+  /** sheet data, shape set by its kind */
+  data: unknown
+  /** deleted sheets stay as a tombstone so another device can't bring them back */
+  deleted?: boolean
+}
+
 /** one flashcard's Leitner state (box 0 = new, 1 = learning … 5 = mastered); syncing keeps the later review */
 export interface CardState {
   box: number
@@ -117,7 +147,7 @@ export interface Attempt {
 
 export interface PlanBlock {
   id: string
-  topic: TopicId | RcTopicId | SmTopicId | PcTopicId | EvTopicId | 'mixed' | 'mock' | 'setup'
+  topic: TopicId | RcTopicId | SmTopicId | PcTopicId | EvTopicId | SvTopicId | 'mixed' | 'mock' | 'setup'
   title: string
   hours: number
   kind: 'learn' | 'practice' | 'revise' | 'mock'
@@ -163,6 +193,8 @@ interface State {
   /** flashcards (CE 301 `k:` ids, CE 331 `ev:` ids): card id → Leitner state */
   cards: Record<string, CardState>
   qStatus: Record<string, 'todo' | 'tried' | 'solved' | 'review'>
+  /** CE 104 field book: sheet id → sheet */
+  fieldbook: Record<string, FieldSheet>
   mockScores: Record<string, { at: number; secA: number; secB: number; note?: string }>
   timeLog: TimeLog
   /** the same seconds split by course: key `<device>|<course>` → day → seconds (merge = max, like timeLog) */
@@ -183,6 +215,7 @@ interface State {
   setPlanner331(p: PlannerState): void
   rateCard(id: string, c: CardState): void
   setQStatus(id: string, s: 'todo' | 'tried' | 'solved' | 'review'): void
+  setSheet(sheet: FieldSheet): void
   saveMock(id: string, secA: number, secB: number, note?: string): void
   addTime(device: string, day: string, seconds: number, course?: string): void
   setTimeAdjust(day: string, seconds: number, at?: number): void
@@ -215,6 +248,7 @@ const initial = {
   planner331: null as PlannerState | null,
   cards: {} as Record<string, CardState>,
   qStatus: {},
+  fieldbook: {} as Record<string, FieldSheet>,
   mockScores: {},
   timeLog: {} as TimeLog,
   courseLog: {} as TimeLog,
@@ -267,6 +301,7 @@ export const useStore = create<State>()(
         set({ cards: { ...get().cards, [id]: c }, activity: { ...get().activity, [t]: (get().activity[t] ?? 0) + 1 } })
       },
       setQStatus: (id, s) => set({ qStatus: { ...get().qStatus, [id]: s }, stamps: stamp(get().stamps, 'q:' + id) }),
+      setSheet: (sheet) => set({ fieldbook: { ...get().fieldbook, [sheet.id]: sheet } }),
       saveMock: (id, secA, secB, note) => set({ mockScores: { ...get().mockScores, [id]: { at: Date.now(), secA, secB, note } } }),
       addTime(device, day, seconds, course) {
         const log = get().timeLog
@@ -298,8 +333,8 @@ useStore.subscribe((s) => setClockwise(s.rotSign !== 'ccw'))
 
 export function exportState(): string {
   const s = useStore.getState()
-  const { attempts, revealed, xp, streak, activity, planner, planner315, planner341, planner301, planner331, cards, qStatus, mockScores, timeLog, courseLog, timeAdjust, timeGoal, stamps, theme, bmdSide, rotSign } = s
-  return JSON.stringify({ attempts, revealed, xp, streak, activity, planner, planner315, planner341, planner301, planner331, cards, qStatus, mockScores, timeLog, courseLog, timeAdjust, timeGoal, stamps, theme, bmdSide, rotSign }, null, 1)
+  const { attempts, revealed, xp, streak, activity, planner, planner315, planner341, planner301, planner331, cards, qStatus, fieldbook, mockScores, timeLog, courseLog, timeAdjust, timeGoal, stamps, theme, bmdSide, rotSign } = s
+  return JSON.stringify({ attempts, revealed, xp, streak, activity, planner, planner315, planner341, planner301, planner331, cards, qStatus, fieldbook, mockScores, timeLog, courseLog, timeAdjust, timeGoal, stamps, theme, bmdSide, rotSign }, null, 1)
 }
 
 /** mastery of a topic: correct checks / total checks seen with that topic prefix */

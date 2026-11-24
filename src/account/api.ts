@@ -5,7 +5,7 @@ import { useSyncExternalStore } from 'react'
 import { CLOUD, cloudUser, getClient, onCloudUser } from '../cloud'
 import { topicTag } from './topics'
 
-export type Course = 'ce311' | 'ce315' | 'ce341' | 'ce301' | 'ce331'
+export type Course = 'ce311' | 'ce315' | 'ce341' | 'ce301' | 'ce331' | 'ce104'
 export type ThreadCourse = Course | 'all'
 
 export const COURSE_NAME: Record<ThreadCourse, string> = {
@@ -15,6 +15,7 @@ export const COURSE_NAME: Record<ThreadCourse, string> = {
   ce341: 'CE 341',
   ce301: 'CE 301',
   ce331: 'CE 331',
+  ce104: 'CE 104',
 }
 
 /** a page inside a course: CE 311's pages sit at the root (/time), the others under /ce3xx */
