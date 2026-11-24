@@ -1,5 +1,6 @@
 // CE 104 overview: what's on today, the next test, the field-day schedule, the marks, and every field work.
 import { Link } from 'react-router-dom'
+import { CourseThreads } from '../../account/TopicThreads'
 import { Ring } from '../../components/ui'
 import { today, useStore, type SvTopicId } from '../../store'
 import { INST_POOL, qKey, SV_CARDS, SV_QUESTIONS } from '../content'
@@ -24,6 +25,7 @@ export default function SvOverview() {
   const sheets = Object.values(book).filter((s) => !s.deleted)
   return (
     <div className="space-y-8">
+      <CourseThreads course="ce104" />
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <div className="card p-5 relative overflow-hidden">
           <div className="absolute -right-6 -top-6 opacity-10 pointer-events-none">

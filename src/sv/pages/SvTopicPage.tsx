@@ -1,6 +1,7 @@
 // One field work: Learn (notes, procedure, submission, traps, what to carry), Field book, Quiz, Maths, Viva.
 import { useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { TopicThreads } from '../../account/TopicThreads'
 import { Md, Tabs } from '../../components/ui'
 import { useStore } from '../../store'
 import { cardsFor, questionsFor, qKey, SV_LEARN } from '../content'
@@ -62,7 +63,12 @@ export default function SvTopicPage() {
       </div>
       <Tabs value={cur} onChange={(v) => nav(`/ce104/topic/${t.id}/${v}`)} items={items} />
 
-      {cur === 'learn' && (learn ? <Learn id={t.id} /> : <div className="text-faint">Notes coming.</div>)}
+      {cur === 'learn' && (
+        <>
+          <TopicThreads topic={t.id} />
+          {learn ? <Learn id={t.id} /> : <div className="text-faint">Notes coming.</div>}
+        </>
+      )}
       {cur === 'field' && (
         <div className="space-y-6">
           {kinds.map((k) => (

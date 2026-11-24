@@ -55,5 +55,5 @@ Sources digested into `CE-104 Practical Surveying/Claude digests/` (gitignored f
   sheets: level book −0.394 check, traverse closing error ≈ 0.5 m, space triangle ≈ 17 324 m², curve R 455 / T 152.9.
 - Class conventions kept: curve ratio = h/b, R to nearest 5 ft, odd length on the LAST chord, set to mid-curve so the
   check is ¼(Δ − 2Sₐ); E = R(sec Δ/2 − 1) (class form; the exact (R+S) form is shown beside it).
-- Threads: `ce104` is a `Course` but is NOT in ThreadsPage's course list, because the live Supabase
-  `threads_course_check` constraint doesn't allow 'ce104' yet (needs the one-line constraint change, like ce331).
+- Threads: `ce104` is in ThreadsPage's course list; course threads show on the CE 104 overview and topic-tagged ones on
+  each topic's Learn tab. Needs the live Supabase `threads_course_check` to allow 'ce104' (in `supabase/accounts.sql`).
