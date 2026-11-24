@@ -44,6 +44,20 @@ export function QuizArena({ initialTopics = [], lockTopic }: { initialTopics?: s
 
   const start = (pool: SvQuestion[], count: number, m: QuizMode, title: string, mins?: number) =>
     setRun({ qs: pickQuestions(pool, useStore.getState().attempts, count), mode: m, minutes: m === 'test' ? mins : undefined, title, key: Date.now() })
+  /** the instruments mock: 8 drawing questions (name the part / what it does) + 12 written ones, mixed */
+  const startInst = () => {
+    const at = useStore.getState().attempts
+    const inst = INST_POOL()
+    const qs = [...pickQuestions(inst.filter((q) => q.fig), at, 8), ...pickQuestions(inst.filter((q) => !q.fig), at, 12)]
+    for (let i = qs.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[qs[i], qs[j]] = [qs[j], qs[i]]
+    }
+    setRun({ qs, mode: 'test', minutes: 15, title: 'Instruments quiz (mock)', key: Date.now() })
+  }
+  /** the drawing questions are many and all on instruments, so the course-wide mixes leave them out */
+  const mixPool = SV_QUESTIONS.filter((q) => !q.fig)
+  const parts = SV_QUESTIONS.filter((q) => q.fig)
 
   const pool = SV_QUESTIONS.filter((q) => (topics.length ? topics.includes(q.topic) : true) && kinds.includes(q.kind))
   const missed = SV_QUESTIONS.filter((q) => {
@@ -67,13 +81,14 @@ export function QuizArena({ initialTopics = [], lockTopic }: { initialTopics?: s
         <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]">
           <Preset
             title="Instruments quiz"
-            sub="25 Nov · 15 marks. 20 questions, 15 minutes, marked at the end."
+            sub="25 Nov · 15 marks. 20 questions (8 on the drawings), 15 minutes, marked at the end. No maths."
             accent
-            onClick={() => start(INST_POOL(), 20, 'test', 'Instruments quiz (mock)', 15)}
+            onClick={startInst}
             count={INST_POOL().length}
           />
-          <Preset title="Final quiz mix" sub="3 Dec · every field work. 30 questions, 20 minutes, marked at the end." onClick={() => start(SV_QUESTIONS, 30, 'test', 'Final quiz (mock)', 20)} count={SV_QUESTIONS.length} />
-          <Preset title="Quick ten" sub="10 questions from everything, feedback after each one." onClick={() => start(SV_QUESTIONS, 10, 'practice', 'Quick ten')} count={SV_QUESTIONS.length} />
+          <Preset title="Parts of the instruments" sub="Name the part on the drawing, what it does, true or false. 15 questions, feedback after each." onClick={() => start(parts, 15, 'practice', 'Parts of the instruments')} count={parts.length} />
+          <Preset title="Final quiz mix" sub="3 Dec · every field work. 30 questions, 20 minutes, marked at the end." onClick={() => start(mixPool, 30, 'test', 'Final quiz (mock)', 20)} count={mixPool.length} />
+          <Preset title="Quick ten" sub="10 questions from everything, feedback after each one." onClick={() => start(mixPool, 10, 'practice', 'Quick ten')} count={mixPool.length} />
           <Preset title="Weak spots" sub="Only the ones you missed or got on a second try." onClick={() => start(missed, 25, 'practice', 'Weak spots')} count={missed.length} disabled={!missed.length} />
         </div>
       )}

@@ -26,22 +26,22 @@ const questions: SvQuestion[] = [
   mc(`S 20° W corresponds to a WCB of:`, `200°`, [`160°`, `340°`, `20°`], `SW quadrant: 180° + 20° = 200°.`, `textbook (conversion)`, 2),
   mc(`N 60° W corresponds to a WCB of:`, `300°`, [`240°`, `120°`, `330°`], `NW quadrant: 360° − 60° = 300°.`, `textbook (conversion)`, 2),
   mc(`S 70° E corresponds to a WCB of:`, `110°`, [`70°`, `250°`, `290°`], `SE quadrant: 180° − 70° = 110°.`, `textbook (conversion)`, 2),
-  mc(`The back bearing of a line with fore bearing 65° is:`, `245°`, [`115°`, `295°`, `25°`], `BB = FB + 180° when the FB is under 180°: 65° + 180° = 245°.`, `textbook`, 2, true),
-  mc(`The back bearing of a line with fore bearing 250° is:`, `70°`, [`430°`, `110°`, `160°`], `BB = FB − 180° when the FB is over 180°: 250° − 180° = 70°.`, `textbook`, 2, true),
+  mc(`The back bearing of a line with fore bearing 65° is:`, `245°`, [`115°`, `295°`, `25°`], `BB = FB + 180° when the FB is under 180°: 65° + 180° = 245°.`, `textbook`, 2),
+  mc(`The back bearing of a line with fore bearing 250° is:`, `70°`, [`430°`, `110°`, `160°`], `BB = FB − 180° when the FB is over 180°: 250° − 180° = 70°.`, `textbook`, 2),
   mc(`Bearings of the lines BA and BC from station B are 220° and 110°. The angle ABC is:`, `110°`, [`330°`, `70°`, `250°`], `The difference of the two bearings: 220° − 110° = 110° (the other way round, 250°).`, `textbook (calculation)`, 3),
   mc(`The magnetic declination is the angle between:`, `The true meridian and the magnetic meridian`, [`The magnetic meridian and the grid north`, `Horizontal and vertical`, `The line and the back bearing`], `It varies with place and time; the class defines it as the angle between true north and magnetic north.`, `class notes (Samiha p11)`, 1, true),
   mc(`The magnetic bearing of a line is 120°. The declination is 3° E. The true bearing is:`, `123°`, [`117°`, `120°`, `183°`], `With an east declination magnetic north lies east of true north: true = magnetic + 3°.`, `textbook (calculation)`, 3),
   mc(`The magnetic bearing of a line is 358° and the declination is 4° E. The true bearing is:`, `2°`, [`354°`, `362°`, `182°`], `358° + 4° = 362°, subtract 360° to get 2°.`, `textbook (calculation)`, 3),
-  mc(`The FB and BB of a line are 75°30′ and 254°30′. This shows:`, `Local attraction at one or both stations, because they differ by 179° instead of 180°`, [`That the line is exactly 100 ft`, `That the compass is perfect`, `That the declination is 1°30′`], `With no local attraction the two bearings differ by exactly 180°.`, `textbook (calculation)`, 3, true),
+  mc(`The FB and BB of a line are 75°30′ and 254°30′. This shows:`, `Local attraction at one or both stations, because they differ by 179° instead of 180°`, [`That the line is exactly 100 ft`, `That the compass is perfect`, `That the declination is 1°30′`], `With no local attraction the two bearings differ by exactly 180°.`, `textbook (calculation)`, 3),
   mc(`Local attraction is caused by:`, `Magnetic substances nearby, such as iron objects, steel tapes or power lines`, [`Earth's rotation`, `Sunlight on the compass`, `A tilted tripod only`], `They pull the needle away from the magnetic meridian. Keep the compass clear of steel and electrical lines.`, `textbook`, 1, true),
 ]
 
 const more: SvQuestion[] = [
-  bl(`The back bearing of a line with fore bearing 65° is ___ °.`, [`245`, `245°`], `BB = FB + 180° (FB < 180°).`, `textbook`, 2, true),
+  bl(`The back bearing of a line with fore bearing 65° is ___ °.`, [`245`, `245°`], `BB = FB + 180° (FB < 180°).`, `textbook`, 2),
   bl(`The reduced bearing of a line with WCB 135° is S ___ ° E.`, [`45`, `45°`], `180° − 135° = 45°.`, `textbook`, 2),
   bl(`The magnetic declination is the angle between true north and ___ north.`, [`magnetic`], `The needle points to magnetic north.`, `class notes (Samiha p11)`, 1, true),
   bl(`N 60° W is a whole circle bearing of ___ °.`, [`300`, `300°`], `360° − 60° = 300°.`, `textbook`, 2),
-  bl(`Back bearing = fore bearing ± ___ °.`, [`180`, `180°`], `Plus when FB < 180°, minus when FB > 180°.`, `textbook`, 1, true),
+  bl(`Back bearing = fore bearing ± ___ °.`, [`180`, `180°`], `Plus when FB < 180°, minus when FB > 180°.`, `textbook`, 1),
   bl(`In class, the theodolite bearing is read by setting north to ___ ° and turning clockwise.`, [`0`, `0°`, `zero`], `Set N = 0, then measure clockwise to the line.`, `class notes (Quiz p14)`, 1),
 
   tf(`The compass needle points along the magnetic meridian.`, true, `That is why a compass shows magnetic north, not true north.`, `class notes (Quiz p13)`, 1, true),

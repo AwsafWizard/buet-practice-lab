@@ -4,6 +4,7 @@
 
 import type { FC } from 'react'
 import type { SvTopicId } from '../store'
+import type { FigId } from './figs/instFigs'
 
 export type { SvTopicId }
 
@@ -28,6 +29,8 @@ export type SvQuestion = {
   inst?: boolean
   /** 1 = basic recall, 2 = needs understanding, 3 = tricky / numerical */
   lvl?: 1 | 2 | 3
+  /** a labelled instrument drawing shown with the question; `hi` is the part pointed at, shown as "?" when `ask` */
+  fig?: { id: FigId; hi: number; ask?: boolean }
 } & ({ kind: 'mcq'; opts: string[]; a: number } | { kind: 'tf'; a: boolean } | { kind: 'blank'; a: string[] })
 
 /** a viva / oral card: what an examiner might ask at the instrument or the sheet, with a short spoken answer */

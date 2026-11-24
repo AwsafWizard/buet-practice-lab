@@ -67,3 +67,25 @@ describe('CE 104 field-book kinds', () => {
     }
   })
 })
+
+describe('CE 104 instrument drawings', () => {
+  it('parts are numbered uniquely and sit inside the drawing', async () => {
+    const { FIGS } = await import('../figs/instFigs')
+    for (const f of FIGS) {
+      const ns = f.parts.map((p) => p.n)
+      expect(new Set(ns).size, f.id).toBe(ns.length)
+      for (const p of f.parts)
+        for (const [x, y] of [p.at, p.lab]) {
+          expect(x >= 0 && x <= f.w && y >= 0 && y <= f.h, `${f.id} part ${p.n}`).toBe(true)
+        }
+      for (const p of f.parts) expect(p.lab[0] >= 10 && p.lab[0] <= f.w - 10 && p.lab[1] >= 10 && p.lab[1] <= f.h - 10, `${f.id} bubble ${p.n} clipped`).toBe(true)
+    }
+  })
+  it('the instruments pool has no calculations and a true/false share', () => {
+    const pool = INST_POOL()
+    expect(pool.filter((q) => q.lvl === 3).length).toBe(0)
+    expect(pool.filter((q) => q.kind === 'tf').length).toBeGreaterThanOrEqual(80)
+    // a false drawing statement must not quote the part's own function
+    for (const q of pool) if (q.fig && q.kind === 'tf' && !q.a) expect(q.why.startsWith('That describes'), q.id).toBe(true)
+  })
+})

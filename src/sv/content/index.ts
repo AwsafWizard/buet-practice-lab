@@ -36,8 +36,8 @@ for (const [path, m] of Object.entries(mods)) {
 export const questionsFor = (t: string) => SV_QUESTIONS.filter((q) => q.topic === t)
 export const cardsFor = (t: string) => SV_CARDS.filter((c) => c.topic === t)
 
-/** the instruments-quiz pool: the instruments topic, compass, modern instruments, and anything tagged `inst` */
-export const INST_POOL = () => SV_QUESTIONS.filter((q) => q.inst || q.topic === 'sv-inst' || q.topic === 'sv-compass')
+/** the instruments-quiz pool: the instruments topic plus the non-numerical questions other topics tag `inst` (no maths) */
+export const INST_POOL = () => SV_QUESTIONS.filter((q) => q.inst || q.topic === 'sv-inst')
 
 /** attempt key for a question (topic-prefixed so per-topic stats work) */
 export const qKey = (q: Pick<SvQuestion, 'topic' | 'id'>) => `${q.topic}:mcq:${q.id}`

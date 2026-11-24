@@ -7,6 +7,7 @@ import { useStore, type Attempt } from '../../store'
 import { qKey } from '../content'
 import { svTopicById } from '../registry'
 import type { SvQuestion } from '../types'
+import { InstFigure } from '../figs/instFigs'
 
 export type QuizMode = 'practice' | 'test'
 
@@ -183,6 +184,11 @@ export function QuizRunner({ questions, mode, minutes, onExit, title }: { questi
           <span className="chip">{s.q.kind === 'mcq' ? 'MCQ' : s.q.kind === 'tf' ? 'True / false' : 'Fill in the blank'}</span>
           {s.q.lvl === 3 && <span className="chip text-load">numerical / tricky</span>}
         </div>
+        {s.q.fig && (
+          <div className="mb-3 max-w-xl">
+            <InstFigure id={s.q.fig.id} hi={s.q.fig.hi} ask={s.q.fig.ask && !reveal} />
+          </div>
+        )}
         <div className="text-[17px] font-semibold leading-snug mb-4">
           <Md>{s.q.kind === 'blank' ? s.q.q.replace(/_{3,}/g, '＿＿＿＿＿') : s.q.q}</Md>
         </div>
@@ -318,6 +324,11 @@ function Summary({ shown, answers, score, onExit, secs }: { shown: Shown[]; answ
       <div className="space-y-2">
         {list.map(({ s, a, ok }) => (
           <div key={s.q.id} className={'card p-3.5 border-l-4 ' + (ok ? 'border-l-good' : 'border-l-bad')}>
+            {s.q.fig && (
+              <div className="max-w-sm mb-2">
+                <InstFigure id={s.q.fig.id} hi={s.q.fig.hi} />
+              </div>
+            )}
             <div className="font-semibold text-sm">
               <Md>{s.q.q}</Md>
             </div>

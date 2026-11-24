@@ -57,3 +57,15 @@ Sources digested into `CE-104 Practical Surveying/Claude digests/` (gitignored f
   check is ¼(Δ − 2Sₐ); E = R(sec Δ/2 − 1) (class form; the exact (R+S) form is shown beside it).
 - Threads: `ce104` is in ThreadsPage's course list; course threads show on the CE 104 overview and topic-tagged ones on
   each topic's Learn tab. Needs the live Supabase `threads_course_check` to allow 'ce104' (in `supabase/accounts.sql`).
+
+## Instruments rework (24 Nov, evening)
+User asked: focus the instruments section on the parts of each instrument and their functions, recheck the
+questions, add figures and true/false, no maths.
+- `src/sv/figs/instFigs.tsx`: nine labelled SVG drawings (chain, small kit, optical square, prismatic compass,
+  plane table, tripod, auto level and theodolite with the lecture sheet's own numbering, staff + cross-hairs).
+  `PartsExplorer` (Learn tab: tap a part, "hide names" self-test) and `InstFigure` (quiz).
+- `content/inst.ts` rewritten: 120 written questions (`q-ins-N`) + 285 generated from the drawings (`q-ifig-N`:
+  name the part / what it does / true-false per part). Calculations removed; the instruments pool no longer pulls in
+  the whole compass topic or the chainage/back-bearing sums. Questions may carry `fig` (`types.ts`).
+- Quiz arena: the instruments mock is 8 drawing + 12 written questions; a "Parts of the instruments" preset;
+  the course-wide mixes leave the drawing questions out.
