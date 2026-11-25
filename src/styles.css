@@ -1017,6 +1017,30 @@ svg [data-tip-hot] {
   text-align: right;
   white-space: nowrap;
 }
+/* printed sheet: font size is set on the table by Grid (shrinks to fit the A4 width) */
+.sv-print .sv-grid th {
+  font-size: 0.9em;
+  padding: 3px 4px;
+}
+.sv-print .sv-grid td {
+  padding: 3px 4px;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+.sv-print .sv-grid td.out {
+  padding: 3px 5px;
+}
+.sv-print .sv-grid.wrap-text td.txt {
+  white-space: normal;
+}
+.sv-print .sv-grid td.note {
+  font-family: var(--font-sans);
+  font-size: 0.85em;
+  white-space: normal;
+}
+.sv-print .sv-grid td.note:not(:empty) {
+  min-width: 7em;
+}
 .sv-cell {
   background: transparent;
   border: 1px solid transparent;

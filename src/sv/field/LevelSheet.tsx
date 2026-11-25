@@ -1,8 +1,8 @@
 // Level book: rise & fall (the method the course asks for) with HI alongside, the book checks,
 // the longitudinal profile along the centre line and a cross-section at every chainage that has side readings.
-import { useMemo } from 'react'
+import { useContext, useMemo } from 'react'
 import { reduceLevels, type LevelRow } from '../engine/level'
-import { Check, Field, fx, Grid, has, n, type Row } from './Grid'
+import { Check, Field, fx, Grid, has, n, ReadOnly, type Row } from './Grid'
 import { Profile } from './plots'
 
 export interface LevelData {
@@ -85,6 +85,7 @@ export function useLevel(d: LevelData) {
 
 export function LevelSheet({ data, set }: { data: LevelData; set: (d: LevelData) => void }) {
   const { res, at, rows } = useLevel(data)
+  const ro = useContext(ReadOnly)
   const cols = [
     { key: 'stn', label: 'Station', w: '4.2rem', type: 'text' as const, ph: 'BM / CP' },
     { key: 'ch', label: 'Chainage', w: '4.2rem', type: 'num' as const },
@@ -122,9 +123,11 @@ export function LevelSheet({ data, set }: { data: LevelData; set: (d: LevelData)
         <Field label="Known RL of the last point" value={data.closeRL} onChange={(v) => set({ ...data, closeRL: v })} hint="only if you closed back on a BM" />
         <Field label="BM description" type="text" w="18rem" value={data.bmNote} onChange={(v) => set({ ...data, bmNote: v })} ph="e.g. top of PL at DSW building" />
       </div>
-      <p className="text-xs text-mute">
-        One row per staff reading, in the order you took them. A change point is ONE row with its FS (read from the old set-up) and its BS (from the new one). Offsets: <b>CL</b>, <b>L1.5</b>, <b>R3</b>… Press Enter to go down a column.
-      </p>
+      {!ro && (
+        <p className="text-xs text-mute">
+          One row per staff reading, in the order you took them. A change point is ONE row with its FS (read from the old set-up) and its BS (from the new one). Offsets: <b>CL</b>, <b>L1.5</b>, <b>R3</b>… Press Enter to go down a column.
+        </p>
+      )}
       <Grid rows={data.rows} cols={cols} outs={outs} onChange={(rows) => set({ ...data, rows })} rowNote={(i) => (rows[i].bs != null && i > 0 && rows[i].fs == null ? 'BS here needs its FS (change point)' : null)} />
 
       <div className="card p-4 space-y-1.5">

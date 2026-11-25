@@ -1,6 +1,6 @@
 // Editable field-book table. Cells hold the text as typed (so "123 30 15" or "1.2" mid-typing survive);
 // the sheet's engine parses them. Enter moves down the column (adding a row at the end), like filling a book.
-import { createContext, useContext, useRef, type ReactNode } from 'react'
+import { createContext, useContext, useLayoutEffect, useRef, type ReactNode } from 'react'
 
 export type Row = Record<string, string>
 
@@ -49,20 +49,36 @@ export function Grid({ rows, cols, outs = [], onChange, newRow = () => ({}), row
   const insert = (i: number) => onChange([...rows.slice(0, i + 1), newRow(rows[i]), ...rows.slice(i + 1)])
   const remove = (i: number) => rows.length > minRows && onChange(rows.filter((_, j) => j !== i))
 
+  // printed (PDF): the page is a fixed width, so shrink the type until every column fits on it
+  const wrap = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    const w = wrap.current
+    const t = table.current
+    if (!ro || !w || !t) return
+    let px = 12
+    t.style.fontSize = px + 'px'
+    while (t.scrollWidth > w.clientWidth + 1 && px > 7) {
+      px -= 0.5
+      t.style.fontSize = px + 'px'
+    }
+    // still too wide at the smallest type: let the text columns (remarks, objects) wrap
+    t.classList.toggle('wrap-text', t.scrollWidth > w.clientWidth + 1)
+  })
+
   return (
-    <div className="overflow-x-auto -mx-1 px-1">
-      <table ref={table} className="sv-grid text-sm border-separate border-spacing-0">
+    <div ref={wrap} className={ro ? 'sv-print' : 'overflow-x-auto -mx-1 px-1'}>
+      <table ref={table} className={'sv-grid border-separate border-spacing-0 ' + (ro ? 'w-full' : 'text-sm')}>
         <thead>
           <tr>
             <th className="w-7 text-faint">#</th>
             {lead && <th />}
             {cols.map((c) => (
-              <th key={c.key} style={{ minWidth: c.w }} title={c.title}>
+              <th key={c.key} style={ro ? undefined : { minWidth: c.w }} title={c.title}>
                 {c.label}
               </th>
             ))}
             {outs.map((o, k) => (
-              <th key={'o' + k} className="out" style={{ minWidth: o.w }} title={o.title}>
+              <th key={'o' + k} className="out" style={ro ? undefined : { minWidth: o.w }} title={o.title}>
                 {o.label}
               </th>
             ))}
@@ -75,9 +91,9 @@ export function Grid({ rows, cols, outs = [], onChange, newRow = () => ({}), row
               <td className="text-faint text-[11px] num text-center">{i + 1}</td>
               {lead && <td className="px-1">{lead(i)}</td>}
               {cols.map((c, ci) => (
-                <td key={c.key}>
+                <td key={c.key} className={c.type === 'text' ? 'txt' : undefined}>
                   {ro ? (
-                    <span className="block px-1.5 py-1 num">{r[c.key] ?? ''}</span>
+                    <span className="block num">{r[c.key] ?? ''}</span>
                   ) : (
                     <input
                       className="sv-cell"
@@ -110,7 +126,7 @@ export function Grid({ rows, cols, outs = [], onChange, newRow = () => ({}), row
                   </button>
                 </td>
               )}
-              {rowNote && <td className="text-xs text-bad pl-2 whitespace-nowrap">{rowNote(i)}</td>}
+              {rowNote && <td className={'text-bad pl-2 ' + (ro ? 'note' : 'text-xs whitespace-nowrap')}>{rowNote(i)}</td>}
             </tr>
           ))}
         </tbody>
