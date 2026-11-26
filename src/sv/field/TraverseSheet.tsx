@@ -1,9 +1,9 @@
 // Closed theodolite traverse (pentagon): the traverse chart the sheet asks for, in the textbook's order.
-import { useMemo } from 'react'
+import { useContext, useMemo, useRef } from 'react'
 import { Seg } from '../../components/ui'
 import { fmtDMS, latDep, norm360, parseDMS } from '../engine/angle'
 import { acres, solveTraverse, type TraverseResult } from '../engine/traverse'
-import { Check, Field, fx, Grid, has, n, type Row } from './Grid'
+import { Check, Field, fx, Grid, has, n, ReadOnly, usePrintFit, type Row } from './Grid'
 import { PlanFrame, Station } from './plots'
 
 export interface TraverseData {
@@ -78,6 +78,11 @@ export function TraverseSheet({ data, set }: { data: TraverseData; set: (d: Trav
   const dp = u === 'm' ? 3 : 2
   const area = r ? acres(r.area, u) : null
   const allowedDeg = 1
+  // the reduction table is 13 columns wide: in the PDF its type steps down to fit the page
+  const ro = useContext(ReadOnly)
+  const redWrap = useRef<HTMLDivElement>(null)
+  const redTable = useRef<HTMLTableElement>(null)
+  usePrintFit(redWrap, redTable, ro)
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap gap-4 items-end">
@@ -134,8 +139,8 @@ export function TraverseSheet({ data, set }: { data: TraverseData; set: (d: Trav
             {r.dirHint && <div className="text-sm text-bad">⚠ {r.dirHint}</div>}
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="sv-grid text-sm border-separate border-spacing-0">
+          <div ref={redWrap} className={ro ? 'sv-print' : 'overflow-x-auto'}>
+            <table ref={redTable} className={'sv-grid border-separate border-spacing-0 ' + (ro ? 'w-full' : 'text-sm')}>
               <thead>
                 <tr>
                   {['Line', `Length`, 'WCB', 'RB', 'Latitude', 'Departure', 'Corr. lat', 'Corr. dep', 'Adj. lat', 'Adj. dep', 'Station', 'N', 'E'].map((h) => (

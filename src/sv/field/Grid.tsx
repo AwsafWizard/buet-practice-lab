@@ -1,6 +1,6 @@
 // Editable field-book table. Cells hold the text as typed (so "123 30 15" or "1.2" mid-typing survive);
 // the sheet's engine parses them. Enter moves down the column (adding a row at the end), like filling a book.
-import { createContext, useContext, useLayoutEffect, useRef, type ReactNode } from 'react'
+import { createContext, useContext, useLayoutEffect, useRef, type ReactNode, type RefObject } from 'react'
 
 export type Row = Record<string, string>
 
@@ -25,6 +25,23 @@ export interface Out {
 
 /** sheet is shown read-only (PDF export) */
 export const ReadOnly = createContext(false)
+
+/** printed (PDF): the page is a fixed width, so step the table's type down until every column fits in `wrap` */
+export function usePrintFit(wrap: RefObject<HTMLElement | null>, table: RefObject<HTMLTableElement | null>, ro: boolean) {
+  useLayoutEffect(() => {
+    const w = wrap.current
+    const t = table.current
+    if (!ro || !w || !t) return
+    let px = 12
+    t.style.fontSize = px + 'px'
+    while (t.scrollWidth > w.clientWidth + 1 && px > 7) {
+      px -= 0.5
+      t.style.fontSize = px + 'px'
+    }
+    // still too wide at the smallest type: let the text columns (remarks, objects) wrap
+    t.classList.toggle('wrap-text', t.scrollWidth > w.clientWidth + 1)
+  })
+}
 
 export function Grid({ rows, cols, outs = [], onChange, newRow = () => ({}), rowNote, minRows = 1, foot, lead }: { rows: Row[]; cols: Col[]; outs?: Out[]; onChange: (rows: Row[]) => void; newRow?: (prev?: Row) => Row; rowNote?: (i: number) => ReactNode; minRows?: number; foot?: ReactNode; lead?: (i: number) => ReactNode }) {
   const ro = useContext(ReadOnly)
@@ -51,19 +68,7 @@ export function Grid({ rows, cols, outs = [], onChange, newRow = () => ({}), row
 
   // printed (PDF): the page is a fixed width, so shrink the type until every column fits on it
   const wrap = useRef<HTMLDivElement>(null)
-  useLayoutEffect(() => {
-    const w = wrap.current
-    const t = table.current
-    if (!ro || !w || !t) return
-    let px = 12
-    t.style.fontSize = px + 'px'
-    while (t.scrollWidth > w.clientWidth + 1 && px > 7) {
-      px -= 0.5
-      t.style.fontSize = px + 'px'
-    }
-    // still too wide at the smallest type: let the text columns (remarks, objects) wrap
-    t.classList.toggle('wrap-text', t.scrollWidth > w.clientWidth + 1)
-  })
+  usePrintFit(wrap, table, ro)
 
   return (
     <div ref={wrap} className={ro ? 'sv-print' : 'overflow-x-auto -mx-1 px-1'}>
