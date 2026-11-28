@@ -96,3 +96,69 @@ export function spaceTriangle(AB: number, f: TargetObs, g: TargetObs, h: TargetO
   const { s, area } = heron(FG.space, GH.space, FH.space)
   return { FG, GH, FH, s, area }
 }
+
+// ── The lecture sheet's own angle sets (pp 017–024). Stations A and B; C, D (and E) are the feet, F, G (and H) the tops.
+// Horizontal angles are read between neighbouring lines, as in the manual's figure (A–B along the front,
+// C and D behind): ∠BAC = ∠BAD + ∠CAD, ∠ABD = ∠ABC + ∠CBD. Vertical angles are elevations at A.
+
+const sin = (d: number) => Math.sin(d * RAD)
+const cos = (d: number) => Math.cos(d * RAD)
+const tan = (d: number) => Math.tan(d * RAD)
+
+/** triangle on base AB with known angles at A and B: the third angle and the two sides by the sine rule */
+function baseTri(AB: number, atA: number, atB: number) {
+  const atP = 180 - atA - atB
+  return { atP, fromA: (AB / sin(atP)) * sin(atB), fromB: (AB / sin(atP)) * sin(atA) }
+}
+const cosRule = (p: number, q: number, ang: number) => Math.sqrt(Math.max(0, p * p + q * q - 2 * p * q * cos(ang)))
+
+/** the six angles of the aerial-distance sheet (degrees; CAF, DAG as elevation angles) */
+export interface AerialAngles {
+  CAD: number
+  BAD: number
+  CAF: number
+  DAG: number
+  ABC: number
+  CBD: number
+}
+
+/** aerial distance FG step by step, exactly as the sheet sets it out */
+export function aerialFG(AB: number, a: AerialAngles) {
+  const BAC = a.BAD + a.CAD
+  const c = baseTri(AB, BAC, a.ABC)
+  const CF = c.fromA * tan(a.CAF)
+  const ABD = a.ABC + a.CBD
+  const d = baseTri(AB, a.BAD, ABD)
+  const DG = d.fromA * tan(a.DAG)
+  const CD = cosRule(c.fromA, d.fromA, a.CAD)
+  const CDb = cosRule(c.fromB, d.fromB, a.CBD)
+  const FG = Math.hypot(CD, CF - DG)
+  return { BAC, ACB: c.atP, AC: c.fromA, BC: c.fromB, CF, ABD, ADB: d.atP, AD: d.fromA, BD: d.fromB, DG, CD, CDb, EF: Math.abs(CF - DG), FG }
+}
+
+/** the nine angles of the space-triangle sheet */
+export interface TriangleAngles extends AerialAngles {
+  DAE: number
+  BAE: number
+  EAH: number
+  DBE: number
+}
+
+/** space triangle FGH: the sheet's chain of horizontal and vertical triangles, then Heron */
+export function spaceFGH(AB: number, a: Omit<TriangleAngles, 'BAD'>) {
+  const BAD = a.BAE + a.DAE
+  const fg = aerialFG(AB, { ...a, BAD })
+  const ABE = a.ABC + a.CBD + a.DBE
+  const e = baseTri(AB, a.BAE, ABE)
+  const EH = e.fromA * tan(a.EAH)
+  const DE = cosRule(fg.AD, e.fromA, a.DAE)
+  const DEb = cosRule(fg.BD, e.fromB, a.DBE)
+  const CAE = a.CAD + a.DAE
+  const CBE = a.CBD + a.DBE
+  const CE = cosRule(fg.AC, e.fromA, CAE)
+  const CEb = cosRule(fg.BC, e.fromB, CBE)
+  const GH = Math.hypot(DE, fg.DG - EH)
+  const FH = Math.hypot(CE, fg.CF - EH)
+  const { s, area } = heron(fg.FG, GH, FH)
+  return { ...fg, BAD, ABE, AEB: e.atP, AE: e.fromA, BE: e.fromB, EH, DE, DEb, CAE, CBE, CE, CEb, GH, FH, s, area }
+}

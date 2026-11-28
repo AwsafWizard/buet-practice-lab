@@ -3,7 +3,7 @@ import { fmtDMS, parseDMS, reducedBearing, wcbOf, bearingOf, RAD } from './angle
 import { reduceLevels } from './level'
 import { solveTraverse, acres } from './traverse'
 import { stadiaConstants, stadiaPoints, stadiaReduce } from './stadia'
-import { aerialDistance, heron, locateTarget, spaceTriangle, towerHeight } from './height'
+import { aerialDistance, aerialFG, heron, locateTarget, spaceFGH, spaceTriangle, towerHeight } from './height'
 import { solveCurve, chords, simpleCurve } from './curve'
 import { contourSegments, levels, pickInterval } from './contour'
 
@@ -162,6 +162,33 @@ describe('height & distance', () => {
     const cr = [v1[1] * v2[2] - v1[2] * v2[1], v1[2] * v2[0] - v1[0] * v2[2], v1[0] * v2[1] - v1[1] * v2[0]]
     expect(st.area).toBeCloseTo(Math.hypot(...cr) / 2, 6)
     expect(heron(3, 4, 5).area).toBeCloseTo(6, 12)
+  })
+  it("the manual's angle sets: CAD, BAD, CAF, DAG, ABC, CBD (+ DAE, BAE, EAH, DBE)", () => {
+    // plan as in the manual's figure: A (0,0), B (40,0), feet C, D, E behind the base
+    const AB = 40
+    const P = { C: [-10, 30, 9], D: [50, 35, 14], E: [60, 10, 4] } as Record<string, number[]>
+    const atA = (k: string) => Math.atan2(P[k][1], P[k][0]) / RAD // from AB
+    const atB = (k: string) => Math.atan2(P[k][1], AB - P[k][0]) / RAD // from BA
+    const el = (k: string) => Math.atan(P[k][2] / Math.hypot(P[k][0], P[k][1])) / RAD
+    const ang = { CAD: atA('C') - atA('D'), BAD: atA('D'), CAF: el('C'), DAG: el('D'), ABC: atB('C'), CBD: atB('D') - atB('C') }
+    const r = aerialFG(AB, ang)
+    expect(r.AC).toBeCloseTo(Math.hypot(-10, 30), 9)
+    expect(r.CD).toBeCloseTo(Math.hypot(60, 5), 9)
+    expect(r.CDb).toBeCloseTo(r.CD, 9)
+    expect(r.FG).toBeCloseTo(Math.hypot(60, 5, 5), 9)
+    const t = spaceFGH(AB, { ...ang, DAE: atA('D') - atA('E'), BAE: atA('E'), EAH: el('E'), DBE: atB('E') - atB('D') })
+    expect(t.DE).toBeCloseTo(Math.hypot(10, 25), 9)
+    expect(t.CEb).toBeCloseTo(t.CE, 9)
+    expect(t.FH).toBeCloseTo(Math.hypot(70, 20, 5), 9)
+  })
+  // ∠DBE from his readings: 183°02′30″ − 121°34′00″ = 61°28′30″ (the sheet writes 61°25′30″, a subtraction slip)
+  it("Nafim's space triangle in the manual's angles", () => {
+    const d = (x: number, m: number, s: number) => Math.sign(x || 1) * (Math.abs(x) + m / 60 + s / 3600)
+    const t = spaceFGH(30, { CAD: d(26, 47, 10), DAE: d(55, 48, 50), BAE: -(2 + 20 / 60 + 10 / 3600), CAF: 90 - d(80, 38, 10), DAG: 90 - d(75, 24, 40), EAH: 90 - d(84, 34, 50), ABC: d(92, 5, 46), CBD: d(29, 28, 14), DBE: d(61, 28, 30) })
+    expect(t.AC).toBeCloseTo(225.5, 0)
+    expect(t.AD).toBeCloseTo(295.9, 0)
+    expect(t.FG).toBeCloseTo(144.44, 0)
+    expect(t.area / 17324).toBeCloseTo(1, 2)
   })
 })
 
